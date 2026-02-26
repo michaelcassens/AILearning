@@ -2020,7 +2020,15 @@ function csDrop(e, binId) {
     const item = document.createElement('div');
     item.className = 'cs-bin-item';
     item.dataset.claim = claimId;
-    item.innerHTML = `<span style="font-size:0.8rem;">${claim.text.length > 80 ? claim.text.substring(0, 77) + '…' : claim.text}</span><span class="cs-remove" onclick="csRemove('${claimId}','${binId}')">✕</span>`;
+    const textSpan = document.createElement('span');
+    textSpan.style.fontSize = '0.8rem';
+    textSpan.textContent = claim.text.length > 80 ? claim.text.substring(0, 77) + '…' : claim.text;
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'cs-remove';
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', () => csRemove(claimId, binId));
+    item.appendChild(textSpan);
+    item.appendChild(removeBtn);
     binItems.appendChild(item);
     csDragged = null;
 
