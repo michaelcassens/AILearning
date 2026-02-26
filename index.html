@@ -141,6 +141,49 @@
         .chip-red { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
         .chip-green { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
         .chip-purple { background: rgba(168,85,247,0.15); color: #c084fc; border-color: rgba(168,85,247,0.3); }
+        .chip-rose { background: rgba(244,63,94,0.15); color: #fb7185; border-color: rgba(244,63,94,0.3); }
+
+        /* ---- UPGRADE THE ARGUMENT GAME ---- */
+        .uta-original {
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.25);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.1rem;
+        }
+        .uta-original-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: #fbbf24; font-weight: 700; margin-bottom: 0.4rem; }
+        .uta-original-text { font-size: 0.97rem; color: var(--text); font-style: italic; }
+        .uta-prompt { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .uta-options { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 0.75rem; }
+        .uta-option {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .uta-option:hover:not([disabled]) { border-color: var(--primary); background: rgba(99,102,241,0.07); }
+        .uta-option.correct { border-color: var(--success); background: rgba(16,185,129,0.1); }
+        .uta-option.wrong { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+        .uta-option.reveal-correct { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+        .uta-letter { width: 26px; height: 26px; border-radius: 50%; background: var(--border); font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .uta-explain { margin-top: 0.5rem; padding: 0.75rem 1rem; border-radius: 7px; font-size: 0.86rem; line-height: 1.6; display: none; }
+        .uta-explain.show { display: block; }
+        .uta-explain.good { background: rgba(16,185,129,0.1); border-left: 3px solid var(--success); color: #a7f3d0; }
+        .uta-explain.bad { background: rgba(239,68,68,0.1); border-left: 3px solid var(--danger); color: #fca5a5; }
+        .uta-progress-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .uta-dots { display: flex; gap: 0.4rem; }
+        .uta-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+        .uta-dot.active { background: #fb7185; }
+        .uta-dot.done-good { background: var(--success); }
+        .uta-dot.done-bad { background: var(--danger); }
 
         /* ---- CLAIM SORTER GAME ---- */
         .cs-topic-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; }
@@ -592,6 +635,7 @@
     <button class="nav-tab" onclick="showModule(3)" id="tab-3"><span class="tab-num">3</span> Hallucinations</button>
     <button class="nav-tab" onclick="showModule(4)" id="tab-4"><span class="tab-num">4</span> Effective Prompting</button>
     <button class="nav-tab" onclick="showModule(5)" id="tab-5"><span class="tab-num">5</span> Synthesis &amp; Thinking</button>
+    <button class="nav-tab" onclick="showModule(6)" id="tab-6"><span class="tab-num">6</span> Skepticism &amp; Agency</button>
 </div>
 
 <main class="main">
@@ -1103,6 +1147,109 @@
 
     <div class="section-nav">
         <button class="btn btn-secondary" onclick="showModule(4)">← Back</button>
+        <button class="btn btn-primary" onclick="showModule(6)">Next: Skepticism &amp; Agency →</button>
+    </div>
+</div>
+
+<!-- ============================= MODULE 6 ============================= -->
+<div class="module" id="module-6">
+    <div class="module-header">
+        <div class="module-badge chip-rose">Part 6 of 6</div>
+        <h1 class="module-title">Skepticism, Agency &amp; the Job Market</h1>
+        <p class="module-subtitle">It's okay not to like generative AI. Here's why you still need to understand it.</p>
+    </div>
+
+    <div class="card">
+        <h2>Your Skepticism Is Legitimate</h2>
+        <p>Let's be direct: not everyone needs to be enthusiastic about generative AI, and there are well-grounded intellectual, ethical, and personal reasons to be skeptical of it. This module won't try to convert you. What it will argue is that <strong>informed skepticism is far more powerful than uninformed avoidance</strong> — and that the difference matters for your life.</p>
+        <div class="highlight">
+            <strong>Valid reasons to be skeptical of generative AI include:</strong> concerns about data privacy and consent; worry about job displacement in your field; environmental costs of large-scale model training; discomfort with AI-generated content displacing human creative work; distrust of the corporations building and deploying these systems; concerns about bias and fairness; and philosophical objections to delegating human judgment to statistical models.
+        </div>
+        <p>None of these concerns disappear because AI has become widely adopted. Adoption is not the same as legitimacy. The history of technology is full of tools that became ubiquitous while remaining genuinely contested — and the most effective critics of those tools were people who understood them deeply.</p>
+    </div>
+
+    <div class="card">
+        <h2>The Difference Between Disliking AI and Being Uninformed About It</h2>
+        <p>There is an important distinction that this entire module has been building toward: <em>the quality of your position — for or against anything — depends on how well-grounded it is in actual knowledge.</em></p>
+        <div class="info-grid">
+            <div class="info-item" style="border-left:3px solid var(--danger);">
+                <div class="info-label">Uninformed Skepticism</div>
+                <strong>"I just don't trust it."</strong>
+                <p style="font-size:0.84rem;">Valid as a feeling, but easy to dismiss. Can't be acted on strategically. Doesn't help you advocate for change, protect yourself, or make decisions in situations where AI is present whether you want it or not.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--success);">
+                <div class="info-label">Informed Skepticism</div>
+                <strong>"Here's specifically why, and here's what I'd require before trusting it."</strong>
+                <p style="font-size:0.84rem;">Grounded in evidence. Can be articulated to colleagues, employers, and policymakers. Positions you to advocate for accountability mechanisms, better oversight, and appropriate use constraints.</p>
+            </div>
+        </div>
+        <p style="margin-top:1rem;">The goal isn't to make you comfortable with AI — it's to make sure that whatever position you hold, you hold it from a foundation of knowledge that makes it defensible and actionable.</p>
+    </div>
+
+    <div class="card">
+        <h2>Historical Parallels: Informed Dissent</h2>
+        <p>The most effective critics of powerful technologies throughout history were not people who refused to engage with them — they were people who understood them well enough to identify the specific harms and demand specific remedies.</p>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-icon">🏭</div>
+                <div class="info-label">Industrial Labor Movement</div>
+                <p style="font-size:0.84rem;">Early labor organizers didn't avoid learning how factories worked. They mastered industrial processes so they could identify unsafe conditions, negotiate effectively, and write legislation that stuck.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">🔒</div>
+                <div class="info-label">Privacy Advocates</div>
+                <p style="font-size:0.84rem;">The most impactful digital privacy advocates — those who shaped GDPR, influenced court decisions, and changed corporate practices — were technically literate. They understood surveillance systems well enough to explain why they were dangerous.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">🍔</div>
+                <div class="info-label">Food Safety Reformers</div>
+                <p style="font-size:0.84rem;">Upton Sinclair's <em>The Jungle</em> transformed food safety regulation because he worked inside a meatpacking plant. Understanding the system he opposed gave his criticism specificity — and that specificity created change.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-icon">💊</div>
+                <div class="info-label">Pharmaceutical Watchdogs</div>
+                <p style="font-size:0.84rem;">Effective drug safety advocates — those who actually changed FDA regulation — learned clinical trial methodology, statistical manipulation, and regulatory loopholes. They criticized pharma from the inside out.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>The Job Market: An Honest Picture</h2>
+        <p>The job market implications of generative AI are genuinely uncertain — and anyone who tells you otherwise with complete confidence is overstating what we know. Here is what the current evidence and expert consensus actually supports:</p>
+
+        <h3>📊 What We Have Evidence For</h3>
+        <p>Certain categories of tasks — generating first drafts, summarizing documents, writing routine code, answering structured queries — are being performed faster or at lower cost by AI tools. This affects the economics of roles where those tasks constitute the majority of the work. Entry-level roles that historically provided "on-ramp" experience in fields like law, finance, and content creation are already showing early signs of compression.</p>
+
+        <h3>⚠️ What Remains Genuinely Uncertain</h3>
+        <p>Whether automation leads to net job loss or net job transformation depends on economic factors (demand elasticity, retraining infrastructure, regulatory response) that are not predetermined. Historical precedents cut in multiple directions — past waves of automation both destroyed and created categories of work, with the distribution of gains and losses being deeply unequal based on access to retraining and social safety nets.</p>
+
+        <h3>🎯 What Appears Consistent Across Projections</h3>
+        <p>Workers who understand <em>what AI can and cannot do</em> in their specific domain are better positioned to — direct AI tools productively, identify where human judgment remains essential, articulate their value in ways that aren't easily automated, and participate in decisions about how AI is deployed in their workplace. This is not about being a technologist. It is about being an informed professional in a field that AI is entering.</p>
+
+        <div class="highlight">
+            <strong>The strategic point:</strong> AI literacy is less about enthusiasm and more about not being the last person in the room who doesn't understand what's being discussed. The people shaping how AI is used in your future workplace will make better decisions if people with your values and concerns are in those conversations.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Knowledge as Agency</h2>
+        <p>One of the most important reframings in this module is this: learning about AI is not an act of endorsement. It is an act of <strong>agency</strong>.</p>
+        <p>Understanding AI means you can — choose not to use it in your own work from a position of informed choice rather than avoidance; recognize when it's being used to make decisions about you, and evaluate those decisions critically; advocate in workplace and policy conversations for limits, oversight, and accountability mechanisms; identify the specific contexts where you believe human judgment is non-negotiable; and hold the systems and organizations deploying AI accountable to standards you can articulate clearly.</p>
+        <p>None of these things are possible from a position of ignorance. All of them are available to the informed skeptic.</p>
+
+        <h3>💡 Knowing what you're refusing</h3>
+        <p>There's a meaningful difference between refusing to use AI after understanding it and avoiding it because it feels unfamiliar or threatening. The first is a principled position. The second is a vulnerability — because it leaves you without the vocabulary to defend your own interests when AI-related decisions are being made around you.</p>
+    </div>
+
+    <!-- GAME 6: Upgrade the Argument -->
+    <div class="game-box" id="upgrade-game">
+        <div class="game-title">🎮 Game: Upgrade the Argument</div>
+        <div class="game-subtitle">Each round shows a vague or uninformed statement about AI — both skeptical <em>and</em> enthusiastic ones. Your job is to pick the most defensible, knowledge-grounded reformulation. The goal: show that every position gets stronger with more knowledge.</div>
+        <div id="uta-content"></div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(5)">← Back</button>
         <button class="btn btn-success" onclick="showCompletion()">🎓 Complete the Module</button>
     </div>
 </div>
@@ -1114,14 +1261,14 @@
     <div class="completion-modal">
         <div style="font-size:3.5rem; margin-bottom:0.75rem;">🎓</div>
         <h2 style="font-size:1.6rem; margin-bottom:0.6rem;">Module Complete!</h2>
-        <p style="color:var(--text-muted); margin-bottom:1.75rem;">You've completed all five parts of the Generative AI Learning Module — foundations, ethics, hallucinations, prompting, and synthesis &amp; critical thinking.</p>
+        <p style="color:var(--text-muted); margin-bottom:1.75rem;">You've completed all six parts of the Generative AI Learning Module — foundations, ethics, hallucinations, prompting, synthesis, and informed agency.</p>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:1.75rem;">
             <div style="background:var(--bg-card2); border-radius:10px; padding:1rem;">
                 <div style="font-size:1.4rem; font-weight:800; color:var(--primary);" id="final-score">--</div>
                 <div style="font-size:0.78rem; color:var(--text-muted);">Avg Game Score</div>
             </div>
             <div style="background:var(--bg-card2); border-radius:10px; padding:1rem;">
-                <div style="font-size:1.4rem; font-weight:800; color:var(--success);">5 / 5</div>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--success);">6 / 6</div>
                 <div style="font-size:0.78rem; color:var(--text-muted);">Modules Completed</div>
             </div>
         </div>
@@ -1135,7 +1282,7 @@
 // ========================
 const state = {
     currentModule: 1,
-    scores: { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0 }
+    scores: { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0, upgrade: 0 }
 };
 
 // ========================
@@ -1147,14 +1294,15 @@ function showModule(n) {
     document.getElementById('module-' + n).classList.add('active');
     document.getElementById('tab-' + n).classList.add('active');
     state.currentModule = n;
-    document.getElementById('progress-fill').style.width = (n / 5 * 100) + '%';
-    document.getElementById('progress-text').textContent = 'Module ' + n + ' of 5';
+    document.getElementById('progress-fill').style.width = (n / 6 * 100) + '%';
+    document.getElementById('progress-text').textContent = 'Module ' + n + ' of 6';
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (n === 1 && !window.tlInit) initTimeline();
     if (n === 2 && !window.scInit) initScenarios();
     if (n === 3 && !window.hlInit) initHallucination();
     if (n === 4 && !window.pbInit) initPromptBuilder();
     if (n === 5 && !window.csInit) initClaimSorter();
+    if (n === 6 && !window.utaInit) initUpgradeGame();
 }
 
 function showCompletion() {
@@ -1165,8 +1313,8 @@ function showCompletion() {
 }
 function restartModule() {
     document.getElementById('completion-overlay').classList.remove('show');
-    state.scores = { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0 };
-    window.tlInit = false; window.scInit = false; window.hlInit = false; window.pbInit = false; window.csInit = false;
+    state.scores = { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0, upgrade: 0 };
+    window.tlInit = false; window.scInit = false; window.hlInit = false; window.pbInit = false; window.csInit = false; window.utaInit = false;
     showModule(1);
     initTimeline();
 }
@@ -1945,6 +2093,282 @@ function csCheck() {
 function csReset() {
     csTopicIdx = (csTopicIdx + 1) % csTopics.length;
     renderClaimSorter();
+}
+
+// ========================
+// MODULE 6: UPGRADE THE ARGUMENT
+// ========================
+const utaRounds = [
+    {
+        original: '"I just don\'t trust AI. It feels wrong."',
+        tone: '😤 Skeptical',
+        options: [
+            {
+                text: "AI systems should be banned immediately until we fully understand them.",
+                correct: false,
+                explain: "This is still an uninformed position — it replaces a vague feeling with a vague demand. 'Fully understand' is not a measurable standard, and blanket bans don't engage with context-specific risks."
+            },
+            {
+                text: "I'm skeptical of AI systems because I lack transparency into how specific decisions are made, which makes it difficult for me to evaluate when their outputs are trustworthy and when they aren't.",
+                correct: true,
+                explain: "✅ This is the upgraded version. It converts a vague feeling into a specific, grounded concern — lack of interpretability — that is both intellectually defensible and actionable. You can now ask for explainability mechanisms, audit trails, or domain-specific validation."
+            },
+            {
+                text: "AI companies are just trying to make money and don't actually care about the public.",
+                correct: false,
+                explain: "This may be partially true, but it's unfalsifiable as stated and uses conspiratorial framing. It doesn't distinguish between companies or explain what specific practices you object to — making it easy to dismiss."
+            }
+        ]
+    },
+    {
+        original: '"AI is going to take everyone\'s jobs."',
+        tone: '😰 Concerned',
+        options: [
+            {
+                text: "AI will cause mass unemployment and economic collapse within a decade.",
+                correct: false,
+                explain: "This overstates the evidence. Labor economists disagree significantly about timelines and net effects. Confident catastrophic predictions are as poorly grounded as confident utopian ones — and this framing is easy to refute with counterexamples."
+            },
+            {
+                text: "AI is bad for workers.",
+                correct: false,
+                explain: "True in certain contexts, false in others. This is too broad to be useful. It can't be acted on, advocated for, or defended against evidence that some workers benefit from AI tools."
+            },
+            {
+                text: "AI-driven automation is likely to displace workers in certain task categories while creating demand in others, with the distribution of gains and losses being highly unequal based on access to retraining and existing economic safety nets.",
+                correct: true,
+                explain: "✅ This is the upgraded version. It accurately represents the state of economic evidence — acknowledging displacement while specifying that the key concern is distributional inequality, not total elimination. This is a position you can bring to a policy conversation."
+            }
+        ]
+    },
+    {
+        original: '"I don\'t need to learn about AI — I\'m going into a creative field."',
+        tone: '🎨 Avoidant',
+        options: [
+            {
+                text: "Creative fields are fundamentally immune to AI disruption because creativity requires human consciousness.",
+                correct: false,
+                explain: "This is a logical flaw: AI doesn't need consciousness to perform tasks that humans describe as creative. Whether AI 'really' creates is philosophically interesting but practically irrelevant to whether it affects creative labor markets."
+            },
+            {
+                text: "I'll learn about AI if and when it becomes relevant to my specific work.",
+                correct: false,
+                explain: "Reactive learning misses the window where knowledge is most valuable — before AI is making decisions about your industry rather than after. By the time it's clearly relevant, the landscape may have already shifted in ways that disadvantage those who didn't prepare."
+            },
+            {
+                text: "AI tools are increasingly integrated into creative industries. Understanding their capabilities, limitations, and contractual implications gives me more leverage over how I use them — and more credibility when I choose not to.",
+                correct: true,
+                explain: "✅ This is the upgraded version. It acknowledges reality without surrendering agency. Knowing AI in your field means you can make informed choices about what to use, refuse, or negotiate around — rather than having those choices made for you."
+            }
+        ]
+    },
+    {
+        original: '"AI is amazing — it can basically do anything now!"',
+        tone: '🤩 Uncritical Enthusiasm',
+        options: [
+            {
+                text: "Generative AI demonstrates remarkable capabilities in certain domains, but is also subject to hallucination, bias, and fails in ways that are difficult to predict without domain expertise — making calibrated evaluation essential before deployment.",
+                correct: true,
+                explain: "✅ This is the upgraded version. Enthusiasm is fine — but uncritical enthusiasm is as problematic as uninformed rejection. This framing acknowledges genuine capabilities while specifying the conditions that make AI unreliable. It's the position of someone who has actually worked with the technology."
+            },
+            {
+                text: "AI will solve climate change, cure cancer, and eliminate poverty if we just fund it enough.",
+                correct: false,
+                explain: "Uncritical techno-optimism makes the same epistemological mistake as uncritical doom — it replaces evidence with vibes. This version can't be defended against counterevidence and makes you look uninformed when specific failures arise."
+            },
+            {
+                text: "AI is always better than humans at any task it's been trained on.",
+                correct: false,
+                explain: "Factually wrong. AI systems regularly fail at tasks in their training domain, especially on edge cases, novel contexts, and tasks requiring common-sense reasoning about physical reality. This overclaim undermines your credibility when challenged."
+            }
+        ]
+    },
+    {
+        original: '"Using AI is cheating. Students shouldn\'t be allowed to use it at all."',
+        tone: '📚 Rule-Based',
+        options: [
+            {
+                text: "No one should ever use AI for any academic or professional work — period.",
+                correct: false,
+                explain: "Absolutist positions without nuance are difficult to defend because they ignore context. A student using AI to auto-generate a thesis is different from a professional using AI to format a document. The same policy can't address both coherently."
+            },
+            {
+                text: "AI use in education raises legitimate questions about attribution, skill development, and what we value in assessed work — the right answer depends on context, explicit norms, and what purpose the task is designed to serve.",
+                correct: true,
+                explain: "✅ This is the upgraded version. It takes the concern seriously while acknowledging that 'cheating' is context-dependent. It opens a productive conversation rather than shutting one down, and it's defensible even to people who disagree about where to draw the line."
+            },
+            {
+                text: "AI is just like spell-check or a calculator, so the rules should be exactly the same.",
+                correct: false,
+                explain: "This analogy has merit but is too simplistic. Spell-check doesn't generate arguments, synthesize evidence, or produce the substance of reasoning tasks — it corrects surface errors. Treating all AI as equivalent to spell-check misses what's genuinely new about generative AI."
+            }
+        ]
+    },
+    {
+        original: '"I don\'t want AI in my future career. I plan to avoid it completely."',
+        tone: '🚫 Refusing',
+        options: [
+            {
+                text: "I will refuse to work at any organization that uses AI tools in my field.",
+                correct: false,
+                explain: "This position may severely constrain your options. More importantly, it forfeits your ability to influence how AI is used in your industry — the decisions will still be made, just without your perspective in the room."
+            },
+            {
+                text: "AI will never become genuinely relevant to my specific role and field.",
+                correct: false,
+                explain: "This is a prediction about the future that contradicts current trends in almost every professional field. Even roles that seem safe from automation involve workflows, organizations, and clients that are already integrating AI — affecting your context even if not your tasks directly."
+            },
+            {
+                text: "I have specific concerns about AI in my field that I want to articulate and advocate for from a position of knowledge — and understanding AI also means I can clearly identify the contexts where I believe human judgment is non-negotiable and argue for those limits effectively.",
+                correct: true,
+                explain: "✅ This is the upgraded version. It honors the skeptical instinct while transforming it from avoidance into advocacy. You don't have to use AI — but knowing it means you can argue for the limits you believe in, protect your interests, and contribute to how your profession decides to engage with it."
+            }
+        ]
+    }
+];
+
+let utaIdx = 0;
+let utaAnswers = [];
+window.utaInit = false;
+
+function initUpgradeGame() {
+    window.utaInit = true;
+    utaIdx = 0;
+    utaAnswers = new Array(utaRounds.length).fill(null);
+    renderUTA();
+}
+
+function renderUTA() {
+    const round = utaRounds[utaIdx];
+    const answered = utaAnswers[utaIdx] !== null;
+
+    const dotsHtml = utaRounds.map((_, i) => {
+        const a = utaAnswers[i];
+        let cls = 'uta-dot';
+        if (i === utaIdx) cls += ' active';
+        else if (a !== null) cls += a === true ? ' done-good' : ' done-bad';
+        return `<div class="${cls}"></div>`;
+    }).join('');
+
+    const answered_count = utaAnswers.filter(a => a !== null).length;
+    const correct_count = utaAnswers.filter(a => a === true).length;
+
+    const optionsHtml = round.options.map((opt, oi) => {
+        let cls = 'uta-option';
+        let explain = '';
+        if (answered) {
+            if (opt.correct) cls += ' correct';
+            else if (utaAnswers[utaIdx] === false && oi === utaRounds[utaIdx].options.findIndex((o, i2) => !o.correct && i2 === utaRounds[utaIdx].options.indexOf(opt))) cls += ' wrong';
+            const wasChosen = utaAnswers[utaIdx + '_chosen'] === oi;
+            if (wasChosen && !opt.correct) cls += ' wrong';
+            if (opt.correct) {
+                explain = `<div class="uta-explain show good">${opt.explain}</div>`;
+            } else if (utaAnswers[utaIdx + '_chosen'] === oi) {
+                explain = `<div class="uta-explain show bad">${opt.explain}</div>`;
+            }
+        }
+        return `
+            <div class="${cls}" id="uta-opt-${utaIdx}-${oi}" onclick="${answered ? '' : `utaSelect(${utaIdx},${oi})`}">
+                <span class="uta-letter">${String.fromCharCode(65+oi)}</span>
+                <div><span>${opt.text}</span>${explain}</div>
+            </div>`;
+    }).join('');
+
+    const isLast = utaIdx === utaRounds.length - 1;
+    const nextBtn = answered
+        ? `<button class="btn btn-primary" onclick="${isLast ? 'utaFinish()' : `utaNext()`}">${isLast ? '🎯 See Results' : 'Next →'}</button>`
+        : '';
+
+    const scoreText = answered_count > 0 ? `<span class="score-badge">${correct_count}/${answered_count} upgraded</span>` : '';
+
+    document.getElementById('uta-content').innerHTML = `
+        <div class="uta-progress-row">
+            <div class="uta-dots">${dotsHtml}</div>
+            <div style="display:flex;gap:0.75rem;align-items:center;">
+                ${scoreText}
+                <span style="font-size:0.8rem;color:var(--text-muted);">${utaIdx+1} / ${utaRounds.length}</span>
+            </div>
+        </div>
+        <div class="uta-original">
+            <div class="uta-original-label">${round.tone} — Original (Uninformed) Statement</div>
+            <div class="uta-original-text">${round.original}</div>
+        </div>
+        <div class="uta-prompt">Which reformulation is the most defensible and knowledge-grounded?</div>
+        <div class="uta-options">${optionsHtml}</div>
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.5rem;">
+            ${nextBtn}
+            ${utaIdx > 0 ? `<button class="btn btn-secondary" onclick="utaPrev()">← Back</button>` : ''}
+        </div>
+        <div id="uta-finish-feedback"></div>`;
+}
+
+function utaSelect(roundIdx, optIdx) {
+    if (utaAnswers[roundIdx] !== null) return;
+    const round = utaRounds[roundIdx];
+    const isCorrect = round.options[optIdx].correct;
+    utaAnswers[roundIdx] = isCorrect;
+    utaAnswers[roundIdx + '_chosen'] = optIdx;
+
+    // Style the chosen option
+    const chosenEl = document.getElementById(`uta-opt-${roundIdx}-${optIdx}`);
+    chosenEl.classList.add(isCorrect ? 'correct' : 'wrong');
+
+    // Show explanation for chosen option
+    const explainDiv = document.createElement('div');
+    explainDiv.className = 'uta-explain show ' + (isCorrect ? 'good' : 'bad');
+    explainDiv.textContent = round.options[optIdx].explain;
+    chosenEl.querySelector('div').appendChild(explainDiv);
+
+    // If wrong, also reveal correct option
+    if (!isCorrect) {
+        const correctIdx = round.options.findIndex(o => o.correct);
+        const correctEl = document.getElementById(`uta-opt-${roundIdx}-${correctIdx}`);
+        correctEl.classList.add('reveal-correct');
+        const correctExplain = document.createElement('div');
+        correctExplain.className = 'uta-explain show good';
+        correctExplain.textContent = round.options[correctIdx].explain;
+        correctEl.querySelector('div').appendChild(correctExplain);
+    }
+
+    // Disable all options
+    document.querySelectorAll(`[id^="uta-opt-${roundIdx}-"]`).forEach(el => {
+        el.style.cursor = 'default';
+        el.setAttribute('onclick', '');
+    });
+
+    // Update dots and add next button
+    renderUTA();
+}
+
+function utaNext() {
+    if (utaIdx < utaRounds.length - 1) { utaIdx++; renderUTA(); }
+}
+function utaPrev() {
+    if (utaIdx > 0) { utaIdx--; renderUTA(); }
+}
+
+function utaFinish() {
+    const correct = utaAnswers.filter(a => a === true).length;
+    const pct = Math.round(correct / utaRounds.length * 100);
+    state.scores.upgrade = pct;
+
+    const el = document.getElementById('uta-finish-feedback');
+    el.className = 'game-feedback show ' + (pct >= 80 ? 'success' : pct >= 50 ? 'partial' : 'error');
+    if (pct === 100) {
+        el.textContent = '🌟 Perfect! You consistently chose knowledge-grounded arguments — skeptical and enthusiastic alike. This is exactly the skill this module is about.';
+    } else if (pct >= 67) {
+        el.textContent = `✅ Strong performance — ${correct}/${utaRounds.length} upgraded correctly. The key insight: a well-grounded position is more powerful than a strongly-felt one, regardless of direction.`;
+    } else {
+        el.textContent = `📖 ${correct}/${utaRounds.length} upgraded. Review the explanations above — the pattern to look for is specificity. Informed arguments name what exactly is wrong or right, and why.`;
+    }
+
+    // Add restart
+    const restartBtn = document.createElement('button');
+    restartBtn.className = 'btn btn-secondary';
+    restartBtn.style.marginTop = '0.75rem';
+    restartBtn.textContent = '↺ Restart';
+    restartBtn.onclick = () => { utaIdx = 0; utaAnswers = new Array(utaRounds.length).fill(null); renderUTA(); };
+    el.after(restartBtn);
 }
 
 // ========================
