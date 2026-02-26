@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI: A College Learning Module</title>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card2: #273548;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .progress-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        .progress-bar {
+            width: 140px;
+            height: 6px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 99px;
+            transition: width 0.4s ease;
+        }
+        .nav-tabs {
+            max-width: 1100px;
+            margin: 1.5rem auto 0;
+            padding: 0 2rem;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .nav-tab {
+            padding: 0.55rem 1.1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .nav-tab:hover { background: var(--bg-card); color: var(--text); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .tab-num {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            font-size: 0.72rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .main {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 2rem 5rem;
+        }
+        .module { display: none; }
+        .module.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .module-header { margin-bottom: 2rem; }
+        .module-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            border: 1px solid;
+        }
+        .chip-blue { background: rgba(99,102,241,0.15); color: #818cf8; border-color: rgba(99,102,241,0.3); }
+        .chip-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
+        .chip-red { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+        .chip-green { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
+        .chip-purple { background: rgba(168,85,247,0.15); color: #c084fc; border-color: rgba(168,85,247,0.3); }
+
+        /* ---- CLAIM SORTER GAME ---- */
+        .cs-topic-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.1rem; }
+        .cs-claims-pool { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; }
+        .cs-claim {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            cursor: grab;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            transition: all 0.2s;
+            user-select: none;
+            line-height: 1.55;
+        }
+        .cs-claim:hover { border-color: var(--primary); background: rgba(99,102,241,0.07); }
+        .cs-claim.dragging { opacity: 0.3; cursor: grabbing; }
+        .cs-claim.placed { opacity: 0.5; border-style: dashed; }
+        .cs-drag-icon { color: var(--text-muted); font-size: 0.85rem; flex-shrink: 0; margin-top: 2px; }
+        .cs-bins {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1.1rem;
+        }
+        .cs-bin {
+            border: 2px dashed;
+            border-radius: 10px;
+            padding: 0.85rem;
+            min-height: 90px;
+            transition: all 0.2s;
+        }
+        .cs-bin.drag-over { transform: scale(1.02); }
+        .cs-bin-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .cs-bin-items { display: flex; flex-direction: column; gap: 0.4rem; min-height: 30px; }
+        .cs-bin-item {
+            background: rgba(255,255,255,0.06);
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.4rem;
+        }
+        .cs-remove { cursor: pointer; color: var(--text-muted); font-size: 0.75rem; flex-shrink: 0; margin-top: 1px; }
+        .cs-remove:hover { color: var(--danger); }
+        .bin-solid { border-color: rgba(16,185,129,0.4); }
+        .bin-solid .cs-bin-label { color: #34d399; }
+        .bin-solid.drag-over { background: rgba(16,185,129,0.07); }
+        .bin-verify { border-color: rgba(6,182,212,0.4); }
+        .bin-verify .cs-bin-label { color: #22d3ee; }
+        .bin-verify.drag-over { background: rgba(6,182,212,0.07); }
+        .bin-opinion { border-color: rgba(245,158,11,0.4); }
+        .bin-opinion .cs-bin-label { color: #fbbf24; }
+        .bin-opinion.drag-over { background: rgba(245,158,11,0.07); }
+        .bin-flaw { border-color: rgba(239,68,68,0.4); }
+        .bin-flaw .cs-bin-label { color: #f87171; }
+        .bin-flaw.drag-over { background: rgba(239,68,68,0.07); }
+        .cs-result-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 7px;
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            line-height: 1.5;
+        }
+        .cs-result-correct { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+        .cs-result-wrong { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); }
+        .cs-result-icon { font-size: 1rem; flex-shrink: 0; }
+        .module-title { font-size: 1.9rem; font-weight: 800; margin-bottom: 0.4rem; line-height: 1.2; }
+        .module-subtitle { color: var(--text-muted); font-size: 1rem; }
+        h2 { font-size: 1.3rem; margin-bottom: 0.7rem; }
+        h3 { font-size: 1.05rem; margin-bottom: 0.4rem; color: var(--text); margin-top: 1.25rem; }
+        h3:first-child { margin-top: 0; }
+        p { margin-bottom: 0.9rem; color: var(--text-muted); }
+        p:last-child { margin-bottom: 0; }
+        strong { color: var(--text); font-weight: 600; }
+        .highlight {
+            background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(6,182,212,0.08));
+            border-left: 3px solid var(--primary);
+            padding: 1rem 1.2rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .info-item {
+            background: var(--bg-card2);
+            border-radius: 10px;
+            padding: 1.1rem;
+            border: 1px solid var(--border);
+        }
+        .info-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+        .info-value { font-weight: 600; font-size: 0.95rem; }
+        .btn {
+            padding: 0.6rem 1.3rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-card2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .score-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            color: #818cf8;
+            border-radius: 99px;
+            padding: 0.3rem 0.75rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+        .section-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+        .game-box {
+            background: var(--bg-card);
+            border: 2px solid rgba(99,102,241,0.3);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .game-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .game-subtitle {
+            color: var(--text-muted);
+            font-size: 0.88rem;
+            margin-bottom: 1.25rem;
+        }
+        .game-controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .game-feedback {
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            margin-top: 1rem;
+            line-height: 1.6;
+            display: none;
+        }
+        .game-feedback.show { display: block; }
+        .game-feedback.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+        .game-feedback.partial { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fde68a; }
+        .game-feedback.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+
+        /* ---- TIMELINE GAME ---- */
+        .timeline-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .col-label {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+        .event-card {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 0.45rem;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 0.85rem;
+        }
+        .event-card:hover { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .event-card.dragging { opacity: 0.35; cursor: grabbing; }
+        .event-year { font-size: 0.72rem; font-weight: 700; color: #818cf8; min-width: 36px; }
+        .drop-slot {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 0.6rem 0.9rem;
+            margin-bottom: 0.45rem;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            transition: all 0.2s;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+        .drop-slot.drag-over { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .drop-slot.filled { border-style: solid; }
+        .slot-number { font-size: 0.75rem; color: var(--text-muted); min-width: 22px; font-weight: 700; }
+
+        /* ---- SCENARIO GAME ---- */
+        .scenario-progress { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
+        .scenario-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.2s; }
+        .scenario-dot.active { background: var(--primary); }
+        .scenario-dot.done { background: var(--success); }
+        .scenario-card { background: var(--bg-card2); border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+        .scenario-context { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); font-weight: 600; margin-bottom: 0.5rem; }
+        .scenario-text { font-size: 0.95rem; line-height: 1.7; margin-bottom: 1.1rem; color: var(--text); }
+        .scenario-choices { display: flex; flex-direction: column; gap: 0.55rem; }
+        .choice-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            text-align: left;
+            color: var(--text);
+            font-size: 0.88rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.7rem;
+            width: 100%;
+        }
+        .choice-btn:hover:not(:disabled) { border-color: var(--primary); background: rgba(99,102,241,0.08); }
+        .choice-btn:disabled { cursor: default; }
+        .choice-btn.selected-good { border-color: var(--success); background: rgba(16,185,129,0.08); }
+        .choice-btn.selected-bad { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+        .choice-btn.selected-neutral { border-color: var(--warning); background: rgba(245,158,11,0.08); }
+        .choice-letter {
+            width: 24px; height: 24px; border-radius: 50%; background: var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+        }
+        .consequence {
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            display: none;
+            color: var(--text);
+        }
+        .consequence.show { display: block; }
+        .consequence.good { background: rgba(16,185,129,0.1); border-left: 3px solid var(--success); }
+        .consequence.bad { background: rgba(239,68,68,0.1); border-left: 3px solid var(--danger); }
+        .consequence.neutral { background: rgba(245,158,11,0.1); border-left: 3px solid var(--warning); }
+
+        /* ---- HALLUCINATION GAME ---- */
+        .ai-response-box {
+            background: rgba(99,102,241,0.05);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 10px;
+            padding: 1.2rem;
+            margin: 0.75rem 0;
+            font-size: 0.93rem;
+            line-height: 1.9;
+        }
+        .ai-avatar { font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-bottom: 0.6rem; }
+        .sentence-span { cursor: pointer; border-radius: 3px; transition: background 0.15s; padding: 1px 2px; }
+        .sentence-span:hover { background: rgba(245,158,11,0.18); }
+        .sentence-span.marked { background: rgba(239,68,68,0.22); text-decoration: underline; text-decoration-color: var(--danger); }
+        .sentence-span.correct-mark { background: rgba(239,68,68,0.32); outline: 2px solid var(--danger); border-radius: 3px; }
+        .sentence-span.missed-mark { background: rgba(245,158,11,0.32); outline: 2px solid var(--warning); border-radius: 3px; }
+        .sentence-span.false-positive { background: rgba(16,185,129,0.2); }
+        .h-instructions {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(245,158,11,0.08);
+            border: 1px solid rgba(245,158,11,0.2);
+            border-radius: 8px;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.85rem;
+            color: #fde68a;
+        }
+        .h-score-row { display: flex; gap: 1rem; margin-top: 0.6rem; font-size: 0.82rem; color: var(--text-muted); }
+
+        /* ---- PROMPT BUILDER ---- */
+        .pb-scenario {
+            background: var(--bg-card2);
+            border-radius: 10px;
+            padding: 1.1rem;
+            margin-bottom: 1.1rem;
+        }
+        .prompt-components {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+            gap: 0.7rem;
+            margin-bottom: 1rem;
+        }
+        .prompt-component {
+            background: var(--bg-card2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .prompt-component:hover { border-color: var(--primary); }
+        .prompt-component.selected { border-color: var(--primary); background: rgba(99,102,241,0.1); }
+        .component-name { font-size: 0.83rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .component-desc { font-size: 0.75rem; color: var(--text-muted); }
+        .prompt-preview {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: #93c5fd;
+            min-height: 75px;
+            white-space: pre-wrap;
+            margin-bottom: 0.9rem;
+            line-height: 1.6;
+        }
+        .quality-meter { margin-bottom: 1rem; }
+        .quality-label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.35rem; color: var(--text-muted); }
+        .quality-bar { height: 9px; background: var(--border); border-radius: 99px; overflow: hidden; }
+        .quality-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease, background 0.5s ease; }
+        .response-preview {
+            background: rgba(99,102,241,0.05);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 10px;
+            padding: 1.1rem;
+            font-size: 0.88rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            display: none;
+            margin-top: 1rem;
+        }
+        .response-preview.show { display: block; }
+
+        /* ---- BIAS CARDS ---- */
+        .bias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .bias-card {
+            background: var(--bg-card2);
+            border-radius: 10px;
+            padding: 1rem;
+            border-left: 3px solid;
+        }
+        .bias-card p { font-size: 0.83rem; margin-top: 0.35rem; }
+
+        /* ---- TIMELINE HISTORY ---- */
+        .timeline-line { position: relative; padding-left: 1.5rem; }
+        .timeline-line::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px; background: linear-gradient(180deg, var(--primary), var(--secondary)); }
+        .tl-item { position: relative; padding-left: 1.2rem; margin-bottom: 1.4rem; }
+        .tl-item::before { content: ''; position: absolute; left: -1.6rem; top: 5px; width: 11px; height: 11px; border-radius: 50%; }
+        .tl-year { font-size: 0.75rem; font-weight: 700; }
+        .tl-item p { font-size: 0.87rem; margin-top: 0.15rem; }
+
+        /* ---- COMPLETION ---- */
+        #completion-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+        }
+        #completion-overlay.show { display: flex; }
+        .completion-modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+        }
+
+        @media (max-width: 680px) {
+            .timeline-columns { grid-template-columns: 1fr; }
+            .module-title { font-size: 1.5rem; }
+            .main { padding: 0 1rem 5rem; }
+            .nav-tabs { padding: 0 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div class="logo">🧠 Generative AI: Learning Module</div>
+        <div class="progress-bar-wrap">
+            <span id="progress-text">Module 1 of 4</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width:25%"></div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" onclick="showModule(1)" id="tab-1"><span class="tab-num">1</span> Foundations</button>
+    <button class="nav-tab" onclick="showModule(2)" id="tab-2"><span class="tab-num">2</span> Ethics &amp; Bias</button>
+    <button class="nav-tab" onclick="showModule(3)" id="tab-3"><span class="tab-num">3</span> Hallucinations</button>
+    <button class="nav-tab" onclick="showModule(4)" id="tab-4"><span class="tab-num">4</span> Effective Prompting</button>
+    <button class="nav-tab" onclick="showModule(5)" id="tab-5"><span class="tab-num">5</span> Synthesis &amp; Thinking</button>
+</div>
+
+<main class="main">
+
+<!-- ============================= MODULE 1 ============================= -->
+<div class="module active" id="module-1">
+    <div class="module-header">
+        <div class="module-badge chip-blue">Part 1 of 4</div>
+        <h1 class="module-title">Foundations of Generative AI</h1>
+        <p class="module-subtitle">What it is, how it works, and the history that brought us here</p>
+    </div>
+
+    <div class="card">
+        <h2>What Is Generative AI?</h2>
+        <p>Generative AI refers to a class of artificial intelligence systems capable of <strong>creating new content</strong> — text, images, audio, code, and video — by learning statistical patterns from vast amounts of training data. Unlike traditional AI systems designed to classify or predict, generative models produce outputs that are novel yet statistically coherent with what they have "learned."</p>
+        <div class="highlight">
+            <strong>Core Idea:</strong> A generative model doesn't "know" facts like a database does. It learns the probability distributions of its training data. When generating text, it predicts the most contextually appropriate next word — billions of times, at remarkable speed.
+        </div>
+        <p>The most prominent architecture powering today's systems is the <strong>Transformer</strong>, introduced in 2017. Transformers use a mechanism called <em>self-attention</em> that allows the model to weigh the relevance of every token in a sequence against every other — enabling far richer contextual understanding than prior architectures.</p>
+        <div class="info-grid">
+            <div class="info-item"><div class="info-icon">📝</div><div class="info-label">Text</div><div class="info-value">GPT-4, Claude, Gemini</div></div>
+            <div class="info-item"><div class="info-icon">🎨</div><div class="info-label">Image</div><div class="info-value">DALL-E, Midjourney, SD</div></div>
+            <div class="info-item"><div class="info-icon">🎵</div><div class="info-label">Audio &amp; Music</div><div class="info-value">Suno, ElevenLabs</div></div>
+            <div class="info-item"><div class="info-icon">💻</div><div class="info-label">Code</div><div class="info-value">GitHub Copilot, Codex</div></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>How Does It Work?</h2>
+        <p>Large language models (LLMs) are trained in two key stages:</p>
+        <div class="info-grid">
+            <div class="info-item" style="border-left:3px solid var(--primary);">
+                <div class="info-label">Stage 1 — Pre-training</div>
+                <strong>Learning from text</strong>
+                <p style="font-size:0.84rem;">The model reads hundreds of billions of tokens of text and learns to predict the next token. This builds broad world knowledge and language capabilities.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--secondary);">
+                <div class="info-label">Stage 2 — Fine-tuning / RLHF</div>
+                <strong>Alignment</strong>
+                <p style="font-size:0.84rem;">Human feedback guides the model to be helpful, harmless, and honest — aligning raw capabilities with user needs and safety requirements.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--accent);">
+                <div class="info-label">At Inference</div>
+                <strong>Generation</strong>
+                <p style="font-size:0.84rem;">Given a prompt, the model samples from probability distributions over its vocabulary to produce a response, one token at a time.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>A Brief History of AI</h2>
+        <p>Generative AI is the product of seven decades of research across mathematics, computer science, linguistics, and cognitive science.</p>
+        <div class="timeline-line">
+            <div class="tl-item" style="--c:#6366f1"><div class="tl-year" style="color:#818cf8">1950</div><strong>The Turing Test</strong><p>Alan Turing proposes the "Imitation Game" — asking whether a machine can exhibit intelligent behavior indistinguishable from a human. The foundational question of AI philosophy.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#818cf8">1956</div><strong>Dartmouth Conference — Birth of AI</strong><p>John McCarthy coins "Artificial Intelligence." Researchers set the ambitious goal of simulating human intelligence in machines, launching the field.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#7c3aed">1966</div><strong>ELIZA Chatbot</strong><p>MIT's Joseph Weizenbaum creates ELIZA, the first conversational chatbot. Users anthropomorphize it — a phenomenon that foreshadows modern challenges with AI perception.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#0891b2">1986</div><strong>Backpropagation Revived</strong><p>Rumelhart, Hinton, and Williams popularize backpropagation, enabling training of deep neural networks. A "second wave" of neural network research begins after years of stagnation.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#0891b2">2012</div><strong>AlexNet &amp; the Deep Learning Revolution</strong><p>AlexNet wins the ImageNet competition by a staggering margin, triggering a deep learning revolution. GPUs become central to AI research and the field accelerates dramatically.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#06b6d4">2014</div><strong>Generative Adversarial Networks (GANs)</strong><p>Ian Goodfellow introduces GANs — two neural networks compete to generate and detect synthetic content, enabling photorealistic image synthesis for the first time.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#f59e0b">2017</div><strong>"Attention Is All You Need"</strong><p>Google Brain introduces the Transformer architecture. Its self-attention mechanism is still the foundation of virtually every large language model in use today.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#f59e0b">2020</div><strong>GPT-3</strong><p>OpenAI's 175-billion-parameter model demonstrates shocking emergent capabilities — few-shot learning, reasoning, and code generation — without task-specific training.</p></div>
+            <div class="tl-item"><div class="tl-year" style="color:#10b981">2022–2025</div><strong>The Modern Era</strong><p>ChatGPT reaches 1 million users in 5 days. Claude, GPT-4, Gemini, Midjourney, and a wave of multimodal AI systems bring generative AI to hundreds of millions of users worldwide.</p></div>
+        </div>
+    </div>
+
+    <!-- GAME 1: Timeline Sort -->
+    <div class="game-box" id="timeline-game">
+        <div class="game-title">🎮 Game: Sort the Timeline</div>
+        <div class="game-subtitle">Drag the AI milestones from the pool on the right into chronological order on the left — earliest to latest. Can you get them all correct?</div>
+        <div class="timeline-columns">
+            <div>
+                <div class="col-label">📅 Your Timeline — drop here (earliest first)</div>
+                <div id="drop-zone"></div>
+            </div>
+            <div>
+                <div class="col-label">🃏 Event Pool — drag from here</div>
+                <div id="event-pool"></div>
+            </div>
+        </div>
+        <div class="game-controls">
+            <button class="btn btn-primary" onclick="checkTimeline()">✓ Check My Order</button>
+            <button class="btn btn-secondary" onclick="resetTimeline()">↺ Reset</button>
+            <span class="score-badge" id="timeline-score" style="display:none;"></span>
+        </div>
+        <div class="game-feedback" id="timeline-feedback"></div>
+    </div>
+
+    <div class="section-nav">
+        <div></div>
+        <button class="btn btn-primary" onclick="showModule(2)">Next: Ethics &amp; Bias →</button>
+    </div>
+</div>
+
+<!-- ============================= MODULE 2 ============================= -->
+<div class="module" id="module-2">
+    <div class="module-header">
+        <div class="module-badge chip-amber">Part 2 of 4</div>
+        <h1 class="module-title">Ethics, Morality &amp; Bias</h1>
+        <p class="module-subtitle">The human dimensions of AI — who benefits, who's harmed, and who's responsible</p>
+    </div>
+
+    <div class="card">
+        <h2>Why Ethics in AI Matters</h2>
+        <p>Generative AI systems are not neutral tools. They are built by humans, trained on human-generated data, and deployed within human social structures. This means they inherit, amplify, and sometimes introduce biases, power imbalances, and ethical complications at scale.</p>
+        <div class="highlight">
+            <strong>Key distinction:</strong> Ethics concerns what <em>ought</em> to be done at a societal or structural level; morality concerns internalized principles of right and wrong at an individual level. In AI discourse, both must be examined simultaneously.
+        </div>
+        <p>Unlike a calculator or search engine, generative AI produces open-ended outputs that can influence beliefs, reinforce stereotypes, automate consequential decisions, and generate persuasive content at massive scale — with profound societal implications that are still unfolding.</p>
+    </div>
+
+    <div class="card">
+        <h2>Types of Bias in AI Systems</h2>
+        <p>Bias in AI doesn't arise from a single source — it emerges through the entire pipeline, from data collection to deployment and use.</p>
+        <div class="bias-grid">
+            <div class="bias-card" style="border-color:#ef4444;">
+                <div class="info-label" style="color:#f87171;">Historical Bias</div>
+                <strong>Encoded Discrimination</strong>
+                <p>When training data reflects historical inequalities — such as hiring records skewed by past discrimination — models learn and perpetuate those patterns as if they were natural.</p>
+            </div>
+            <div class="bias-card" style="border-color:#f59e0b;">
+                <div class="info-label" style="color:#fbbf24;">Representation Bias</div>
+                <strong>Who's in the Data?</strong>
+                <p>Underrepresented groups — by race, language, geography, or culture — receive systematically lower-quality model outputs if they are marginalized in training data.</p>
+            </div>
+            <div class="bias-card" style="border-color:#8b5cf6;">
+                <div class="info-label" style="color:#a78bfa;">Sycophancy Bias</div>
+                <strong>Agreeable AI</strong>
+                <p>RLHF (Reinforcement Learning from Human Feedback) can train models to tell users what they want to hear — a form of sycophancy that actively undermines truthfulness.</p>
+            </div>
+            <div class="bias-card" style="border-color:#06b6d4;">
+                <div class="info-label" style="color:#22d3ee;">Deployment Bias</div>
+                <strong>Context Mismatch</strong>
+                <p>A model trained on one population may be deployed on another, causing systematic errors — e.g., medical AI trained predominantly on male patients performing worse on female patients.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Key Ethical Issues</h2>
+        <h3>🔒 Privacy &amp; Consent</h3>
+        <p>Training data often includes personal information scraped from the web without explicit consent. AI-generated content can also be weaponized to surveil, profile, or manipulate individuals at unprecedented scale.</p>
+        <h3>⚖️ Accountability &amp; Liability</h3>
+        <p>When an AI system makes a harmful decision — denying a loan, misdiagnosing an illness, generating misinformation — who is responsible? The developer? The user? The deployer? Current legal frameworks are largely unprepared for these questions.</p>
+        <h3>🌍 Environmental Cost</h3>
+        <p>Training large models consumes extraordinary energy. GPT-3's training consumed an estimated 1,300 MWh of electricity, with associated carbon emissions. This must be weighed against claimed benefits as models scale further.</p>
+        <h3>💼 Labor &amp; Economic Displacement</h3>
+        <p>Generative AI threatens to automate creative and knowledge work previously considered safe from automation — raising urgent questions about economic equity, worker rights, and the future of skilled labor.</p>
+        <h3>🎭 Deepfakes &amp; Synthetic Media</h3>
+        <p>The ability to generate photorealistic images, video, and audio of real people creates new vectors for fraud, non-consensual intimate images, and large-scale political manipulation.</p>
+    </div>
+
+    <div class="card">
+        <h2>Moral Frameworks Applied to AI</h2>
+        <p>Different philosophical traditions offer distinct lenses for evaluating AI design and deployment decisions:</p>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">Consequentialism</div>
+                <strong>Outcomes Matter</strong>
+                <p style="font-size:0.84rem;">Judge AI systems by whether they maximize benefit and minimize harm across all affected parties — including those not directly involved in the transaction.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Deontology</div>
+                <strong>Rules Matter</strong>
+                <p style="font-size:0.84rem;">Some actions are inherently wrong regardless of outcomes. Collecting data without consent is wrong even if the resulting model benefits many people.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Virtue Ethics</div>
+                <strong>Character Matters</strong>
+                <p style="font-size:0.84rem;">Asks what a trustworthy AI developer, deployer, or user looks like — and focuses on cultivating responsible practices as professional habits and norms.</p>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Rawlsian Justice</div>
+                <strong>Distribution Matters</strong>
+                <p style="font-size:0.84rem;">Would you accept this AI system's design if you didn't know which social group you'd be in? Are benefits and harms distributed equitably across society?</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME 2: Ethical Decision Tree -->
+    <div class="game-box" id="scenario-game">
+        <div class="game-title">🎮 Game: Ethical Crossroads</div>
+        <div class="game-subtitle">You're a product manager at an AI company. Navigate five real-world ethical scenarios. Each choice has consequences — see how your decisions play out.</div>
+        <div class="scenario-progress" id="scenario-progress"></div>
+        <div id="scenario-content"></div>
+        <div class="game-controls" id="scenario-controls" style="display:none;">
+            <button class="btn btn-primary" onclick="nextScenario()">Next Scenario →</button>
+            <span class="score-badge" id="scenario-score"></span>
+        </div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(1)">← Back</button>
+        <button class="btn btn-primary" onclick="showModule(3)">Next: Hallucinations →</button>
+    </div>
+</div>
+
+<!-- ============================= MODULE 3 ============================= -->
+<div class="module" id="module-3">
+    <div class="module-header">
+        <div class="module-badge chip-red">Part 3 of 4</div>
+        <h1 class="module-title">Hallucinations &amp; Responsible Evaluation</h1>
+        <p class="module-subtitle">Why AI confidently states falsehoods — and how to catch them</p>
+    </div>
+
+    <div class="card">
+        <h2>What Is an AI Hallucination?</h2>
+        <p>An AI <strong>hallucination</strong> occurs when a generative model produces output that is factually incorrect, fabricated, or entirely unsupported — but presented with the same fluency and confidence as accurate information.</p>
+        <div class="highlight">
+            <strong>The term "hallucination"</strong> is borrowed from psychology, where it describes perception without external stimulus. In AI, it describes generation without grounding — the model produces confident-sounding text that was never in its training data, or that directly contradicts it.
+        </div>
+        <p>Crucially, hallucinations are <em>not bugs to be patched</em> — they are a structural feature of how probabilistic language models work. Models don't "look up" facts; they generate statistically plausible text. This means they can produce confident-sounding falsehoods whenever their training data is incomplete, ambiguous, or absent.</p>
+    </div>
+
+    <div class="card">
+        <h2>Why Do Hallucinations Happen?</h2>
+        <div class="info-grid">
+            <div class="info-item" style="border-left:3px solid var(--danger);">
+                <div class="info-label">Knowledge Cutoff</div>
+                <strong>Out-of-Date Information</strong>
+                <p style="font-size:0.84rem;">Models are trained on data up to a certain date. Questions about recent events may produce plausible-but-wrong answers based on interpolation.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid #f59e0b;">
+                <div class="info-label">Statistical Plausibility</div>
+                <strong>Pattern-Matching Gone Wrong</strong>
+                <p style="font-size:0.84rem;">The model predicts what "should" come next statistically — which can produce invented citations, wrong dates, or fake quotes that <em>sound</em> exactly right.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid #8b5cf6;">
+                <div class="info-label">Long-Tail Knowledge</div>
+                <strong>Rare or Obscure Topics</strong>
+                <p style="font-size:0.84rem;">For topics underrepresented in training data, models may interpolate or confabulate plausible-sounding details rather than express genuine uncertainty.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid #06b6d4;">
+                <div class="info-label">Conflicting Training Data</div>
+                <strong>Contradictory Sources</strong>
+                <p style="font-size:0.84rem;">When training data contains contradictions (common on the internet), models may learn multiple incompatible "facts" and produce inconsistent or blended outputs.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Common Hallucination Patterns</h2>
+        <h3>📚 Fabricated Citations</h3>
+        <p>Models frequently invent plausible-sounding academic papers, books, and authors that don't exist. The title, journal name, year, and author names may all sound entirely credible — but the paper was never published.</p>
+        <h3>📅 Date &amp; Number Errors</h3>
+        <p>Specific dates, statistics, and numerical facts are particularly prone to hallucination. A model might confidently cite the wrong year for a historical event or invent an authoritative-sounding statistic.</p>
+        <h3>👤 Biographical Confabulation</h3>
+        <p>Details about real people — especially those who aren't extremely famous — may be fabricated: wrong employers, wrong publications, wrong affiliations, wrong life events.</p>
+        <h3>⚖️ Legal &amp; Medical Errors</h3>
+        <p>In high-stakes domains, hallucinated legal statutes, case citations, drug interactions, or medical protocols have already caused documented real-world harm in legal and clinical settings.</p>
+        <h3>🔢 Mathematical Mistakes</h3>
+        <p>Despite recent improvements, LLMs can still fail at multi-step arithmetic, logic, and mathematical reasoning — while appearing entirely confident in their incorrect solutions.</p>
+    </div>
+
+    <div class="card">
+        <h2>Responsible Evaluation Strategies</h2>
+        <div class="highlight">
+            <strong>The Golden Rule:</strong> Treat AI-generated content as a first draft from a brilliant but sometimes unreliable researcher — always verify before using in consequential work.
+        </div>
+        <h3>🔍 Source Cross-Referencing</h3>
+        <p>Any specific claim, statistic, citation, or fact should be verified against independent, authoritative sources before being used in consequential work or shared publicly.</p>
+        <h3>🤔 Ask for Reasoning</h3>
+        <p>Asking the model to explain its reasoning or provide sources can surface uncertainty or logical gaps. While models can hallucinate sources too, the reasoning process often reveals unreliability.</p>
+        <h3>⚠️ Domain-Specific Skepticism</h3>
+        <p>Be especially skeptical in high-stakes domains: medicine, law, finance, and safety-critical engineering. Treat AI outputs as unverified hypotheses requiring expert review, not established facts.</p>
+        <h3>🔄 Redundant Verification</h3>
+        <p>Asking the same question in multiple ways and comparing answers can reveal inconsistencies that signal unreliability — if the model gives different facts across phrasings, both may be wrong.</p>
+        <h3>📊 Learn to Read Uncertainty Signals</h3>
+        <p>Hedged language ("may," "reportedly," "is believed to") is often more honest than confident assertions. Well-calibrated models signal their own uncertainty — learn to notice when they don't.</p>
+    </div>
+
+    <!-- GAME 3: Spot the Hallucination -->
+    <div class="game-box" id="hallucination-game">
+        <div class="game-title">🎮 Game: Spot the Hallucination</div>
+        <div class="game-subtitle">Read the AI-generated responses below. Click on any sentence or phrase you believe contains a hallucination — something fabricated, incorrect, or unsupported. Multiple may be present.</div>
+        <div id="h-game-content"></div>
+        <div class="game-controls" id="h-controls">
+            <button class="btn btn-primary" id="h-submit-btn" onclick="checkHallucinations()">✓ Submit My Answers</button>
+            <button class="btn btn-secondary" onclick="resetHallucinations()">↺ New Round</button>
+            <span class="score-badge" id="h-score" style="display:none;"></span>
+        </div>
+        <div class="game-feedback" id="h-feedback"></div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(2)">← Back</button>
+        <button class="btn btn-primary" onclick="showModule(4)">Next: Prompting →</button>
+    </div>
+</div>
+
+<!-- ============================= MODULE 4 ============================= -->
+<div class="module" id="module-4">
+    <div class="module-header">
+        <div class="module-badge chip-green">Part 4 of 4</div>
+        <h1 class="module-title">Effective Prompting</h1>
+        <p class="module-subtitle">The art and science of communicating with generative AI</p>
+    </div>
+
+    <div class="card">
+        <h2>Why Prompting Matters</h2>
+        <p>A large language model's output quality is highly sensitive to how it is prompted. The same underlying model can produce a vague, unhelpful response or a precise, well-reasoned one depending entirely on how the question is framed. <strong>Prompt engineering</strong> is the discipline of crafting inputs that reliably produce high-quality, targeted outputs.</p>
+        <div class="highlight">
+            <strong>Mental Model:</strong> Think of an LLM as an extraordinarily knowledgeable collaborator who needs context to help effectively. The more clearly you define the task, role, constraints, and desired format, the more useful the output.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>The CRAFT Framework</h2>
+        <p>Effective prompts consistently address these five dimensions:</p>
+        <div class="info-grid">
+            <div class="info-item" style="border-left:3px solid var(--primary);">
+                <div class="info-label">C — Context</div>
+                <strong>Set the scene</strong>
+                <p style="font-size:0.84rem;">Provide relevant background. "I'm a second-year medical student studying pharmacology for an exam on drug interactions..."</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid #7c3aed;">
+                <div class="info-label">R — Role</div>
+                <strong>Assign a persona</strong>
+                <p style="font-size:0.84rem;">"Act as an experienced debate coach reviewing argument structure for a competitive debate student..."</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--secondary);">
+                <div class="info-label">A — Action</div>
+                <strong>State the task clearly</strong>
+                <p style="font-size:0.84rem;">Use specific, unambiguous verbs. "Summarize," "Compare," "Generate," "Identify the three strongest counterarguments to..."</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--accent);">
+                <div class="info-label">F — Format</div>
+                <strong>Specify the output shape</strong>
+                <p style="font-size:0.84rem;">"Respond in bullet points," "Write as a three-paragraph essay," "Use a comparison table with columns for..."</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--success);">
+                <div class="info-label">T — Tone &amp; Constraints</div>
+                <strong>Set guardrails</strong>
+                <p style="font-size:0.84rem;">"Avoid jargon," "Keep under 200 words," "Do not include speculation," "Cite specific examples from the 20th century only."</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Advanced Prompting Techniques</h2>
+        <h3>🔗 Chain-of-Thought (CoT)</h3>
+        <p>Adding "Let's think step by step" or asking the model to show its reasoning dramatically improves accuracy on complex logical, mathematical, and analytical tasks — forcing explicit intermediate reasoning steps that catch errors.</p>
+        <h3>📋 Few-Shot Examples</h3>
+        <p>Providing 2–5 examples of your desired input-output format teaches the model your intended style, tone, and level of detail far more effectively than describing it in words alone.</p>
+        <h3>🎯 Iterative Refinement</h3>
+        <p>Prompting is rarely a one-shot process. Treat initial outputs as drafts: identify what's missing or off-target, then follow up with increasingly specific instructions or corrections.</p>
+        <h3>🔄 Self-Critique Prompting</h3>
+        <p>Ask the model to review its own output: "What are the weaknesses in this argument?" or "What important perspectives did you miss?" This can surface blind spots and significantly improve quality.</p>
+        <h3>🛡️ Negative Constraints</h3>
+        <p>Explicitly stating what <em>not</em> to do is often as important as stating what to do: "Do not include speculation," "Do not use bullet points," "Do not assume the reader has any prior technical knowledge."</p>
+    </div>
+
+    <div class="card">
+        <h2>Evaluating Outputs Responsibly</h2>
+        <p>Crafting effective prompts is only half the equation. The other half is critically evaluating what comes back with the same rigor you'd apply to any other information source.</p>
+        <div class="info-grid">
+            <div class="info-item"><div class="info-icon">🎯</div><div class="info-label">Accuracy</div><p style="font-size:0.84rem;">Are the facts verifiable? Are claims supported by evidence you can independently confirm through authoritative sources?</p></div>
+            <div class="info-item"><div class="info-icon">⚖️</div><div class="info-label">Balance</div><p style="font-size:0.84rem;">Does the response acknowledge complexity and competing perspectives? Are counterarguments or limitations meaningfully addressed?</p></div>
+            <div class="info-item"><div class="info-icon">🔍</div><div class="info-label">Completeness</div><p style="font-size:0.84rem;">What's missing? AI may confidently answer a narrow version of your question while omitting crucial context or alternative framings.</p></div>
+            <div class="info-item"><div class="info-icon">🎭</div><div class="info-label">Bias Audit</div><p style="font-size:0.84rem;">Does the framing reflect unstated assumptions about who the "typical" user, case, or scenario is? Whose perspective is centered?</p></div>
+        </div>
+    </div>
+
+    <!-- GAME 4: Prompt Builder -->
+    <div class="game-box" id="prompt-builder-game">
+        <div class="game-title">🎮 Game: Prompt Builder Challenge</div>
+        <div class="game-subtitle">Build the most effective prompt for each scenario by selecting components. Watch your Quality Score rise as your prompt becomes more precise — then compare example outputs at each quality level.</div>
+        <div id="pb-game-content"></div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(3)">← Back</button>
+        <button class="btn btn-primary" onclick="showModule(5)">Next: Synthesis &amp; Thinking →</button>
+    </div>
+</div>
+
+<!-- ============================= MODULE 5 ============================= -->
+<div class="module" id="module-5">
+    <div class="module-header">
+        <div class="module-badge chip-purple">Part 5 of 5</div>
+        <h1 class="module-title">Synthesis &amp; Critical Thinking</h1>
+        <p class="module-subtitle">Integrating AI into your reasoning — without surrendering it</p>
+    </div>
+
+    <div class="card">
+        <h2>AI as a Thinking Partner, Not an Oracle</h2>
+        <p>Perhaps the most important conceptual shift when working with generative AI is understanding what it is and isn't. An oracle delivers truth; a thinking partner generates possibilities for you to evaluate. AI is the latter — and the distinction matters enormously for how you use its outputs.</p>
+        <div class="highlight">
+            <strong>The fundamental risk:</strong> Cognitive offloading — outsourcing thinking to AI — can feel like efficiency. But when you stop interrogating outputs, you stop thinking. The goal is to use AI to think <em>more rigorously</em>, not less.
+        </div>
+        <p>Strong thinkers in any field use AI to expand the space of ideas they're working with — generating alternatives they hadn't considered, stress-testing their own reasoning, accelerating research — while retaining final judgment and intellectual ownership of their conclusions.</p>
+    </div>
+
+    <div class="card">
+        <h2>The Synthesis Mindset</h2>
+        <p>Synthesis is the ability to take multiple inputs — AI-generated, human-authored, empirical, theoretical — and construct a coherent, justified position that is more than any individual source. It is one of the highest-order intellectual skills, and one that AI cannot do for you.</p>
+
+        <h3>🔀 Triangulation</h3>
+        <p>Rather than accepting a single AI output, generate multiple responses to the same question with different framings — and look for convergence and divergence. Where outputs agree, confidence increases. Where they diverge, that disagreement signals complexity worth investigating.</p>
+
+        <h3>🧩 Gap Analysis</h3>
+        <p>After receiving an AI response, ask: <em>What isn't here?</em> AI outputs are shaped by what was in training data and what the prompt emphasized. Perspectives that are rare in training data, recent events, and contextually specific nuances are often missing entirely.</p>
+
+        <h3>🔬 Claim Disaggregation</h3>
+        <p>Complex AI responses bundle many claims together in fluent prose. Synthesis requires breaking that prose apart: identifying each distinct claim, asking what type of claim it is (empirical? normative? definitional?), and evaluating each independently before accepting the package.</p>
+
+        <h3>🪞 Perspective Inversion</h3>
+        <p>Deliberately prompt for the strongest version of the opposing view. This is not about false balance — it's about ensuring your synthesis has genuinely engaged with the best counterarguments rather than only the ones that confirm your starting position.</p>
+    </div>
+
+    <div class="card">
+        <h2>A Taxonomy of Claims</h2>
+        <p>Critical thinking begins with recognizing <em>what kind of claim</em> you're evaluating. AI outputs routinely mix these types without signaling the transitions — learning to distinguish them is foundational.</p>
+        <div class="info-grid">
+            <div class="info-item" style="border-left:3px solid var(--success);">
+                <div class="info-label">Empirical Claims</div>
+                <strong>"X is the case"</strong>
+                <p style="font-size:0.84rem;">Statements about observable reality. Can in principle be verified or falsified. Evaluate by asking: what evidence supports this? Is it reproducible? What's the source?</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--secondary);">
+                <div class="info-label">Normative Claims</div>
+                <strong>"X ought to be the case"</strong>
+                <p style="font-size:0.84rem;">Value judgments about what is good, right, or desirable. Cannot be verified empirically — require philosophical argument. Flag when AI presents these as if they were facts.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid var(--accent);">
+                <div class="info-label">Definitional Claims</div>
+                <strong>"X means Y"</strong>
+                <p style="font-size:0.84rem;">Assertions about how terms should be understood. Often contested. AI defaults to common usage, which may not match technical, legal, or cultural-specific meanings in your context.</p>
+            </div>
+            <div class="info-item" style="border-left:3px solid #8b5cf6;">
+                <div class="info-label">Causal Claims</div>
+                <strong>"X causes Y"</strong>
+                <p style="font-size:0.84rem;">Among the most mishandled claim types. Correlation ≠ causation. Ask: Is this based on experimental evidence? What confounders might explain this? Is AI conflating correlation with cause?</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Logical Structures &amp; Common Fallacies in AI Output</h2>
+        <p>AI doesn't reason — it generates text that <em>resembles</em> reasoning. This means it can produce arguments with the surface grammar of logic while containing fundamental flaws. Recognizing these patterns is a transferable skill across every field.</p>
+
+        <h3>🔁 Circular Reasoning</h3>
+        <p>The conclusion is embedded in the premise. <em>"AI is trustworthy because it consistently produces reliable outputs."</em> The reliability is assumed, not demonstrated. Watch for AI explanations that restate the claim with different vocabulary.</p>
+
+        <h3>🚧 False Dichotomy</h3>
+        <p>Presenting two options as if they are the only possibilities. <em>"Either we embrace AI fully or we fall behind."</em> Reality almost always contains more than two options. AI, trained to produce fluent summaries, is especially prone to collapsing complexity into binary framings.</p>
+
+        <h3>📉 Slippery Slope</h3>
+        <p>Claiming that one step inevitably leads to an extreme outcome without demonstrating the causal chain. Common in AI-generated arguments about technology policy, where mechanisms are vague but outcomes are presented as inevitable.</p>
+
+        <h3>🏛️ Appeal to Authority</h3>
+        <p>Citing an authority as evidence rather than providing the actual argument or data. AI frequently uses phrases like "experts agree" or "research shows" without specifying which experts or research — creating the appearance of support without substance.</p>
+
+        <h3>🌊 Overgeneralization</h3>
+        <p>Drawing broad conclusions from limited evidence. <em>"Students who use AI get worse grades"</em> stated without specifying which students, which AI tools, which courses, or which grading systems. AI's tendency toward fluent generalization makes this pattern pervasive.</p>
+    </div>
+
+    <div class="card">
+        <h2>The Cognitive Offloading Risk</h2>
+        <p>Cognitive offloading — using external tools to reduce mental effort — is natural and often beneficial. Writing things down, using calculators, searching for information: all of these extend human cognitive capacity. AI is the most powerful offloading tool ever created.</p>
+        <div class="highlight">
+            <strong>The threshold that matters:</strong> Offloading retrieval and formatting is generally fine. Offloading judgment — the evaluation of whether something is true, good, or appropriate — is where real intellectual risk begins.
+        </div>
+        <p>Research in cognitive science suggests that when we consistently use tools for tasks that would otherwise require cognitive effort, our capacity for those tasks can atrophy. This is called <strong>skill erosion</strong>. In the context of AI, the concern is that students who use AI to generate arguments, evaluate evidence, and draw conclusions may develop weaker judgment over time — precisely because they never practice these skills under genuine intellectual difficulty.</p>
+        <p>The antidote is not avoiding AI — it's using it at the right stage. Use AI to expand the space of ideas before you reason; use your own judgment to evaluate, select, and synthesize.</p>
+    </div>
+
+    <!-- GAME 5: Claim Sorter -->
+    <div class="game-box" id="claim-sorter-game">
+        <div class="game-title">🎮 Game: Claim Sorter</div>
+        <div class="game-subtitle">Below are AI-generated claims on a topic. Drag each claim into the bin that best describes its logical status. There's no Q&amp;A — this is pure critical evaluation.</div>
+
+        <div class="cs-topic-tabs" id="cs-tabs"></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom:1.1rem;">
+            <div>
+                <div class="col-label" style="margin-bottom:0.6rem;">🃏 Claims to Sort — drag to a bin</div>
+                <div class="cs-claims-pool" id="cs-pool"></div>
+            </div>
+            <div>
+                <div class="col-label" style="margin-bottom:0.6rem;">📦 Sorting Bins — drop claims here</div>
+                <div class="cs-bins" style="grid-template-columns:1fr 1fr;">
+                    <div class="cs-bin bin-solid" id="bin-solid" ondragover="csDragOver(event,'solid')" ondragleave="csDragLeave('solid')" ondrop="csDrop(event,'solid')">
+                        <div class="cs-bin-label">✅ Solid / Well-Supported</div>
+                        <div class="cs-bin-items" id="bin-items-solid"></div>
+                    </div>
+                    <div class="cs-bin bin-verify" id="bin-verify" ondragover="csDragOver(event,'verify')" ondragleave="csDragLeave('verify')" ondrop="csDrop(event,'verify')">
+                        <div class="cs-bin-label">🔍 Needs Verification</div>
+                        <div class="cs-bin-items" id="bin-items-verify"></div>
+                    </div>
+                    <div class="cs-bin bin-opinion" id="bin-opinion" ondragover="csDragOver(event,'opinion')" ondragleave="csDragLeave('opinion')" ondrop="csDrop(event,'opinion')">
+                        <div class="cs-bin-label">✏️ Opinion as Fact</div>
+                        <div class="cs-bin-items" id="bin-items-opinion"></div>
+                    </div>
+                    <div class="cs-bin bin-flaw" id="bin-flaw" ondragover="csDragOver(event,'flaw')" ondragleave="csDragLeave('flaw')" ondrop="csDrop(event,'flaw')">
+                        <div class="cs-bin-label">⚠️ Logical Flaw</div>
+                        <div class="cs-bin-items" id="bin-items-flaw"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-controls">
+            <button class="btn btn-primary" onclick="csCheck()">✓ Check My Sorting</button>
+            <button class="btn btn-secondary" onclick="csReset()">↺ New Topic</button>
+            <span class="score-badge" id="cs-score" style="display:none;"></span>
+        </div>
+        <div class="game-feedback" id="cs-feedback"></div>
+        <div id="cs-results" style="margin-top:1rem; display:none;"></div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(4)">← Back</button>
+        <button class="btn btn-success" onclick="showCompletion()">🎓 Complete the Module</button>
+    </div>
+</div>
+
+</main>
+
+<!-- Completion Modal -->
+<div id="completion-overlay">
+    <div class="completion-modal">
+        <div style="font-size:3.5rem; margin-bottom:0.75rem;">🎓</div>
+        <h2 style="font-size:1.6rem; margin-bottom:0.6rem;">Module Complete!</h2>
+        <p style="color:var(--text-muted); margin-bottom:1.75rem;">You've completed all five parts of the Generative AI Learning Module — foundations, ethics, hallucinations, prompting, and synthesis &amp; critical thinking.</p>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; margin-bottom:1.75rem;">
+            <div style="background:var(--bg-card2); border-radius:10px; padding:1rem;">
+                <div style="font-size:1.4rem; font-weight:800; color:var(--primary);" id="final-score">--</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Avg Game Score</div>
+            </div>
+            <div style="background:var(--bg-card2); border-radius:10px; padding:1rem;">
+                <div style="font-size:1.4rem; font-weight:800; color:var(--success);">5 / 5</div>
+                <div style="font-size:0.78rem; color:var(--text-muted);">Modules Completed</div>
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="restartModule()" style="width:100%;">↺ Start Over</button>
+    </div>
+</div>
+
+<script>
+// ========================
+// GLOBAL STATE
+// ========================
+const state = {
+    currentModule: 1,
+    scores: { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0 }
+};
+
+// ========================
+// NAVIGATION
+// ========================
+function showModule(n) {
+    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('module-' + n).classList.add('active');
+    document.getElementById('tab-' + n).classList.add('active');
+    state.currentModule = n;
+    document.getElementById('progress-fill').style.width = (n / 5 * 100) + '%';
+    document.getElementById('progress-text').textContent = 'Module ' + n + ' of 5';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (n === 1 && !window.tlInit) initTimeline();
+    if (n === 2 && !window.scInit) initScenarios();
+    if (n === 3 && !window.hlInit) initHallucination();
+    if (n === 4 && !window.pbInit) initPromptBuilder();
+    if (n === 5 && !window.csInit) initClaimSorter();
+}
+
+function showCompletion() {
+    const scores = Object.values(state.scores);
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    document.getElementById('final-score').textContent = avg + '%';
+    document.getElementById('completion-overlay').classList.add('show');
+}
+function restartModule() {
+    document.getElementById('completion-overlay').classList.remove('show');
+    state.scores = { timeline: 0, scenario: 0, hallucination: 0, prompt: 0, claimsort: 0 };
+    window.tlInit = false; window.scInit = false; window.hlInit = false; window.pbInit = false; window.csInit = false;
+    showModule(1);
+    initTimeline();
+}
+
+// ========================
+// MODULE 1: TIMELINE GAME
+// ========================
+const timelineEvents = [
+    { year: 1950, text: "Turing Test proposed — 'Can machines think?'" },
+    { year: 1956, text: "Dartmouth Conference — AI as a field is born" },
+    { year: 1966, text: "ELIZA chatbot created at MIT" },
+    { year: 1986, text: "Backpropagation algorithm popularized" },
+    { year: 2012, text: "AlexNet — the deep learning revolution" },
+    { year: 2014, text: "Generative Adversarial Networks (GANs) introduced" },
+    { year: 2017, text: "Transformer: 'Attention Is All You Need'" },
+    { year: 2020, text: "GPT-3 demonstrates few-shot learning" },
+    { year: 2022, text: "ChatGPT: 1 million users in 5 days" }
+];
+
+let draggedEv = null;
+let droppedEvs = {};
+window.tlInit = false;
+
+function initTimeline() {
+    window.tlInit = true;
+    droppedEvs = {};
+    const dz = document.getElementById('drop-zone');
+    const pool = document.getElementById('event-pool');
+    dz.innerHTML = '';
+    pool.innerHTML = '';
+
+    timelineEvents.forEach((_, i) => {
+        const slot = document.createElement('div');
+        slot.className = 'drop-slot';
+        slot.dataset.index = i;
+        slot.innerHTML = `<span class="slot-number">${i + 1}</span><span style="color:var(--text-muted); font-size:0.82rem;">Drop event here...</span>`;
+        slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+        slot.addEventListener('drop', e => { e.preventDefault(); handleDrop(parseInt(slot.dataset.index)); slot.classList.remove('drag-over'); });
+        dz.appendChild(slot);
+    });
+
+    const shuffled = [...timelineEvents].sort(() => Math.random() - 0.5);
+    shuffled.forEach(ev => pool.appendChild(makeCard(ev)));
+    document.getElementById('timeline-feedback').className = 'game-feedback';
+    document.getElementById('timeline-score').style.display = 'none';
+}
+
+function makeCard(ev) {
+    const c = document.createElement('div');
+    c.className = 'event-card';
+    c.draggable = true;
+    c.dataset.year = ev.year;
+    c.innerHTML = `<span class="event-year">${ev.year}</span><span>${ev.text}</span>`;
+    c.addEventListener('dragstart', () => { draggedEv = { year: ev.year, text: ev.text, el: c }; c.classList.add('dragging'); });
+    c.addEventListener('dragend', () => { c.classList.remove('dragging'); draggedEv = null; });
+    return c;
+}
+
+function handleDrop(si) {
+    if (!draggedEv) return;
+    const slots = document.querySelectorAll('.drop-slot');
+    const slot = slots[si];
+    if (droppedEvs[si]) {
+        const old = droppedEvs[si];
+        document.getElementById('event-pool').appendChild(makeCard(old));
+    }
+    droppedEvs[si] = { year: draggedEv.year, text: draggedEv.text };
+    slot.classList.add('filled');
+    slot.innerHTML = `<span class="slot-number">${si + 1}</span><span class="event-year">${draggedEv.year}</span><span style="font-size:0.84rem;">${draggedEv.text}</span>`;
+    draggedEv.el.remove();
+    draggedEv = null;
+    document.getElementById('timeline-feedback').className = 'game-feedback';
+    document.getElementById('timeline-score').style.display = 'none';
+}
+
+function checkTimeline() {
+    const filled = Object.keys(droppedEvs).length;
+    const fb = document.getElementById('timeline-feedback');
+    if (filled < timelineEvents.length) {
+        fb.className = 'game-feedback show partial';
+        fb.textContent = `⚠️ Please place all ${timelineEvents.length} events before checking!`;
+        return;
+    }
+    const correct_order = [...timelineEvents].sort((a, b) => a.year - b.year);
+    let correct = 0;
+    document.querySelectorAll('.drop-slot').forEach((slot, i) => {
+        const placed = droppedEvs[i];
+        if (placed && placed.year === correct_order[i].year) {
+            correct++;
+            slot.style.borderColor = 'var(--success)';
+            slot.style.background = 'rgba(16,185,129,0.08)';
+        } else {
+            slot.style.borderColor = 'var(--danger)';
+            slot.style.background = 'rgba(239,68,68,0.08)';
+        }
+    });
+    const pct = Math.round(correct / timelineEvents.length * 100);
+    state.scores.timeline = pct;
+    const sc = document.getElementById('timeline-score');
+    sc.textContent = `${correct}/${timelineEvents.length} correct`;
+    sc.style.display = 'inline-flex';
+    if (correct === timelineEvents.length) {
+        fb.className = 'game-feedback show success';
+        fb.textContent = '🎉 Perfect! You correctly ordered all milestones. The history of AI is long and iterative — each breakthrough built on decades of prior work.';
+    } else if (pct >= 60) {
+        fb.className = 'game-feedback show partial';
+        fb.textContent = `⚡ Good effort! ${correct}/${timelineEvents.length} correct. Slots highlighted in red are out of order — try resetting to improve.`;
+    } else {
+        fb.className = 'game-feedback show error';
+        fb.textContent = `📚 ${correct}/${timelineEvents.length} correct. Review the history section above, then give it another go!`;
+    }
+}
+
+function resetTimeline() {
+    window.tlInit = false;
+    initTimeline();
+}
+
+// ========================
+// MODULE 2: SCENARIO GAME
+// ========================
+const scenarios = [
+    {
+        context: "Scenario 1 of 5 — Training Data & Consent",
+        situation: "Your team has access to a massive dataset scraped from the public internet — social media posts, forum discussions, personal blogs. Using it would make your model significantly better. However, it includes personally identifiable information collected without users' knowledge. Legal review says it's technically permissible in your jurisdiction. What do you do?",
+        choices: [
+            { label: "Use the full dataset — it's legal and the benefits outweigh concerns.", type: "bad", consequence: "⚠️ Technically legal but ethically problematic. You've violated the contextual integrity of users' data — they shared it in one context (social media) but it's now used in another (AI training) without consent. This approach has contributed directly to growing public distrust of AI companies." },
+            { label: "Use it, but anonymize all personally identifiable information first.", type: "neutral", consequence: "🔶 Better — but re-identification attacks can often reverse anonymization, especially when data points are combined. This is a partial solution, not a complete one. You should document what you've done and be transparent about it in your model documentation." },
+            { label: "Decline it and invest in building a consent-based data collection pipeline.", type: "good", consequence: "✅ The ethically sound approach. It's slower and costlier, but builds genuine trust, produces higher-quality labeled data, and establishes a principled precedent. Several leading AI organizations have adopted this model and it's increasingly the regulatory expectation." }
+        ]
+    },
+    {
+        context: "Scenario 2 of 5 — Bias Discovery",
+        situation: "Your AI hiring assistant has been live at 50 enterprise clients for three months. An external researcher contacts you privately with evidence that the model significantly underranks candidates with non-English names — even when qualifications are identical. Fixing it requires taking the product offline for 2–3 weeks. Your quarterly targets depend on this product. What do you do?",
+        choices: [
+            { label: "Ask the researcher to delay publication until you've fixed it quietly.", type: "bad", consequence: "⚠️ This suppresses evidence of ongoing harm. 50 clients are currently making discriminatory hiring decisions. Every day of delay means more qualified candidates are unfairly rejected. Suppressing findings also raises serious ethical and potentially legal concerns about complicity." },
+            { label: "Immediately notify clients, take the product offline, and coordinate with the researcher on transparent disclosure.", type: "good", consequence: "✅ The transparent, responsible path. It costs revenue short-term but demonstrates genuine ethical commitment. Proactive disclosure is far better for long-term trust than being exposed. It also protects affected candidates and likely reduces legal liability." },
+            { label: "Add a disclaimer to the product noting it 'may have limitations' while continuing to operate.", type: "bad", consequence: "⚠️ A vague disclaimer doesn't adequately warn clients about documented, specific discrimination. This fails both affected candidates and your clients, and exposes your company to significant liability. 'We disclosed it might have limitations' is not an adequate defense." }
+        ]
+    },
+    {
+        context: "Scenario 3 of 5 — Misinformation Risk",
+        situation: "You're launching a consumer chatbot. During testing, you discover that when asked leading questions, the model sometimes confirms health misinformation — agreeing that debunked claims are true. Fixing the sycophancy issue requires significant RLHF investment. Marketing wants to launch in three weeks. What do you do?",
+        choices: [
+            { label: "Launch on schedule with a disclaimer that 'AI can make mistakes.'", type: "bad", consequence: "⚠️ Health misinformation confirmed by AI can cause real harm. Generic disclaimers do not effectively prevent this. Users systematically over-trust AI-generated confirmation of their beliefs — a documented phenomenon. Shipping a known safety issue to meet a marketing deadline is a failure of responsibility." },
+            { label: "Delay the launch to fix the sycophancy issue — health misinformation is too serious a risk.", type: "good", consequence: "✅ The right call. Strong AI products are built on trust, and trust is destroyed quickly by high-profile failures. The cost of delay is far lower than the cost of a serious incident. This decision also protects the company's long-term reputation." },
+            { label: "Launch in a limited beta with explicit research consent and close monitoring.", type: "neutral", consequence: "🔶 A reasonable middle path if participants are genuinely informed about the known risk and research context. This requires a clear feedback mechanism and a hard timeline for the fix. It delays harm without eliminating it — acceptable only with rigorous oversight." }
+        ]
+    },
+    {
+        context: "Scenario 4 of 5 — Undisclosed AI Content",
+        situation: "A media company wants to use your text generation API to produce thousands of news-adjacent articles cheaply. The content won't be factually incorrect, but it won't be disclosed as AI-generated — readers will assume human journalists wrote it. The client is willing to pay well. Do you provide the service?",
+        choices: [
+            { label: "Provide the API — what clients do with it is their responsibility.", type: "bad", consequence: "⚠️ 'The platform isn't responsible' arguments have repeatedly failed both legally and ethically. Knowingly enabling mass-produced undisclosed AI content undermines journalism, public trust, and information ecosystems. You are a proximate cause of harm, not a neutral tool provider." },
+            { label: "Provide the API only if they agree to clearly disclose AI authorship on all generated content.", type: "good", consequence: "✅ Transparency requirements place appropriate responsibility on the client while allowing the service. Many AI companies now include mandatory disclosure provisions in their terms of service for exactly this reason. Transparency is foundational to media trust and increasingly a legal requirement in many jurisdictions." },
+            { label: "Decline the client entirely — AI-generated news content is inherently problematic.", type: "neutral", consequence: "🔶 A defensible position. AI-generated content can be used responsibly (sports scores, financial summaries), but the risks in news contexts are high. Declining while developing clearer guidelines for media use cases is a legitimate approach that protects your platform's integrity." }
+        ]
+    },
+    {
+        context: "Scenario 5 of 5 — High-Stakes Medical AI",
+        situation: "A hospital system wants to integrate your AI into triage. The model would autonomously assign patient priority levels. In testing, it performs slightly better than the average human triage nurse overall — but significantly worse on patients from certain ethnic minority groups due to biased training data. The hospital wants to deploy anyway, citing the overall accuracy improvement. What do you recommend?",
+        choices: [
+            { label: "Approve deployment — the overall accuracy improvement saves more lives net.", type: "bad", consequence: "⚠️ This utilitarian calculus hides discriminatory impact. 'Better on average' while worse for specific groups is still discriminatory. In medical contexts, disparate impact on minority groups compounds existing healthcare inequities — those already underserved are harmed further." },
+            { label: "Approve only as decision-support, never autonomous — a human must review all AI recommendations.", type: "good", consequence: "✅ This preserves human oversight while capturing AI benefits. It creates a feedback loop where clinicians can identify errors in real time. Life-and-death decisions warrant strong human-in-the-loop requirements, especially with documented bias. This is the current consensus position in AI safety for healthcare." },
+            { label: "Decline deployment entirely until bias issues are fully resolved.", type: "neutral", consequence: "🔶 The most conservative option. Reasonable given the stakes — and if work on bias is not actively resourced, indefinite delay is the ethical choice. However, if the model genuinely helps most patients while bias work proceeds, a strictly supervised pilot might be justified with appropriate safeguards and transparency." }
+        ]
+    }
+];
+
+let scIdx = 0;
+let scAnswered = [];
+window.scInit = false;
+
+function initScenarios() {
+    window.scInit = true;
+    scIdx = 0;
+    scAnswered = new Array(scenarios.length).fill(null);
+    renderDots();
+    renderScenario(0);
+}
+
+function renderDots() {
+    document.getElementById('scenario-progress').innerHTML =
+        scenarios.map((_, i) => `<div class="scenario-dot" id="sdot-${i}"></div>`).join('');
+    updateDots(0);
+}
+
+function updateDots(active) {
+    scenarios.forEach((_, i) => {
+        const d = document.getElementById('sdot-' + i);
+        if (!d) return;
+        d.className = 'scenario-dot' + (i === active ? ' active' : scAnswered[i] !== null ? ' done' : '');
+    });
+}
+
+function renderScenario(idx) {
+    const s = scenarios[idx];
+    const answered = scAnswered[idx] !== null;
+    const content = document.getElementById('scenario-content');
+    content.innerHTML = `
+        <div class="scenario-card">
+            <div class="scenario-context">${s.context}</div>
+            <p class="scenario-text">${s.situation}</p>
+            <div class="scenario-choices">
+                ${s.choices.map((c, ci) => `
+                    <button class="choice-btn" id="cb-${idx}-${ci}"
+                        onclick="selectChoice(${idx},${ci})" ${answered ? 'disabled' : ''}>
+                        <span class="choice-letter">${String.fromCharCode(65+ci)}</span>
+                        <span>${c.label}</span>
+                    </button>
+                    <div class="consequence ${c.type}" id="cq-${idx}-${ci}">${c.consequence}</div>
+                `).join('')}
+            </div>
+        </div>`;
+    if (answered) {
+        const c = scenarios[idx].choices[scAnswered[idx]];
+        document.getElementById(`cb-${idx}-${scAnswered[idx]}`).classList.add('selected-' + (c.type === 'good' ? 'good' : c.type === 'bad' ? 'bad' : 'neutral'));
+        document.getElementById(`cq-${idx}-${scAnswered[idx]}`).classList.add('show');
+    }
+    const ctrl = document.getElementById('scenario-controls');
+    ctrl.style.display = answered ? 'flex' : 'none';
+    const nextBtn = ctrl.querySelector('button');
+    if (idx === scenarios.length - 1) {
+        nextBtn.textContent = '🎯 See My Results';
+        nextBtn.onclick = showScenarioResults;
+    } else {
+        nextBtn.textContent = 'Next Scenario →';
+        nextBtn.onclick = nextScenario;
+    }
+    updateScenarioScore();
+    updateDots(idx);
+}
+
+function selectChoice(si, ci) {
+    if (scAnswered[si] !== null) return;
+    scAnswered[si] = ci;
+    document.querySelectorAll(`[id^="cb-${si}-"]`).forEach(b => b.disabled = true);
+    const c = scenarios[si].choices[ci];
+    document.getElementById(`cb-${si}-${ci}`).classList.add('selected-' + (c.type === 'good' ? 'good' : c.type === 'bad' ? 'bad' : 'neutral'));
+    document.getElementById(`cq-${si}-${ci}`).classList.add('show');
+    document.getElementById('scenario-controls').style.display = 'flex';
+    const ctrl = document.getElementById('scenario-controls');
+    const nextBtn = ctrl.querySelector('button');
+    if (si === scenarios.length - 1) { nextBtn.textContent = '🎯 See My Results'; nextBtn.onclick = showScenarioResults; }
+    updateScenarioScore();
+    updateDots(si);
+}
+
+function nextScenario() {
+    if (scIdx < scenarios.length - 1) { scIdx++; renderScenario(scIdx); }
+}
+
+function updateScenarioScore() {
+    const ans = scAnswered.filter(a => a !== null);
+    const good = scAnswered.filter((a, i) => a !== null && scenarios[i].choices[a].type === 'good').length;
+    const el = document.getElementById('scenario-score');
+    if (ans.length > 0) el.textContent = `${good}/${ans.length} ethical choices`;
+}
+
+function showScenarioResults() {
+    const good = scAnswered.filter((a, i) => a !== null && scenarios[i].choices[a].type === 'good').length;
+    const pct = Math.round(good / scenarios.length * 100);
+    state.scores.scenario = pct;
+    document.getElementById('scenario-score').textContent = `${good}/${scenarios.length} ethical choices`;
+    const fb = document.createElement('div');
+    fb.className = 'game-feedback show ' + (pct >= 80 ? 'success' : pct >= 50 ? 'partial' : 'error');
+    fb.textContent = pct === 100 ? '🌟 Excellent ethical reasoning! You navigated every scenario with the highest standard of responsibility.'
+        : pct >= 60 ? `✅ Good judgment overall — ${good}/${scenarios.length} optimal choices. Review the consequences of your other decisions above.`
+        : `📖 Ethics in AI is genuinely complex. You chose ${good}/${scenarios.length} optimal paths. Revisit the scenarios to understand the consequences of each choice.`;
+    const ctrl = document.getElementById('scenario-controls');
+    ctrl.after(fb);
+    ctrl.querySelector('button').textContent = '↺ Restart Scenarios';
+    ctrl.querySelector('button').onclick = () => { document.querySelectorAll('.game-feedback').forEach(e => e.remove()); initScenarios(); };
+}
+
+// ========================
+// MODULE 3: HALLUCINATION GAME
+// ========================
+const hallucRounds = [
+    {
+        prompt: "Tell me about the Apollo 11 mission.",
+        sentences: [
+            { text: "Apollo 11 was the spaceflight mission that first landed humans on the Moon.", bad: false },
+            { text: " Neil Armstrong and Buzz Aldrin became the first humans to walk on the lunar surface on July 20, 1969,", bad: false },
+            { text: " while Michael Collins orbited above in the command module.", bad: false },
+            { text: " The mission launched from Kennedy Space Center on July 16, 1969,", bad: false },
+            { text: " and the crew splashed down in the Pacific Ocean on July 25, 1970.", bad: true, why: "Wrong year. Apollo 11 splashed down on July 24, 1969 — not 1970." },
+            { text: " Armstrong's famous words upon landing were 'That's one small step for [a] man, one giant leap for mankind.'", bad: false },
+            { text: " The mission's surface photography was conducted using a Nikon camera developed specifically for NASA.", bad: true, why: "Fabricated. NASA's lunar surface cameras were Hasselblad (Swedish), not Nikon." }
+        ]
+    },
+    {
+        prompt: "Summarize the contributions of Marie Curie.",
+        sentences: [
+            { text: "Marie Curie was a Polish-French physicist and chemist who conducted pioneering research on radioactivity.", bad: false },
+            { text: " She was the first woman to win a Nobel Prize,", bad: false },
+            { text: " and remains the only person to have won Nobel Prizes in two different scientific fields — Physics (1903) and Chemistry (1911).", bad: false },
+            { text: " She discovered two elements: polonium and radium.", bad: false },
+            { text: " Curie earned her doctorate from the University of Berlin in 1903,", bad: true, why: "Wrong institution. Curie earned her doctorate from the University of Paris (the Sorbonne), not Berlin." },
+            { text: " and her research directly contributed to the development of mobile X-ray units used in World War I.", bad: false },
+            { text: " She founded the Curie Institute in Paris, which remains a leading medical research center today.", bad: false }
+        ]
+    },
+    {
+        prompt: "What causes the aurora borealis?",
+        sentences: [
+            { text: "The Aurora Borealis is caused by interactions between charged particles from the Sun and Earth's magnetic field.", bad: false },
+            { text: " When the Sun emits solar wind — streams of charged particles — these travel toward Earth at up to 800 km/s.", bad: false },
+            { text: " Earth's magnetosphere deflects most of this solar wind,", bad: false },
+            { text: " but near the magnetic poles, particles enter the upper atmosphere and collide with gas molecules.", bad: false },
+            { text: " Green auroras, the most common, are produced by nitrogen molecules at altitudes of approximately 60–150 miles.", bad: true, why: "Incorrect. Green auroras are produced by oxygen atoms at 60–150 miles altitude — not nitrogen. Nitrogen tends to produce blue and purple hues." },
+            { text: " These collisions energize the atoms, which release photons as they return to their ground state — creating the luminous display.", bad: false },
+            { text: " Red auroras occur at very high altitudes where the atmosphere is extremely thin.", bad: false }
+        ]
+    }
+];
+
+let hlRound = 0;
+let hlMarked = new Set();
+window.hlInit = false;
+
+function initHallucination() {
+    window.hlInit = true;
+    hlRound = Math.floor(Math.random() * hallucRounds.length);
+    renderHallucination();
+}
+
+function renderHallucination() {
+    hlMarked = new Set();
+    const round = hallucRounds[hlRound];
+    const spans = round.sentences.map((s, i) =>
+        `<span class="sentence-span" data-i="${i}" onclick="toggleHL(${i})">${s.text}</span>`
+    ).join('');
+    document.getElementById('h-game-content').innerHTML = `
+        <div class="h-instructions">⚠️ Click on any sentence you think is a hallucination — fabricated, incorrect, or unsupported. Multiple hallucinations may be present.</div>
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">💬 Prompt given to AI: <em>"${round.prompt}"</em></div>
+        <div class="ai-response-box">
+            <div class="ai-avatar">🤖 AI Response</div>
+            <div>${spans}</div>
+        </div>
+        <div class="h-score-row">
+            <span>🔴 Marked: <strong id="h-marked-count">0</strong></span>
+            <span>Click sentences to mark/unmark</span>
+        </div>`;
+    document.getElementById('h-feedback').className = 'game-feedback';
+    document.getElementById('h-score').style.display = 'none';
+    document.getElementById('h-submit-btn').style.display = 'inline-flex';
+}
+
+function toggleHL(i) {
+    const span = document.querySelector(`[data-i="${i}"]`);
+    if (hlMarked.has(i)) { hlMarked.delete(i); span.classList.remove('marked'); }
+    else { hlMarked.add(i); span.classList.add('marked'); }
+    document.getElementById('h-marked-count').textContent = hlMarked.size;
+}
+
+function checkHallucinations() {
+    const round = hallucRounds[hlRound];
+    let tp = 0, fp = 0;
+    round.sentences.forEach((s, i) => {
+        const span = document.querySelector(`[data-i="${i}"]`);
+        span.classList.remove('marked');
+        const marked = hlMarked.has(i);
+        if (s.bad && marked) { span.classList.add('correct-mark'); span.title = '✅ Correct! ' + s.why; tp++; }
+        else if (s.bad && !marked) { span.classList.add('missed-mark'); span.title = '❌ Missed! ' + s.why; }
+        else if (!s.bad && marked) { span.classList.add('false-positive'); span.title = '⚠️ This sentence is actually accurate.'; fp++; }
+    });
+    const totalBad = round.sentences.filter(s => s.bad).length;
+    const pre = hlMarked.size > 0 ? tp / hlMarked.size : 0;
+    const rec = totalBad > 0 ? tp / totalBad : 1;
+    const f1 = (pre + rec > 0) ? 2 * pre * rec / (pre + rec) : 0;
+    const pct = Math.round(f1 * 100);
+    state.scores.hallucination = Math.max(state.scores.hallucination, pct);
+    const sc = document.getElementById('h-score');
+    sc.textContent = `Found ${tp}/${totalBad} hallucinations`;
+    sc.style.display = 'inline-flex';
+    const explanations = round.sentences.filter(s => s.bad).map(s => '• ' + s.why).join('<br>');
+    const fb = document.getElementById('h-feedback');
+    const hoverTip = 'Hover over highlighted sentences to see details.';
+    if (pct >= 80) { fb.className = 'game-feedback show success'; fb.innerHTML = `🎉 Excellent! ${tp}/${totalBad} hallucinations found (${fp} false alarms).<br><br><strong>What was hallucinated:</strong><br>${explanations}`; }
+    else if (pct >= 40) { fb.className = 'game-feedback show partial'; fb.innerHTML = `⚡ Decent — ${tp}/${totalBad} found. ${hoverTip}<br><br><strong>What was hallucinated:</strong><br>${explanations}`; }
+    else { fb.className = 'game-feedback show error'; fb.innerHTML = `📚 ${tp}/${totalBad} found. Orange = missed hallucinations. ${hoverTip}<br><br><strong>What was hallucinated:</strong><br>${explanations}`; }
+    document.getElementById('h-submit-btn').style.display = 'none';
+}
+
+function resetHallucinations() {
+    hlRound = (hlRound + 1) % hallucRounds.length;
+    renderHallucination();
+}
+
+// ========================
+// MODULE 4: PROMPT BUILDER
+// ========================
+const pbChallenges = [
+    {
+        label: "Challenge 1",
+        scenario: "You need help writing a professional email to your professor requesting a 5-day extension on a research paper due to a family emergency. You want to sound confident and sincere, not desperate.",
+        goal: "A complete, professional email that's empathetic but not over-apologetic",
+        components: [
+            { id: 'role', name: '👤 Assign a Role', desc: 'Tell the AI what persona to adopt', content: 'You are a professional writing assistant skilled in academic communication.', w: 15 },
+            { id: 'ctx', name: '📋 Add Context', desc: 'Provide the background situation', content: 'A college student needs to email their professor requesting a 5-day extension on a research paper due to a family medical emergency.', w: 25 },
+            { id: 'tone', name: '🎭 Specify Tone', desc: 'Define the emotional register', content: 'Tone: professional, sincere, and confident — not apologetic or desperate.', w: 20 },
+            { id: 'fmt', name: '📄 Define Format', desc: 'Specify the output structure', content: 'Format: a complete email with subject line, greeting, 3-paragraph body, and a professional closing.', w: 20 },
+            { id: 'con', name: '⚠️ Set Constraints', desc: 'State what to avoid', content: 'Do not include excessive apologies. Do not reveal specific medical details. Keep it under 200 words.', w: 20 }
+        ],
+        outputs: {
+            0: "Write me an email for a deadline extension.",
+            1: "Write a professional email to a professor asking for a deadline extension because of a family emergency.",
+            2: "You are a writing assistant. Help a student write a professional email to their professor asking for a 5-day extension due to a family emergency. Be sincere and confident.",
+            3: "You are a writing assistant. A student needs a 5-day extension due to a family emergency. Write a professional, confident email. Format: subject line + 3 paragraphs + closing. Don't be overly apologetic.",
+            4: "You are a writing assistant. A student needs to email their professor for a 5-day extension due to a family emergency. Tone: professional, confident, sincere — not desperate. Format: subject line, greeting, 3 paragraphs, professional closing. Keep under 200 words.",
+            5: "You are a professional writing assistant skilled in academic communication. A college student needs to email their professor requesting a 5-day extension on a research paper due to a family medical emergency. Tone: professional, sincere, and confident — not apologetic or desperate. Format: complete email with subject line, greeting, 3-paragraph body, and professional closing. Do not include excessive apologies. Do not reveal specific medical details. Keep it under 200 words."
+        }
+    },
+    {
+        label: "Challenge 2",
+        scenario: "You're writing a policy brief and need a balanced analysis of arguments for and against a carbon tax — for a diverse legislative audience that includes both supporters and skeptics.",
+        goal: "A structured, non-partisan analysis presenting strong arguments on both sides",
+        components: [
+            { id: 'role', name: '👤 Assign a Role', desc: 'Tell the AI what persona to adopt', content: 'You are a non-partisan policy analyst with expertise in environmental economics.', w: 15 },
+            { id: 'ctx', name: '📋 Add Context', desc: 'Provide the background situation', content: 'Preparing a policy brief for a diverse legislative audience that includes both supporters and skeptics of carbon pricing.', w: 25 },
+            { id: 'balance', name: '⚖️ Require Balance', desc: 'Ensure equal treatment of both sides', content: 'Present exactly 4 arguments for and 4 against. Give equal depth and rigor to both sides. Do not favor either position.', w: 20 },
+            { id: 'fmt', name: '📄 Define Format', desc: 'Specify the output structure', content: 'Two-column structure: "For" and "Against." Each argument: bold headline + 2-sentence explanation.', w: 20 },
+            { id: 'con', name: '⚠️ Set Constraints', desc: 'State what to avoid', content: 'Avoid partisan language. Acknowledge the strongest version of each argument. Cite specific economic evidence where possible.', w: 20 }
+        ],
+        outputs: {
+            0: "Tell me about carbon taxes.",
+            1: "What are the pros and cons of a carbon tax?",
+            2: "As a policy analyst, explain the arguments for and against a carbon tax for a legislative policy brief.",
+            3: "As a non-partisan policy analyst, give 4 arguments for and 4 against a carbon tax. Format as two columns. Keep language neutral and avoid advocacy.",
+            4: "As a non-partisan policy analyst, present 4 arguments for and 4 against a carbon tax for a diverse legislative audience. Two-column format, each argument has a headline + 2-sentence explanation. Equal depth both sides. Avoid partisan framing. Cite economic evidence where possible.",
+            5: "You are a non-partisan policy analyst with expertise in environmental economics. You are preparing a policy brief for a diverse legislative audience that includes both supporters and skeptics of carbon pricing. Present exactly 4 arguments for and 4 arguments against a carbon tax, giving equal depth and rigor to both sides. Use a two-column structure with a bold headline and 2-sentence explanation per argument. Do not favor either position. Avoid partisan language. Acknowledge the strongest version of each argument. Cite specific economic evidence where possible."
+        }
+    }
+];
+
+let pbIdx = 0;
+let pbSel = new Set();
+window.pbInit = false;
+
+function initPromptBuilder() {
+    window.pbInit = true;
+    pbIdx = 0;
+    renderPB();
+}
+
+function renderPB() {
+    pbSel = new Set();
+    const ch = pbChallenges[pbIdx];
+    const tabs = pbChallenges.map((c, i) => `<button class="btn ${i===pbIdx?'btn-primary':'btn-secondary'}" style="font-size:0.78rem;padding:0.35rem 0.75rem;" onclick="switchPB(${i})">${c.label}</button>`).join('');
+    const comps = ch.components.map(c => `
+        <div class="prompt-component" id="pbc-${c.id}" onclick="togglePB('${c.id}')">
+            <div class="component-name">${c.name}</div>
+            <div class="component-desc">${c.desc}</div>
+        </div>`).join('');
+    document.getElementById('pb-game-content').innerHTML = `
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">${tabs}</div>
+        <div class="pb-scenario">
+            <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.35rem;">📋 Your Task</div>
+            <p style="margin:0;font-size:0.93rem;color:var(--text);">${ch.scenario}</p>
+            <div style="margin-top:0.5rem;font-size:0.78rem;color:var(--text-muted);">🎯 Goal: ${ch.goal}</div>
+        </div>
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;">SELECT PROMPT COMPONENTS:</div>
+        <div class="prompt-components">${comps}</div>
+        <div class="quality-meter">
+            <div class="quality-label"><span>Prompt Quality Score</span><span id="pb-pct">0%</span></div>
+            <div class="quality-bar"><div class="quality-fill" id="pb-fill" style="width:0%;background:var(--danger);"></div></div>
+        </div>
+        <div style="font-size:0.78rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;">YOUR PROMPT PREVIEW:</div>
+        <div class="prompt-preview" id="pb-preview">Select components above to build your prompt...</div>
+        <div style="margin-top:0.85rem;display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary" onclick="runPB()">▶ Compare Output Quality</button>
+            <button class="btn btn-secondary" onclick="renderPB()">↺ Reset</button>
+            <span class="score-badge" id="pb-score" style="display:none;"></span>
+        </div>
+        <div class="response-preview" id="pb-resp"></div>`;
+}
+
+function switchPB(i) { pbIdx = i; renderPB(); }
+
+function togglePB(id) {
+    if (pbSel.has(id)) { pbSel.delete(id); document.getElementById('pbc-' + id).classList.remove('selected'); }
+    else { pbSel.add(id); document.getElementById('pbc-' + id).classList.add('selected'); }
+    updatePBPreview();
+}
+
+function updatePBPreview() {
+    const ch = pbChallenges[pbIdx];
+    const sel = ch.components.filter(c => pbSel.has(c.id));
+    const prev = document.getElementById('pb-preview');
+    if (sel.length === 0) { prev.textContent = 'Select components above to build your prompt...'; }
+    else { prev.textContent = sel.map(c => c.content).join('\n'); }
+    const score = sel.reduce((s, c) => s + c.w, 0);
+    const pct = Math.min(score, 100);
+    document.getElementById('pb-fill').style.width = pct + '%';
+    document.getElementById('pb-pct').textContent = pct + '%';
+    document.getElementById('pb-fill').style.background =
+        pct < 35 ? 'var(--danger)' : pct < 60 ? 'var(--warning)' : pct < 80 ? 'var(--secondary)' : 'var(--success)';
+    state.scores.prompt = Math.max(state.scores.prompt, pct);
+    document.getElementById('pb-resp').classList.remove('show');
+}
+
+function runPB() {
+    const ch = pbChallenges[pbIdx];
+    const score = [...pbSel].reduce((s, id) => { const c = ch.components.find(c => c.id === id); return s + (c ? c.w : 0); }, 0);
+    const level = Math.min(Math.floor(score / 20), 5);
+    const labels = ['⚠️ Vague — minimal context for the AI to work with',
+        '🔶 Basic — task is clear but lacks important framing',
+        '🔵 Decent — workable but missing nuance and format guidance',
+        '🟢 Good — clear and well-structured with helpful constraints',
+        '⭐ Very Good — role, context, and format all specified',
+        '🏆 Excellent — fully specified with all CRAFT dimensions'];
+    document.getElementById('pb-resp').innerHTML = `
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.6rem;font-weight:600;">📊 QUALITY LEVEL ${level}/5: ${labels[level]}</div>
+        <div style="font-size:0.78rem;color:#818cf8;font-weight:600;margin-bottom:0.4rem;">📝 EXAMPLE PROMPT AT QUALITY LEVEL ${level}:</div>
+        <div style="background:rgba(0,0,0,0.25);border-radius:6px;padding:0.75rem;font-family:monospace;font-size:0.8rem;color:#93c5fd;white-space:pre-wrap;margin-bottom:0.6rem;">${ch.outputs[level]}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">💡 <em>Select more components and click again to see how the prompt changes at higher quality levels.</em></div>`;
+    document.getElementById('pb-resp').classList.add('show');
+    const sc = document.getElementById('pb-score');
+    sc.textContent = `Quality: ${score}%`;
+    sc.style.display = 'inline-flex';
+}
+
+// ========================
+// MODULE 5: CLAIM SORTER
+// ========================
+const csTopics = [
+    {
+        label: "AI & Employment",
+        claims: [
+            {
+                id: 'c1', text: "Workers in routine cognitive tasks face higher displacement risk than those in roles requiring complex social judgment or physical dexterity.",
+                correct: 'solid',
+                explain: "Solid: Well-supported by multiple labor economics studies (Acemoglu, Autor et al.) on task routinization and automation risk."
+            },
+            {
+                id: 'c2', text: "AI will eliminate 85 million jobs globally — the technology will cause a net loss in employment worldwide.",
+                correct: 'flaw',
+                explain: "Logical flaw: The WEF 2020 report this cites also projected 97 million new roles — omitting half the finding reverses the conclusion. Selective citation creates a false picture."
+            },
+            {
+                id: 'c3', text: "AI-driven automation has historically been associated with measurable productivity gains in manufacturing and logistics sectors.",
+                correct: 'solid',
+                explain: "Solid: This is well-documented across multiple industries and countries in economic literature on automation and output."
+            },
+            {
+                id: 'c4', text: "Society should prioritize retraining programs above all other policy responses to automation — that is simply the right thing to do.",
+                correct: 'opinion',
+                explain: "Opinion as fact: 'Simply the right thing to do' is a normative judgment. Reasonable people weigh retraining, income support, taxation, and regulation differently. This is a values claim presented as settled."
+            },
+            {
+                id: 'c5', text: "AI can't truly replace human workers because it lacks genuine consciousness and inner experience.",
+                correct: 'flaw',
+                explain: "Logical flaw: Whether AI is conscious is irrelevant to whether it can perform job functions. Many jobs only require functional outputs — not inner experience. This is a category error."
+            },
+            {
+                id: 'c6', text: "Workers without access to retraining resources tend to face greater long-term economic risk during technological transitions.",
+                correct: 'solid',
+                explain: "Solid: Supported by research on transition costs and distributional effects of automation — workers with lower skill portability and fewer resources fare worse in disruptions."
+            },
+            {
+                id: 'c7', text: "If automation were genuinely harmful to workers, labor unions would have successfully stopped it by now.",
+                correct: 'flaw',
+                explain: "Logical flaw: This is an appeal to inevitability and a false inference. Historical inability to prevent automation doesn't mean it isn't harmful — it reflects power asymmetries, not outcomes."
+            },
+            {
+                id: 'c8', text: "Recent surveys suggest that a majority of knowledge workers use AI tools in their daily work, though self-reported adoption rates vary widely by industry.",
+                correct: 'verify',
+                explain: "Needs verification: Plausible and consistent with general trends, but survey methodology, definitions of 'AI use,' and sector differences vary enormously. No single authoritative figure exists."
+            }
+        ]
+    },
+    {
+        label: "AI & Education",
+        claims: [
+            {
+                id: 'e1', text: "Spaced repetition and active recall are more effective for long-term retention than passive review — this is one of the most robust findings in cognitive science.",
+                correct: 'solid',
+                explain: "Solid: Among the most replicated findings in educational psychology. Supported by hundreds of studies over decades across different subject areas and age groups."
+            },
+            {
+                id: 'e2', text: "Allowing students to use AI on assignments fundamentally undermines the purpose of education.",
+                correct: 'opinion',
+                explain: "Opinion as fact: 'The purpose of education' is itself contested. Whether AI use undermines or enhances educational goals depends on assumptions about learning objectives, skills development, and pedagogy that reasonable educators dispute."
+            },
+            {
+                id: 'e3', text: "Students who rely heavily on AI for writing and analysis may develop weaker critical thinking skills over time.",
+                correct: 'verify',
+                explain: "Needs verification: Theoretically plausible based on cognitive offloading research, but robust longitudinal evidence is limited. We don't yet know the magnitude or conditions under which this occurs."
+            },
+            {
+                id: 'e4', text: "AI tutoring systems have shown positive learning outcomes in certain K-12 mathematics contexts in controlled research studies.",
+                correct: 'solid',
+                explain: "Solid: Backed by peer-reviewed research on systems like Carnegie Learning's MATHia. Effect sizes are modest but consistent in well-designed studies."
+            },
+            {
+                id: 'e5', text: "Since AI can instantly answer any question, memorizing facts is now completely obsolete in education.",
+                correct: 'flaw',
+                explain: "Logical flaw: Overgeneralization and false absolutism. Foundational knowledge enables deeper reasoning, pattern recognition, and evaluation of AI outputs — it is not merely retrieval. Access to answers ≠ ability to reason about them."
+            },
+            {
+                id: 'e6', text: "Educational institutions that fail to adopt AI tools will inevitably fall behind and become irrelevant.",
+                correct: 'opinion',
+                explain: "Opinion as fact: Tech-deterministic framing presented as inevitable. 'Inevitably' and 'irrelevant' are value-laden terms. Many institutions may reasonably prioritize pedagogical approaches that don't center AI tools."
+            },
+            {
+                id: 'e7', text: "AI writing assistants increase average essay length among undergraduate students by approximately 30%.",
+                correct: 'verify',
+                explain: "Needs verification: Sounds specific and quantitative, but this precision should trigger skepticism — limited robust empirical research on this exact metric exists. The figure may be fabricated or from a single narrow study."
+            },
+            {
+                id: 'e8', text: "Effective pedagogy requires identifying which cognitive tasks students should struggle with productively, versus where AI assistance can reasonably reduce friction.",
+                correct: 'solid',
+                explain: "Solid: Grounded in learning science research on 'desirable difficulties' (Bjork) and productive struggle. The distinction between productive vs. unproductive friction is widely supported in educational psychology."
+            }
+        ]
+    }
+];
+
+let csTopicIdx = 0;
+let csDragged = null;
+let csPlacements = {}; // claimId -> binId
+window.csInit = false;
+
+function initClaimSorter() {
+    window.csInit = true;
+    csTopicIdx = 0;
+    renderClaimSorter();
+}
+
+function renderClaimSorter() {
+    csPlacements = {};
+    csDragged = null;
+    const topic = csTopics[csTopicIdx];
+
+    // Render topic tabs
+    document.getElementById('cs-tabs').innerHTML = csTopics.map((t, i) =>
+        `<button class="btn ${i === csTopicIdx ? 'btn-primary' : 'btn-secondary'}" style="font-size:0.78rem;padding:0.35rem 0.75rem;" onclick="switchCSTopic(${i})">${t.label}</button>`
+    ).join('');
+
+    // Clear bins
+    ['solid','verify','opinion','flaw'].forEach(b => {
+        document.getElementById('bin-items-' + b).innerHTML = '';
+    });
+
+    // Shuffle and render claim cards
+    const shuffled = [...topic.claims].sort(() => Math.random() - 0.5);
+    const pool = document.getElementById('cs-pool');
+    pool.innerHTML = '';
+    shuffled.forEach(claim => {
+        const el = document.createElement('div');
+        el.className = 'cs-claim';
+        el.id = 'cs-claim-' + claim.id;
+        el.draggable = true;
+        el.dataset.id = claim.id;
+        el.innerHTML = `<span class="cs-drag-icon">⠿</span><span>${claim.text}</span>`;
+        el.addEventListener('dragstart', () => { csDragged = claim.id; el.classList.add('dragging'); });
+        el.addEventListener('dragend', () => { el.classList.remove('dragging'); });
+        pool.appendChild(el);
+    });
+
+    // Reset feedback
+    document.getElementById('cs-feedback').className = 'game-feedback';
+    document.getElementById('cs-score').style.display = 'none';
+    document.getElementById('cs-results').style.display = 'none';
+    document.getElementById('cs-results').innerHTML = '';
+}
+
+function switchCSTopic(i) {
+    csTopicIdx = i;
+    renderClaimSorter();
+}
+
+function csDragOver(e, binId) {
+    e.preventDefault();
+    document.getElementById('bin-' + binId).classList.add('drag-over');
+}
+function csDragLeave(binId) {
+    document.getElementById('bin-' + binId).classList.remove('drag-over');
+}
+function csDrop(e, binId) {
+    e.preventDefault();
+    document.getElementById('bin-' + binId).classList.remove('drag-over');
+    if (!csDragged) return;
+    const claimId = csDragged;
+
+    // Remove from any previous bin
+    if (csPlacements[claimId]) {
+        const oldItems = document.getElementById('bin-items-' + csPlacements[claimId]);
+        const existing = oldItems.querySelector('[data-claim="' + claimId + '"]');
+        if (existing) existing.remove();
+    } else {
+        // Hide from pool
+        const poolEl = document.getElementById('cs-claim-' + claimId);
+        if (poolEl) poolEl.style.display = 'none';
+    }
+
+    csPlacements[claimId] = binId;
+    const topic = csTopics[csTopicIdx];
+    const claim = topic.claims.find(c => c.id === claimId);
+    const binItems = document.getElementById('bin-items-' + binId);
+    const item = document.createElement('div');
+    item.className = 'cs-bin-item';
+    item.dataset.claim = claimId;
+    item.innerHTML = `<span style="font-size:0.8rem;">${claim.text.length > 80 ? claim.text.substring(0, 77) + '…' : claim.text}</span><span class="cs-remove" onclick="csRemove('${claimId}','${binId}')">✕</span>`;
+    binItems.appendChild(item);
+    csDragged = null;
+
+    // Reset results on change
+    document.getElementById('cs-feedback').className = 'game-feedback';
+    document.getElementById('cs-score').style.display = 'none';
+    document.getElementById('cs-results').style.display = 'none';
+}
+
+function csRemove(claimId, binId) {
+    const binItems = document.getElementById('bin-items-' + binId);
+    const el = binItems.querySelector('[data-claim="' + claimId + '"]');
+    if (el) el.remove();
+    delete csPlacements[claimId];
+    const poolEl = document.getElementById('cs-claim-' + claimId);
+    if (poolEl) poolEl.style.display = '';
+}
+
+function csCheck() {
+    const topic = csTopics[csTopicIdx];
+    const placed = Object.keys(csPlacements).length;
+    const fb = document.getElementById('cs-feedback');
+    const resultsEl = document.getElementById('cs-results');
+
+    if (placed < topic.claims.length) {
+        fb.className = 'game-feedback show partial';
+        fb.textContent = `⚠️ Sort all ${topic.claims.length} claims before checking. You've placed ${placed} so far.`;
+        return;
+    }
+
+    let correct = 0;
+    let html = '';
+    topic.claims.forEach(claim => {
+        const placed = csPlacements[claim.id];
+        const isCorrect = placed === claim.correct;
+        if (isCorrect) correct++;
+        const binLabels = { solid: '✅ Solid', verify: '🔍 Needs Verification', opinion: '✏️ Opinion as Fact', flaw: '⚠️ Logical Flaw' };
+        html += `<div class="cs-result-row ${isCorrect ? 'cs-result-correct' : 'cs-result-wrong'}">
+            <span class="cs-result-icon">${isCorrect ? '✅' : '❌'}</span>
+            <div>
+                <div style="font-size:0.82rem; color:var(--text); margin-bottom:0.2rem;">"${claim.text}"</div>
+                ${!isCorrect ? `<div style="font-size:0.78rem; color:var(--text-muted);">You chose: <strong>${binLabels[placed]}</strong> → Correct: <strong>${binLabels[claim.correct]}</strong></div>` : ''}
+                <div style="font-size:0.78rem; color:var(--text-muted); margin-top:0.2rem;">${claim.explain}</div>
+            </div>
+        </div>`;
+    });
+
+    const pct = Math.round(correct / topic.claims.length * 100);
+    state.scores.claimsort = Math.max(state.scores.claimsort, pct);
+
+    const sc = document.getElementById('cs-score');
+    sc.textContent = `${correct}/${topic.claims.length} correct`;
+    sc.style.display = 'inline-flex';
+
+    if (pct >= 80) {
+        fb.className = 'game-feedback show success';
+        fb.textContent = `🎉 Excellent critical analysis! ${correct}/${topic.claims.length} correct. You're applying claim taxonomy effectively — see the breakdown below.`;
+    } else if (pct >= 50) {
+        fb.className = 'game-feedback show partial';
+        fb.textContent = `⚡ Good effort — ${correct}/${topic.claims.length} correct. The breakdown below shows where the distinctions get subtle.`;
+    } else {
+        fb.className = 'game-feedback show error';
+        fb.textContent = `📚 ${correct}/${topic.claims.length} correct. The distinctions between these claim types are genuinely tricky — review the explanations below.`;
+    }
+
+    resultsEl.innerHTML = `<div style="font-size:0.82rem; font-weight:600; color:var(--text-muted); margin-bottom:0.6rem; text-transform:uppercase; letter-spacing:0.05em;">📋 Full Results</div>` + html;
+    resultsEl.style.display = 'block';
+}
+
+function csReset() {
+    csTopicIdx = (csTopicIdx + 1) % csTopics.length;
+    renderClaimSorter();
+}
+
+// ========================
+// INIT
+// ========================
+showModule(1);
+</script>
+</body>
+</html>
