@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intermediate Python — 16-Week Course</title>
+  <style>
+    :root {
+      --purple:      #5e35b1;
+      --purple-dark: #4527a0;
+      --amber:       #ffca28;
+      --dark:        #1c1a2e;
+      --dark2:       #2d2a45;
+      --sidebar-w:   270px;
+      --bg:          #f3f0fb;
+      --border:      #e0daf5;
+      --text:        #1c1a2e;
+      --muted:       #5a5475;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-setup:     #1565c0;
+      --c-activity:  #6200ea;
+      --c-assign:    #2e7d32;
+      --c-assess:    #e65100;
+      --bg-setup:    #e3f2fd;
+      --bg-activity: #ede7f6;
+      --bg-assign:   #e8f5e9;
+      --bg-assess:   #fff3e0;
+      --code-bg:     #1a1730;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #1c1a2e, #2d2a45);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--amber); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px; color: var(--dark); flex-shrink: 0;
+      letter-spacing: -.5px;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #9b8fc4; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #443e60;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #9b8fc4; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(94,53,177,.25); border-left-color: var(--purple); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #7a6ea0;
+    }
+    .nav-item.active .nav-num { background: var(--purple); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0;
+    }
+    .pill-quiz    { background: #bf360c; color: #fff; }
+    .pill-midterm { background: #4527a0; color: #fff; }
+    .pill-final   { background: #b71c1c; color: #fff; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--purple), #1a0a4a);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '🐍'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .12; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── PREREQ BANNER ── */
+    .prereq {
+      background: #ede7f6; border: 1px solid var(--purple);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 22px;
+      display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px;
+    }
+    .prereq .prereq-icon { font-size: 20px; flex-shrink: 0; }
+    .prereq strong { color: var(--purple); }
+
+    /* ── CARD GRIDS ── */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '✓'; color: #5e35b1; font-weight: 700; flex-shrink: 0; }
+    .grade-table { width: 100%; border-collapse: collapse; }
+    .grade-table tr { border-bottom: 1px solid var(--border); }
+    .grade-table tr:last-child { border-bottom: none; }
+    .grade-table td { padding: 8px 0; font-size: 13px; }
+    .grade-table td:last-child { text-align: right; font-weight: 700; color: var(--purple); }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--purple);
+      box-shadow: 0 4px 12px rgba(94,53,177,.15);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* ── WEEK HEADER ── */
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--purple);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--purple); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .banner {
+      border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .banner-quiz    { background: #fff3e0; border: 1px solid #f57c00; color: #e65100; }
+    .banner-midterm { background: #ede7f6; border: 1px solid #5e35b1; color: #4527a0; }
+    .banner-final   { background: #ffebee; border: 1px solid #c62828; color: #b71c1c; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--purple); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* ── SECTION CARDS ── */
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.concept  { background: var(--bg-setup);    border-color: var(--c-setup); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.assign   { background: var(--bg-assign);   border-color: var(--c-assign); }
+    .sec.assess   { background: var(--bg-assess);   border-color: var(--c-assess); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .concept  .sec-icon { background: rgba(21,101,192,.13); }
+    .activity .sec-icon { background: rgba(98,0,234,.13); }
+    .assign   .sec-icon { background: rgba(46,125,50,.13); }
+    .assess   .sec-icon { background: rgba(245,124,0,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .concept  .sec-hdr h3 { color: #1565c0; }
+    .activity .sec-hdr h3 { color: #4527a0; }
+    .assign   .sec-hdr h3 { color: #1b5e20; }
+    .assess   .sec-hdr h3 { color: #bf360c; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .assign .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .assess .due-tag { background: rgba(245,124,0,.15); color: #bf360c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .concept  ul li::before { content: '💡'; font-size: 11px; flex-shrink: 0; }
+    .assign   ul li::before { content: '→'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .assess   ul li::before { content: '•'; color: var(--c-assess); font-weight: 700; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .sample-qs h5 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: #bf360c; margin: 12px 0 6px;
+    }
+    .sample-qs ul li::before { content: '?'; color: var(--c-assess); font-weight: 900; flex-shrink: 0; }
+    .rubric-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .rubric-table tr { border-bottom: 1px solid rgba(0,0,0,.08); }
+    .rubric-table tr:last-child { border-bottom: none; }
+    .rubric-table td { padding: 7px 2px; font-size: 13px; }
+    .rubric-table td:last-child { text-align: right; font-weight: 700; color: var(--c-assess); }
+    .exam-list { list-style: none; margin-bottom: 14px; }
+    .exam-list li {
+      padding: 4px 0; font-size: 13.5px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .exam-list li::before { content: '📌'; font-size: 12px; flex-shrink: 0; }
+    .sec-label {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; margin: 14px 0 6px; color: #bf360c;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--code-bg); border-radius: 9px;
+      padding: 16px; margin-top: 14px; overflow-x: auto;
+    }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 12.5px; line-height: 1.65; color: #d4c8ff; white-space: pre;
+    }
+
+    /* ── SCHEDULE TABLE ── */
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--purple); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #f5f0ff; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--purple); white-space: nowrap; }
+    .tbl-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tbl-quiz    { background: #fff3e0; color: #e65100; }
+    .tbl-midterm { background: #ede7f6; color: #4527a0; }
+    .tbl-final   { background: #ffebee; color: #b71c1c; }
+
+    /* ── WEEK NAV BUTTONS ── */
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--purple); color: var(--purple); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── MOBILE ── */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">Py+</div>
+      <div>
+        <h1>Intermediate Python</h1>
+        <div class="sub">16-Week Advanced CS Course</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Course Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">Full Schedule</span>
+    </div>
+    <div class="nav-group-label">Weeks</div>
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Course Overview</h2>
+    <span class="chip" id="topChip">16 Weeks · Intermediate · Requires Beginning Python</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   COURSE DATA
+═══════════════════════════ */
+const data = {
+  goals: [
+    "Write idiomatic, Pythonic code following PEP 8 and best practices",
+    "Master advanced function patterns: closures, decorators, lambdas",
+    "Build custom iterators, generators, and context managers",
+    "Apply functional programming techniques with Python",
+    "Work with real-world data: JSON, CSV, REST APIs, and SQLite databases",
+    "Write and run automated tests with unittest and pytest",
+    "Understand concurrency: threading, multiprocessing, and asyncio basics",
+    "Design and build a substantial, multi-module Python application"
+  ],
+  grading: [
+    { c: "Weekly Assignments (14)", w: "35%" },
+    { c: "In-Class Activities",     w: "10%" },
+    { c: "Quizzes (4)",             w: "20%" },
+    { c: "Midterm Project",         w: "15%" },
+    { c: "Final Project",           w: "20%" }
+  ],
+  resources: [
+    { icon: "📖", title: "Python Docs",       desc: "docs.python.org/3",          url: "https://docs.python.org/3/" },
+    { icon: "🧠", title: "Real Python",        desc: "realpython.com",             url: "https://realpython.com/" },
+    { icon: "📦", title: "PyPI",               desc: "Package repository",          url: "https://pypi.org/" },
+    { icon: "⚔️", title: "Codewars",           desc: "Intermediate kata",           url: "https://www.codewars.com/" },
+    { icon: "🧪", title: "pytest",             desc: "pytest.org",                 url: "https://pytest.org/" },
+    { icon: "🌐", title: "Requests Docs",      desc: "requests.readthedocs.io",    url: "https://requests.readthedocs.io/" },
+    { icon: "🗄️", title: "SQLite Tutorial",   desc: "sqlitetutorial.net",          url: "https://www.sqlitetutorial.net/" },
+    { icon: "📐", title: "PEP 8 Style Guide",  desc: "pep8.org",                   url: "https://pep8.org/" }
+  ],
+  weeks: [
+    {
+      n: 1, title: "Python Best Practices & Review", badge: null,
+      objectives: [
+        "Write clean, idiomatic Python following PEP 8",
+        "Set up and use virtual environments with venv",
+        "Organize projects with modules and packages"
+      ],
+      topics: [
+        "PEP 8 style guide: naming, spacing, line length",
+        "Virtual environments: python -m venv, activation, deactivation",
+        "pip and requirements.txt for dependency management",
+        "Project structure: packages vs. modules, __init__.py",
+        "Type hints and annotations (intro)",
+        "Review: classes, file I/O, error handling from Beginner course"
+      ],
+      concept: {
+        title: "Why Best Practices Matter",
+        desc: "Code is read far more than it is written. PEP 8, virtual environments, and good project structure are foundational habits that distinguish hobbyist scripts from professional software.",
+        points: [
+          "PEP 8 is not just style — it signals intent and improves readability",
+          "Virtual environments prevent dependency conflicts between projects",
+          "A well-organized package is importable, testable, and maintainable",
+          "Type hints are optional in Python but dramatically improve editor support and catch bugs early"
+        ]
+      },
+      activity: {
+        title: '"Code Review Clinic"',
+        desc: "Students receive a poorly written but working Python script. They identify PEP 8 violations, refactor it into a proper package structure, and set up a virtual environment for it.",
+        code: '# Before: messy code\ndef CalcArea(R):\n  import math\n  return math.pi*R*R\nx=float(input("r: "))\nprint("Area="+str(CalcArea(x)))\n\n# After: idiomatic Python\nimport math\n\ndef calculate_area(radius: float) -> float:\n    """Return the area of a circle given its radius."""\n    return math.pi * radius ** 2\n\ndef main() -> None:\n    radius = float(input("Enter radius: "))\n    print(f"Area: {calculate_area(radius):.4f}")\n\nif __name__ == "__main__":\n    main()'
+      },
+      assign: {
+        n: 1, title: "refactor_project.py", due: 2,
+        desc: "Take a messy script provided by the instructor and fully refactor it.",
+        reqs: [
+          "Fix all PEP 8 violations (naming, spacing, line length)",
+          "Add type hints to all function signatures",
+          "Add a docstring to every function and the module itself",
+          "Create a virtual environment and requirements.txt",
+          "Reorganize into a proper package with __init__.py and main.py"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 2, title: "Advanced Functions", badge: null,
+      objectives: [
+        "Use lambda, *args, and **kwargs confidently",
+        "Understand first-class functions and closures",
+        "Apply functools utilities for higher-order programming"
+      ],
+      topics: [
+        "lambda functions: syntax, use cases, and limits",
+        "*args and **kwargs: packing and unpacking",
+        "First-class functions: passing and returning functions",
+        "Closures and the enclosing scope (LEGB rule revisited)",
+        "functools.partial for partial application",
+        "functools.lru_cache for memoization"
+      ],
+      concept: null,
+      activity: {
+        title: '"Function Combinators Lab"',
+        desc: "Students build a small pipeline of functions using *args, **kwargs, and closures. Final challenge: implement a memoized fibonacci using only lru_cache vs. a manual cache dict.",
+        code: 'from functools import lru_cache, partial\n\n# Closure example: make a multiplier factory\ndef make_multiplier(factor):\n    def multiply(x):\n        return x * factor\n    return multiply\n\ndouble = make_multiplier(2)\ntriple = make_multiplier(3)\nprint(double(5), triple(5))   # 10, 15\n\n# lru_cache memoization\n@lru_cache(maxsize=None)\ndef fib(n):\n    if n < 2:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\nprint(fib(50))   # instant with caching\n\n# partial application\nbase_power = lambda base, exp: base ** exp\nsquare = partial(base_power, exp=2)\nprint(square(9))   # 81'
+      },
+      assign: {
+        n: 2, title: "advanced_functions.py", due: 3,
+        desc: "Write a collection of advanced function patterns demonstrating the week's concepts.",
+        reqs: [
+          "Write a make_validator(min_val, max_val) closure that returns a validator function",
+          "Write a flexible logger(*args, **kwargs) that accepts any positional and keyword args",
+          "Use partial to create specialized versions of a generic format_price(amount, currency, decimals) function",
+          "Use lru_cache to optimize a recursive function of your choice",
+          "Write a compose(*funcs) function that applies functions right-to-left in a pipeline"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 3, title: "Decorators", badge: "Quiz 1",
+      objectives: [
+        "Explain what decorators are and how they work under the hood",
+        "Write decorators that wrap and modify function behavior",
+        "Use @property, @staticmethod, and @classmethod"
+      ],
+      topics: [
+        "How decorators work: functions wrapping functions",
+        "Writing a basic decorator with functools.wraps",
+        "Decorator factories (decorators that take arguments)",
+        "Stacking multiple decorators",
+        "@property: computed attributes with getters and setters",
+        "@staticmethod and @classmethod"
+      ],
+      concept: null,
+      activity: {
+        title: '"Decorator Toolbox"',
+        desc: "Students implement three practical decorators from scratch: a timer, a retry-on-failure decorator, and an access logger. These will be reusable tools throughout the course.",
+        code: 'import time\nimport functools\n\n# Timer decorator\ndef timer(func):\n    @functools.wraps(func)\n    def wrapper(*args, **kwargs):\n        start = time.perf_counter()\n        result = func(*args, **kwargs)\n        elapsed = time.perf_counter() - start\n        print(f"{func.__name__} ran in {elapsed:.4f}s")\n        return result\n    return wrapper\n\n# Retry decorator factory\ndef retry(times=3):\n    def decorator(func):\n        @functools.wraps(func)\n        def wrapper(*args, **kwargs):\n            for attempt in range(1, times + 1):\n                try:\n                    return func(*args, **kwargs)\n                except Exception as e:\n                    print(f"Attempt {attempt} failed: {e}")\n            raise RuntimeError(f"{func.__name__} failed after {times} retries")\n        return wrapper\n    return decorator\n\n@timer\n@retry(times=3)\ndef risky_operation():\n    import random\n    if random.random() < 0.7:\n        raise ValueError("Simulated error")\n    return "Success!"'
+      },
+      assign: {
+        n: 3, title: "decorator_library.py", due: 4,
+        desc: "Build a personal decorator library with at least four decorators.",
+        reqs: [
+          "timer(func): prints how long a function takes to run",
+          "retry(times, exceptions): retries on specified exception types",
+          "validate_types(*types): checks that arguments match expected types",
+          "A class using @property with a getter, setter, and deleter",
+          "A class using @classmethod as an alternative constructor and @staticmethod as a utility"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 1",
+        topics: "Weeks 1-3: best practices, advanced functions, decorators",
+        format: "15 multiple-choice + 3 code-writing questions (25 min)",
+        samples: [
+          "What does functools.wraps do and why is it important?",
+          "Write a decorator that prints 'Before' and 'After' around any function call.",
+          "What is the difference between @staticmethod and @classmethod?"
+        ]
+      }
+    },
+    {
+      n: 4, title: "Comprehensions and Generator Expressions", badge: null,
+      objectives: [
+        "Write advanced list, dict, and set comprehensions",
+        "Use generator expressions to save memory",
+        "Know when to use each approach for clarity and performance"
+      ],
+      topics: [
+        "List comprehensions with conditions and nested loops",
+        "Dictionary comprehensions",
+        "Set comprehensions",
+        "Generator expressions vs. list comprehensions: memory trade-offs",
+        "Nested comprehensions (matrix operations)",
+        "When NOT to use comprehensions (readability limits)"
+      ],
+      concept: null,
+      activity: {
+        title: '"Data Transformation Sprint"',
+        desc: "Given a raw list of student records (dicts), students write comprehensions to filter, transform, and reshape the data — no loops allowed. Timed challenge: shortest readable solution wins.",
+        code: 'students = [\n    {"name": "Alice", "grade": 88, "major": "CS"},\n    {"name": "Bob",   "grade": 72, "major": "Math"},\n    {"name": "Carol", "grade": 95, "major": "CS"},\n    {"name": "Dan",   "grade": 61, "major": "Physics"},\n]\n\n# List comprehension: names of CS students with grade >= 80\ncs_honors = [s["name"] for s in students\n             if s["major"] == "CS" and s["grade"] >= 80]\n\n# Dict comprehension: {name: grade} for all students\ngrade_map = {s["name"]: s["grade"] for s in students}\n\n# Generator: sum grades without building a list in memory\navg = sum(s["grade"] for s in students) / len(students)\n\n# Nested: letter grades matrix\nletter = lambda g: "A" if g>=90 else "B" if g>=80 else "C" if g>=70 else "D"\ngrades = {s["name"]: letter(s["grade"]) for s in students}\nprint(cs_honors, grade_map, avg, grades)'
+      },
+      assign: {
+        n: 4, title: "comprehension_toolkit.py", due: 5,
+        desc: "Solve a series of data transformation problems using only comprehensions and generators.",
+        reqs: [
+          "Given a list of integers, produce a dict of {number: its_square} for odd numbers only",
+          "Flatten a 2D list (list of lists) into a 1D list using a single comprehension",
+          "Use a generator expression to find the first prime number above 1000",
+          "Read a CSV file and use a dict comprehension to build {row_id: row_dict}",
+          "Compare memory usage of a list comprehension vs. generator expression for 1,000,000 items (use sys.getsizeof)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 5, title: "Iterators and Generators", badge: null,
+      objectives: [
+        "Implement the iterator protocol with __iter__ and __next__",
+        "Write generator functions using yield",
+        "Use itertools for powerful, memory-efficient iteration"
+      ],
+      topics: [
+        "Iterator protocol: __iter__() and __next__()",
+        "Building a custom iterator class",
+        "yield keyword and generator functions",
+        "yield from for delegating to sub-generators",
+        "Infinite generators and lazy evaluation",
+        "itertools: chain, cycle, islice, groupby, combinations, permutations"
+      ],
+      concept: null,
+      activity: {
+        title: '"Build a Lazy Pipeline"',
+        desc: "Students build a data processing pipeline using only generators — no intermediate lists. Read lines from a file, filter, transform, and aggregate all lazily. Measure memory vs. list-based approach.",
+        code: 'import itertools\n\n# Custom iterator: countdown\nclass Countdown:\n    def __init__(self, start):\n        self.current = start\n\n    def __iter__(self):\n        return self\n\n    def __next__(self):\n        if self.current < 0:\n            raise StopIteration\n        val = self.current\n        self.current -= 1\n        return val\n\n# Generator function: infinite fibonacci\ndef fibonacci():\n    a, b = 0, 1\n    while True:\n        yield a\n        a, b = b, a + b\n\n# Take first 10 fibonacci numbers lazily\nfirst_10 = list(itertools.islice(fibonacci(), 10))\nprint(first_10)\n\n# Generator pipeline: read -> filter -> transform\ndef read_numbers(iterable):\n    for item in iterable:\n        yield int(item.strip())\n\ndef filter_even(nums):\n    for n in nums:\n        if n % 2 == 0:\n            yield n\n\ndef square(nums):\n    for n in nums:\n        yield n ** 2'
+      },
+      assign: {
+        n: 5, title: "custom_itertools.py", due: 6,
+        desc: "Build your own mini itertools library and a lazy file processing pipeline.",
+        reqs: [
+          "Implement a custom iterator class Range2D that iterates over a 2D grid of (row, col) tuples",
+          "Write a generator function running_average(iterable) that yields the cumulative average",
+          "Write a generator function chunk(iterable, size) that yields chunks of a given size",
+          "Build a lazy pipeline: read a large text file, filter lines containing a keyword, count words per line — all with generators",
+          "Use itertools.groupby to group a list of records by a field and summarize each group"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 6, title: "Magic Methods and Operator Overloading", badge: "Quiz 2",
+      objectives: [
+        "Implement dunder methods to make objects feel native to Python",
+        "Overload operators for custom classes",
+        "Build context managers using __enter__ and __exit__"
+      ],
+      topics: [
+        "Dunder (magic) method overview",
+        "__repr__, __str__, __format__",
+        "Comparison: __eq__, __lt__, __le__, __gt__, __ge__",
+        "Arithmetic: __add__, __sub__, __mul__, __truediv__, __mod__",
+        "Container protocol: __len__, __getitem__, __setitem__, __contains__",
+        "Context managers: __enter__, __exit__, and the contextlib module"
+      ],
+      concept: null,
+      activity: {
+        title: '"Build a Vector Class"',
+        desc: "Students implement a mathematical Vector class that supports +, -, *, dot product, magnitude, and comparison by magnitude. Then write a custom context manager for a timed code block.",
+        code: 'import math\nfrom contextlib import contextmanager\nimport time\n\nclass Vector:\n    def __init__(self, *components):\n        self.components = tuple(components)\n\n    def __repr__(self):\n        return f"Vector{self.components}"\n\n    def __add__(self, other):\n        return Vector(*(a + b for a, b in zip(self.components, other.components)))\n\n    def __mul__(self, scalar):\n        return Vector(*(c * scalar for c in self.components))\n\n    def __len__(self):\n        return len(self.components)\n\n    def __abs__(self):\n        return math.sqrt(sum(c**2 for c in self.components))\n\n    def __eq__(self, other):\n        return self.components == other.components\n\n@contextmanager\ndef timer(label=""):\n    start = time.perf_counter()\n    yield\n    print(f"{label}: {time.perf_counter() - start:.4f}s")\n\nwith timer("computation"):\n    v1 = Vector(1, 2, 3)\n    v2 = Vector(4, 5, 6)\n    print(v1 + v2, abs(v1))'
+      },
+      assign: {
+        n: 6, title: "custom_collections.py", due: 7,
+        desc: "Build two richly-featured custom classes using dunder methods.",
+        reqs: [
+          "Create a Matrix class supporting +, -, *, scalar multiplication, __repr__, and __getitem__",
+          "Create a Fraction class supporting all arithmetic operators, comparison, and simplification via GCD",
+          "Implement a TimedBlock context manager class (using __enter__/__exit__) that logs execution time to a file",
+          "Both classes must be sortable (implement __lt__) and usable in sets (implement __hash__)"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 2",
+        topics: "Weeks 4-6: comprehensions, iterators/generators, magic methods",
+        format: "15 multiple-choice + 3 code-writing questions (25 min)",
+        samples: [
+          "What is the difference between __iter__ and __next__?",
+          "Write a class Money that supports addition and string formatting.",
+          "When should you use a generator expression instead of a list comprehension?"
+        ]
+      }
+    },
+    {
+      n: 7, title: "Advanced OOP: ABCs, Dataclasses, and Design Patterns", badge: null,
+      objectives: [
+        "Define and enforce interfaces using Abstract Base Classes",
+        "Simplify data classes using the dataclasses module",
+        "Apply common design patterns: Factory, Observer, and Strategy"
+      ],
+      topics: [
+        "Abstract Base Classes with abc.ABC and @abstractmethod",
+        "isinstance() and issubclass() with ABCs",
+        "@dataclass: auto-generating __init__, __repr__, __eq__",
+        "dataclass fields: default values, field(), frozen, slots",
+        "Design Pattern: Factory (object creation)",
+        "Design Pattern: Observer (event-driven communication)",
+        "Design Pattern: Strategy (swappable algorithms)"
+      ],
+      concept: null,
+      activity: {
+        title: '"Shape Factory"',
+        desc: "Students build a Shape abstract base class, implement concrete subclasses (Circle, Rectangle, Triangle), then write a ShapeFactory that creates shapes from a string name. Add an Observer to log when shapes are created.",
+        code: 'from abc import ABC, abstractmethod\nfrom dataclasses import dataclass, field\nfrom typing import Callable\n\nclass Shape(ABC):\n    @abstractmethod\n    def area(self) -> float: ...\n    @abstractmethod\n    def perimeter(self) -> float: ...\n    def __str__(self):\n        return f"{type(self).__name__}: area={self.area():.2f}"\n\n@dataclass\nclass Circle(Shape):\n    radius: float\n    def area(self):\n        import math\n        return math.pi * self.radius ** 2\n    def perimeter(self):\n        import math\n        return 2 * math.pi * self.radius\n\n# Factory pattern\nclass ShapeFactory:\n    _registry = {}\n\n    @classmethod\n    def register(cls, name):\n        def decorator(shape_cls):\n            cls._registry[name] = shape_cls\n            return shape_cls\n        return decorator\n\n    @classmethod\n    def create(cls, name, **kwargs):\n        if name not in cls._registry:\n            raise ValueError(f"Unknown shape: {name}")\n        return cls._registry[name](**kwargs)\n\nShapeFactory.register("circle")(Circle)'
+      },
+      assign: {
+        n: 7, title: "design_patterns.py", due: 8,
+        desc: "Implement three design patterns in a cohesive mini-application.",
+        reqs: [
+          "Define an Animal ABC with abstract methods speak() and move(). Implement Dog, Bird, Fish subclasses.",
+          "Use @dataclass for each animal subclass with relevant fields (name, speed, etc.)",
+          "Implement an AnimalFactory (Factory pattern) that creates animals from a config dict",
+          "Implement an EventSystem (Observer pattern) where Animal objects emit events on speak()",
+          "Implement a SortStrategy (Strategy pattern) that sorts animals by different criteria (speed, name, type)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 8, title: "Midterm Project", badge: "Midterm",
+      objectives: [
+        "Apply Weeks 1-7 concepts in a cohesive, real-world application",
+        "Demonstrate code quality, testing, and documentation",
+        "Present and explain design decisions to peers"
+      ],
+      topics: [
+        "Project work time and code review",
+        "Architecture planning: separating concerns into modules",
+        "Debugging with pdb and VS Code debugger",
+        "Writing project documentation",
+        "Peer code review session"
+      ],
+      concept: null,
+      activity: {
+        title: "Midterm Peer Review",
+        desc: "Students exchange projects with a partner and complete a structured code review: architecture clarity, PEP 8 compliance, use of advanced patterns, and testing.",
+        code: null
+      },
+      assign: {
+        n: 8, title: "Midterm Project", due: 8,
+        desc: "Build and present a complete Python application demonstrating Weeks 1-7 concepts.",
+        reqs: [
+          "Choose a domain: data processor, CLI tool, simulation, or game",
+          "Must use at minimum: decorators, generators or iterators, comprehensions, and at least one design pattern",
+          "At minimum 3 modules / files with clear separation of concerns",
+          "At least 10 unit tests covering core logic",
+          "Full PEP 8 compliance, type hints, and docstrings",
+          "A README.md with setup instructions and usage examples"
+        ]
+      },
+      assess: {
+        type: "midterm", label: "Midterm Project",
+        desc: "Build a multi-module Python application that demonstrates mastery of advanced function patterns, OOP, iterators, decorators, and at least one design pattern.",
+        reqs: [
+          "At least 3 Python modules with clear separation of concerns",
+          "Uses decorators (at least 2 meaningful uses)",
+          "Uses generators or custom iterators",
+          "Implements at least one design pattern (Factory, Observer, or Strategy)",
+          "10+ unit tests with meaningful assertions",
+          "README.md with setup and usage instructions"
+        ],
+        rubric: [
+          { c: "Functionality and correctness",          p: 25 },
+          { c: "Advanced Python concepts used",          p: 25 },
+          { c: "Code quality, PEP 8, type hints",        p: 20 },
+          { c: "Test coverage and quality",              p: 15 },
+          { c: "Documentation and README",               p: 15 }
+        ]
+      }
+    },
+    {
+      n: 9, title: "Functional Programming", badge: null,
+      objectives: [
+        "Understand pure functions, immutability, and side effects",
+        "Use map(), filter(), and reduce() effectively",
+        "Apply functools for partial application and composition"
+      ],
+      topics: [
+        "Functional programming principles: pure functions, immutability",
+        "map(), filter(), zip(), and why generators often replace them",
+        "functools.reduce() for fold operations",
+        "functools.partial for partial function application",
+        "Chaining operations functionally",
+        "Immutable data structures: tuples, frozensets, namedtuples"
+      ],
+      concept: null,
+      activity: {
+        title: '"FP Data Pipeline"',
+        desc: "Students rewrite an imperative data analysis script using purely functional techniques: map, filter, reduce, and composition. No mutation of variables allowed.",
+        code: 'from functools import reduce\nfrom typing import Callable, Iterable, TypeVar\n\nT = TypeVar("T")\nU = TypeVar("U")\n\n# Function composition\ndef compose(*funcs: Callable) -> Callable:\n    """Apply functions right-to-left."""\n    return reduce(lambda f, g: lambda x: f(g(x)), funcs)\n\n# Functional pipeline on sales data\nsales = [\n    {"product": "Widget", "qty": 5,  "price": 9.99},\n    {"product": "Gadget", "qty": 2,  "price": 49.99},\n    {"product": "Widget", "qty": 12, "price": 9.99},\n    {"product": "Donut",  "qty": 100,"price": 1.25},\n]\n\ntotal_revenue = reduce(\n    lambda acc, s: acc + s["qty"] * s["price"],\n    sales, 0\n)\n\nhigh_value = list(filter(lambda s: s["qty"] * s["price"] > 50, sales))\nproducts   = list(map(lambda s: s["product"], high_value))\n\nprint(f"Total revenue: ${total_revenue:.2f}")\nprint(f"High-value orders: {products}")'
+      },
+      assign: {
+        n: 9, title: "functional_tools.py", due: 10,
+        desc: "Solve data analysis problems using exclusively functional programming techniques.",
+        reqs: [
+          "Implement a compose(*funcs) and pipe(*funcs) utility (left-to-right composition)",
+          "Use map and filter (no list comprehensions) to process a list of employee records",
+          "Use reduce to implement your own sum, product, flatten, and group_by functions",
+          "Use namedtuple to create immutable Point, Color, and Employee record types",
+          "Write a memoize(func) decorator using a closure (without lru_cache) and test it on fibonacci"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 10, title: "Regular Expressions", badge: null,
+      objectives: [
+        "Write regex patterns using the re module",
+        "Use groups, named groups, and backreferences",
+        "Apply regex to real-world text processing tasks"
+      ],
+      topics: [
+        "Regex syntax: literals, character classes, quantifiers",
+        "Anchors: ^, $, \\b (word boundary)",
+        "Groups: capturing (), non-capturing (?:), named (?P<name>)",
+        "re.compile(), re.match(), re.search(), re.findall(), re.sub()",
+        "Flags: re.IGNORECASE, re.MULTILINE, re.DOTALL",
+        "Lookahead and lookbehind assertions"
+      ],
+      concept: null,
+      activity: {
+        title: '"Log File Detective"',
+        desc: "Students are given a sample web server log file. Using regex, they must extract: IP addresses, timestamps, HTTP status codes, URLs, and user agents. Then generate a summary report.",
+        code: 'import re\nfrom collections import Counter\n\n# Sample Apache-style log line\nlog_line = \'192.168.1.42 - - [27/Feb/2026:14:32:01 +0000] "GET /api/data HTTP/1.1" 200 1234 "Mozilla/5.0"\'\n\n# Named groups make patterns self-documenting\nlog_pattern = re.compile(\n    r\'(?P<ip>\\d{1,3}(?:\\.\\d{1,3}){3})\'\n    r\' - - \\[(?P<timestamp>[^\\]]+)\\]\'\n    r\' "(?P<method>\\w+) (?P<url>[^\\s]+) HTTP/[\\d.]+"\'\n    r\' (?P<status>\\d{3})\'\n    r\' (?P<bytes>\\d+)\'\n)\n\nm = log_pattern.match(log_line)\nif m:\n    print(m.group("ip"), m.group("status"), m.group("url"))\n\n# Email validator\nemail_re = re.compile(\n    r"^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$"\n)\nprint(email_re.match("user@example.com") is not None)'
+      },
+      assign: {
+        n: 10, title: "text_processor.py", due: 11,
+        desc: "Build a text processing toolkit powered by regular expressions.",
+        reqs: [
+          "Write a function extract_emails(text) that finds all valid email addresses",
+          "Write a function extract_urls(text) that finds all http/https URLs",
+          "Write a function mask_credit_cards(text) that replaces card numbers with XXXX-XXXX-XXXX-1234",
+          "Write a function parse_log_file(path) that parses an Apache log and returns a list of dicts",
+          "Write a function find_duplicates(text) that finds words that appear twice consecutively using backreferences"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 11, title: "Working with Data: JSON, CSV, and APIs", badge: "Quiz 3",
+      objectives: [
+        "Encode and decode JSON data fluently",
+        "Process structured CSV data with the csv module",
+        "Consume REST APIs using the requests library"
+      ],
+      topics: [
+        "json module: json.loads(), json.dumps(), json.load(), json.dump()",
+        "Custom JSON serialization with JSONEncoder / default=",
+        "Advanced CSV: DictReader, DictWriter, handling edge cases",
+        "HTTP fundamentals: GET, POST, headers, status codes",
+        "requests library: .get(), .post(), .json(), error handling",
+        "Pagination, rate limiting, and API authentication (Bearer tokens)"
+      ],
+      concept: null,
+      activity: {
+        title: '"Open Data Explorer"',
+        desc: "Students fetch data from a public REST API (e.g., open-meteo.com for weather data), parse the JSON response, convert it to CSV, and generate a text summary report.",
+        code: 'import json\nimport csv\nimport requests\nfrom datetime import datetime\n\n# Fetch weather data (no API key required)\nurl = "https://api.open-meteo.com/v1/forecast"\nparams = {\n    "latitude": 40.71,\n    "longitude": -74.01,\n    "hourly": "temperature_2m",\n    "forecast_days": 1\n}\n\nresponse = requests.get(url, params=params, timeout=10)\nresponse.raise_for_status()   # raises HTTPError on 4xx/5xx\ndata = response.json()\n\n# Write to CSV\nwith open("weather.csv", "w", newline="") as f:\n    writer = csv.DictWriter(f, fieldnames=["time", "temp_c"])\n    writer.writeheader()\n    for time, temp in zip(data["hourly"]["time"],\n                          data["hourly"]["temperature_2m"]):\n        writer.writerow({"time": time, "temp_c": temp})\n\nprint("Saved weather.csv")'
+      },
+      assign: {
+        n: 11, title: "data_pipeline.py", due: 12,
+        desc: "Build an end-to-end data pipeline from a public API to a processed CSV report.",
+        reqs: [
+          "Fetch data from a public REST API of your choice (weather, astronomy, quotes, etc.)",
+          "Handle errors: connection timeout, non-200 status codes, malformed JSON",
+          "Save raw JSON response to disk with a timestamp in the filename",
+          "Parse and clean the data, then write a summary CSV using DictWriter",
+          "Write a custom JSONEncoder subclass to handle a Python object (e.g., datetime) that json can't serialize by default",
+          "Add a retry decorator (from Week 3) around the API call"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 3",
+        topics: "Weeks 9-11: functional programming, regex, JSON/CSV/APIs",
+        format: "15 multiple-choice + 3 code-writing questions (30 min)",
+        samples: [
+          "What is the difference between json.loads() and json.load()?",
+          "Write a regex pattern that matches a US phone number in the format (555) 123-4567.",
+          "What does response.raise_for_status() do?"
+        ]
+      }
+    },
+    {
+      n: 12, title: "Databases with SQLite", badge: null,
+      objectives: [
+        "Design and create relational database schemas",
+        "Perform CRUD operations using Python's sqlite3 module",
+        "Use parameterized queries to prevent SQL injection"
+      ],
+      topics: [
+        "Relational database concepts: tables, rows, columns, keys",
+        "sqlite3: connecting, creating tables, committing",
+        "CRUD: INSERT, SELECT, UPDATE, DELETE",
+        "Parameterized queries with ? placeholders",
+        "Fetching data: fetchone(), fetchall(), fetchmany()",
+        "Joins, aggregates (COUNT, SUM, AVG), and ORDER BY",
+        "Using sqlite3 as a context manager"
+      ],
+      concept: null,
+      activity: {
+        title: '"Library Database"',
+        desc: "Students design and implement a two-table library database (books + authors) using sqlite3. They write functions for all CRUD operations and a search function using a JOIN.",
+        code: 'import sqlite3\nfrom contextlib import contextmanager\n\nDB_PATH = "library.db"\n\n@contextmanager\ndef get_db(path=DB_PATH):\n    conn = sqlite3.connect(path)\n    conn.row_factory = sqlite3.Row   # rows as dicts\n    try:\n        yield conn\n        conn.commit()\n    except Exception:\n        conn.rollback()\n        raise\n    finally:\n        conn.close()\n\ndef create_tables():\n    with get_db() as conn:\n        conn.executescript("""\n            CREATE TABLE IF NOT EXISTS authors (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                name TEXT NOT NULL UNIQUE\n            );\n            CREATE TABLE IF NOT EXISTS books (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                title TEXT NOT NULL,\n                author_id INTEGER REFERENCES authors(id),\n                year INTEGER\n            );\n        """)\n\ndef add_book(title: str, author: str, year: int):\n    with get_db() as conn:\n        conn.execute("INSERT OR IGNORE INTO authors (name) VALUES (?)", (author,))\n        author_id = conn.execute(\n            "SELECT id FROM authors WHERE name = ?", (author,)\n        ).fetchone()[0]\n        conn.execute(\n            "INSERT INTO books (title, author_id, year) VALUES (?,?,?)",\n            (title, author_id, year)\n        )'
+      },
+      assign: {
+        n: 12, title: "contact_db.py", due: 13,
+        desc: "Build a full-featured contact manager backed by a SQLite database.",
+        reqs: [
+          "Schema: contacts table (id, name, email, phone) + tags table + contact_tags join table",
+          "Functions: add_contact, get_contact, update_contact, delete_contact, list_all",
+          "Function: search_contacts(query) searches name and email using LIKE",
+          "Function: add_tag(contact_id, tag) and get_contacts_by_tag(tag)",
+          "All queries must use parameterized placeholders (no string formatting in SQL)",
+          "Use a context manager for all database connections"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 13, title: "Testing and Debugging", badge: null,
+      objectives: [
+        "Write effective unit tests using unittest and pytest",
+        "Use mocking to isolate tests from external dependencies",
+        "Apply test-driven development (TDD) principles"
+      ],
+      topics: [
+        "Why testing matters: regression, refactoring confidence",
+        "unittest: TestCase, setUp/tearDown, assert methods",
+        "pytest: test discovery, fixtures, parametrize",
+        "Mocking with unittest.mock: Mock, MagicMock, patch",
+        "Test-driven development (TDD): red-green-refactor cycle",
+        "Code coverage with pytest-cov",
+        "Debugging: pdb, breakpoint(), VS Code debugger"
+      ],
+      concept: null,
+      activity: {
+        title: '"TDD: Build a Calculator"',
+        desc: "Students practice strict TDD: write a failing test, write the minimum code to pass it, refactor. Build a Calculator class with add, subtract, multiply, divide, and history — tests first.",
+        code: 'import pytest\nfrom unittest.mock import patch, MagicMock\n\n# --- The class under test ---\nclass Calculator:\n    def __init__(self):\n        self.history = []\n\n    def add(self, a, b):\n        result = a + b\n        self.history.append(f"{a} + {b} = {result}")\n        return result\n\n    def divide(self, a, b):\n        if b == 0:\n            raise ZeroDivisionError("Cannot divide by zero")\n        return a / b\n\n# --- Tests (write these FIRST in TDD) ---\nclass TestCalculator:\n    def setup_method(self):\n        self.calc = Calculator()\n\n    def test_add_positive(self):\n        assert self.calc.add(2, 3) == 5\n\n    def test_add_records_history(self):\n        self.calc.add(1, 2)\n        assert len(self.calc.history) == 1\n\n    def test_divide_by_zero_raises(self):\n        with pytest.raises(ZeroDivisionError):\n            self.calc.divide(10, 0)\n\n    @patch("builtins.input", return_value="5")\n    def test_with_mock_input(self, mock_input):\n        val = int(input("Enter: "))\n        assert val == 5'
+      },
+      assign: {
+        n: 13, title: "test_suite.py", due: 14,
+        desc: "Write a comprehensive test suite for an existing module using TDD.",
+        reqs: [
+          "Write tests for the contact_db.py from Week 12 (or a provided module)",
+          "At least 15 test cases covering happy paths and edge cases",
+          "Use pytest fixtures to set up and tear down a test database",
+          "Mock the requests library in at least one test to avoid real API calls",
+          "Use @pytest.mark.parametrize for at least one set of input/output pairs",
+          "Run pytest-cov and achieve at least 80% code coverage"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 14, title: "Concurrency: Threading, Multiprocessing, and Async", badge: "Quiz 4",
+      objectives: [
+        "Understand the GIL and when threading helps vs. hurts",
+        "Use threading for I/O-bound tasks",
+        "Write basic async/await code with asyncio"
+      ],
+      topics: [
+        "The Global Interpreter Lock (GIL): what it means for Python",
+        "threading.Thread: creating, starting, joining threads",
+        "Thread safety: Lock, Event, Queue",
+        "multiprocessing for CPU-bound parallelism",
+        "concurrent.futures: ThreadPoolExecutor and ProcessPoolExecutor",
+        "asyncio basics: async def, await, event loop",
+        "aiohttp for async HTTP requests"
+      ],
+      concept: null,
+      activity: {
+        title: '"Concurrent Downloader"',
+        desc: "Students benchmark three approaches to downloading 20 URLs: sequential, ThreadPoolExecutor, and asyncio/aiohttp. Compare timing, complexity, and correctness. Discuss when to use each.",
+        code: 'import time\nimport requests\nimport asyncio\nimport aiohttp\nfrom concurrent.futures import ThreadPoolExecutor\n\nURLS = [f"https://httpbin.org/delay/1" for _ in range(5)]\n\n# Sequential\ndef sequential():\n    return [requests.get(url).status_code for url in URLS]\n\n# Threaded\ndef threaded():\n    with ThreadPoolExecutor(max_workers=5) as executor:\n        futures = [executor.submit(requests.get, url) for url in URLS]\n        return [f.result().status_code for f in futures]\n\n# Async\nasync def fetch_all():\n    async with aiohttp.ClientSession() as session:\n        async def fetch(url):\n            async with session.get(url) as r:\n                return r.status\n        return await asyncio.gather(*[fetch(u) for u in URLS])\n\nfor name, fn in [("sequential", sequential), ("threaded", threaded)]:\n    t = time.perf_counter()\n    fn()\n    print(f"{name}: {time.perf_counter()-t:.2f}s")'
+      },
+      assign: {
+        n: 14, title: "concurrent_tools.py", due: 15,
+        desc: "Build tools that demonstrate threading, multiprocessing, and async in practical scenarios.",
+        reqs: [
+          "Write a threaded_downloader(urls) function using ThreadPoolExecutor that downloads files concurrently",
+          "Write a parallel_processor(data, func) using ProcessPoolExecutor for CPU-bound transformation",
+          "Implement a thread-safe counter class using threading.Lock",
+          "Write an async weather fetcher that fetches 10 cities from an open API concurrently with asyncio",
+          "Write a benchmark comparing sequential, threaded, and async approaches for the weather fetcher"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 4",
+        topics: "Weeks 12-14: databases, testing, concurrency",
+        format: "15 multiple-choice + 3 code-writing questions (30 min)",
+        samples: [
+          "What is the GIL and when should you use multiprocessing instead of threading?",
+          "Write a pytest fixture that creates and tears down a temporary SQLite database.",
+          "What does asyncio.gather() do?"
+        ]
+      }
+    },
+    {
+      n: 15, title: "Performance, Packaging, and Real-World Python", badge: null,
+      objectives: [
+        "Profile Python code and identify bottlenecks",
+        "Package a Python project for distribution",
+        "Apply real-world engineering practices: logging, configuration, CLI"
+      ],
+      topics: [
+        "Profiling: cProfile, line_profiler, memory_profiler",
+        "Optimization strategies: algorithmic, data structure choice, NumPy basics",
+        "Python packaging: pyproject.toml, setuptools, building a wheel",
+        "CLI tools with argparse and click",
+        "Logging with the logging module (levels, handlers, formatters)",
+        "Configuration management: configparser, environment variables, dotenv"
+      ],
+      concept: null,
+      activity: {
+        title: '"Build a CLI Tool"',
+        desc: "Students turn their data pipeline from Week 11 into a polished CLI tool using click: configurable via flags, with proper logging, error messages, and --help text.",
+        code: 'import click\nimport logging\nfrom pathlib import Path\n\nlogging.basicConfig(\n    level=logging.INFO,\n    format="%(asctime)s [%(levelname)s] %(message)s"\n)\nlog = logging.getLogger(__name__)\n\n@click.group()\ndef cli():\n    """Data Pipeline CLI Tool."""\n    pass\n\n@cli.command()\n@click.option("--city", "-c", required=True, help="City name to fetch weather for")\n@click.option("--days", "-d", default=3, show_default=True, help="Forecast days")\n@click.option("--output", "-o", type=click.Path(), default="output.csv")\ndef weather(city, days, output):\n    """Fetch weather forecast and save to CSV."""\n    log.info(f"Fetching {days}-day forecast for {city}")\n    # ... fetch and process data ...\n    click.secho(f"Saved to {output}", fg="green")\n\nif __name__ == "__main__":\n    cli()'
+      },
+      assign: {
+        n: 15, title: "Final Project Checkpoint", due: 16,
+        desc: "Submit your final project in progress for instructor feedback. Graded on effort.",
+        reqs: [
+          "Submit current code with at least 60% of features working",
+          "Include a brief architecture document: modules, data flow, design decisions",
+          "List what's done, what's remaining, and any blockers",
+          "Include your test file showing at least 10 passing tests"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 16, title: "Final Project Presentations & Final Exam", badge: "Final",
+      objectives: [
+        "Present a substantial, production-quality Python application",
+        "Demonstrate mastery of intermediate Python techniques",
+        "Reflect on growth from beginner to intermediate programmer"
+      ],
+      topics: [
+        "Final project presentations (8 min each + Q&A)",
+        "Final exam — 75 minutes",
+        "Course retrospective and next steps (data science, web dev, systems)"
+      ],
+      concept: null,
+      activity: {
+        title: "Final Project Presentations",
+        desc: "Each student presents for 8 minutes: demo the app, walk through one interesting technical challenge, explain a design decision, and answer questions from the class.",
+        code: null
+      },
+      assign: {
+        n: 16, title: "Final Project", due: 16,
+        desc: "Build and present a production-quality Python application demonstrating intermediate mastery.",
+        reqs: [
+          "Minimum 300 lines of meaningful code across multiple modules",
+          "Must use at least 4 of: decorators, generators, comprehensions, ABCs, regex, SQLite, APIs, threading/async, testing",
+          "Full test suite with 80%+ coverage",
+          "CLI interface using argparse or click",
+          "Logging configured appropriately",
+          "pyproject.toml or setup.py for packaging",
+          "README.md with installation, usage, and architecture overview"
+        ]
+      },
+      assess: {
+        type: "final", label: "Final Exam + Final Project",
+        desc: "A 75-minute written exam covering all 16 weeks, plus a graded final project and 8-minute live presentation with Q&A.",
+        examSections: [
+          "Multiple Choice (25 questions, 1 pt each) — all 16 weeks",
+          "Code Reading (15 pts) — trace execution of a complex program and explain output",
+          "Design Question (15 pts) — choose the right tools and patterns for a described problem",
+          "Code Writing (20 pts) — implement two functions/classes meeting a given specification"
+        ],
+        rubric: [
+          { c: "Functionality and correctness",                  p: 25 },
+          { c: "Advanced Python techniques applied correctly",   p: 25 },
+          { c: "Code quality, style, and documentation",         p: 20 },
+          { c: "Test suite quality and coverage",                p: 15 },
+          { c: "Presentation and Q&A",                          p: 15 }
+        ]
+      }
+    }
+  ]
+};
+
+/* ═══════════════════════════
+   HELPERS
+═══════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function codeBlock(code) {
+  if (!code) return '';
+  return `<div class="code-block">
+    <div class="code-dots">
+      <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+    </div>
+    <pre>${esc(code)}</pre>
+  </div>`;
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+/* ═══════════════════════════
+   RENDER: OVERVIEW
+═══════════════════════════ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Course Overview';
+  document.getElementById('topChip').textContent  = '16 Weeks · Intermediate · Requires Beginning Python';
+
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const grading = data.grading.map(g => `<tr><td>${esc(g.c)}</td><td>${esc(g.w)}</td></tr>`).join('');
+  const res     = data.resources.map(r =>
+    `<div class="resource-card" onclick="window.open('${r.url}','_blank')">
+      <div class="r-icon">${r.icon}</div>
+      <div class="r-title">${esc(r.title)}</div>
+      <div class="r-desc">${esc(r.desc)}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Intermediate Python</h1>
+      <div class="tagline">Deeper Python — Advanced Techniques, Real-World Applications, and Professional Practices</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">16</div><div class="lbl">Weeks</div></div>
+        <div class="stat-box"><div class="val">14</div><div class="lbl">Assignments</div></div>
+        <div class="stat-box"><div class="val">4</div><div class="lbl">Quizzes</div></div>
+        <div class="stat-box"><div class="val">2</div><div class="lbl">Projects</div></div>
+      </div>
+    </div>
+
+    <div class="prereq">
+      <div class="prereq-icon">📚</div>
+      <div>
+        <strong>Prerequisite:</strong> Completion of Beginning Python (or equivalent).
+        Students should be comfortable with variables, loops, functions, OOP basics, file I/O, and error handling.
+        This course picks up where Beginning Python left off and moves significantly faster.
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#ede7f6">🎯</span> Course Goals</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">📊</span> Grading Breakdown</div>
+        <table class="grade-table"><tbody>${grading}</tbody></table>
+        <p style="font-size:12px;color:var(--muted);margin-top:14px">
+          Note: Assignments are more open-ended than in the beginner course.
+          Design decisions and code quality are evaluated alongside correctness.
+        </p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">🗺️</span> Course Arc</div>
+        <ul class="check-list">
+          <li>Weeks 1–3: Pythonic code, advanced functions, decorators</li>
+          <li>Weeks 4–7: Comprehensions, iterators, OOP mastery</li>
+          <li>Week 8: Midterm Project</li>
+          <li>Weeks 9–11: FP, regex, data formats and APIs</li>
+          <li>Weeks 12–14: Databases, testing, concurrency</li>
+          <li>Weeks 15–16: Packaging, CLI tools, final project</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#e3f2fd">🔗</span> Recommended Resources</div>
+      <div class="row3" style="margin-bottom:0; margin-top:4px">${res}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: SCHEDULE
+═══════════════════════════ */
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = 'Full Course Schedule';
+  document.getElementById('topChip').textContent  = 'All 16 Weeks';
+
+  const rows = data.weeks.map(w => {
+    let assess = '<span style="color:#bbb">—</span>';
+    if (w.assess) {
+      const cls = w.assess.type === 'quiz' ? 'tbl-quiz' : w.assess.type === 'midterm' ? 'tbl-midterm' : 'tbl-final';
+      assess = `<span class="tbl-pill ${cls}">${esc(w.assess.label)}</span>`;
+    }
+    const asgn = w.assign ? `A${w.assign.n}: ${esc(w.assign.title)}` : '<span style="color:#bbb">—</span>';
+    return `<tr onclick="go('week-${w.n}')">
+      <td class="wk-col">Week ${w.n}</td>
+      <td>${esc(w.title)}</td>
+      <td>${asgn}</td>
+      <td>${assess}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Assignment</th><th>Assessment</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that week.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: WEEK
+═══════════════════════════ */
+function renderWeek(num) {
+  const w = data.weeks.find(x => x.n === num);
+  if (!w) return;
+
+  document.getElementById('topTitle').textContent = `Week ${w.n}: ${w.title}`;
+  document.getElementById('topChip').textContent  = `Week ${w.n} of 16`;
+
+  let html = '<div class="fade-in">';
+
+  // Banner
+  let banner = '';
+  if (w.assess) {
+    const cls = { quiz:'banner-quiz', midterm:'banner-midterm', final:'banner-final' }[w.assess.type];
+    const ico = { quiz:'📝', midterm:'🏆', final:'🎓' }[w.assess.type];
+    banner = `<div class="banner ${cls}">${ico} Assessment this week: <strong>${esc(w.assess.label)}</strong></div>`;
+  }
+
+  const objs   = w.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = w.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Week ${w.n}</div>
+    <h2>${esc(w.title)}</h2>
+    ${banner}
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Learning Objectives</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Topics Covered</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  // Concept card (replaces setup)
+  if (w.concept) {
+    const pts = w.concept.points.map(p => `<li>${esc(p)}</li>`).join('');
+    html += `<div class="sec concept">
+      <div class="sec-hdr">
+        <div class="sec-icon">💡</div>
+        <h3>Key Concept: ${esc(w.concept.title)}</h3>
+      </div>
+      <p class="desc">${esc(w.concept.desc)}</p>
+      <ul>${pts}</ul>
+    </div>`;
+  }
+
+  // Activity
+  if (w.activity) {
+    html += `<div class="sec activity">
+      <div class="sec-hdr">
+        <div class="sec-icon">🎮</div>
+        <h3>In-Class Activity: ${esc(w.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(w.activity.desc)}</p>
+      ${codeBlock(w.activity.code)}
+    </div>`;
+  }
+
+  // Assignment
+  if (w.assign) {
+    const reqs = w.assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec assign">
+      <div class="sec-hdr">
+        <div class="sec-icon">📝</div>
+        <h3>Assignment ${w.assign.n}: ${esc(w.assign.title)}</h3>
+        <span class="due-tag">Due Week ${w.assign.due}</span>
+      </div>
+      <p class="desc">${esc(w.assign.desc)}</p>
+      <ul>${reqs}</ul>
+    </div>`;
+  }
+
+  // Assessment
+  if (w.assess) {
+    if (w.assess.type === 'quiz') {
+      const samples = w.assess.samples.map(s => `<li>${esc(s)}</li>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">📋</div>
+          <h3>${esc(w.assess.label)}</h3>
+          <span class="due-tag">End of Week ${w.n}</span>
+        </div>
+        <p><strong>Topics:</strong> ${esc(w.assess.topics)}</p>
+        <p><strong>Format:</strong> ${esc(w.assess.format)}</p>
+        <div class="sample-qs">
+          <h5>Sample Questions</h5>
+          <ul>${samples}</ul>
+        </div>
+      </div>`;
+
+    } else if (w.assess.type === 'midterm') {
+      const reqs   = w.assess.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      const rubric = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🏆</div>
+          <h3>Midterm Project</h3>
+          <span class="due-tag">Due End of Week 8</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Requirements</div>
+        <ul>${reqs}</ul>
+        <div class="sec-label">Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    } else if (w.assess.type === 'final') {
+      const sections = w.assess.examSections.map(s => `<li>${esc(s)}</li>`).join('');
+      const rubric   = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🎓</div>
+          <h3>Final Exam + Final Project</h3>
+          <span class="due-tag">Week 16</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul class="exam-list">${sections}</ul>
+        <div class="sec-label">Project Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  // Prev / Next
+  const prev = num > 1  ? num - 1 : null;
+  const next = num < 16 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('week-${prev}')">&#8592; Week ${prev ?? ''}</button>
+    <span style="font-size:12px;color:var(--muted)">Week ${num} of 16</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('week-${next}')">Week ${next ?? ''} &#8594;</button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ═══════════════════════════
+   NAVIGATION
+═══════════════════════════ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')           renderOverview();
+  else if (view === 'schedule')      renderSchedule();
+  else if (view.startsWith('week-')) renderWeek(+view.replace('week-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.weeks.forEach(w => {
+    let pillHtml = '';
+    if (w.badge) {
+      const cls = w.badge.includes('Quiz') ? 'quiz' : w.badge === 'Midterm' ? 'midterm' : 'final';
+      pillHtml = `<span class="pill pill-${cls}">${esc(w.badge)}</span>`;
+    }
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-week-${w.n}`;
+    item.onclick = () => go(`week-${w.n}`);
+    item.innerHTML = `<div class="nav-num">${w.n}</div><span class="nav-label">${esc(w.title)}</span>${pillHtml}`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
