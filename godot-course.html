@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godot Game Development: 16-Week College Course</title>
+    <style>
+        :root {
+            --primary: #478cbf;
+            --primary-dark: #3a7aa8;
+            --secondary: #38b28a;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card2: #273548;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; position: sticky; top: 0; z-index: 100; }
+        .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-size: 1.2rem; font-weight: 700; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .progress-bar-wrap { display: flex; align-items: center; gap: 0.75rem; font-size: 0.85rem; color: var(--text-muted); }
+        .progress-bar { width: 140px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 99px; transition: width 0.4s ease; }
+        .nav-tabs { max-width: 1100px; margin: 1.5rem auto 0; padding: 0 2rem; display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .nav-tab { padding: 0.45rem 0.85rem; border-radius: var(--radius); border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.82rem; transition: all 0.2s; display: flex; align-items: center; gap: 0.35rem; }
+        .nav-tab:hover { background: var(--bg-card); color: var(--text); }
+        .nav-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .tab-num { width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.2); font-size: 0.72rem; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+        .main { max-width: 1100px; margin: 2rem auto; padding: 0 2rem 5rem; }
+        .module { display: none; }
+        .module.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .module-header { margin-bottom: 2rem; }
+        .module-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; border-radius: 99px; font-size: 0.78rem; font-weight: 600; margin-bottom: 0.75rem; border: 1px solid; }
+        .chip-blue { background: rgba(71,140,191,0.15); color: #78b4d9; border-color: rgba(71,140,191,0.3); }
+        .chip-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3); }
+        .chip-red { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+        .chip-green { background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3); }
+        .chip-purple { background: rgba(168,85,247,0.15); color: #c084fc; border-color: rgba(168,85,247,0.3); }
+        .chip-teal { background: rgba(56,178,138,0.15); color: #5ecea0; border-color: rgba(56,178,138,0.3); }
+        .module-title { font-size: 1.9rem; font-weight: 800; margin-bottom: 0.4rem; line-height: 1.2; }
+        .module-subtitle { color: var(--text-muted); font-size: 1rem; }
+        h2 { font-size: 1.3rem; margin-bottom: 0.7rem; }
+        h3 { font-size: 1.05rem; margin-bottom: 0.4rem; color: var(--text); margin-top: 1.25rem; }
+        h3:first-child { margin-top: 0; }
+        p { margin-bottom: 0.9rem; color: var(--text-muted); }
+        p:last-child { margin-bottom: 0; }
+        strong { color: var(--text); font-weight: 600; }
+        ul { list-style: none; padding: 0; }
+        ul li { padding: 0.3rem 0; color: var(--text-muted); display: flex; align-items: flex-start; gap: 0.5rem; }
+        ul li::before { content: "▸"; color: var(--primary); flex-shrink: 0; margin-top: 2px; }
+        .highlight { background: linear-gradient(135deg, rgba(71,140,191,0.08), rgba(56,178,138,0.08)); border-left: 3px solid var(--primary); padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .info-item { background: var(--bg-card2); border-radius: 10px; padding: 1.1rem; border: 1px solid var(--border); }
+        .info-icon { font-size: 1.6rem; margin-bottom: 0.4rem; }
+        .info-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .info-value { font-weight: 600; font-size: 0.95rem; }
+        .btn { padding: 0.6rem 1.3rem; border-radius: 8px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.4rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: var(--bg-card2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .score-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(71,140,191,0.15); border: 1px solid rgba(71,140,191,0.3); color: #78b4d9; border-radius: 99px; padding: 0.3rem 0.75rem; font-size: 0.82rem; font-weight: 600; }
+        .section-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+        .game-box { background: var(--bg-card); border: 2px solid rgba(71,140,191,0.3); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .game-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.5rem; }
+        .game-subtitle { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.25rem; }
+        .game-controls { display: flex; gap: 0.75rem; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+        .game-feedback { padding: 0.85rem 1rem; border-radius: 8px; font-size: 0.88rem; margin-top: 1rem; line-height: 1.6; display: none; }
+        .game-feedback.show { display: block; }
+        .game-feedback.success { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+        .game-feedback.partial { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); color: #fde68a; }
+        .game-feedback.error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+        .quiz-option { background: var(--bg-card2); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; cursor: pointer; font-size: 0.9rem; line-height: 1.55; display: flex; gap: 0.75rem; align-items: flex-start; transition: all 0.2s; color: var(--text); margin-bottom: 0.55rem; }
+        .quiz-option:hover:not([disabled]) { border-color: var(--primary); background: rgba(71,140,191,0.07); }
+        .quiz-option.correct { border-color: var(--success); background: rgba(16,185,129,0.1); }
+        .quiz-option.wrong { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+        .quiz-option.reveal-correct { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.05); }
+        .quiz-letter { width: 26px; height: 26px; border-radius: 50%; background: var(--border); font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+        .quiz-explain { margin-top: 0.5rem; padding: 0.75rem 1rem; border-radius: 7px; font-size: 0.86rem; line-height: 1.6; display: none; }
+        .quiz-explain.show { display: block; }
+        .quiz-explain.good { background: rgba(16,185,129,0.1); border-left: 3px solid var(--success); color: #a7f3d0; }
+        .quiz-explain.bad { background: rgba(239,68,68,0.1); border-left: 3px solid var(--danger); color: #fca5a5; }
+        .code-block { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 1rem 1.2rem; font-family: "Consolas", "Monaco", monospace; font-size: 0.85rem; line-height: 1.7; overflow-x: auto; margin: 0.75rem 0; }
+        .code-comment { color: #6e7681; }
+        .code-keyword { color: #ff7b72; }
+        .code-func { color: #d2a8ff; }
+        .code-string { color: #a5d6ff; }
+        .code-num { color: #79c0ff; }
+        .code-var { color: #e6edf3; }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .week-outcomes { background: rgba(71,140,191,0.06); border: 1px solid rgba(71,140,191,0.2); border-radius: 10px; padding: 1.2rem 1.4rem; margin-bottom: 1.25rem; }
+        .week-outcomes-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: #78b4d9; font-weight: 700; margin-bottom: 0.6rem; }
+        .topic-pill { display: inline-flex; align-items: center; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 99px; padding: 0.25rem 0.7rem; font-size: 0.78rem; color: var(--text-muted); margin: 0.2rem; }
+        .activity-card { background: rgba(56,178,138,0.06); border: 1px solid rgba(56,178,138,0.2); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 0.85rem; }
+        .activity-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #5ecea0; font-weight: 700; margin-bottom: 0.35rem; }
+        @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } .module-title { font-size: 1.4rem; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <div class="logo">&#9670; Godot Game Development</div>
+        <div class="progress-bar-wrap">
+            <span id="progress-label">Week 1 of 16</span>
+            <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:6.25%"></div></div>
+        </div>
+    </div>
+</div>
+
+<div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" onclick="showModule(1)"><span class="tab-num">1</span>Intro &amp; Setup</button>
+    <button class="nav-tab" onclick="showModule(2)"><span class="tab-num">2</span>GDScript Basics</button>
+    <button class="nav-tab" onclick="showModule(3)"><span class="tab-num">3</span>Scene System</button>
+    <button class="nav-tab" onclick="showModule(4)"><span class="tab-num">4</span>2D Fundamentals</button>
+    <button class="nav-tab" onclick="showModule(5)"><span class="tab-num">5</span>OOP in GDScript</button>
+    <button class="nav-tab" onclick="showModule(6)"><span class="tab-num">6</span>Signals &amp; Events</button>
+    <button class="nav-tab" onclick="showModule(7)"><span class="tab-num">7</span>2D Physics</button>
+    <button class="nav-tab" onclick="showModule(8)"><span class="tab-num">8</span>2D Project</button>
+    <button class="nav-tab" onclick="showModule(9)"><span class="tab-num">9</span>3D Intro</button>
+    <button class="nav-tab" onclick="showModule(10)"><span class="tab-num">10</span>3D Physics</button>
+    <button class="nav-tab" onclick="showModule(11)"><span class="tab-num">11</span>Design Patterns</button>
+    <button class="nav-tab" onclick="showModule(12)"><span class="tab-num">12</span>Networking</button>
+    <button class="nav-tab" onclick="showModule(13)"><span class="tab-num">13</span>Proc Gen I</button>
+    <button class="nav-tab" onclick="showModule(14)"><span class="tab-num">14</span>Proc Gen II</button>
+    <button class="nav-tab" onclick="showModule(15)"><span class="tab-num">15</span>Optimization</button>
+    <button class="nav-tab" onclick="showModule(16)"><span class="tab-num">16</span>Final Project</button>
+</div>
+
+<div class="main">
+
+<!-- WEEK 1 -->
+<div class="module active" id="module-1">
+    <div class="module-header">
+        <div class="module-badge chip-blue">&#9670; Unit 1 &mdash; Foundations</div>
+        <div class="module-title">Week 1: Introduction to Godot &amp; Setup</div>
+        <div class="module-subtitle">Get familiar with the Godot Engine, its interface, and configure your development environment.</div>
+    </div>
+
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Install and configure Godot 4 and understand the editor layout</li>
+            <li>Navigate the Scene, Inspector, FileSystem, and Output panels</li>
+            <li>Understand Godot&#39;s node-based architecture at a conceptual level</li>
+            <li>Create, save, and run your first Godot project</li>
+        </ul>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-item"><div class="info-icon">&#127918;</div><div class="info-label">Engine</div><div class="info-value">Godot 4.x</div></div>
+        <div class="info-item"><div class="info-icon">&#128196;</div><div class="info-label">Language</div><div class="info-value">GDScript / GDNative</div></div>
+        <div class="info-item"><div class="info-icon">&#127775;</div><div class="info-label">Difficulty</div><div class="info-value">Beginner</div></div>
+        <div class="info-item"><div class="info-icon">&#9201;</div><div class="info-label">Est. Time</div><div class="info-value">6&ndash;8 hours</div></div>
+    </div>
+
+    <div class="card">
+        <h2>&#127968; What is Godot?</h2>
+        <p>Godot is a free, open-source game engine for 2D and 3D games. Unlike Unity or Unreal, Godot uses a unique <strong>scene and node architecture</strong> where every element of a game &mdash; from sprites to physics bodies &mdash; is a node that can be composed into reusable scenes.</p>
+        <div class="highlight">
+            <strong>Key Philosophy:</strong> In Godot, everything is a <em>node</em>. Nodes are building blocks you combine into <em>scenes</em>. Scenes can be nested inside other scenes, enabling powerful compositional design.
+        </div>
+        <h3>Core Editor Panels</h3>
+        <ul>
+            <li><strong>Scene Panel</strong> &mdash; the hierarchy of all nodes in your current scene</li>
+            <li><strong>Inspector</strong> &mdash; edit properties of the currently selected node</li>
+            <li><strong>FileSystem</strong> &mdash; browse your project files and assets</li>
+            <li><strong>Viewport</strong> &mdash; visual canvas where you place and preview your scene</li>
+            <li><strong>Script Editor</strong> &mdash; write and edit GDScript attached to nodes</li>
+            <li><strong>Output / Debugger</strong> &mdash; view print output, errors, and runtime info</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>&#128196; Node Types Overview</h2>
+        <p>Godot has hundreds of built-in node types, each serving a specific purpose. Here are the foundational categories you&#39;ll encounter in Week 1:</p>
+        <div class="two-col">
+            <div>
+                <h3>2D Nodes</h3>
+                <ul>
+                    <li><strong>Node2D</strong> &mdash; base 2D node with transform</li>
+                    <li><strong>Sprite2D</strong> &mdash; displays a texture</li>
+                    <li><strong>Camera2D</strong> &mdash; 2D viewport camera</li>
+                    <li><strong>Area2D</strong> &mdash; detects overlaps</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Core / UI Nodes</h3>
+                <ul>
+                    <li><strong>Node</strong> &mdash; base node with no transform</li>
+                    <li><strong>Label</strong> &mdash; displays text in the UI</li>
+                    <li><strong>Button</strong> &mdash; interactive UI button</li>
+                    <li><strong>CanvasLayer</strong> &mdash; separate rendering layer</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Your First Scene</strong>
+        <p style="margin-top:0.4rem">Create a new Godot project, add a <code>Node2D</code> as root, attach a <code>Sprite2D</code> child, assign a texture, and click <strong>Run Scene (F6)</strong> to see your first game object on screen. Save the scene as <code>main.tscn</code>.</p>
+    </div>
+
+    <div class="game-box" id="quiz1-box">
+        <div class="game-title">&#10067; Week 1 Knowledge Check</div>
+        <div class="game-subtitle">Test your understanding of the Godot editor and node system.</div>
+        <div id="quiz1-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(1)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz1-score" style="display:none"></span>
+        </div>
+    </div>
+
+    <div class="section-nav">
+        <span style="color:var(--text-muted);font-size:0.9rem">Start of course</span>
+        <button class="btn btn-primary" onclick="showModule(2)">Next: GDScript Basics &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 2 -->
+<div class="module" id="module-2">
+    <div class="module-header">
+        <div class="module-badge chip-blue">&#9670; Unit 1 &mdash; Foundations</div>
+        <div class="module-title">Week 2: GDScript Fundamentals</div>
+        <div class="module-subtitle">Learn Godot&#39;s native scripting language: syntax, types, control flow, and connecting scripts to nodes.</div>
+    </div>
+
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Write GDScript with correct syntax: variables, constants, functions, and control flow</li>
+            <li>Use built-in types: int, float, String, bool, Vector2, Vector3, Array, Dictionary</li>
+            <li>Attach scripts to nodes and respond to built-in callbacks (_ready, _process, _input)</li>
+            <li>Use <code>print()</code> and the debugger to trace program execution</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>&#128196; GDScript Syntax Essentials</h2>
+        <p>GDScript is a Python-inspired, dynamically-typed language designed for Godot. It uses indentation for block structure and integrates tightly with the engine API.</p>
+        <div class="code-block"><span class="code-comment"># Variables and constants</span>
+<span class="code-keyword">var</span> speed: <span class="code-var">float</span> = <span class="code-num">200.0</span>
+<span class="code-keyword">var</span> player_name: <span class="code-var">String</span> = <span class="code-string">"Hero"</span>
+<span class="code-keyword">const</span> MAX_HEALTH: <span class="code-var">int</span> = <span class="code-num">100</span>
+
+<span class="code-comment"># Functions</span>
+<span class="code-keyword">func</span> <span class="code-func">greet</span>(name: <span class="code-var">String</span>) -&gt; <span class="code-var">String</span>:
+    <span class="code-keyword">return</span> <span class="code-string">"Hello, "</span> + name
+
+<span class="code-comment"># Control flow</span>
+<span class="code-keyword">if</span> speed &gt; <span class="code-num">100</span>:
+    <span class="code-func">print</span>(<span class="code-string">"Fast!"</span>)
+<span class="code-keyword">elif</span> speed &gt; <span class="code-num">50</span>:
+    <span class="code-func">print</span>(<span class="code-string">"Medium"</span>)
+<span class="code-keyword">else</span>:
+    <span class="code-func">print</span>(<span class="code-string">"Slow"</span>)
+
+<span class="code-comment"># Loops</span>
+<span class="code-keyword">for</span> i <span class="code-keyword">in</span> <span class="code-func">range</span>(<span class="code-num">5</span>):
+    <span class="code-func">print</span>(i)
+
+<span class="code-keyword">var</span> items = [<span class="code-string">"sword"</span>, <span class="code-string">"shield"</span>, <span class="code-string">"potion"</span>]
+<span class="code-keyword">for</span> item <span class="code-keyword">in</span> items:
+    <span class="code-func">print</span>(item)</div>
+    </div>
+
+    <div class="card">
+        <h2>&#9889; Node Lifecycle Callbacks</h2>
+        <p>Every script attached to a node can override these built-in functions, which Godot calls automatically:</p>
+        <div class="code-block"><span class="code-keyword">extends</span> <span class="code-var">Node2D</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_ready</span>() -&gt; <span class="code-var">void</span>:
+    <span class="code-comment"># Called once when node enters the scene tree</span>
+    <span class="code-func">print</span>(<span class="code-string">"Node is ready!"</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">_process</span>(delta: <span class="code-var">float</span>) -&gt; <span class="code-var">void</span>:
+    <span class="code-comment"># Called every frame. delta = time since last frame (seconds)</span>
+    position.x += speed * delta
+
+<span class="code-keyword">func</span> <span class="code-func">_input</span>(event: <span class="code-var">InputEvent</span>) -&gt; <span class="code-var">void</span>:
+    <span class="code-comment"># Called for every input event</span>
+    <span class="code-keyword">if</span> event.is_action_pressed(<span class="code-string">"ui_accept"</span>):
+        <span class="code-func">print</span>(<span class="code-string">"Space/Enter pressed"</span>)</div>
+        <div class="highlight"><strong>Why delta?</strong> Multiplying movement by <code>delta</code> makes movement frame-rate independent &mdash; the player moves the same speed whether the game runs at 30fps or 120fps.</div>
+    </div>
+
+    <div class="card">
+        <h2>&#128203; Key Data Types</h2>
+        <div class="two-col">
+            <div>
+                <h3>Primitives</h3>
+                <ul>
+                    <li><strong>int</strong> &mdash; whole numbers</li>
+                    <li><strong>float</strong> &mdash; decimal numbers</li>
+                    <li><strong>bool</strong> &mdash; true / false</li>
+                    <li><strong>String</strong> &mdash; text</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Godot Types</h3>
+                <ul>
+                    <li><strong>Vector2(x, y)</strong> &mdash; 2D position/direction</li>
+                    <li><strong>Vector3(x,y,z)</strong> &mdash; 3D position</li>
+                    <li><strong>Color(r,g,b,a)</strong> &mdash; RGBA color</li>
+                    <li><strong>NodePath</strong> &mdash; path to a node</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Moving Square</strong>
+        <p style="margin-top:0.4rem">Create a <code>Node2D</code> with a script. In <code>_process(delta)</code>, move the node right at 150 px/s using <code>position.x += 150 * delta</code>. Add a boundary check: if <code>position.x &gt; 800</code>, reset to <code>position.x = 0</code>. Print the position every 60 frames.</p>
+    </div>
+
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 2 Knowledge Check</div>
+        <div class="game-subtitle">GDScript syntax and node lifecycle callbacks.</div>
+        <div id="quiz2-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(2)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz2-score" style="display:none"></span>
+        </div>
+    </div>
+
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(1)">&#8592; Week 1</button>
+        <button class="btn btn-primary" onclick="showModule(3)">Next: Scene System &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 3 -->
+<div class="module" id="module-3">
+    <div class="module-header">
+        <div class="module-badge chip-teal">&#9670; Unit 2 &mdash; 2D Development</div>
+        <div class="module-title">Week 3: The Scene System &amp; Node Architecture</div>
+        <div class="module-subtitle">Master Godot&#39;s scene tree, node composition, instancing, and the parent-child relationship model.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Explain the scene tree and understand parent-child node relationships</li>
+            <li>Create reusable scenes and instance them programmatically and in the editor</li>
+            <li>Navigate nodes using <code>get_node()</code>, the <code>$</code> shorthand, and <code>get_parent()</code></li>
+            <li>Use <code>add_child()</code> and <code>queue_free()</code> to manage the scene tree at runtime</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127968; Scene Composition</h2>
+        <p>A Godot scene is a tree of nodes saved as a <code>.tscn</code> file. Any scene can be <strong>instanced</strong> inside another scene, just like a component or prefab.</p>
+        <div class="highlight">
+            <strong>Composition over Inheritance:</strong> Instead of deep class hierarchies, Godot encourages building complex objects by combining smaller, purpose-built scenes. A Player scene might combine a CharacterBody2D, a Sprite2D, a CollisionShape2D, and an AudioStreamPlayer.
+        </div>
+        <div class="code-block"><span class="code-comment"># Accessing child nodes</span>
+<span class="code-keyword">var</span> sprite = <span class="code-func">get_node</span>(<span class="code-string">"Sprite2D"</span>)        <span class="code-comment"># by name</span>
+<span class="code-keyword">var</span> sprite = $<span class="code-var">Sprite2D</span>                   <span class="code-comment"># shorthand</span>
+<span class="code-keyword">var</span> health = $<span class="code-var">UI/HealthBar</span>              <span class="code-comment"># nested path</span>
+<span class="code-keyword">var</span> parent = <span class="code-func">get_parent</span>()              <span class="code-comment"># parent node</span>
+
+<span class="code-comment"># Runtime scene management</span>
+<span class="code-keyword">var</span> bullet_scene = <span class="code-func">preload</span>(<span class="code-string">"res://bullet.tscn"</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">fire</span>():
+    <span class="code-keyword">var</span> bullet = bullet_scene.<span class="code-func">instantiate</span>()
+    bullet.position = position
+    <span class="code-func">get_parent</span>().<span class="code-func">add_child</span>(bullet)
+
+<span class="code-comment"># Removing nodes safely</span>
+bullet.<span class="code-func">queue_free</span>()  <span class="code-comment"># deferred deletion at end of frame</span></div>
+    </div>
+    <div class="card">
+        <h2>&#127981; Groups</h2>
+        <p>Nodes can belong to named <strong>groups</strong>, allowing batch operations (e.g., pausing all enemies, dealing damage to all targets in range).</p>
+        <div class="code-block"><span class="code-comment"># Add to group in editor or via code</span>
+<span class="code-func">add_to_group</span>(<span class="code-string">"enemies"</span>)
+
+<span class="code-comment"># Call a method on all nodes in group</span>
+<span class="code-func">get_tree</span>().<span class="code-func">call_group</span>(<span class="code-string">"enemies"</span>, <span class="code-string">"take_damage"</span>, <span class="code-num">10</span>)
+
+<span class="code-comment"># Get all nodes in group</span>
+<span class="code-keyword">var</span> enemies = <span class="code-func">get_tree</span>().<span class="code-func">get_nodes_in_group</span>(<span class="code-string">"enemies"</span>)</div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Bullet Spawner</strong>
+        <p style="margin-top:0.4rem">Create a <code>Bullet.tscn</code> with a <code>CharacterBody2D</code>, <code>Sprite2D</code>, and <code>CollisionShape2D</code>. In a <code>Main.tscn</code>, instance it on spacebar press using <code>preload</code> and <code>instantiate()</code>. Make bullets move forward and <code>queue_free()</code> after 3 seconds using a <code>Timer</code> node.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 3 Knowledge Check</div>
+        <div class="game-subtitle">Scene tree, instancing, and node navigation.</div>
+        <div id="quiz3-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(3)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz3-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(2)">&#8592; Week 2</button>
+        <button class="btn btn-primary" onclick="showModule(4)">Next: 2D Fundamentals &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 4 -->
+<div class="module" id="module-4">
+    <div class="module-header">
+        <div class="module-badge chip-teal">&#9670; Unit 2 &mdash; 2D Development</div>
+        <div class="module-title">Week 4: 2D Fundamentals &mdash; Sprites, Tilemaps &amp; Input</div>
+        <div class="module-subtitle">Build a functional 2D game world: sprites, animations, tilemap levels, and responsive player input.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Configure and animate sprites using <code>AnimatedSprite2D</code> and <code>AnimationPlayer</code></li>
+            <li>Build tile-based levels using <code>TileMapLayer</code> with custom tilesets</li>
+            <li>Handle keyboard, mouse, and gamepad input via the Input Map and <code>Input</code> singleton</li>
+            <li>Implement smooth player movement with 8-directional and platformer controls</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127759; Sprites &amp; Animation</h2>
+        <div class="code-block"><span class="code-comment"># AnimatedSprite2D: play animations by name</span>
+<span class="code-keyword">func</span> <span class="code-func">_process</span>(delta: <span class="code-var">float</span>):
+    <span class="code-keyword">var</span> direction = <span class="code-var">Vector2</span>.<span class="code-var">ZERO</span>
+    direction.x = <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_left"</span>, <span class="code-string">"move_right"</span>)
+    direction.y = <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_up"</span>, <span class="code-string">"move_down"</span>)
+
+    <span class="code-keyword">if</span> direction != <span class="code-var">Vector2</span>.<span class="code-var">ZERO</span>:
+        $<span class="code-var">AnimatedSprite2D</span>.<span class="code-func">play</span>(<span class="code-string">"walk"</span>)
+        <span class="code-comment"># Flip sprite based on direction</span>
+        $<span class="code-var">AnimatedSprite2D</span>.flip_h = direction.x &lt; <span class="code-num">0</span>
+    <span class="code-keyword">else</span>:
+        $<span class="code-var">AnimatedSprite2D</span>.<span class="code-func">play</span>(<span class="code-string">"idle"</span>)
+
+    position += direction.<span class="code-func">normalized</span>() * speed * delta</div>
+    </div>
+    <div class="card">
+        <h2>&#127749; Input Handling</h2>
+        <p>Godot provides an <strong>Input Map</strong> (Project &gt; Project Settings &gt; Input Map) to bind actions to keys/buttons. Code reads actions by name, keeping input flexible and remappable.</p>
+        <div class="code-block"><span class="code-comment"># Polling input (in _process)</span>
+<span class="code-keyword">var</span> vel_x = <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_left"</span>, <span class="code-string">"move_right"</span>)  <span class="code-comment"># -1 to 1</span>
+
+<span class="code-comment"># Event-based input (in _input)</span>
+<span class="code-keyword">func</span> <span class="code-func">_input</span>(event: <span class="code-var">InputEvent</span>):
+    <span class="code-keyword">if</span> event.<span class="code-func">is_action_pressed</span>(<span class="code-string">"jump"</span>):
+        <span class="code-func">jump</span>()
+    <span class="code-keyword">if</span> event <span class="code-keyword">is</span> <span class="code-var">InputEventMouseButton</span>:
+        <span class="code-keyword">if</span> event.button_index == <span class="code-var">MOUSE_BUTTON_LEFT</span> <span class="code-keyword">and</span> event.pressed:
+            <span class="code-func">shoot_at</span>(event.position)</div>
+    </div>
+    <div class="card">
+        <h2>&#127764; TileMapLayer</h2>
+        <p>Tilemaps let you design levels efficiently by placing tiles on a grid. In Godot 4, each layer is a separate <code>TileMapLayer</code> node, supporting custom collision, navigation, and custom data per tile.</p>
+        <ul>
+            <li>Import a spritesheet as a <strong>TileSet</strong> resource</li>
+            <li>Paint tiles in the editor using the TileMap toolbar</li>
+            <li>Assign <strong>collision shapes</strong> to tile types for physics</li>
+            <li>Use <strong>custom data layers</strong> to tag tiles (e.g., <code>is_deadly</code>, <code>is_ladder</code>)</li>
+        </ul>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Top-Down Explorer</strong>
+        <p style="margin-top:0.4rem">Build a small top-down level using a tilemap (at least 20&times;15 tiles). Add a player with an <code>AnimatedSprite2D</code> that has idle and walk animations. Implement 8-directional movement using <code>Input.get_axis()</code> and flip the sprite based on horizontal direction.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 4 Knowledge Check</div>
+        <div class="game-subtitle">Sprites, animation, tilemaps, and input.</div>
+        <div id="quiz4-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(4)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz4-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(3)">&#8592; Week 3</button>
+        <button class="btn btn-primary" onclick="showModule(5)">Next: OOP in GDScript &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 5 -->
+<div class="module" id="module-5">
+    <div class="module-header">
+        <div class="module-badge chip-purple">&#9670; Unit 3 &mdash; OOP &amp; Architecture</div>
+        <div class="module-title">Week 5: Object-Oriented Programming in GDScript</div>
+        <div class="module-subtitle">Apply OOP principles &mdash; classes, inheritance, and polymorphism &mdash; using GDScript within Godot.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Define custom classes with <code>class_name</code> and extend built-in Godot types</li>
+            <li>Apply inheritance to share and override behaviour between related node types</li>
+            <li>Use <code>@export</code> to expose variables in the Inspector for designer-friendly workflows</li>
+            <li>Implement polymorphism through virtual methods and duck typing</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#128230; Defining Classes &amp; Inheritance</h2>
+        <div class="code-block"><span class="code-comment"># Entity.gd - base class</span>
+<span class="code-keyword">class_name</span> <span class="code-var">Entity</span>
+<span class="code-keyword">extends</span> <span class="code-var">CharacterBody2D</span>
+
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> max_health: <span class="code-var">int</span> = <span class="code-num">100</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> move_speed: <span class="code-var">float</span> = <span class="code-num">150.0</span>
+
+<span class="code-keyword">var</span> health: <span class="code-var">int</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_ready</span>():
+    health = max_health
+
+<span class="code-keyword">func</span> <span class="code-func">take_damage</span>(amount: <span class="code-var">int</span>) -&gt; <span class="code-var">void</span>:
+    health -= amount
+    <span class="code-keyword">if</span> health &lt;= <span class="code-num">0</span>:
+        <span class="code-func">die</span>()
+
+<span class="code-keyword">func</span> <span class="code-func">die</span>() -&gt; <span class="code-var">void</span>:
+    <span class="code-func">queue_free</span>()   <span class="code-comment"># can be overridden in subclass</span></div>
+        <div class="code-block"><span class="code-comment"># Player.gd - extends Entity</span>
+<span class="code-keyword">class_name</span> <span class="code-var">Player</span>
+<span class="code-keyword">extends</span> <span class="code-var">Entity</span>
+
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> jump_force: <span class="code-var">float</span> = <span class="code-num">400.0</span>
+
+<span class="code-keyword">func</span> <span class="code-func">die</span>() -&gt; <span class="code-var">void</span>:
+    <span class="code-comment"># Override: play death anim before freeing</span>
+    $<span class="code-var">AnimationPlayer</span>.<span class="code-func">play</span>(<span class="code-string">"death"</span>)
+    <span class="code-keyword">await</span> $<span class="code-var">AnimationPlayer</span>.animation_finished
+    <span class="code-keyword">super</span>.<span class="code-func">die</span>()  <span class="code-comment"># call parent die()</span></div>
+    </div>
+    <div class="card">
+        <h2>&#128268; @export &amp; Inspector Integration</h2>
+        <p>The <code>@export</code> annotation exposes a variable in Godot&#39;s Inspector, allowing designers to tweak values without editing code. This is a cornerstone of Godot&#39;s workflow.</p>
+        <div class="code-block"><span class="code-keyword">@export</span> <span class="code-keyword">var</span> damage: <span class="code-var">int</span> = <span class="code-num">25</span>
+<span class="code-keyword">@export_range</span>(<span class="code-num">0</span>, <span class="code-num">100</span>) <span class="code-keyword">var</span> accuracy: <span class="code-var">float</span> = <span class="code-num">85.0</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> projectile_scene: <span class="code-var">PackedScene</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> fire_color: <span class="code-var">Color</span> = <span class="code-var">Color</span>.<span class="code-var">RED</span></div>
+    </div>
+    <div class="card">
+        <h2>&#127981; Composition vs. Inheritance</h2>
+        <p>While inheritance is powerful, Godot encourages preferring <strong>composition</strong> &mdash; building entities by combining simple scenes/scripts &mdash; over deep inheritance hierarchies. This avoids fragile base class problems and makes components easier to reuse.</p>
+        <div class="highlight">
+            <strong>Rule of Thumb:</strong> Use inheritance for <em>is-a</em> relationships (Enemy is-an Entity). Use composition for <em>has-a</em> relationships (Enemy has a HealthComponent, has a WeaponComponent).
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Entity Hierarchy</strong>
+        <p style="margin-top:0.4rem">Create a base <code>Entity</code> class with health, take_damage(), and die(). Extend it into <code>Player</code> and <code>Enemy</code> classes. Override <code>die()</code> in each. Export at least 3 properties per class and configure them differently in the Inspector for two enemy instances.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 5 Knowledge Check</div>
+        <div class="game-subtitle">OOP concepts: classes, inheritance, @export, polymorphism.</div>
+        <div id="quiz5-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(5)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz5-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(4)">&#8592; Week 4</button>
+        <button class="btn btn-primary" onclick="showModule(6)">Next: Signals &amp; Events &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 6 -->
+<div class="module" id="module-6">
+    <div class="module-header">
+        <div class="module-badge chip-purple">&#9670; Unit 3 &mdash; OOP &amp; Architecture</div>
+        <div class="module-title">Week 6: Signals &amp; Event-Driven Architecture</div>
+        <div class="module-subtitle">Decouple game systems using Godot&#39;s signal system &mdash; the backbone of event-driven game programming.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Declare custom signals and emit them to notify observers of state changes</li>
+            <li>Connect signals in the editor and programmatically with <code>.connect()</code></li>
+            <li>Use <code>await</code> to suspend execution until a signal fires</li>
+            <li>Design loosely-coupled architectures with a global EventBus autoload</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#128276; Signals: The Observer Pattern</h2>
+        <p>Signals implement the <strong>Observer pattern</strong> &mdash; an object emits a signal when something happens, and zero or more connected objects react. This decouples emitters from listeners.</p>
+        <div class="code-block"><span class="code-comment"># Declaring and emitting a signal</span>
+<span class="code-keyword">extends</span> <span class="code-var">Node</span>
+
+<span class="code-keyword">signal</span> <span class="code-func">health_changed</span>(new_health: <span class="code-var">int</span>, max_health: <span class="code-var">int</span>)
+<span class="code-keyword">signal</span> <span class="code-func">died</span>
+
+<span class="code-keyword">var</span> health: <span class="code-var">int</span> = <span class="code-num">100</span>
+
+<span class="code-keyword">func</span> <span class="code-func">take_damage</span>(amount: <span class="code-var">int</span>):
+    health -= amount
+    <span class="code-func">health_changed</span>.<span class="code-func">emit</span>(health, <span class="code-num">100</span>)
+    <span class="code-keyword">if</span> health &lt;= <span class="code-num">0</span>:
+        <span class="code-func">died</span>.<span class="code-func">emit</span>()</div>
+        <div class="code-block"><span class="code-comment"># Connecting signals in code</span>
+<span class="code-keyword">func</span> <span class="code-func">_ready</span>():
+    <span class="code-keyword">var</span> player = $<span class="code-var">Player</span>
+    player.health_changed.<span class="code-func">connect</span>(<span class="code-func">_on_health_changed</span>)
+    player.died.<span class="code-func">connect</span>(<span class="code-func">_on_player_died</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">_on_health_changed</span>(new_hp: <span class="code-var">int</span>, max_hp: <span class="code-var">int</span>):
+    $<span class="code-var">HealthBar</span>.value = <span class="code-keyword">float</span>(new_hp) / max_hp * <span class="code-num">100</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_on_player_died</span>():
+    <span class="code-func">show_game_over_screen</span>()</div>
+    </div>
+    <div class="card">
+        <h2>&#9654; Await &amp; Async Patterns</h2>
+        <div class="code-block"><span class="code-comment"># Await a signal before continuing execution</span>
+<span class="code-keyword">func</span> <span class="code-func">level_transition</span>():
+    $<span class="code-var">FadeScreen</span>.<span class="code-func">play</span>(<span class="code-string">"fade_out"</span>)
+    <span class="code-keyword">await</span> $<span class="code-var">FadeScreen</span>.animation_finished
+    <span class="code-func">get_tree</span>().<span class="code-func">change_scene_to_file</span>(<span class="code-string">"res://level2.tscn"</span>)
+
+<span class="code-comment"># Await a timer without creating a Timer node</span>
+<span class="code-keyword">await</span> <span class="code-func">get_tree</span>().<span class="code-func">create_timer</span>(<span class="code-num">2.0</span>).timeout</div>
+    </div>
+    <div class="card">
+        <h2>&#127758; EventBus Autoload Pattern</h2>
+        <p>An <strong>Autoload</strong> is a global singleton loaded at startup. A common pattern is an <code>EventBus</code> autoload that centralises cross-system signals, preventing node references between unrelated systems.</p>
+        <div class="code-block"><span class="code-comment"># EventBus.gd (registered as Autoload)</span>
+<span class="code-keyword">extends</span> <span class="code-var">Node</span>
+
+<span class="code-keyword">signal</span> <span class="code-func">enemy_killed</span>(enemy_type: <span class="code-var">String</span>, position: <span class="code-var">Vector2</span>)
+<span class="code-keyword">signal</span> <span class="code-func">score_changed</span>(new_score: <span class="code-var">int</span>)
+<span class="code-keyword">signal</span> <span class="code-func">level_completed</span>()
+
+<span class="code-comment"># Enemy emits: EventBus.enemy_killed.emit("goblin", position)</span>
+<span class="code-comment"># UI listens:  EventBus.score_changed.connect(_update_score_display)</span></div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Decoupled HUD</strong>
+        <p style="margin-top:0.4rem">Create a Player that emits <code>health_changed(int, int)</code> and <code>died</code> signals. Build a HUD scene with a <code>ProgressBar</code> that listens to <code>health_changed</code> and a "Game Over" label that appears on <code>died</code>. The HUD must not hold a reference to the Player node &mdash; route events through an <code>EventBus</code> autoload.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 6 Knowledge Check</div>
+        <div class="game-subtitle">Signals, observer pattern, await, and EventBus architecture.</div>
+        <div id="quiz6-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(6)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz6-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(5)">&#8592; Week 5</button>
+        <button class="btn btn-primary" onclick="showModule(7)">Next: 2D Physics &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 7 -->
+<div class="module" id="module-7">
+    <div class="module-header">
+        <div class="module-badge chip-amber">&#9670; Unit 4 &mdash; Physics &amp; Collision</div>
+        <div class="module-title">Week 7: 2D Physics &amp; Collision Detection</div>
+        <div class="module-subtitle">Implement realistic game physics using Godot&#39;s built-in physics engine and understand collision algorithms.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Distinguish between RigidBody2D, CharacterBody2D, and StaticBody2D and choose the correct type</li>
+            <li>Use <code>move_and_slide()</code> and <code>move_and_collide()</code> for character movement</li>
+            <li>Configure collision layers/masks to control which objects interact</li>
+            <li>Implement AABB and ray-cast collision detection manually</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#128270; Physics Body Types</h2>
+        <div class="two-col">
+            <div>
+                <h3>StaticBody2D</h3>
+                <p>Non-moving collider. Used for walls, floors, platforms. Zero performance cost when stationary.</p>
+                <h3>RigidBody2D</h3>
+                <p>Fully physics-simulated. Apply forces/impulses; physics engine controls movement. Best for projectiles, debris.</p>
+            </div>
+            <div>
+                <h3>CharacterBody2D</h3>
+                <p>For player-controlled characters. Uses <code>move_and_slide()</code> for collision resolution you control via code.</p>
+                <h3>Area2D</h3>
+                <p>Detects overlaps but doesn&#39;t physically collide. Ideal for pick-ups, trigger zones, hitboxes.</p>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#127939; Platformer Movement</h2>
+        <div class="code-block"><span class="code-keyword">extends</span> <span class="code-var">CharacterBody2D</span>
+
+<span class="code-keyword">const</span> SPEED = <span class="code-num">200.0</span>
+<span class="code-keyword">const</span> JUMP_VELOCITY = -<span class="code-num">450.0</span>
+<span class="code-keyword">const</span> GRAVITY = <span class="code-num">980.0</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_physics_process</span>(delta: <span class="code-var">float</span>):
+    <span class="code-comment"># Apply gravity</span>
+    <span class="code-keyword">if</span> <span class="code-keyword">not</span> <span class="code-func">is_on_floor</span>():
+        velocity.y += GRAVITY * delta
+
+    <span class="code-comment"># Jump</span>
+    <span class="code-keyword">if</span> <span class="code-var">Input</span>.<span class="code-func">is_action_just_pressed</span>(<span class="code-string">"jump"</span>) <span class="code-keyword">and</span> <span class="code-func">is_on_floor</span>():
+        velocity.y = JUMP_VELOCITY
+
+    <span class="code-comment"># Horizontal movement</span>
+    velocity.x = <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_left"</span>, <span class="code-string">"move_right"</span>) * SPEED
+
+    <span class="code-func">move_and_slide</span>()  <span class="code-comment"># handles all collision resolution</span></div>
+    </div>
+    <div class="card">
+        <h2>&#127919; Collision Layers &amp; AABB</h2>
+        <p>Godot uses a 32-layer bitmask system. Each body belongs to <strong>layers</strong> and scans <strong>masks</strong>. Two bodies only interact if one&#39;s mask overlaps the other&#39;s layer.</p>
+        <div class="highlight">
+            <strong>AABB (Axis-Aligned Bounding Box):</strong> The simplest collision check. Two rectangles overlap when:
+            <code>A.right &gt; B.left AND A.left &lt; B.right AND A.bottom &gt; B.top AND A.top &lt; B.bottom</code>
+        </div>
+        <div class="code-block"><span class="code-comment"># Manual AABB overlap test in GDScript</span>
+<span class="code-keyword">func</span> <span class="code-func">aabb_overlap</span>(a: <span class="code-var">Rect2</span>, b: <span class="code-var">Rect2</span>) -&gt; <span class="code-var">bool</span>:
+    <span class="code-keyword">return</span> a.<span class="code-func">intersects</span>(b)
+
+<span class="code-comment"># Godot Rect2 gives us this for free, but understanding</span>
+<span class="code-comment"># the underlying test is critical for custom physics.</span>
+
+<span class="code-comment"># Raycasting for line-of-sight</span>
+<span class="code-keyword">var</span> space = <span class="code-func">get_world_2d</span>().direct_space_state
+<span class="code-keyword">var</span> query = <span class="code-var">PhysicsRayQueryParameters2D</span>.<span class="code-func">create</span>(position, target_pos)
+<span class="code-keyword">var</span> result = space.<span class="code-func">intersect_ray</span>(query)
+<span class="code-keyword">if</span> result:
+    <span class="code-func">print</span>(<span class="code-string">"Hit: "</span>, result.collider.name)</div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Platformer with Hitboxes</strong>
+        <p style="margin-top:0.4rem">Build a complete platformer: player with gravity, jump, and horizontal movement using <code>move_and_slide()</code>. Add an enemy with an <code>Area2D</code> hitbox. When the player&#39;s feet hitbox overlaps the enemy&#39;s head, the enemy is defeated. If the player hits the enemy&#39;s body, the player takes damage.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 7 Knowledge Check</div>
+        <div class="game-subtitle">Physics bodies, collision detection, and AABB.</div>
+        <div id="quiz7-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(7)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz7-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(6)">&#8592; Week 6</button>
+        <button class="btn btn-primary" onclick="showModule(8)">Next: 2D Project &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 8 -->
+<div class="module" id="module-8">
+    <div class="module-header">
+        <div class="module-badge chip-amber">&#9670; Unit 4 &mdash; Mid-Course Project</div>
+        <div class="module-title">Week 8: Mid-Course Project &mdash; Complete 2D Platformer</div>
+        <div class="module-subtitle">Apply Weeks 1&ndash;7 skills to deliver a fully playable 2D platformer with UI, audio, and polish.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Architect a multi-scene game with a main menu, gameplay, and game over flow</li>
+            <li>Integrate audio using <code>AudioStreamPlayer</code> and <code>AudioBus</code> for SFX/music</li>
+            <li>Implement a HUD with health bar, score, and timer using Control nodes</li>
+            <li>Present and peer-review completed projects against design criteria</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127968; Project Requirements</h2>
+        <p>Your mid-course project must demonstrate competency in all foundational areas covered so far. Use the checklist below as your assessment criteria:</p>
+        <div class="two-col">
+            <div>
+                <h3>Gameplay</h3>
+                <ul>
+                    <li>Player with platformer physics (gravity, jump, run)</li>
+                    <li>At least 2 enemy types with distinct AI behaviour</li>
+                    <li>Collectible items that affect game state</li>
+                    <li>3 levels minimum with tilemap design</li>
+                    <li>Win condition and lose condition</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Code Quality</h3>
+                <ul>
+                    <li>OOP: custom classes with inheritance</li>
+                    <li>Signals used for UI updates and game events</li>
+                    <li>EventBus autoload for cross-system communication</li>
+                    <li>Exported variables used for designer tuning</li>
+                    <li>No hard-coded magic numbers</li>
+                </ul>
+            </div>
+        </div>
+        <div class="two-col" style="margin-top:1rem">
+            <div>
+                <h3>UI / UX</h3>
+                <ul>
+                    <li>Main menu with play / quit</li>
+                    <li>HUD: health, score, lives</li>
+                    <li>Game Over &amp; Win screens</li>
+                    <li>Pause menu (ESC key)</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Polish</h3>
+                <ul>
+                    <li>Background music with volume control</li>
+                    <li>Sound effects for jump, collect, death</li>
+                    <li>Screen shake or particle on impact</li>
+                    <li>Smooth camera follow with limits</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#127381; Scene Architecture Diagram</h2>
+        <div class="highlight">
+            <strong>Recommended Scene Structure:</strong><br>
+            <code>Main.tscn</code> &rarr; spawns <code>Level1.tscn</code> / <code>Level2.tscn</code> / <code>Level3.tscn</code><br>
+            Each level contains: <code>TileMapLayer</code>, <code>EnemySpawner</code>, <code>Pickups</code>, <code>LevelExit</code><br>
+            <code>Player.tscn</code> is instanced inside each level<br>
+            <code>HUD.tscn</code> lives on a <code>CanvasLayer</code> (always on top)<br>
+            <code>EventBus.gd</code> as Autoload connects all systems
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#127942; Assessment</div>
+        <strong>Peer Review Session</strong>
+        <p style="margin-top:0.4rem">In pairs, play each other&#39;s game for 5 minutes, then evaluate using the provided rubric. Provide written feedback on: gameplay feel, code architecture (inspect the scene tree &amp; scripts), and one specific suggestion for improvement.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 8 Knowledge Check</div>
+        <div class="game-subtitle">Game architecture, UI systems, and audio integration.</div>
+        <div id="quiz8-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(8)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz8-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(7)">&#8592; Week 7</button>
+        <button class="btn btn-primary" onclick="showModule(9)">Next: 3D Intro &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 9 -->
+<div class="module" id="module-9">
+    <div class="module-header">
+        <div class="module-badge chip-green">&#9670; Unit 5 &mdash; 3D Development</div>
+        <div class="module-title">Week 9: Introduction to 3D &mdash; Scenes, Meshes &amp; Cameras</div>
+        <div class="module-subtitle">Transition from 2D to 3D: understand 3D coordinate systems, meshes, materials, and camera control.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Explain the 3D coordinate system and transform (position, rotation, scale) in Godot</li>
+            <li>Add 3D meshes, apply materials, and set up a basic lit 3D scene</li>
+            <li>Implement first-person and third-person camera rigs</li>
+            <li>Convert 2D GDScript patterns to their 3D equivalents</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127757; The 3D Coordinate System</h2>
+        <p>Godot uses a <strong>right-handed Y-up</strong> coordinate system: X points right, Y points up, Z points toward the viewer. Understanding transforms is essential before working in 3D.</p>
+        <div class="two-col">
+            <div>
+                <h3>Key 3D Node Types</h3>
+                <ul>
+                    <li><strong>Node3D</strong> &mdash; base 3D node</li>
+                    <li><strong>MeshInstance3D</strong> &mdash; displays a mesh</li>
+                    <li><strong>Camera3D</strong> &mdash; viewport into the 3D world</li>
+                    <li><strong>DirectionalLight3D</strong> &mdash; sun-like light</li>
+                    <li><strong>OmniLight3D</strong> &mdash; point light</li>
+                    <li><strong>SpotLight3D</strong> &mdash; cone spotlight</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Transform Essentials</h3>
+                <ul>
+                    <li><code>position</code> &mdash; Vector3 world position</li>
+                    <li><code>rotation</code> &mdash; Vector3 Euler angles (radians)</li>
+                    <li><code>scale</code> &mdash; Vector3 per-axis scale</li>
+                    <li><code>basis</code> &mdash; 3x3 rotation matrix</li>
+                    <li><code>global_position</code> &mdash; world-space position</li>
+                    <li><code>look_at(target, up)</code> &mdash; orient toward target</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#127909; First-Person Camera Rig</h2>
+        <div class="code-block"><span class="code-keyword">extends</span> <span class="code-var">CharacterBody3D</span>
+
+<span class="code-keyword">const</span> SPEED = <span class="code-num">5.0</span>
+<span class="code-keyword">const</span> JUMP_VELOCITY = <span class="code-num">4.5</span>
+<span class="code-keyword">const</span> MOUSE_SENS = <span class="code-num">0.002</span>
+<span class="code-keyword">const</span> GRAVITY = <span class="code-num">9.8</span>
+
+<span class="code-keyword">@onready</span> <span class="code-keyword">var</span> camera = $<span class="code-var">Camera3D</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_ready</span>():
+    <span class="code-var">Input</span>.<span class="code-func">set_mouse_mode</span>(<span class="code-var">Input</span>.<span class="code-var">MOUSE_MODE_CAPTURED</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">_input</span>(event: <span class="code-var">InputEvent</span>):
+    <span class="code-keyword">if</span> event <span class="code-keyword">is</span> <span class="code-var">InputEventMouseMotion</span>:
+        <span class="code-comment"># Rotate player body left/right</span>
+        rotate_y(-event.relative.x * MOUSE_SENS)
+        <span class="code-comment"># Tilt camera up/down (clamped)</span>
+        camera.rotation.x -= event.relative.y * MOUSE_SENS
+        camera.rotation.x = <span class="code-func">clamp</span>(camera.rotation.x, -<span class="code-var">PI</span>/<span class="code-num">2</span>, <span class="code-var">PI</span>/<span class="code-num">2</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">_physics_process</span>(delta: <span class="code-var">float</span>):
+    <span class="code-keyword">if</span> <span class="code-keyword">not</span> <span class="code-func">is_on_floor</span>():
+        velocity.y -= GRAVITY * delta
+    <span class="code-keyword">if</span> <span class="code-var">Input</span>.<span class="code-func">is_action_just_pressed</span>(<span class="code-string">"jump"</span>) <span class="code-keyword">and</span> <span class="code-func">is_on_floor</span>():
+        velocity.y = JUMP_VELOCITY
+    <span class="code-keyword">var</span> dir = (<span class="code-func">transform</span>.basis * <span class="code-var">Vector3</span>(
+        <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_left"</span>, <span class="code-string">"move_right"</span>),
+        <span class="code-num">0</span>,
+        <span class="code-var">Input</span>.<span class="code-func">get_axis</span>(<span class="code-string">"move_forward"</span>, <span class="code-string">"move_back"</span>)
+    )).<span class="code-func">normalized</span>()
+    velocity.x = dir.x * SPEED
+    velocity.z = dir.z * SPEED
+    <span class="code-func">move_and_slide</span>()</div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>3D Explorer</strong>
+        <p style="margin-top:0.4rem">Build a 3D scene with: a <code>WorldEnvironment</code> with sky, a <code>DirectionalLight3D</code>, a flat plane as ground (<code>StaticBody3D</code> + <code>MeshInstance3D</code>), several primitive mesh obstacles, and a first-person player controller. Add at least 3 different materials (varying albedo, roughness, metallic).</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 9 Knowledge Check</div>
+        <div class="game-subtitle">3D coordinate systems, nodes, transforms, and cameras.</div>
+        <div id="quiz9-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(9)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz9-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(8)">&#8592; Week 8</button>
+        <button class="btn btn-primary" onclick="showModule(10)">Next: 3D Physics &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 10 -->
+<div class="module" id="module-10">
+    <div class="module-header">
+        <div class="module-badge chip-green">&#9670; Unit 5 &mdash; 3D Development</div>
+        <div class="module-title">Week 10: 3D Physics, Lighting &amp; Materials</div>
+        <div class="module-subtitle">Simulate realistic 3D physics, craft lighting environments, and apply PBR materials to 3D scenes.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Apply 3D physics bodies (CharacterBody3D, RigidBody3D) and configure collision shapes</li>
+            <li>Use 3D raycasting for detection, targeting, and line-of-sight checks</li>
+            <li>Configure PBR materials with albedo, roughness, metallic, and normal maps</li>
+            <li>Set up an environment with sky, ambient occlusion, and dynamic shadow-casting lights</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#128270; 3D Physics Bodies</h2>
+        <p>The 3D physics API mirrors the 2D API with equivalent node names. The same design principles apply: use <strong>CharacterBody3D</strong> for player-controlled movement, <strong>RigidBody3D</strong> for physics-driven objects, and <strong>StaticBody3D</strong> for immovable environment geometry.</p>
+        <div class="code-block"><span class="code-comment"># 3D Raycast example: shooting</span>
+<span class="code-keyword">func</span> <span class="code-func">shoot</span>():
+    <span class="code-keyword">var</span> space = <span class="code-func">get_world_3d</span>().direct_space_state
+    <span class="code-keyword">var</span> cam = $<span class="code-var">Camera3D</span>
+    <span class="code-keyword">var</span> origin = cam.global_position
+    <span class="code-keyword">var</span> direction = -cam.global_transform.basis.z  <span class="code-comment"># forward vector</span>
+    <span class="code-keyword">var</span> end = origin + direction * <span class="code-num">100.0</span>
+
+    <span class="code-keyword">var</span> query = <span class="code-var">PhysicsRayQueryParameters3D</span>.<span class="code-func">create</span>(origin, end)
+    query.exclude = [<span class="code-func">self</span>]
+    <span class="code-keyword">var</span> result = space.<span class="code-func">intersect_ray</span>(query)
+
+    <span class="code-keyword">if</span> result <span class="code-keyword">and</span> result.collider.<span class="code-func">has_method</span>(<span class="code-string">"take_damage"</span>):
+        result.collider.<span class="code-func">take_damage</span>(<span class="code-num">25</span>)
+        <span class="code-func">spawn_hit_effect</span>(result.position, result.normal)</div>
+    </div>
+    <div class="card">
+        <h2>&#127775; PBR Materials &amp; Lighting</h2>
+        <p>Godot uses <strong>Physically Based Rendering (PBR)</strong>. The <code>StandardMaterial3D</code> has properties that correspond to real-world surface characteristics:</p>
+        <div class="two-col">
+            <div>
+                <h3>Material Properties</h3>
+                <ul>
+                    <li><strong>Albedo</strong> &mdash; base colour / texture</li>
+                    <li><strong>Roughness</strong> &mdash; 0=mirror, 1=matte</li>
+                    <li><strong>Metallic</strong> &mdash; 0=dielectric, 1=metal</li>
+                    <li><strong>Normal Map</strong> &mdash; surface detail illusion</li>
+                    <li><strong>Emission</strong> &mdash; glowing surfaces</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Light Types</h3>
+                <ul>
+                    <li><strong>DirectionalLight3D</strong> &mdash; sun; casts parallel shadows</li>
+                    <li><strong>OmniLight3D</strong> &mdash; point light; all directions</li>
+                    <li><strong>SpotLight3D</strong> &mdash; cone; flashlight / lamp</li>
+                    <li><strong>WorldEnvironment</strong> &mdash; sky, ambient, fog, glow</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight">
+            <strong>Shadow Performance Tip:</strong> Directional light shadows are the most expensive. Use <code>shadow_mode = SHADOW_PARALLEL_4_SPLITS</code> (PSSM) for large outdoor scenes, and reduce shadow distance for better performance on lower-end hardware.
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>3D Shooting Gallery</strong>
+        <p style="margin-top:0.4rem">Build a first-person shooting gallery. Create 5 target objects (RigidBody3D) with custom PBR materials. On left-click, fire a raycast from the camera. If a target is hit, emit a particle effect at the impact point and apply an impulse to the target. Track and display the score using a HUD CanvasLayer.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 10 Knowledge Check</div>
+        <div class="game-subtitle">3D physics, raycasting, PBR materials, and lighting.</div>
+        <div id="quiz10-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(10)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz10-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(9)">&#8592; Week 9</button>
+        <button class="btn btn-primary" onclick="showModule(11)">Next: Design Patterns &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 11 -->
+<div class="module" id="module-11">
+    <div class="module-header">
+        <div class="module-badge chip-red">&#9670; Unit 6 &mdash; Advanced Architecture</div>
+        <div class="module-title">Week 11: Advanced GDScript &amp; Design Patterns</div>
+        <div class="module-subtitle">Implement industry-standard design patterns (State Machine, Object Pool, Observer) to architect scalable game systems.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Implement a Finite State Machine (FSM) for enemy AI and player controllers</li>
+            <li>Apply the Object Pool pattern to manage high-frequency object creation (bullets, particles)</li>
+            <li>Use Resource types for data-driven game design (weapon stats, character configs)</li>
+            <li>Evaluate architectural trade-offs between patterns in terms of scalability and complexity</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127774; Finite State Machine (FSM)</h2>
+        <p>An FSM models an entity as being in exactly one <strong>state</strong> at a time. Transitions occur when conditions are met. This cleanly replaces nested if/else chains in AI logic.</p>
+        <div class="code-block"><span class="code-comment"># Enemy AI with FSM</span>
+<span class="code-keyword">enum</span> <span class="code-var">State</span> { PATROL, CHASE, ATTACK, DEAD }
+
+<span class="code-keyword">var</span> state: <span class="code-var">State</span> = <span class="code-var">State</span>.<span class="code-var">PATROL</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> chase_range: <span class="code-var">float</span> = <span class="code-num">200.0</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> attack_range: <span class="code-var">float</span> = <span class="code-num">50.0</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_physics_process</span>(delta: <span class="code-var">float</span>):
+    <span class="code-keyword">match</span> state:
+        <span class="code-var">State</span>.<span class="code-var">PATROL</span>: <span class="code-func">_patrol</span>(delta)
+        <span class="code-var">State</span>.<span class="code-var">CHASE</span>:  <span class="code-func">_chase</span>(delta)
+        <span class="code-var">State</span>.<span class="code-var">ATTACK</span>: <span class="code-func">_attack</span>(delta)
+        <span class="code-var">State</span>.<span class="code-var">DEAD</span>:   <span class="code-keyword">pass</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_patrol</span>(delta: <span class="code-var">float</span>):
+    <span class="code-func">move_along_patrol_path</span>(delta)
+    <span class="code-keyword">if</span> <span class="code-func">dist_to_player</span>() &lt; chase_range:
+        state = <span class="code-var">State</span>.<span class="code-var">CHASE</span>
+
+<span class="code-keyword">func</span> <span class="code-func">_chase</span>(delta: <span class="code-var">float</span>):
+    <span class="code-func">move_toward_player</span>(delta)
+    <span class="code-keyword">if</span> <span class="code-func">dist_to_player</span>() &lt; attack_range:
+        state = <span class="code-var">State</span>.<span class="code-var">ATTACK</span>
+    <span class="code-keyword">elif</span> <span class="code-func">dist_to_player</span>() &gt; chase_range * <span class="code-num">1.5</span>:
+        state = <span class="code-var">State</span>.<span class="code-var">PATROL</span></div>
+    </div>
+    <div class="card">
+        <h2>&#9855; Object Pool Pattern</h2>
+        <p>Creating and destroying nodes every frame is expensive. An <strong>Object Pool</strong> pre-instantiates a set of objects and recycles them, dramatically reducing garbage collection and allocation overhead.</p>
+        <div class="code-block"><span class="code-keyword">class_name</span> <span class="code-var">BulletPool</span>
+<span class="code-keyword">extends</span> <span class="code-var">Node</span>
+
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> bullet_scene: <span class="code-var">PackedScene</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> pool_size: <span class="code-var">int</span> = <span class="code-num">30</span>
+
+<span class="code-keyword">var</span> pool: <span class="code-var">Array</span> = []
+
+<span class="code-keyword">func</span> <span class="code-func">_ready</span>():
+    <span class="code-keyword">for</span> i <span class="code-keyword">in</span> pool_size:
+        <span class="code-keyword">var</span> b = bullet_scene.<span class="code-func">instantiate</span>()
+        b.visible = <span class="code-keyword">false</span>
+        <span class="code-func">add_child</span>(b)
+        pool.<span class="code-func">append</span>(b)
+
+<span class="code-keyword">func</span> <span class="code-func">get_bullet</span>() -&gt; <span class="code-var">Node</span>:
+    <span class="code-keyword">for</span> b <span class="code-keyword">in</span> pool:
+        <span class="code-keyword">if</span> <span class="code-keyword">not</span> b.visible:
+            b.visible = <span class="code-keyword">true</span>
+            <span class="code-keyword">return</span> b
+    <span class="code-keyword">return</span> <span class="code-keyword">null</span>  <span class="code-comment"># pool exhausted</span>
+
+<span class="code-keyword">func</span> <span class="code-func">return_bullet</span>(b: <span class="code-var">Node</span>):
+    b.visible = <span class="code-keyword">false</span>  <span class="code-comment"># mark as available</span></div>
+    </div>
+    <div class="card">
+        <h2>&#128196; Data-Driven Design with Resources</h2>
+        <p>A <code>Resource</code> is a data container you can save as a <code>.tres</code> file and assign in the Inspector. This separates game data from logic &mdash; e.g., a <code>WeaponData</code> resource holds damage, fire rate, and bullet scene for every weapon type.</p>
+        <div class="code-block"><span class="code-comment"># WeaponData.gd</span>
+<span class="code-keyword">class_name</span> <span class="code-var">WeaponData</span>
+<span class="code-keyword">extends</span> <span class="code-var">Resource</span>
+
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> weapon_name: <span class="code-var">String</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> damage: <span class="code-var">int</span> = <span class="code-num">25</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> fire_rate: <span class="code-var">float</span> = <span class="code-num">0.2</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> bullet_scene: <span class="code-var">PackedScene</span></div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Enemy FSM + Object Pool</strong>
+        <p style="margin-top:0.4rem">Implement a 4-state FSM enemy (Patrol, Chase, Attack, Dead). Use a BulletPool autoload to fire bullets without <code>instantiate()</code> every shot. Create 3 <code>WeaponData</code> resources (pistol, rifle, shotgun) with different stats and allow the player to switch between them at runtime.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 11 Knowledge Check</div>
+        <div class="game-subtitle">FSM, object pooling, and resource-based data design.</div>
+        <div id="quiz11-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(11)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz11-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(10)">&#8592; Week 10</button>
+        <button class="btn btn-primary" onclick="showModule(12)">Next: Networking &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 12 -->
+<div class="module" id="module-12">
+    <div class="module-header">
+        <div class="module-badge chip-red">&#9670; Unit 6 &mdash; Networking</div>
+        <div class="module-title">Week 12: Networking &amp; Multiplayer Architecture</div>
+        <div class="module-subtitle">Implement real-time multiplayer using Godot&#39;s high-level multiplayer API, RPCs, and network synchronisation strategies.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Explain the client-server model and compare authoritative vs. peer-to-peer architectures</li>
+            <li>Use Godot&#39;s ENet/WebSocket MultiplayerPeer to create host and client connections</li>
+            <li>Call Remote Procedure Calls (RPCs) to synchronise state across the network</li>
+            <li>Implement basic lag compensation techniques: client-side prediction and interpolation</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127760; Networking Architecture</h2>
+        <div class="two-col">
+            <div>
+                <h3>Client-Server (Authoritative)</h3>
+                <ul>
+                    <li>Server is the single source of truth</li>
+                    <li>Clients send inputs; server simulates</li>
+                    <li>Prevents cheating; adds latency</li>
+                    <li><strong>Best for:</strong> competitive games</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Peer-to-Peer</h3>
+                <ul>
+                    <li>All peers simulate simultaneously</li>
+                    <li>Lower latency but trust issues</li>
+                    <li>Lockstep or rollback netcode needed</li>
+                    <li><strong>Best for:</strong> small player count, co-op</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight">
+            <strong>Godot&#39;s Model:</strong> Godot uses a <em>scene replication</em> approach with RPCs. One peer acts as server (ID=1); clients are assigned unique IDs. Nodes use <code>multiplayer.get_unique_id()</code> to know their authority.
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#128272; Host &amp; Client Setup</h2>
+        <div class="code-block"><span class="code-comment"># Lobby.gd</span>
+<span class="code-keyword">const</span> PORT = <span class="code-num">7777</span>
+<span class="code-keyword">const</span> MAX_CLIENTS = <span class="code-num">4</span>
+
+<span class="code-keyword">func</span> <span class="code-func">host_game</span>():
+    <span class="code-keyword">var</span> peer = <span class="code-var">ENetMultiplayerPeer</span>.<span class="code-func">new</span>()
+    peer.<span class="code-func">create_server</span>(PORT, MAX_CLIENTS)
+    multiplayer.multiplayer_peer = peer
+    multiplayer.peer_connected.<span class="code-func">connect</span>(<span class="code-func">_on_peer_connected</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">join_game</span>(address: <span class="code-var">String</span>):
+    <span class="code-keyword">var</span> peer = <span class="code-var">ENetMultiplayerPeer</span>.<span class="code-func">new</span>()
+    peer.<span class="code-func">create_client</span>(address, PORT)
+    multiplayer.multiplayer_peer = peer
+
+<span class="code-keyword">func</span> <span class="code-func">_on_peer_connected</span>(id: <span class="code-var">int</span>):
+    <span class="code-func">print</span>(<span class="code-string">"Player connected: "</span>, id)
+    <span class="code-comment"># Spawn a player for the new client</span>
+    <span class="code-func">spawn_player</span>.<span class="code-func">rpc</span>(id)</div>
+    </div>
+    <div class="card">
+        <h2>&#128225; RPCs &amp; MultiplayerSynchronizer</h2>
+        <div class="code-block"><span class="code-comment"># Player.gd</span>
+<span class="code-keyword">extends</span> <span class="code-var">CharacterBody3D</span>
+
+<span class="code-keyword">@rpc</span>(<span class="code-string">"any_peer"</span>, <span class="code-string">"call_local"</span>, <span class="code-string">"reliable"</span>)
+<span class="code-keyword">func</span> <span class="code-func">spawn_player</span>(peer_id: <span class="code-var">int</span>):
+    <span class="code-comment"># All clients create a player node for peer_id</span>
+    <span class="code-keyword">var</span> player = player_scene.<span class="code-func">instantiate</span>()
+    player.name = <span class="code-var">str</span>(peer_id)
+    player.set_multiplayer_authority(peer_id)
+    <span class="code-func">add_child</span>(player)
+
+<span class="code-comment"># Send input from client to server</span>
+<span class="code-keyword">@rpc</span>(<span class="code-string">"any_peer"</span>, <span class="code-string">"unreliable"</span>)
+<span class="code-keyword">func</span> <span class="code-func">send_input</span>(input_vec: <span class="code-var">Vector2</span>):
+    <span class="code-keyword">if</span> <span class="code-func">is_multiplayer_authority</span>():
+        <span class="code-func">_apply_movement</span>(input_vec)</div>
+        <div class="highlight">
+            <strong>RPC Modes:</strong> Use <code>reliable</code> for important state (deaths, pickups) and <code>unreliable</code> for high-frequency position updates. Reliable uses resending; unreliable is fast but may drop packets.
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>2-Player LAN Pong</strong>
+        <p style="margin-top:0.4rem">Implement a LAN multiplayer Pong game: one player hosts, one joins. Use RPCs to synchronise paddle positions and ball physics. The ball simulation runs on the server (authoritative). Display each player&#39;s ping using <code>multiplayer.get_peer_latency()</code>.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 12 Knowledge Check</div>
+        <div class="game-subtitle">Network architecture, ENet, RPCs, and synchronisation.</div>
+        <div id="quiz12-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(12)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz12-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(11)">&#8592; Week 11</button>
+        <button class="btn btn-primary" onclick="showModule(13)">Next: Proc Gen I &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 13 -->
+<div class="module" id="module-13">
+    <div class="module-header">
+        <div class="module-badge chip-teal">&#9670; Unit 7 &mdash; Procedural Generation</div>
+        <div class="module-title">Week 13: Procedural Generation I &mdash; Algorithms &amp; Noise</div>
+        <div class="module-subtitle">Generate infinite, varied game content algorithmically using noise functions, BSP trees, and random walk techniques.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Explain the purpose and properties of Perlin/Simplex noise for terrain generation</li>
+            <li>Use Godot&#39;s <code>FastNoiseLite</code> to generate heightmaps and texture masks</li>
+            <li>Implement a Binary Space Partitioning (BSP) dungeon generator</li>
+            <li>Apply random walk algorithms to generate cave and corridor layouts</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127754; Noise-Based Terrain Generation</h2>
+        <p>Noise functions produce smooth, natural-looking random values. A single noise sample gives elevation; multiple octaves (fractal noise) create realistic terrain.</p>
+        <div class="code-block"><span class="code-keyword">@export</span> <span class="code-keyword">var</span> noise_texture: <span class="code-var">FastNoiseLite</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> width: <span class="code-var">int</span> = <span class="code-num">64</span>
+<span class="code-keyword">@export</span> <span class="code-keyword">var</span> height: <span class="code-var">int</span> = <span class="code-num">64</span>
+
+<span class="code-keyword">func</span> <span class="code-func">generate_terrain</span>():
+    <span class="code-keyword">var</span> noise = <span class="code-var">FastNoiseLite</span>.<span class="code-func">new</span>()
+    noise.noise_type = <span class="code-var">FastNoiseLite</span>.<span class="code-var">TYPE_SIMPLEX_SMOOTH</span>
+    noise.frequency = <span class="code-num">0.03</span>
+    noise.fractal_octaves = <span class="code-num">4</span>
+    noise.fractal_lacunarity = <span class="code-num">2.0</span>
+    noise.seed = <span class="code-var">randi</span>()
+
+    <span class="code-keyword">for</span> x <span class="code-keyword">in</span> width:
+        <span class="code-keyword">for</span> y <span class="code-keyword">in</span> height:
+            <span class="code-keyword">var</span> value = noise.<span class="code-func">get_noise_2d</span>(x, y)  <span class="code-comment"># -1.0 to 1.0</span>
+            <span class="code-keyword">if</span> value &lt; -<span class="code-num">0.2</span>:
+                <span class="code-func">set_cell_as_water</span>(x, y)
+            <span class="code-keyword">elif</span> value &lt; <span class="code-num">0.3</span>:
+                <span class="code-func">set_cell_as_grass</span>(x, y)
+            <span class="code-keyword">else</span>:
+                <span class="code-func">set_cell_as_mountain</span>(x, y)</div>
+    </div>
+    <div class="card">
+        <h2>&#127983; BSP Dungeon Generation</h2>
+        <p>Binary Space Partitioning recursively divides a rectangular space into smaller rooms, then connects them with corridors. This guarantees all rooms are reachable.</p>
+        <div class="code-block"><span class="code-comment"># Simplified BSP node</span>
+<span class="code-keyword">class</span> <span class="code-var">BSPNode</span>:
+    <span class="code-keyword">var</span> rect: <span class="code-var">Rect2i</span>
+    <span class="code-keyword">var</span> left: <span class="code-var">BSPNode</span>
+    <span class="code-keyword">var</span> right: <span class="code-var">BSPNode</span>
+    <span class="code-keyword">var</span> room: <span class="code-var">Rect2i</span>
+
+<span class="code-keyword">func</span> <span class="code-func">split</span>(node: <span class="code-var">BSPNode</span>, depth: <span class="code-var">int</span>):
+    <span class="code-keyword">if</span> depth == <span class="code-num">0</span> <span class="code-keyword">or</span> node.rect.size.x &lt; MIN_SIZE:
+        <span class="code-func">create_room</span>(node)
+        <span class="code-keyword">return</span>
+    <span class="code-keyword">var</span> split_h = node.rect.size.x &gt; node.rect.size.y
+    <span class="code-comment"># create left and right child nodes, recurse</span>
+    node.left = <span class="code-var">BSPNode</span>.<span class="code-func">new</span>()
+    node.right = <span class="code-var">BSPNode</span>.<span class="code-func">new</span>()
+    <span class="code-func">split</span>(node.left, depth - <span class="code-num">1</span>)
+    <span class="code-func">split</span>(node.right, depth - <span class="code-num">1</span>)
+    <span class="code-func">connect_rooms</span>(node.left.room, node.right.room)</div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Procedural Dungeon</strong>
+        <p style="margin-top:0.4rem">Build a roguelike dungeon generator that creates a new layout each run. Use BSP to create 8&ndash;12 rooms connected by corridors. Populate rooms with enemies and items based on noise values. Display a minimap using a second Camera2D viewport showing the full dungeon.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 13 Knowledge Check</div>
+        <div class="game-subtitle">Noise functions, BSP, and procedural algorithms.</div>
+        <div id="quiz13-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(13)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz13-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(12)">&#8592; Week 12</button>
+        <button class="btn btn-primary" onclick="showModule(14)">Next: Proc Gen II &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 14 -->
+<div class="module" id="module-14">
+    <div class="module-header">
+        <div class="module-badge chip-teal">&#9670; Unit 7 &mdash; Procedural Generation</div>
+        <div class="module-title">Week 14: Procedural Generation II &mdash; Advanced Techniques &amp; Shaders</div>
+        <div class="module-subtitle">Level up procedural content with Wave Function Collapse, procedural animation, and visual shader programming.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Implement Wave Function Collapse (WFC) for contextually-consistent tile placement</li>
+            <li>Generate procedural meshes at runtime using <code>ArrayMesh</code> and <code>SurfaceTool</code></li>
+            <li>Write basic visual shaders in Godot&#39;s Shader Language (GLSL-like) for procedural effects</li>
+            <li>Evaluate the trade-offs between speed, quality, and memory in procedural generation choices</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#9855; Wave Function Collapse (WFC)</h2>
+        <p>WFC fills a grid by repeatedly picking the uncollapsed cell with the fewest valid options (lowest entropy) and collapsing it to one option, then propagating constraints to neighbours. It produces locally-consistent, globally-varied layouts.</p>
+        <div class="highlight">
+            <strong>Key Concepts:</strong><br>
+            <strong>Tiles:</strong> Each tile defines which tiles may appear in each adjacent direction.<br>
+            <strong>Entropy:</strong> A cell&#39;s entropy is the count of valid options remaining.<br>
+            <strong>Collapse:</strong> Randomly select one valid option (weighted by frequency).<br>
+            <strong>Propagate:</strong> Remove options from neighbours that contradict the collapsed tile&#39;s rules.
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#127754; Procedural Meshes with SurfaceTool</h2>
+        <div class="code-block"><span class="code-comment"># Generate a terrain mesh from a heightmap array</span>
+<span class="code-keyword">func</span> <span class="code-func">build_mesh</span>(heights: <span class="code-var">Array</span>, cols: <span class="code-var">int</span>, rows: <span class="code-var">int</span>) -&gt; <span class="code-var">ArrayMesh</span>:
+    <span class="code-keyword">var</span> st = <span class="code-var">SurfaceTool</span>.<span class="code-func">new</span>()
+    st.<span class="code-func">begin</span>(<span class="code-var">Mesh</span>.<span class="code-var">PRIMITIVE_TRIANGLES</span>)
+
+    <span class="code-keyword">for</span> z <span class="code-keyword">in</span> rows - <span class="code-num">1</span>:
+        <span class="code-keyword">for</span> x <span class="code-keyword">in</span> cols - <span class="code-num">1</span>:
+            <span class="code-keyword">var</span> i = z * cols + x
+            <span class="code-comment"># Two triangles per quad</span>
+            st.<span class="code-func">add_vertex</span>(<span class="code-var">Vector3</span>(x,   heights[i],       z))
+            st.<span class="code-func">add_vertex</span>(<span class="code-var">Vector3</span>(x+<span class="code-num">1</span>, heights[i+<span class="code-num">1</span>],     z))
+            st.<span class="code-func">add_vertex</span>(<span class="code-var">Vector3</span>(x,   heights[i+cols],  z+<span class="code-num">1</span>))
+            <span class="code-comment"># ... second triangle ...</span>
+
+    st.<span class="code-func">generate_normals</span>()
+    <span class="code-keyword">return</span> st.<span class="code-func">commit</span>()</div>
+    </div>
+    <div class="card">
+        <h2>&#127775; Visual Shaders &amp; Shader Language</h2>
+        <p>Shaders run on the GPU and can generate procedural textures, animate materials, and create effects impossible with the CPU alone. Godot supports both a node-based Visual Shader editor and a GLSL-like text shader language.</p>
+        <div class="code-block"><span class="code-comment">// Procedural water shader (Godot Shader Language)</span>
+shader_type spatial;
+
+uniform float wave_speed = 1.0;
+uniform float wave_height = 0.2;
+
+void vertex() {
+    // Animate vertex Y position using UV and time
+    VERTEX.y += sin(UV.x * 6.28 + TIME * wave_speed) * wave_height;
+    VERTEX.y += cos(UV.y * 6.28 + TIME * wave_speed * 0.7) * wave_height * 0.5;
+}
+
+void fragment() {
+    ALBEDO = vec3(0.0, 0.4, 0.8);
+    ROUGHNESS = 0.05;
+    METALLIC = 0.3;
+}</div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Procedural Island Generator</strong>
+        <p style="margin-top:0.4rem">Combine this week&#39;s techniques: generate a 3D island mesh with <code>SurfaceTool</code> using Simplex noise for height, apply a WFC-based surface type (beach, grass, rock, snow) based on elevation zones, and apply a procedural water shader around the island. Generate a new island each run with a random seed displayed in the UI.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 14 Knowledge Check</div>
+        <div class="game-subtitle">WFC, procedural meshes, and shader programming.</div>
+        <div id="quiz14-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(14)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz14-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(13)">&#8592; Week 13</button>
+        <button class="btn btn-primary" onclick="showModule(15)">Next: Optimization &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 15 -->
+<div class="module" id="module-15">
+    <div class="module-header">
+        <div class="module-badge chip-blue">&#9670; Unit 8 &mdash; Performance &amp; Systems</div>
+        <div class="module-title">Week 15: Performance, Profiling &amp; Optimization</div>
+        <div class="module-subtitle">Identify and eliminate performance bottlenecks using Godot&#39;s profiler and apply engine-specific optimization techniques.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes This Week</div>
+        <ul>
+            <li>Use Godot&#39;s built-in Profiler, Monitor, and Remote Scene Tree to diagnose performance issues</li>
+            <li>Apply draw call batching, LOD, visibility notifiers, and occlusion culling</li>
+            <li>Offload heavy computation to threads using <code>Thread</code> and <code>WorkerThreadPool</code></li>
+            <li>Evaluate trade-offs between CPU, GPU, and memory budgets in real-time systems</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#128200; Profiling Strategy</h2>
+        <p>Before optimising, always profile. Godot&#39;s <strong>Debugger &gt; Profiler</strong> shows per-function CPU time each frame. The <strong>Monitor</strong> tab shows FPS, draw calls, objects, physics bodies, and memory usage over time.</p>
+        <div class="highlight">
+            <strong>Optimisation Priority:</strong> (1) Profile to find the bottleneck. (2) Optimise the biggest bottleneck. (3) Measure the improvement. (4) Repeat. Never guess &mdash; premature optimisation wastes time and creates fragile code.
+        </div>
+        <div class="two-col">
+            <div>
+                <h3>Common CPU Bottlenecks</h3>
+                <ul>
+                    <li>Too many nodes in scene tree</li>
+                    <li>Expensive <code>_process()</code> per-node logic</li>
+                    <li>GDScript loops over large arrays</li>
+                    <li>Frequent <code>get_node()</code> calls (cache with <code>@onready</code>)</li>
+                    <li>Physics bodies with complex shapes</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Common GPU Bottlenecks</h3>
+                <ul>
+                    <li>High draw call count (batching helps)</li>
+                    <li>Overdraw on transparent objects</li>
+                    <li>High-poly meshes in large numbers</li>
+                    <li>Unoptimised shadow maps</li>
+                    <li>Complex shaders on many objects</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#9889; Key Optimization Techniques</h2>
+        <div class="code-block"><span class="code-comment"># 1. Cache node references (avoid get_node() every frame)</span>
+<span class="code-keyword">@onready</span> <span class="code-keyword">var</span> sprite = $<span class="code-var">Sprite2D</span>          <span class="code-comment"># resolved once at _ready</span>
+
+<span class="code-comment"># 2. Use _physics_process only when needed</span>
+<span class="code-keyword">func</span> <span class="code-func">set_active</span>(active: <span class="code-var">bool</span>):
+    <span class="code-func">set_physics_process</span>(active)        <span class="code-comment"># disable when idle</span>
+
+<span class="code-comment"># 3. Multithreaded noise generation</span>
+<span class="code-keyword">func</span> <span class="code-func">generate_async</span>():
+    <span class="code-keyword">var</span> thread = <span class="code-var">Thread</span>.<span class="code-func">new</span>()
+    thread.<span class="code-func">start</span>(<span class="code-func">_generate_on_thread</span>)
+
+<span class="code-keyword">func</span> <span class="code-func">_generate_on_thread</span>():
+    <span class="code-keyword">var</span> data = <span class="code-func">heavy_computation</span>()     <span class="code-comment"># runs off main thread</span>
+    <span class="code-func">call_deferred</span>(<span class="code-string">"_apply_data"</span>, data) <span class="code-comment"># safe main-thread update</span>
+
+<span class="code-comment"># 4. VisibleOnScreenNotifier2D - pause off-screen enemies</span>
+<span class="code-keyword">func</span> <span class="code-func">_on_screen_entered</span>():
+    <span class="code-func">set_process</span>(<span class="code-keyword">true</span>)
+<span class="code-keyword">func</span> <span class="code-func">_on_screen_exited</span>():
+    <span class="code-func">set_process</span>(<span class="code-keyword">false</span>)</div>
+    </div>
+    <div class="card">
+        <h2>&#127760; System Design Trade-offs</h2>
+        <p>Every optimisation decision involves trade-offs. Understanding these is essential for designing scalable real-time systems:</p>
+        <div class="two-col">
+            <div>
+                <h3>Speed vs. Memory</h3>
+                <ul>
+                    <li>Object pools: faster but reserves RAM</li>
+                    <li>Preloaded assets: fast access, high startup RAM</li>
+                    <li>Cached computation: fast reads, extra storage</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Fidelity vs. Performance</h3>
+                <ul>
+                    <li>LOD: lower-poly meshes at distance</li>
+                    <li>Shadow cascades: quality vs. GPU cost</li>
+                    <li>Physics simplification: capsule vs. convex hull</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#128736; Lab Activity</div>
+        <strong>Profiling Sprint</strong>
+        <p style="margin-top:0.4rem">Take your Week 8 platformer project. Use the Profiler to identify the top 3 performance bottlenecks. Apply at least 2 specific optimisations (e.g., object pooling for bullets, visibility notifiers for enemies, @onready caching). Document the FPS before and after each change using Monitor screenshots. Write a 300-word analysis of the trade-offs made.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 15 Knowledge Check</div>
+        <div class="game-subtitle">Profiling, optimization techniques, and performance trade-offs.</div>
+        <div id="quiz15-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(15)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz15-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(14)">&#8592; Week 14</button>
+        <button class="btn btn-primary" onclick="showModule(16)">Next: Final Project &#8594;</button>
+    </div>
+</div>
+
+<!-- WEEK 16 -->
+<div class="module" id="module-16">
+    <div class="module-header">
+        <div class="module-badge chip-blue">&#9670; Unit 8 &mdash; Capstone</div>
+        <div class="module-title">Week 16: Final Project &amp; System Design Trade-offs</div>
+        <div class="module-subtitle">Design, build, and present a complete original game demonstrating mastery of all four course learning outcomes.</div>
+    </div>
+    <div class="week-outcomes">
+        <div class="week-outcomes-title">&#10003; Learning Outcomes Demonstrated</div>
+        <ul>
+            <li><strong>LO1:</strong> Design and architect real-time interactive systems in 2D and/or 3D</li>
+            <li><strong>LO2:</strong> Apply OOP and event-driven programming using GDScript</li>
+            <li><strong>LO3:</strong> Implement computational game systems: physics, networking, and/or procedural generation</li>
+            <li><strong>LO4:</strong> Evaluate and document performance, scalability, and design trade-offs</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127942; Final Project Requirements</h2>
+        <p>Your final project is an original game of your own design. It must demonstrate mastery across all course units. Use the rubric below as your guide:</p>
+        <div class="two-col">
+            <div>
+                <h3>Technical (60%)</h3>
+                <ul>
+                    <li><strong>Architecture (15%)</strong> &mdash; Scene design, autoloads, separation of concerns</li>
+                    <li><strong>OOP &amp; Signals (15%)</strong> &mdash; Custom classes, inheritance, EventBus</li>
+                    <li><strong>Core System (20%)</strong> &mdash; Implement one of: multiplayer networking, procedural generation, or custom physics simulation</li>
+                    <li><strong>Performance (10%)</strong> &mdash; Profiling evidence, documented optimisations</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Design (40%)</h3>
+                <ul>
+                    <li><strong>Game Feel (15%)</strong> &mdash; Responsive controls, feedback, juice</li>
+                    <li><strong>Level/Content Design (10%)</strong> &mdash; Engaging, balanced gameplay</li>
+                    <li><strong>UI/UX (10%)</strong> &mdash; Clear menus, HUD, accessibility</li>
+                    <li><strong>Presentation (5%)</strong> &mdash; GDD document + live demo</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <h2>&#128196; Game Design Document (GDD)</h2>
+        <p>Submit a 1,500&ndash;2,000 word GDD alongside your project. It must include:</p>
+        <ul>
+            <li><strong>Concept:</strong> Genre, target audience, core loop, unique selling point</li>
+            <li><strong>Architecture:</strong> Scene tree diagram, autoload list, key class hierarchy</li>
+            <li><strong>Technical Choices:</strong> Why you chose your core system (networking/procgen/physics) and what alternatives you considered</li>
+            <li><strong>Performance Analysis:</strong> Profiler evidence, bottlenecks found, optimisations applied, measured improvements</li>
+            <li><strong>Trade-off Evaluation:</strong> At least 3 specific trade-offs with reasoned justification (e.g., object pool vs. queue_free, BSP vs. WFC, authoritative vs. P2P)</li>
+        </ul>
+    </div>
+    <div class="card">
+        <h2>&#127758; Trade-off Case Studies</h2>
+        <p>As part of your final submission, critically evaluate these types of trade-offs drawn from across the course:</p>
+        <div class="info-grid">
+            <div class="info-item"><div class="info-icon">&#9875;</div><div class="info-label">Physics</div><div class="info-value">CharacterBody vs RigidBody &mdash; control vs realism</div></div>
+            <div class="info-item"><div class="info-icon">&#127760;</div><div class="info-label">Networking</div><div class="info-value">Authoritative server vs P2P &mdash; fairness vs latency</div></div>
+            <div class="info-item"><div class="info-icon">&#127982;</div><div class="info-label">Proc Gen</div><div class="info-value">BSP vs WFC &mdash; speed vs coherence</div></div>
+            <div class="info-item"><div class="info-icon">&#128200;</div><div class="info-label">Performance</div><div class="info-value">Object pool vs GC &mdash; memory vs simplicity</div></div>
+            <div class="info-item"><div class="info-icon">&#127922;</div><div class="info-label">Design</div><div class="info-value">Inheritance vs composition &mdash; reuse vs flexibility</div></div>
+            <div class="info-item"><div class="info-icon">&#127775;</div><div class="info-label">Rendering</div><div class="info-value">LOD vs full detail &mdash; performance vs fidelity</div></div>
+        </div>
+    </div>
+    <div class="activity-card">
+        <div class="activity-label">&#127942; Final Presentation</div>
+        <strong>Demo Day &mdash;10-Minute Slot</strong>
+        <p style="margin-top:0.4rem">Each student presents: (1) 3-minute live game demo showing core gameplay loop, (2) 4-minute technical walkthrough of your key system and architecture choices, (3) 3-minute Q&amp;A from the panel (instructor + 2 peers). Upload your game to itch.io as a web export before class.</p>
+    </div>
+    <div class="game-box">
+        <div class="game-title">&#10067; Week 16 &mdash; Course Review Quiz</div>
+        <div class="game-subtitle">A cumulative review spanning all 4 learning outcomes.</div>
+        <div id="quiz16-area"></div>
+        <div class="game-controls">
+            <button class="btn btn-secondary" onclick="resetQuiz(16)">&#8635; Restart</button>
+            <span class="score-badge" id="quiz16-score" style="display:none"></span>
+        </div>
+    </div>
+    <div class="section-nav">
+        <button class="btn btn-secondary" onclick="showModule(15)">&#8592; Week 15</button>
+        <span style="color:var(--text-muted);font-size:0.9rem">&#127942; Course Complete &mdash; Congratulations!</span>
+    </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ─── Quiz Data ───────────────────────────────────────────────────────────────
+const QUIZZES = {
+  1: [
+    { q: "What is the fundamental building block of every Godot scene?",
+      opts: ["Script","Node","Scene","Resource"], ans: 1,
+      exp: "Nodes are Godot's fundamental building blocks. Scenes are saved trees of nodes, and scripts are attached to nodes." },
+    { q: "Which editor panel shows the hierarchy of nodes in your current scene?",
+      opts: ["Inspector","FileSystem","Scene Panel","Debugger"], ans: 2,
+      exp: "The Scene Panel (top-left by default) shows the parent-child hierarchy of all nodes in the current scene." },
+    { q: "What file extension do Godot scene files use?",
+      opts: [".gd",".tres",".tscn",".res"], ans: 2,
+      exp: ".tscn is the text-based scene format. .gd is GDScript, .tres/.res are resource files." },
+    { q: "Which node would you use to display a 2D image in Godot 4?",
+      opts: ["Sprite","Image2D","Sprite2D","TextureRect"], ans: 2,
+      exp: "In Godot 4, Sprite2D displays a 2D texture. (Sprite was the Godot 3 equivalent.)" }
+  ],
+  2: [
+    { q: "What does the 'delta' parameter in _process(delta) represent?",
+      opts: ["Target frame rate","Time since last frame in seconds","Physics step size","Random seed"], ans: 1,
+      exp: "delta is the elapsed time since the last frame in seconds. Multiplying movement by delta makes it frame-rate independent." },
+    { q: "Which callback is called exactly once when a node enters the scene tree?",
+      opts: ["_process","_ready","_init","_enter_tree"], ans: 1,
+      exp: "_ready() is the go-to setup function, called after the node and all its children have entered the scene tree." },
+    { q: "How do you correctly declare a typed variable in GDScript 4?",
+      opts: ["int speed = 200","var speed: int = 200","speed: int = 200","let speed: int = 200"], ans: 1,
+      exp: "GDScript uses 'var name: Type = value' syntax. The type hint is optional but recommended." },
+    { q: "Which keyword is used to define an unchanging value in GDScript?",
+      opts: ["static","final","const","readonly"], ans: 2,
+      exp: "The 'const' keyword declares compile-time constants. Their values cannot change at runtime." }
+  ],
+  3: [
+    { q: "What is the shorthand for get_node('Sprite2D') in GDScript?",
+      opts: ["#Sprite2D","@Sprite2D","$Sprite2D","&Sprite2D"], ans: 2,
+      exp: "The $ shorthand resolves a node path relative to the current node, equivalent to get_node('path')." },
+    { q: "Which method safely removes a node from the scene tree at the end of the frame?",
+      opts: ["remove_child()","delete()","free()","queue_free()"], ans: 3,
+      exp: "queue_free() defers node deletion to the end of the frame, preventing issues with nodes being freed mid-iteration." },
+    { q: "How do you create an instance of a PackedScene in GDScript?",
+      opts: ["scene.new()","scene.create()","scene.instance()","scene.instantiate()"], ans: 3,
+      exp: "In Godot 4, PackedScene.instantiate() creates a new instance of the scene. (In Godot 3 it was .instance())" },
+    { q: "What method adds a newly created node to the scene tree?",
+      opts: ["attach_child()","push_child()","append_child()","add_child()"], ans: 3,
+      exp: "add_child(node) parents the node under the caller, inserting it into the scene tree and calling its _ready()." }
+  ],
+  4: [
+    { q: "Which node plays named animations from a sprite sheet?",
+      opts: ["Sprite2D","AnimationPlayer","AnimatedSprite2D","SpriteFrames"], ans: 2,
+      exp: "AnimatedSprite2D holds a SpriteFrames resource and plays animations by name via .play('anim_name')." },
+    { q: "What does Input.get_axis('move_left','move_right') return when both keys are held?",
+      opts: ["1.0","0.0","-1.0","2.0"], ans: 1,
+      exp: "When both opposing inputs are held simultaneously they cancel out, returning 0.0." },
+    { q: "Where do you configure which keyboard keys trigger named actions like 'jump' or 'move_left'?",
+      opts: ["Script editor","Node Inspector","Project > Project Settings > Input Map","Debugger"], ans: 2,
+      exp: "The Input Map (Project Settings) binds named actions to physical inputs, keeping input-reading code device-agnostic." },
+    { q: "In Godot 4, which node type replaces the single TileMap for building layered tile levels?",
+      opts: ["TileSet","TileLayer","TileMapLayer","GridMap"], ans: 2,
+      exp: "Godot 4.x split TileMap into per-layer TileMapLayer nodes, giving each layer independent properties." }
+  ],
+  5: [
+    { q: "Which annotation exposes a GDScript variable in the Godot Inspector?",
+      opts: ["@inspector","@export","@public","@show"], ans: 1,
+      exp: "@export makes the variable editable in the Inspector for the node instance, enabling designer-friendly workflows." },
+    { q: "How does a subclass call its parent class's implementation of an overridden method?",
+      opts: ["parent.method()","base.method()","super.method()","super()"], ans: 3,
+      exp: "In GDScript 4, 'super()' or 'super.method_name()' calls the parent class implementation." },
+    { q: "Which keyword registers a GDScript class globally so other scripts can reference it by name?",
+      opts: ["@global","class_name","register_class","export_class"], ans: 1,
+      exp: "class_name MyClass registers the script as a global type, making it usable without preload() in other scripts." },
+    { q: "What design principle does Godot's scene system primarily encourage?",
+      opts: ["Deep inheritance hierarchies","Singleton pattern","Composition over inheritance","Global state"], ans: 2,
+      exp: "Godot encourages composition — building complex objects from simple, reusable scenes — over deep class inheritance." }
+  ],
+  6: [
+    { q: "What design pattern do Godot signals implement?",
+      opts: ["Singleton","Factory","Observer","Strategy"], ans: 2,
+      exp: "Signals implement the Observer pattern: emitters broadcast events; connected listeners react without tight coupling." },
+    { q: "How do you emit a signal named 'health_changed' with a parameter?",
+      opts: ["emit_signal('health_changed', val)","health_changed(val)","health_changed.emit(val)","signal.emit('health_changed', val)"], ans: 2,
+      exp: "In Godot 4, signals are emitted via signal_name.emit(args). The old emit_signal() still works but is deprecated." },
+    { q: "What does 'await signal_name' do in GDScript?",
+      opts: ["Connects a listener","Pauses execution until the signal fires","Emits the signal","Disconnects the signal"], ans: 1,
+      exp: "await suspends the current function until the specified signal is emitted, then resumes from that line." },
+    { q: "What is an Autoload in Godot?",
+      opts: ["A node that loads assets automatically","A global singleton script loaded at startup","A preloaded PackedScene","A background thread"], ans: 1,
+      exp: "Autoloads are scripts (or scenes) registered as global singletons, accessible from any script in the project." }
+  ],
+  7: [
+    { q: "Which physics body type should you use for a player character you control with code?",
+      opts: ["StaticBody2D","RigidBody2D","CharacterBody2D","Area2D"], ans: 2,
+      exp: "CharacterBody2D is designed for code-driven movement via move_and_slide() with built-in collision resolution." },
+    { q: "What does move_and_slide() return / update after being called?",
+      opts: ["The collision object","Updates the velocity property","The distance moved","A boolean indicating collision"], ans: 1,
+      exp: "move_and_slide() moves the body, resolves collisions, and updates the body's velocity property automatically." },
+    { q: "What does AABB stand for in collision detection?",
+      opts: ["Absolute Axis Bounding Body","Axis-Aligned Bounding Box","Automatic Area Boundary Builder","Aligned Angle Boundary Box"], ans: 1,
+      exp: "AABB = Axis-Aligned Bounding Box. It's the simplest overlap test: check if two rectangles/cuboids intersect." },
+    { q: "Which node type detects overlaps without applying physical forces?",
+      opts: ["RigidBody2D","StaticBody2D","CharacterBody2D","Area2D"], ans: 3,
+      exp: "Area2D is a sensor — it detects when physics bodies enter/exit its shape but doesn't push them." }
+  ],
+  8: [
+    { q: "Which Godot node keeps UI elements always rendered on top of 3D or 2D game content?",
+      opts: ["Node2D","CanvasLayer","Control","Viewport"], ans: 1,
+      exp: "CanvasLayer renders its children at a fixed screen position regardless of the game camera, ideal for HUDs." },
+    { q: "How do you change the active scene to a different .tscn file in Godot 4?",
+      opts: ["load_scene('path')","SceneManager.change('path')","get_tree().change_scene_to_file('path')","SceneTree.load('path')"], ans: 2,
+      exp: "get_tree().change_scene_to_file('res://scene.tscn') is the standard way to transition between scenes." },
+    { q: "Which node plays audio in 2D space (non-positional)?",
+      opts: ["SoundPlayer","AudioPlayer","AudioStreamPlayer","AudioStreamPlayer2D"], ans: 2,
+      exp: "AudioStreamPlayer plays audio without spatial positioning (music, UI sounds). AudioStreamPlayer2D is for positional audio." },
+    { q: "What is the recommended way to pause a Godot game (freeze everything except UI)?",
+      opts: ["Engine.time_scale = 0","get_tree().paused = true","PhysicsServer2D.stop()","set_process(false) on all nodes"], ans: 1,
+      exp: "get_tree().paused = true pauses all nodes except those with process_mode = PROCESS_MODE_ALWAYS (e.g., pause menus)." }
+  ],
+  9: [
+    { q: "In Godot's 3D coordinate system, which direction does the positive Y axis point?",
+      opts: ["Away from viewer","Towards viewer","Down","Up"], ans: 3,
+      exp: "Godot uses a right-handed Y-up coordinate system: +Y is up, +X is right, -Z is forward (into screen)." },
+    { q: "What is the correct way to get the 'forward' direction of a Node3D in Godot?",
+      opts: ["-global_transform.basis.z","global_transform.basis.z","global_transform.basis.y","global_position.forward"], ans: 0,
+      exp: "The local -Z axis is the conventional 'forward' direction in Godot 3D. Multiply by the basis to get world-space forward." },
+    { q: "Which method orients a 3D node to face a target position?",
+      opts: ["face(target)","rotate_to(target)","look_at(target, up)","aim_at(target)"], ans: 2,
+      exp: "look_at(target_position, up_vector) rotates the node so its -Z axis points toward the target." },
+    { q: "What Godot node captures mouse movement for FPS camera control?",
+      opts: ["InputEventKey","InputEventMouseButton","InputEventMouseMotion","InputEventGamepadAxis"], ans: 2,
+      exp: "InputEventMouseMotion has a .relative property giving the pixel delta each frame, used for camera rotation." }
+  ],
+  10: [
+    { q: "In PBR materials, what does a Roughness value of 0.0 produce?",
+      opts: ["Matte surface","Mirror-like reflection","Transparent surface","Emissive glow"], ans: 1,
+      exp: "Roughness 0 = perfectly smooth/mirror-like. Roughness 1 = completely diffuse/matte." },
+    { q: "Which light type casts parallel shadows like sunlight in Godot 3D?",
+      opts: ["OmniLight3D","SpotLight3D","DirectionalLight3D","PointLight3D"], ans: 2,
+      exp: "DirectionalLight3D simulates an infinitely distant light source (sun/moon) with parallel shadow rays." },
+    { q: "How do you fire a 3D raycast from a camera in Godot 4?",
+      opts: ["Camera3D.cast_ray()","get_world_3d().direct_space_state.intersect_ray(query)","PhysicsServer3D.ray_test()","RayCast3D.force_update()"], ans: 1,
+      exp: "You create a PhysicsRayQueryParameters3D and call intersect_ray() on the direct_space_state of the current World3D." },
+    { q: "What Godot 3D resource holds environment settings like sky, ambient light, and glow?",
+      opts: ["Sky3D","LightEnvironment","Environment","WorldEnvironment"], ans: 2,
+      exp: "The Environment resource (assigned to WorldEnvironment or Camera3D) controls sky, ambient, fog, glow, SSAO, and more." }
+  ],
+  11: [
+    { q: "What is the main advantage of a Finite State Machine over nested if/else chains for AI?",
+      opts: ["Uses less memory","Runs faster on GPU","Provides clear, maintainable, and extensible state logic","Requires fewer variables"], ans: 2,
+      exp: "FSMs make state logic explicit: each state has defined entry, update, and exit behaviour, eliminating spaghetti conditionals." },
+    { q: "What problem does an Object Pool solve?",
+      opts: ["Memory leaks","High CPU cost of frequent node creation/destruction","Circular references","Null pointer errors"], ans: 1,
+      exp: "Pooling avoids repeated instantiate()/queue_free() calls, reducing per-frame allocation overhead and GC pressure." },
+    { q: "In Godot, which class do you extend to create a saveable data container (e.g., WeaponData)?",
+      opts: ["Node","Object","RefCounted","Resource"], ans: 3,
+      exp: "Resource extends RefCounted and can be saved as .tres files, exported in the Inspector, and shared across instances." },
+    { q: "Which GDScript keyword allows matching against an enum value cleanly?",
+      opts: ["switch","select","match","when"], ans: 2,
+      exp: "GDScript uses 'match' (similar to switch/case) which works cleanly with enums for FSM state dispatch." }
+  ],
+  12: [
+    { q: "In an authoritative server model, which machine simulates the game state?",
+      opts: ["Each client independently","Only the server","The host client","A dedicated cloud service"], ans: 1,
+      exp: "In authoritative server architecture, only the server simulates truth. Clients send inputs and receive state updates." },
+    { q: "What does RPC stand for in multiplayer programming?",
+      opts: ["Realtime Player Communication","Remote Procedure Call","Reliable Packet Channel","Replicated Player Controller"], ans: 1,
+      exp: "RPC = Remote Procedure Call. One machine calls a function that executes on another machine over the network." },
+    { q: "Which ENet transmission mode should be used for frequent position updates?",
+      opts: ["reliable","ordered","unreliable","sequenced"], ans: 2,
+      exp: "Unreliable mode sends packets without guaranteed delivery — acceptable for position updates since newer data overwrites stale data." },
+    { q: "What is client-side prediction in multiplayer games?",
+      opts: ["The client simulates its own inputs immediately without waiting for server confirmation","The client predicts enemy positions","The server predicts client inputs","Lag compensation via rewind"], ans: 0,
+      exp: "Client-side prediction applies the player's input locally and immediately, making controls feel responsive despite network latency." }
+  ],
+  13: [
+    { q: "What makes Simplex/Perlin noise useful for terrain generation?",
+      opts: ["It is perfectly random","It produces smooth, continuous gradients that mimic natural patterns","It is faster than random()","It generates integer values only"], ans: 1,
+      exp: "Noise functions produce smooth, correlated values — nearby samples are similar — creating natural-looking height gradients." },
+    { q: "In BSP dungeon generation, what happens when a rectangle is too small to split further?",
+      opts: ["It is deleted","It is converted into a room","It is merged with a neighbour","It remains as an empty space"], ans: 1,
+      exp: "When a BSP node is too small to partition, a room is carved within it. Rooms from sibling nodes are then connected by corridors." },
+    { q: "What does 'fractal octaves' control in a FastNoiseLite configuration?",
+      opts: ["The number of noise types blended","Layers of noise at different frequencies added together for detail","The random seed","The output value range"], ans: 1,
+      exp: "Each octave adds a higher-frequency, lower-amplitude noise layer. More octaves = more detail but higher computation cost." },
+    { q: "What is the main advantage of procedural generation over hand-crafted levels?",
+      opts: ["Better visual quality","Guaranteed difficulty balance","Near-infinite content variety from compact seed data","Simpler code"], ans: 2,
+      exp: "Procedural generation creates near-unlimited content variation from a single seed value, dramatically extending replayability." }
+  ],
+  14: [
+    { q: "In Wave Function Collapse, what does 'entropy' measure for a cell?",
+      opts: ["The cell's current tile type","The number of valid tile options remaining","The distance to the nearest collapsed cell","The computational cost of collapsing the cell"], ans: 1,
+      exp: "Entropy in WFC is the count (or weighted count) of valid options remaining for a cell. The lowest-entropy cell is collapsed first." },
+    { q: "Which Godot class is used to construct a mesh programmatically from vertex data?",
+      opts: ["MeshBuilder","ProceduralMesh","SurfaceTool","MeshInstance3D"], ans: 2,
+      exp: "SurfaceTool provides a convenient API to push vertices, normals, and UVs and then commit() to create an ArrayMesh." },
+    { q: "In Godot's shader language, which built-in variable provides the current time for animation?",
+      opts: ["ELAPSED","ENGINE_TIME","TIME","FRAME_TIME"], ans: 2,
+      exp: "TIME is the built-in shader uniform providing elapsed time in seconds, used for animating procedural effects." },
+    { q: "What is the key trade-off between BSP and Wave Function Collapse dungeon generation?",
+      opts: ["BSP is slower but more coherent","WFC is faster but less varied","BSP guarantees connectivity; WFC produces more contextually coherent, varied layouts","WFC always produces rectangular rooms"], ans: 2,
+      exp: "BSP is fast and guarantees all rooms connect. WFC produces more visually coherent layouts but can fail (contradict) and is slower." }
+  ],
+  15: [
+    { q: "What should you always do BEFORE optimising code performance?",
+      opts: ["Rewrite in C++","Profile to identify the actual bottleneck","Add caching everywhere","Reduce polygon counts"], ans: 1,
+      exp: "Always profile first. Premature optimisation wastes time on non-bottlenecks and introduces unnecessary complexity." },
+    { q: "What is the purpose of @onready in GDScript?",
+      opts: ["Exports the variable to the Inspector","Marks the variable as thread-safe","Resolves node references at _ready() instead of compile time","Marks the function to run on the physics thread"], ans: 2,
+      exp: "@onready initialises the variable when _ready() runs, ensuring the scene tree is fully set up. Avoids repeated get_node() calls." },
+    { q: "Which technique hides and reuses existing objects instead of creating/destroying them?",
+      opts: ["Lazy loading","Object pooling","LOD (Level of Detail)","Occlusion culling"], ans: 1,
+      exp: "Object pooling pre-creates objects and marks them as inactive instead of destroying them, eliminating costly instantiate() calls." },
+    { q: "What trade-off does Level of Detail (LOD) make?",
+      opts: ["More CPU for less GPU","Lower visual quality at distance for better GPU performance","Better shadows for fewer draw calls","More RAM for faster loading"], ans: 1,
+      exp: "LOD swaps high-poly meshes for lower-poly versions at distance, reducing GPU vertex processing at the cost of visual fidelity." }
+  ],
+  16: [
+    { q: "Which learning outcome is addressed by implementing a multiplayer networking system?",
+      opts: ["LO1: Real-time system design","LO2: OOP and event-driven programming","LO3: Computational game systems","LO4: Performance trade-offs"], ans: 2,
+      exp: "LO3 covers implementing core computational systems: collision detection, physics simulation, networking, and procedural generation." },
+    { q: "A CharacterBody2D gives you code control; a RigidBody2D is physics-simulated. This is an example of:",
+      opts: ["A bug","A design pattern","A system design trade-off","A GDScript feature"], ans: 2,
+      exp: "Choosing between physics body types is a classic trade-off: control and predictability vs. physical realism and emergent behaviour." },
+    { q: "Why is it important to document performance optimisations in your GDD?",
+      opts: ["It's required by the Godot engine","It demonstrates critical evaluation of trade-offs between speed, memory, and code simplicity","It helps the compiler optimise code","It reduces the final binary size"], ans: 1,
+      exp: "LO4 requires evaluating trade-offs. Documentation shows you understand WHY you made each choice, not just WHAT you changed." },
+    { q: "Which Godot feature best demonstrates applying LO2 (OOP and event-driven programming)?",
+      opts: ["Using TileMapLayer for levels","Combining custom class_name classes with signals and an EventBus autoload","Applying PBR materials","Using FastNoiseLite for terrain"], ans: 1,
+      exp: "Custom classes (OOP), signals (event-driven), and EventBus (architecture) together fully demonstrate LO2 in a real project." }
+  ]
+};
+
+// ─── Quiz Engine ──────────────────────────────────────────────────────────────
+const quizStates = {};
+
+function initQuiz(week) {
+    const questions = QUIZZES[week];
+    const state = { idx: 0, correct: 0, answered: 0 };
+    quizStates[week] = state;
+    renderQuestion(week);
+}
+
+function renderQuestion(week) {
+    const state = quizStates[week];
+    const questions = QUIZZES[week];
+    const area = document.getElementById('quiz' + week + '-area');
+    if (state.idx >= questions.length) {
+        showResult(week);
+        return;
+    }
+    const q = questions[state.idx];
+    const letters = ['A','B','C','D'];
+    let html = '<p style="font-weight:600;margin-bottom:0.85rem;color:var(--text)">' +
+        (state.idx + 1) + '/' + questions.length + ' &nbsp; ' + q.q + '</p>';
+    q.opts.forEach((opt, i) => {
+        html += '<div class="quiz-option" id="q' + week + 'o' + i + '" onclick="answer(' + week + ',' + i + ',' + q.ans + ')">' +
+            '<span class="quiz-letter">' + letters[i] + '</span>' + opt +
+            '</div>';
+    });
+    html += '<div class="quiz-explain" id="q' + week + '-explain"></div>';
+    area.innerHTML = html;
+}
+
+function answer(week, chosen, correct) {
+    const state = quizStates[week];
+    const q = QUIZZES[week][state.idx];
+    const letters = ['A','B','C','D'];
+    // Disable all options
+    q.opts.forEach((_, i) => {
+        const el = document.getElementById('q' + week + 'o' + i);
+        if (el) { el.setAttribute('disabled','true'); el.style.cursor='default'; }
+    });
+    const chosenEl = document.getElementById('q' + week + 'o' + chosen);
+    const correctEl = document.getElementById('q' + week + 'o' + correct);
+    const explainEl = document.getElementById('q' + week + '-explain');
+    if (chosen === correct) {
+        chosenEl.classList.add('correct');
+        explainEl.className = 'quiz-explain show good';
+        explainEl.innerHTML = '&#10003; Correct! ' + q.exp;
+        state.correct++;
+    } else {
+        chosenEl.classList.add('wrong');
+        correctEl.classList.add('reveal-correct');
+        explainEl.className = 'quiz-explain show bad';
+        explainEl.innerHTML = '&#10007; The correct answer is <strong>' + letters[correct] + ': ' + q.opts[correct] + '</strong>. ' + q.exp;
+    }
+    state.answered++;
+    state.idx++;
+    // Auto-advance after 1.8s
+    setTimeout(() => renderQuestion(week), 1800);
+}
+
+function showResult(week) {
+    const state = quizStates[week];
+    const total = QUIZZES[week].length;
+    const pct = Math.round(state.correct / total * 100);
+    const area = document.getElementById('quiz' + week + '-area');
+    let msg, cls;
+    if (pct === 100) { msg = '&#127881; Perfect score! Outstanding work.'; cls = 'success'; }
+    else if (pct >= 75) { msg = '&#128077; Great job! Review any missed questions above.'; cls = 'success'; }
+    else if (pct >= 50) { msg = '&#128218; Good effort — revisit the topic cards for the questions you missed.'; cls = 'partial'; }
+    else { msg = '&#128269; More review needed. Re-read this week's content and try again.'; cls = 'error'; }
+    area.innerHTML = '<div class="game-feedback show ' + cls + '">' + msg + '</div>';
+    const badge = document.getElementById('quiz' + week + '-score');
+    badge.style.display = 'inline-flex';
+    badge.textContent = state.correct + '/' + total + ' (' + pct + '%)';
+}
+
+function resetQuiz(week) {
+    const badge = document.getElementById('quiz' + week + '-score');
+    if (badge) badge.style.display = 'none';
+    initQuiz(week);
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showModule(n) {
+    document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('module-' + n).classList.add('active');
+    document.querySelectorAll('.nav-tab')[n - 1].classList.add('active');
+    // Update progress
+    const pct = Math.round(n / 16 * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = 'Week ' + n + ' of 16';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Initialise quiz if not yet done
+    if (!quizStates[n]) initQuiz(n);
+}
+
+// ─── Initialise ───────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => { initQuiz(1); });
+</script>
+</body>
+</html>
