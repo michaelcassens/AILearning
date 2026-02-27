@@ -1910,7 +1910,7 @@ function showResult(week) {
     if (pct === 100) { msg = '&#127881; Perfect score! Outstanding work.'; cls = 'success'; }
     else if (pct >= 75) { msg = '&#128077; Great job! Review any missed questions above.'; cls = 'success'; }
     else if (pct >= 50) { msg = '&#128218; Good effort — revisit the topic cards for the questions you missed.'; cls = 'partial'; }
-    else { msg = '&#128269; More review needed. Re-read this week's content and try again.'; cls = 'error'; }
+    else { msg = '&#128269; More review needed. Re-read this week\'s content and try again.'; cls = 'error'; }
     area.innerHTML = '<div class="game-feedback show ' + cls + '">' + msg + '</div>';
     const badge = document.getElementById('quiz' + week + '-score');
     badge.style.display = 'inline-flex';
