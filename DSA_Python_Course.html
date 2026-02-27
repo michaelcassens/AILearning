@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Structures &amp; Algorithms — 16-Week Course</title>
+  <style>
+    :root {
+      --teal:        #00695c;
+      --teal-dark:   #004d40;
+      --amber:       #ffab40;
+      --dark:        #0b1f1a;
+      --dark2:       #1a3530;
+      --sidebar-w:   270px;
+      --bg:          #f0fdf9;
+      --border:      #b2dfdb;
+      --text:        #0b1f1a;
+      --muted:       #3d6b5a;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-concept:   #01579b;
+      --c-activity:  #00695c;
+      --c-assign:    #2e7d32;
+      --c-assess:    #e65100;
+      --bg-concept:  #e3f2fd;
+      --bg-activity: #e0f2f1;
+      --bg-assign:   #e8f5e9;
+      --bg-assess:   #fff3e0;
+      --code-bg:     #0b2420;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #0b1f1a, #1a3530);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--amber); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 12px; color: var(--dark); flex-shrink: 0; letter-spacing: -.5px;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #6aab99; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #2d5045;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #6aab99; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(0,105,92,.25); border-left-color: var(--teal); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #4a8a78;
+    }
+    .nav-item.active .nav-num { background: var(--teal); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0;
+    }
+    .pill-quiz    { background: #bf360c; color: #fff; }
+    .pill-midterm { background: #004d40; color: #fff; }
+    .pill-final   { background: #b71c1c; color: #fff; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 { font-size: 17px; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topbar .chip { font-size: 12px; color: var(--muted); background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0; }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #b2dfdb transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #b2dfdb; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--teal), #00251a);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '⚙️'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .1; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── PREREQ BANNER ── */
+    .prereq {
+      background: #e0f2f1; border: 1px solid var(--teal);
+      border-radius: 10px; padding: 14px 18px; margin-bottom: 22px;
+      display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px;
+    }
+    .prereq .prereq-icon { font-size: 20px; flex-shrink: 0; }
+    .prereq strong { color: var(--teal); }
+
+    /* ── COMPLEXITY TABLE ── */
+    .complexity-table-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .complexity-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .complexity-table thead { background: var(--teal); color: #fff; }
+    .complexity-table th { padding: 9px 14px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+    .complexity-table tbody tr:nth-child(even) { background: #f0fdf9; }
+    .complexity-table td { padding: 8px 14px; border-bottom: 1px solid var(--border); }
+    .complexity-table tbody tr:last-child td { border-bottom: none; }
+    .o-good { color: #1b5e20; font-weight: 700; }
+    .o-ok   { color: #e65100; font-weight: 700; }
+    .o-bad  { color: #b71c1c; font-weight: 700; }
+
+    /* ── CARD GRIDS ── */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+    .card { background: #fff; border-radius: 12px; padding: 22px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .card-icon { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .check-list { list-style: none; }
+    .check-list li { padding: 5px 0; font-size: 13px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+    .check-list li::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; }
+    .grade-table { width: 100%; border-collapse: collapse; }
+    .grade-table tr { border-bottom: 1px solid var(--border); }
+    .grade-table tr:last-child { border-bottom: none; }
+    .grade-table td { padding: 8px 0; font-size: 13px; }
+    .grade-table td:last-child { text-align: right; font-weight: 700; color: var(--teal); }
+    .resource-card { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 14px; cursor: pointer; transition: all .18s; display: flex; flex-direction: column; gap: 5px; }
+    .resource-card:hover { border-color: var(--teal); box-shadow: 0 4px 12px rgba(0,105,92,.15); transform: translateY(-2px); }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* ── WEEK HEADER ── */
+    .week-hdr { background: #fff; border-radius: 12px; padding: 26px; margin-bottom: 18px; box-shadow: var(--shadow); border: 1px solid var(--border); border-left: 5px solid var(--teal); }
+    .week-hdr .wk-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--teal); margin-bottom: 5px; }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .banner { border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+    .banner-quiz    { background: #fff3e0; border: 1px solid #f57c00; color: #e65100; }
+    .banner-midterm { background: #e0f2f1; border: 1px solid #00695c; color: #004d40; }
+    .banner-final   { background: #ffebee; border: 1px solid #c62828; color: #b71c1c; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
+    .ot-list { list-style: none; }
+    .ot-list li { padding: 3.5px 0; font-size: 13px; color: var(--muted); display: flex; align-items: flex-start; gap: 7px; line-height: 1.45; }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--teal); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* ── SECTION CARDS ── */
+    .sec { border-radius: 12px; padding: 22px; margin-bottom: 18px; box-shadow: var(--shadow); border: 1px solid; }
+    .sec.concept  { background: var(--bg-concept);  border-color: var(--c-concept); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.assign   { background: var(--bg-assign);   border-color: var(--c-assign); }
+    .sec.assess   { background: var(--bg-assess);   border-color: var(--c-assess); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .concept  .sec-icon { background: rgba(1,87,155,.13); }
+    .activity .sec-icon { background: rgba(0,105,92,.13); }
+    .assign   .sec-icon { background: rgba(46,125,50,.13); }
+    .assess   .sec-icon { background: rgba(245,124,0,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .concept  .sec-hdr h3 { color: #01579b; }
+    .activity .sec-hdr h3 { color: #004d40; }
+    .assign   .sec-hdr h3 { color: #1b5e20; }
+    .assess   .sec-hdr h3 { color: #bf360c; }
+    .due-tag { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0; }
+    .assign .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .assess .due-tag { background: rgba(245,124,0,.15); color: #bf360c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li { font-size: 13.5px; color: var(--muted); padding: 4.5px 0; display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; }
+    .concept  ul li::before { content: '💡'; font-size: 11px; flex-shrink: 0; }
+    .assign   ul li::before { content: '→'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .assess   ul li::before { content: '•'; color: var(--c-assess); font-weight: 700; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .sample-qs h5 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #bf360c; margin: 12px 0 6px; }
+    .sample-qs ul li::before { content: '?'; color: var(--c-assess); font-weight: 900; flex-shrink: 0; }
+    .rubric-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .rubric-table tr { border-bottom: 1px solid rgba(0,0,0,.08); }
+    .rubric-table tr:last-child { border-bottom: none; }
+    .rubric-table td { padding: 7px 2px; font-size: 13px; }
+    .rubric-table td:last-child { text-align: right; font-weight: 700; color: var(--c-assess); }
+    .exam-list { list-style: none; margin-bottom: 14px; }
+    .exam-list li { padding: 4px 0; font-size: 13.5px; color: var(--muted); display: flex; align-items: flex-start; gap: 8px; }
+    .exam-list li::before { content: '📌'; font-size: 12px; flex-shrink: 0; }
+    .sec-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin: 14px 0 6px; color: #bf360c; }
+
+    /* ── CODE BLOCK ── */
+    .code-block { background: var(--code-bg); border-radius: 9px; padding: 16px; margin-top: 14px; overflow-x: auto; }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre { font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 12.5px; line-height: 1.65; color: #a8f0dc; white-space: pre; }
+
+    /* ── SCHEDULE TABLE ── */
+    .sched-wrap { background: #fff; border-radius: 12px; border: 1px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--teal); color: #fff; }
+    .sched-table th { padding: 11px 16px; text-align: left; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #e0f2f1; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--teal); white-space: nowrap; }
+    .tbl-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tbl-quiz    { background: #fff3e0; color: #e65100; }
+    .tbl-midterm { background: #e0f2f1; color: #004d40; }
+    .tbl-final   { background: #ffebee; color: #b71c1c; }
+
+    /* ── WEEK NAV BUTTONS ── */
+    .wk-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border); }
+    .nav-btn { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .14s; color: var(--text); }
+    .nav-btn:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── MOBILE ── */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">DSA</div>
+      <div>
+        <h1>Data Structures &amp; Algorithms</h1>
+        <div class="sub">16-Week CS Course in Python</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Course Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">Full Schedule</span>
+    </div>
+    <div class="nav-item" id="nav-complexity" onclick="go('complexity')">
+      <div class="nav-num">📊</div>
+      <span class="nav-label">Complexity Reference</span>
+    </div>
+    <div class="nav-group-label">Weeks</div>
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Course Overview</h2>
+    <span class="chip" id="topChip">16 Weeks · Intermediate CS · Python</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   COURSE DATA
+═══════════════════════════ */
+const data = {
+  goals: [
+    "Analyze algorithm efficiency using Big-O, Big-Omega, and Big-Theta notation",
+    "Implement abstract data types: stacks, queues, linked lists, trees, heaps, and graphs",
+    "Apply recursion to divide-and-conquer and backtracking problems",
+    "Implement and analyze sorting algorithms: merge sort, quicksort, heapsort",
+    "Design and use hash tables with effective collision resolution strategies",
+    "Traverse and manipulate binary trees and binary search trees",
+    "Implement and apply graph algorithms: BFS, DFS, Dijkstra, topological sort",
+    "Choose the right data structure for a given problem and justify the decision"
+  ],
+  grading: [
+    { c: "Weekly Assignments (14)", w: "35%" },
+    { c: "In-Class Activities",     w: "10%" },
+    { c: "Quizzes (4)",             w: "20%" },
+    { c: "Midterm Exam",            w: "15%" },
+    { c: "Final Project + Exam",    w: "20%" }
+  ],
+  resources: [
+    { icon: "📘", title: "Problem Solving w/ Algorithms",  desc: "runestone.academy",          url: "https://runestone.academy/ns/books/published/pythonds/index.html" },
+    { icon: "🧠", title: "VisuAlgo",                        desc: "Algorithm visualizations",    url: "https://visualgo.net/" },
+    { icon: "⚔️", title: "LeetCode",                        desc: "Algorithm practice",          url: "https://leetcode.com/" },
+    { icon: "🔍", title: "Big-O Cheat Sheet",               desc: "bigocheatsheet.com",          url: "https://www.bigocheatsheet.com/" },
+    { icon: "📖", title: "Python Docs",                     desc: "docs.python.org",             url: "https://docs.python.org/3/" },
+    { icon: "🎥", title: "CS Dojo",                         desc: "YouTube DSA tutorials",       url: "https://www.youtube.com/@CSDojo" }
+  ],
+  complexity: [
+    { ds: "Array / Python list (access)",   avg: "O(1)",      worst: "O(1)",      space: "O(n)" },
+    { ds: "Array / Python list (search)",   avg: "O(n)",      worst: "O(n)",      space: "O(n)" },
+    { ds: "Array / Python list (insert end)",avg:"O(1)*",     worst: "O(n)",      space: "O(n)" },
+    { ds: "Linked List (search)",           avg: "O(n)",      worst: "O(n)",      space: "O(n)" },
+    { ds: "Linked List (insert head)",      avg: "O(1)",      worst: "O(1)",      space: "O(n)" },
+    { ds: "Stack (push/pop)",               avg: "O(1)",      worst: "O(1)",      space: "O(n)" },
+    { ds: "Queue (enqueue/dequeue)",        avg: "O(1)",      worst: "O(1)",      space: "O(n)" },
+    { ds: "Hash Table (search/insert)",     avg: "O(1)",      worst: "O(n)",      space: "O(n)" },
+    { ds: "BST (search/insert)",            avg: "O(log n)",  worst: "O(n)",      space: "O(n)" },
+    { ds: "Heap (insert)",                  avg: "O(log n)",  worst: "O(log n)",  space: "O(n)" },
+    { ds: "Heap (extract-min/max)",         avg: "O(log n)",  worst: "O(log n)",  space: "O(n)" },
+    { ds: "Graph BFS / DFS",                avg: "O(V + E)",  worst: "O(V + E)",  space: "O(V)" },
+    { ds: "Bubble / Selection / Insertion Sort", avg: "O(n²)", worst: "O(n²)",  space: "O(1)" },
+    { ds: "Merge Sort",                     avg: "O(n log n)",worst: "O(n log n)",space: "O(n)" },
+    { ds: "Quick Sort",                     avg: "O(n log n)",worst: "O(n²)",     space: "O(log n)" },
+    { ds: "Heap Sort",                      avg: "O(n log n)",worst: "O(n log n)",space: "O(1)" }
+  ],
+  weeks: [
+    {
+      n: 1, title: "Introduction, ADTs, and Python Review", badge: null,
+      objectives: [
+        "Distinguish between an abstract data type and its implementation",
+        "Review Python classes, type hints, and dunder methods",
+        "Understand the course structure and expectations"
+      ],
+      topics: [
+        "What is a data structure? What is an algorithm?",
+        "Abstract Data Type (ADT): interface vs. implementation",
+        "Python review: classes, __init__, __repr__, __str__",
+        "Type hints and the typing module",
+        "Python built-in structures overview: list, dict, set, tuple",
+        "Setting up the course environment (venv, pytest)"
+      ],
+      concept: {
+        title: "Abstract Data Types",
+        desc: "An ADT specifies WHAT a data structure does — its interface — without specifying HOW it does it. This separation lets us swap implementations without changing the code that uses them. For example, the Stack ADT defines push(), pop(), and peek() — but we can implement it with a list or a linked list.",
+        points: [
+          "Interface = contract (what operations are available, what they guarantee)",
+          "Implementation = the actual code (arrays, linked nodes, hash tables, etc.)",
+          "The same ADT can have multiple implementations with different trade-offs",
+          "Choosing the right implementation is one of the core skills in this course"
+        ]
+      },
+      activity: {
+        title: '"ADT Design Sprint"',
+        desc: "In pairs, students design the interface (not the code) for 3 ADTs: a Bag (multiset), a Dictionary, and a PriorityQueue. List every operation needed, what it takes as input, and what it returns. Discuss with the class.",
+        code: '# We specify the INTERFACE of a Stack ADT before touching code\n# This is what users of our Stack will depend on.\n\nclass StackADT:\n    """Abstract interface for a Stack (LIFO) data structure."""\n\n    def push(self, item) -> None:\n        """Add item to the top of the stack."""\n        raise NotImplementedError\n\n    def pop(self):\n        """Remove and return the top item. Raises IndexError if empty."""\n        raise NotImplementedError\n\n    def peek(self):\n        """Return the top item without removing it. Raises IndexError if empty."""\n        raise NotImplementedError\n\n    def is_empty(self) -> bool:\n        """Return True if the stack has no items."""\n        raise NotImplementedError\n\n    def __len__(self) -> int:\n        """Return the number of items in the stack."""\n        raise NotImplementedError'
+      },
+      assign: {
+        n: 1, title: "adt_design.py", due: 2,
+        desc: "Design and stub out two ADT interfaces, then write a short analysis.",
+        reqs: [
+          "Design a Queue ADT class with stub methods, docstrings, and type hints",
+          "Design a PriorityQueue ADT class — think carefully about what enqueue needs",
+          "For each ADT, write a 3-5 sentence comment: what problem does it solve? What guarantees does it provide?",
+          "Write a short main() that shows how BOTH would be used (just call the stubs — they don't need to work yet)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 2, title: "Algorithm Analysis and Big-O Notation", badge: null,
+      objectives: [
+        "Express algorithm efficiency using Big-O, Big-Omega, and Big-Theta",
+        "Identify the complexity of code by inspecting loops and recursion",
+        "Measure empirical performance with Python's time and timeit modules"
+      ],
+      topics: [
+        "Why analysis matters: correctness alone is not enough",
+        "Big-O notation: formal definition, intuition, dominant terms",
+        "Common complexity classes: O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ)",
+        "Big-Omega (Ω) and Big-Theta (Θ): best case vs. tight bound",
+        "Analyzing loops, nested loops, and sequential statements",
+        "Space complexity and auxiliary space",
+        "Empirical timing: time.perf_counter() and timeit"
+      ],
+      concept: null,
+      activity: {
+        title: '"Complexity Hunt"',
+        desc: "Students are given 8 code snippets of varying complexity. Without running them, they classify each as O(1), O(log n), O(n), O(n log n), or O(n²). Then they time each with n = 1000, 10000, 100000 and plot growth.",
+        code: '# What is the Big-O of each function?\n\ndef f1(n):               # O(?)\n    return n * (n + 1) // 2\n\ndef f2(lst):             # O(?)\n    total = 0\n    for x in lst:\n        total += x\n    return total\n\ndef f3(lst):             # O(?)\n    for i in lst:\n        for j in lst:\n            print(i, j)\n\ndef f4(n):               # O(?)\n    i = 1\n    while i < n:\n        i *= 2\n\ndef f5(lst):             # O(?)\n    result = []\n    for i in range(len(lst)):\n        for j in range(i, len(lst)):\n            result.append(lst[i] + lst[j])\n    return result\n\n# Empirical timing\nimport time\nn = 100_000\ndata = list(range(n))\nt0 = time.perf_counter()\nf2(data)\nprint(f"f2 with n={n}: {time.perf_counter()-t0:.6f}s")'
+      },
+      assign: {
+        n: 2, title: "complexity_analysis.py", due: 3,
+        desc: "Analyze and time several algorithms, then write Big-O justifications.",
+        reqs: [
+          "Write and time 5 functions with different complexities (O(1) through O(n²)) with at least 3 different values of n",
+          "For each function, write a comment with its Big-O and 2-3 sentences explaining WHY",
+          "Plot your empirical results (use print or a simple ASCII chart) and verify they match the predicted growth",
+          "Find the Big-O of Python's list.append(), list.insert(0, x), dict[key], and in for list vs. set — time each empirically to verify"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 3, title: "Recursion", badge: "Quiz 1",
+      objectives: [
+        "Break problems into recursive base cases and recursive cases",
+        "Trace recursive call stacks and identify stack depth",
+        "Apply recursion to sorting, searching, and combinatorics"
+      ],
+      topics: [
+        "Recursive thinking: restate the problem in terms of a smaller version",
+        "Base case and recursive case — getting both right",
+        "The call stack: frames, depth, and stack overflow",
+        "Classic recursive algorithms: factorial, Fibonacci, binary search",
+        "Divide and conquer pattern: merge sort preview",
+        "Recursion vs. iteration: trade-offs and Python's recursion limit",
+        "Memoization: caching repeated subproblems"
+      ],
+      concept: null,
+      activity: {
+        title: '"Recursion Tree Drawing"',
+        desc: "Students manually draw the recursion tree for fib(5) and binary_search([1..16], target). Count the total function calls. Then add memoization and redraw — see the dramatic reduction.",
+        code: '# Naive recursive fibonacci — draw the call tree for n=5\ndef fib(n):\n    if n <= 1:\n        return n\n    return fib(n - 1) + fib(n - 2)\n\n# Memoized fibonacci — how does the tree change?\nfrom functools import lru_cache\n@lru_cache(maxsize=None)\ndef fib_memo(n):\n    if n <= 1:\n        return n\n    return fib_memo(n - 1) + fib_memo(n - 2)\n\n# Recursive binary search\ndef binary_search(arr, target, lo=0, hi=None):\n    if hi is None:\n        hi = len(arr) - 1\n    if lo > hi:\n        return -1\n    mid = (lo + hi) // 2\n    if arr[mid] == target:\n        return mid\n    elif arr[mid] < target:\n        return binary_search(arr, target, mid + 1, hi)\n    else:\n        return binary_search(arr, target, lo, mid - 1)\n\n# Recursive power set\ndef power_set(s):\n    if not s:\n        return [[]]\n    first, rest = s[0], s[1:]\n    without = power_set(rest)\n    with_first = [[first] + sub for sub in without]\n    return without + with_first'
+      },
+      assign: {
+        n: 3, title: "recursion_problems.py", due: 4,
+        desc: "Solve a set of recursive problems and analyze each solution.",
+        reqs: [
+          "Implement recursive sum(lst), reverse(lst), and flatten(nested_list) — no loops allowed",
+          "Implement a recursive function that counts the number of paths in a grid from top-left to bottom-right (only right/down moves)",
+          "Implement the Tower of Hanoi and print each move; count total moves for n disks and verify it equals 2ⁿ - 1",
+          "Compare fib(35) timing with and without memoization and report the speedup",
+          "Write a recursive function to generate all permutations of a string"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 1",
+        topics: "Weeks 1-3: ADTs, algorithm analysis, recursion",
+        format: "15 multiple-choice + 2 code-tracing + 1 code-writing (30 min)",
+        samples: [
+          "What is the Big-O of a function with two nested loops, each running n/2 times?",
+          "Trace the call stack for fib(4) and count the total number of function calls.",
+          "What is the difference between O(n) and Θ(n)? Give an example of a function that is O(n) but not Θ(n)."
+        ]
+      }
+    },
+    {
+      n: 4, title: "Stacks", badge: null,
+      objectives: [
+        "Implement a Stack ADT using both an array and a linked list",
+        "Analyze the time and space complexity of each implementation",
+        "Apply stacks to real problems: parenthesis matching, postfix evaluation"
+      ],
+      topics: [
+        "Stack ADT: LIFO principle, push, pop, peek, is_empty, __len__",
+        "Array-based stack: Python list as backing store, amortized O(1)",
+        "Linked-node stack: Node class, O(1) push/pop, no resizing",
+        "Comparing implementations: memory layout, cache performance",
+        "Application: balanced parentheses / bracket checker",
+        "Application: infix to postfix (Shunting-Yard algorithm)",
+        "Application: postfix expression evaluator"
+      ],
+      concept: null,
+      activity: {
+        title: '"Build Two Stacks, Race Them"',
+        desc: "Students implement ArrayStack and LinkedStack, then time push/pop operations for n = 10k, 100k, 1M elements. Discuss: why are they both O(1) but one is faster in practice?",
+        code: 'class Node:\n    def __init__(self, data, next_node=None):\n        self.data = data\n        self.next = next_node\n\nclass LinkedStack:\n    def __init__(self):\n        self._top = None\n        self._size = 0\n\n    def push(self, item) -> None:\n        self._top = Node(item, self._top)\n        self._size += 1\n\n    def pop(self):\n        if self.is_empty():\n            raise IndexError("pop from empty stack")\n        val = self._top.data\n        self._top = self._top.next\n        self._size -= 1\n        return val\n\n    def peek(self):\n        if self.is_empty():\n            raise IndexError("peek at empty stack")\n        return self._top.data\n\n    def is_empty(self) -> bool:\n        return self._size == 0\n\n    def __len__(self) -> int:\n        return self._size\n\n# Application: balanced brackets\ndef is_balanced(expr: str) -> bool:\n    stack = LinkedStack()\n    pairs = {")": "(", "]": "[", "}": "{"}\n    for ch in expr:\n        if ch in "([{":\n            stack.push(ch)\n        elif ch in ")]}":\n            if stack.is_empty() or stack.pop() != pairs[ch]:\n                return False\n    return stack.is_empty()'
+      },
+      assign: {
+        n: 4, title: "stack_applications.py", due: 5,
+        desc: "Implement a stack and three classic stack-based applications.",
+        reqs: [
+          "Implement ArrayStack backed by a Python list with full type hints and docstrings",
+          "Implement LinkedStack backed by a custom Node class",
+          "Write is_balanced(expr) that checks for matched (), [], and {} using your stack",
+          "Write postfix_eval(expr) that evaluates a space-separated postfix expression (e.g., '3 4 + 2 *' = 14)",
+          "Write infix_to_postfix(expr) using the Shunting-Yard algorithm",
+          "Time both stack implementations for 1,000,000 push/pop operations and report results"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 5, title: "Queues and Deques", badge: null,
+      objectives: [
+        "Implement Queue and Deque ADTs with array and linked-list backing",
+        "Explain why a naive array queue is O(n) and how circular arrays fix it",
+        "Apply queues to BFS and simulation problems"
+      ],
+      topics: [
+        "Queue ADT: FIFO, enqueue, dequeue, front, is_empty",
+        "Naive array queue: O(n) dequeue — and why that's a problem",
+        "Circular array queue: O(1) enqueue and dequeue",
+        "Linked-list queue: O(1) both ends with head and tail pointers",
+        "Python's collections.deque: O(1) append and appendleft",
+        "Deque ADT: double-ended queue operations",
+        "Priority Queue intro and Python's heapq module",
+        "Application: hot-potato simulation, BFS graph traversal preview"
+      ],
+      concept: null,
+      activity: {
+        title: '"Hot Potato Simulation"',
+        desc: "Students implement the hot-potato problem: n people in a circle, pass a 'potato' every k steps, the person holding it is eliminated. Simulate with a queue. Then implement a printer job scheduler.",
+        code: 'from collections import deque\n\ndef hot_potato(names: list[str], num: int) -> str:\n    """Simulate hot potato — return the last person standing."""\n    queue = deque(names)\n    while len(queue) > 1:\n        for _ in range(num):\n            queue.append(queue.popleft())  # pass the potato\n        queue.popleft()                    # eliminate front person\n    return queue[0]\n\nprint(hot_potato(["Alice","Bob","Carol","Dan","Eve"], 7))\n\n# Circular Array Queue (O(1) both ends)\nclass CircularQueue:\n    def __init__(self, capacity: int):\n        self._data = [None] * capacity\n        self._front = 0\n        self._size = 0\n        self._capacity = capacity\n\n    def enqueue(self, item) -> None:\n        if self._size == self._capacity:\n            raise OverflowError("Queue is full")\n        back = (self._front + self._size) % self._capacity\n        self._data[back] = item\n        self._size += 1\n\n    def dequeue(self):\n        if self._size == 0:\n            raise IndexError("dequeue from empty queue")\n        val = self._data[self._front]\n        self._front = (self._front + 1) % self._capacity\n        self._size -= 1\n        return val'
+      },
+      assign: {
+        n: 5, title: "queue_applications.py", due: 6,
+        desc: "Implement queue variants and apply them to simulation problems.",
+        reqs: [
+          "Implement CircularQueue (array-based, fixed capacity) with enqueue, dequeue, front, is_empty",
+          "Implement LinkedQueue using head and tail node pointers",
+          "Implement Deque with addFront, addRear, removeFront, removeRear — analyze each operation",
+          "Write a palindrome checker using a Deque",
+          "Simulate a print queue: jobs arrive at random intervals (random.randint), are processed in order; report average wait time for 100 jobs"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 6, title: "Linked Lists", badge: "Quiz 2",
+      objectives: [
+        "Implement singly and doubly linked lists from scratch",
+        "Perform insertion, deletion, and search with correct pointer manipulation",
+        "Compare linked list and array performance trade-offs"
+      ],
+      topics: [
+        "Singly linked list: Node, head pointer, traversal",
+        "Insertion: at head O(1), at tail O(n), at position O(n)",
+        "Deletion: by value and by position, handling edge cases",
+        "Doubly linked list: prev and next pointers, O(1) delete with node reference",
+        "Circular linked list: applications and implementation",
+        "Sentinel / dummy nodes: simplifying edge cases",
+        "Array vs. linked list: access, insertion, deletion, memory"
+      ],
+      concept: null,
+      activity: {
+        title: '"Linked List Surgery"',
+        desc: "Students are given a broken linked list implementation with 5 bugs. They must trace through pointer diagrams to find and fix each bug — no running code until all 5 are identified on paper first.",
+        code: 'class Node:\n    def __init__(self, data):\n        self.data = data\n        self.next = None\n\nclass SinglyLinkedList:\n    def __init__(self):\n        self._head = None\n        self._size = 0\n\n    def prepend(self, data) -> None:\n        """Insert at head — O(1)."""\n        self._head = Node(data)   # BUG: loses existing list!\n        # Fix: Node(data, self._head)\n        self._size += 1\n\n    def append(self, data) -> None:\n        """Insert at tail — O(n)."""\n        new_node = Node(data)\n        if self._head is None:\n            self._head = new_node\n            return\n        current = self._head\n        while current.next:    # walk to tail\n            current = current.next\n        current.next = new_node\n        self._size += 1\n\n    def delete(self, data) -> bool:\n        """Remove first node with given data — O(n)."""\n        prev, curr = None, self._head\n        while curr:\n            if curr.data == data:\n                if prev:\n                    prev.next = curr.next\n                else:\n                    self._head = curr.next\n                self._size -= 1\n                return True\n            prev, curr = curr, curr.next\n        return False\n\n    def __iter__(self):\n        current = self._head\n        while current:\n            yield current.data\n            current = current.next\n\n    def __repr__(self):\n        return " -> ".join(str(x) for x in self) + " -> None"'
+      },
+      assign: {
+        n: 6, title: "linked_list.py", due: 7,
+        desc: "Build a complete doubly linked list and apply it to two problems.",
+        reqs: [
+          "Implement DoublyLinkedList with: append, prepend, insert_after, delete, search, __len__, __iter__, __repr__",
+          "All operations must handle edge cases: empty list, single element, head/tail deletion",
+          "Implement reverse() in-place by swapping all next/prev pointers — O(n), O(1) space",
+          "Use your linked list to implement an LRU Cache (Least Recently Used): get(key) and put(key, value) both O(1)",
+          "Write a function detect_cycle(head) that returns True if a linked list has a cycle (Floyd's tortoise and hare)"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 2",
+        topics: "Weeks 4-6: stacks, queues, linked lists",
+        format: "15 multiple-choice + 2 pointer-tracing diagrams + 1 code-writing (30 min)",
+        samples: [
+          "Draw the state of a linked list after: append(1), append(2), prepend(0), delete(2).",
+          "What is the time complexity of inserting at the middle of a linked list vs. the middle of an array?",
+          "Write the code to reverse a singly linked list iteratively in O(n) time, O(1) space."
+        ]
+      }
+    },
+    {
+      n: 7, title: "Sorting Algorithms — Comparison Sorts", badge: null,
+      objectives: [
+        "Implement and analyze bubble, selection, insertion, and merge sort",
+        "Prove the Ω(n log n) lower bound for comparison-based sorting",
+        "Distinguish stable vs. unstable and in-place vs. not-in-place sorts"
+      ],
+      topics: [
+        "Bubble sort: passes, early-exit optimization, O(n²) worst, O(n) best",
+        "Selection sort: invariant, always O(n²), unstable",
+        "Insertion sort: O(n²) worst, O(n) best, in-place, stable, good for nearly sorted",
+        "Merge sort: divide and conquer, O(n log n) guaranteed, O(n) space, stable",
+        "Recurrence relations: T(n) = 2T(n/2) + O(n) — solved by Master Theorem",
+        "Lower bound proof sketch: any comparison sort is Ω(n log n)",
+        "Stability and in-place: definitions and why they matter"
+      ],
+      concept: null,
+      activity: {
+        title: '"Sorting Race"',
+        desc: "Students implement all four sorts and time them on: random data, sorted data, reverse-sorted data, and nearly-sorted data with n = 100, 1000, 5000. Results are shared and graphed as a class.",
+        code: 'def bubble_sort(arr: list) -> list:\n    arr = arr[:]\n    n = len(arr)\n    for i in range(n - 1):\n        swapped = False\n        for j in range(n - 1 - i):\n            if arr[j] > arr[j + 1]:\n                arr[j], arr[j + 1] = arr[j + 1], arr[j]\n                swapped = True\n        if not swapped:      # already sorted — O(n) best case\n            break\n    return arr\n\ndef merge_sort(arr: list) -> list:\n    if len(arr) <= 1:\n        return arr\n    mid = len(arr) // 2\n    left  = merge_sort(arr[:mid])\n    right = merge_sort(arr[mid:])\n    return _merge(left, right)\n\ndef _merge(left: list, right: list) -> list:\n    result = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            result.append(left[i]); i += 1\n        else:\n            result.append(right[j]); j += 1\n    result.extend(left[i:])\n    result.extend(right[j:])\n    return result'
+      },
+      assign: {
+        n: 7, title: "sorting.py", due: 8,
+        desc: "Implement all comparison sorts and perform a thorough empirical analysis.",
+        reqs: [
+          "Implement: bubble_sort, selection_sort, insertion_sort, merge_sort — each returns a new sorted list",
+          "Each function must count comparisons and swaps/copies via a counter parameter",
+          "Time each on 4 input types (random, sorted, reverse, nearly-sorted) at n = 100, 1000, 10000",
+          "Implement merge sort iteratively (bottom-up) as a bonus — compare to recursive version",
+          "Write a report (as Python comments/docstring) comparing all four: Big-O, stability, in-place, and your timing data"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 8, title: "Midterm Exam", badge: "Midterm",
+      objectives: [
+        "Demonstrate mastery of Weeks 1-7 concepts",
+        "Implement data structures and algorithms under time constraints",
+        "Analyze code for correctness and complexity"
+      ],
+      topics: [
+        "Review: ADTs, Big-O analysis, recursion",
+        "Review: stacks, queues, linked lists",
+        "Review: bubble, selection, insertion, merge sort",
+        "Practice problems and exam strategy",
+        "Exam: 90 minutes, closed book, open cheat sheet (one page)"
+      ],
+      concept: null,
+      activity: {
+        title: "Midterm Review — Problem Set",
+        desc: "Students work through a set of exam-style problems in pairs: trace through an algorithm, write a recurrence, implement a data structure method, and analyze a given piece of code for complexity.",
+        code: '# Sample midterm problems\n\n# Q1: What is the Big-O of this function?\ndef mystery(n):\n    count = 0\n    i = n\n    while i > 1:\n        for j in range(n):\n            count += 1\n        i //= 2\n    return count\n# Answer: O(n log n) — outer loop runs log n times, inner loop n times\n\n# Q2: Trace this recursive call. What does it return for mystery([1,2,3,4,5])?\ndef mystery2(lst):\n    if len(lst) == 0:\n        return 0\n    if lst[0] % 2 == 0:\n        return lst[0] + mystery2(lst[1:])\n    return mystery2(lst[1:])\n# Answer: sum of even numbers = 2 + 4 = 6\n\n# Q3: What is printed?\nstack = []\nfor ch in "ABCDE":\n    stack.append(ch)\nwhile stack:\n    print(stack.pop(), end=" ")\n# Answer: E D C B A'
+      },
+      assign: {
+        n: 8, title: "Midterm Exam", due: 8,
+        desc: "90-minute in-class midterm exam covering all concepts from Weeks 1-7.",
+        reqs: [
+          "Section 1: Multiple Choice (20 questions, 1 pt each) — Big-O, ADTs, recursion, sorting",
+          "Section 2: Code Tracing (20 pts) — trace 3 algorithms and write their output",
+          "Section 3: Complexity Analysis (20 pts) — analyze 4 code snippets",
+          "Section 4: Implementation (40 pts) — implement 2 data structure operations from scratch",
+          "Allowed: one hand-written 8.5x11 cheat sheet (both sides)"
+        ]
+      },
+      assess: {
+        type: "midterm", label: "Midterm Exam",
+        desc: "90-minute closed-book exam covering ADTs, algorithm analysis, recursion, stacks, queues, linked lists, and sorting algorithms.",
+        reqs: [
+          "Section 1: Multiple Choice (20 pts) — vocabulary, concepts, complexity",
+          "Section 2: Code Tracing (20 pts) — trace 3 algorithms and give exact output",
+          "Section 3: Complexity Analysis (20 pts) — determine Big-O of 4 code snippets",
+          "Section 4: Implementation (40 pts) — write two data structure methods from scratch"
+        ],
+        rubric: [
+          { c: "Multiple Choice",        p: 20 },
+          { c: "Code Tracing",           p: 20 },
+          { c: "Complexity Analysis",    p: 20 },
+          { c: "Implementation",         p: 40 }
+        ]
+      }
+    },
+    {
+      n: 9, title: "Quicksort, Heapsort, and Non-Comparison Sorts", badge: null,
+      objectives: [
+        "Implement quicksort and explain pivot selection strategies",
+        "Analyze quicksort's average O(n log n) vs. worst O(n²) case",
+        "Describe counting sort and radix sort as O(n + k) algorithms"
+      ],
+      topics: [
+        "Quicksort: Lomuto and Hoare partition schemes",
+        "Pivot selection: first, last, median-of-three, random",
+        "Quicksort analysis: average O(n log n), worst O(n²) (sorted input!)",
+        "Quicksort in practice: why it beats merge sort on average",
+        "Heapsort: using a max-heap to sort in O(n log n), O(1) extra space",
+        "Counting sort: O(n + k), when k is small",
+        "Radix sort: O(d·n) for d-digit integers",
+        "Python's Timsort: hybrid merge/insertion sort used by sorted()"
+      ],
+      concept: null,
+      activity: {
+        title: '"Quicksort Worst Case Hunt"',
+        desc: "Students demonstrate quicksort's O(n²) worst case with a sorted input and last-element pivot. Then implement median-of-three pivot and show the improvement. Also implement heapsort using Python's heapq.",
+        code: 'import random\n\ndef quicksort(arr: list, lo: int = 0, hi: int = None) -> None:\n    """In-place quicksort using Lomuto partition."""\n    if hi is None:\n        hi = len(arr) - 1\n    if lo < hi:\n        pivot_idx = _partition(arr, lo, hi)\n        quicksort(arr, lo, pivot_idx - 1)\n        quicksort(arr, pivot_idx + 1, hi)\n\ndef _partition(arr: list, lo: int, hi: int) -> int:\n    # Median-of-three pivot selection\n    mid = (lo + hi) // 2\n    if arr[mid] < arr[lo]:\n        arr[lo], arr[mid] = arr[mid], arr[lo]\n    if arr[hi] < arr[lo]:\n        arr[lo], arr[hi] = arr[hi], arr[lo]\n    if arr[mid] < arr[hi]:\n        arr[mid], arr[hi] = arr[hi], arr[mid]\n    pivot = arr[hi]\n    i = lo - 1\n    for j in range(lo, hi):\n        if arr[j] <= pivot:\n            i += 1\n            arr[i], arr[j] = arr[j], arr[i]\n    arr[i + 1], arr[hi] = arr[hi], arr[i + 1]\n    return i + 1\n\nimport heapq\ndef heap_sort(arr: list) -> list:\n    h = arr[:]\n    heapq.heapify(h)\n    return [heapq.heappop(h) for _ in range(len(h))]'
+      },
+      assign: {
+        n: 9, title: "advanced_sorting.py", due: 10,
+        desc: "Implement and thoroughly compare quicksort variants and non-comparison sorts.",
+        reqs: [
+          "Implement quicksort with 3 pivot strategies: last element, random, and median-of-three",
+          "Time all three on sorted, reverse-sorted, and random arrays of n = 10000",
+          "Implement heapsort WITHOUT using heapq — build a max-heap manually with sift_down()",
+          "Implement counting_sort(arr, max_val) and radix_sort(arr)",
+          "Write a summary table (as a docstring/comment) comparing all sorting algorithms covered in Weeks 7 and 9"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 10, title: "Searching and Hashing", badge: null,
+      objectives: [
+        "Implement a hash table with chaining and open addressing",
+        "Explain load factor, rehashing, and collision resolution",
+        "Apply hash tables to solve algorithmic problems in O(n)"
+      ],
+      topics: [
+        "Linear search O(n) vs. binary search O(log n) — requirements",
+        "Hash function properties: deterministic, uniform, efficient",
+        "Collision resolution: separate chaining (linked list buckets)",
+        "Open addressing: linear probing, quadratic probing, double hashing",
+        "Load factor (α) and when to rehash",
+        "Amortized O(1) average for insert, search, delete",
+        "Python dict and set internals (high-level)",
+        "Application: two-sum in O(n), anagram detection, frequency maps"
+      ],
+      concept: null,
+      activity: {
+        title: '"Build a Hash Table from Scratch"',
+        desc: "Students implement a HashTable class with separate chaining in 30 minutes. Then test it with the two-sum problem and compare performance to a nested loop solution.",
+        code: 'class HashTable:\n    """Hash table with separate chaining."""\n\n    def __init__(self, capacity: int = 16):\n        self._capacity = capacity\n        self._buckets: list[list] = [[] for _ in range(capacity)]\n        self._size = 0\n        self._load_threshold = 0.75\n\n    def _hash(self, key) -> int:\n        return hash(key) % self._capacity\n\n    def put(self, key, value) -> None:\n        idx = self._hash(key)\n        for i, (k, v) in enumerate(self._buckets[idx]):\n            if k == key:\n                self._buckets[idx][i] = (key, value)\n                return\n        self._buckets[idx].append((key, value))\n        self._size += 1\n        if self._size / self._capacity > self._load_threshold:\n            self._rehash()\n\n    def get(self, key):\n        idx = self._hash(key)\n        for k, v in self._buckets[idx]:\n            if k == key:\n                return v\n        raise KeyError(key)\n\n    def _rehash(self) -> None:\n        old_buckets = self._buckets\n        self._capacity *= 2\n        self._buckets = [[] for _ in range(self._capacity)]\n        self._size = 0\n        for bucket in old_buckets:\n            for k, v in bucket:\n                self.put(k, v)\n\n# Two-sum in O(n) using hashing\ndef two_sum(nums: list[int], target: int) -> tuple[int, int]:\n    seen = {}   # value -> index\n    for i, num in enumerate(nums):\n        complement = target - num\n        if complement in seen:\n            return (seen[complement], i)\n        seen[num] = i\n    return (-1, -1)'
+      },
+      assign: {
+        n: 10, title: "hash_table.py", due: 11,
+        desc: "Build a complete hash table implementation and solve hashing-based problems.",
+        reqs: [
+          "Implement HashTable with separate chaining: put, get, remove, __len__, __contains__, resize on load > 0.75",
+          "Implement a second HashTable with linear probing (open addressing) — handle deletions with tombstones",
+          "Write a load_factor() method and test how performance degrades as load increases",
+          "Solve: group_anagrams(words) — group a list of words into anagram families using your hash table",
+          "Solve: longest_subarray_sum_k(arr, k) — find the longest subarray that sums to k using hashing in O(n)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 11, title: "Trees: Binary Trees and Binary Search Trees", badge: "Quiz 3",
+      objectives: [
+        "Implement a binary search tree with insertion, search, and deletion",
+        "Perform all four tree traversals iteratively and recursively",
+        "Analyze BST operations and identify degenerate cases"
+      ],
+      topics: [
+        "Tree terminology: root, parent, child, leaf, height, depth, subtree",
+        "Binary tree properties: full, complete, perfect",
+        "Binary Search Tree (BST) property: left < root < right",
+        "BST operations: insert O(h), search O(h), delete O(h) — h = height",
+        "Tree traversals: inorder (sorted!), preorder, postorder, level-order (BFS)",
+        "Implementing traversals iteratively using a stack/queue",
+        "Degenerate BST: O(n) height when inserting sorted data",
+        "BST deletion: three cases (leaf, one child, two children — predecessor)"
+      ],
+      concept: null,
+      activity: {
+        title: '"BST Build and Traverse"',
+        desc: "Students build a BST by hand (on paper) from a given sequence, then implement it in code. They implement all four traversals both recursively and iteratively and verify the output matches.",
+        code: 'from __future__ import annotations\nfrom typing import Optional\n\nclass BSTNode:\n    def __init__(self, key):\n        self.key = key\n        self.left: Optional[BSTNode] = None\n        self.right: Optional[BSTNode] = None\n\nclass BST:\n    def __init__(self):\n        self._root: Optional[BSTNode] = None\n\n    def insert(self, key) -> None:\n        self._root = self._insert(self._root, key)\n\n    def _insert(self, node, key):\n        if node is None:\n            return BSTNode(key)\n        if key < node.key:\n            node.left = self._insert(node.left, key)\n        elif key > node.key:\n            node.right = self._insert(node.right, key)\n        return node  # duplicate keys ignored\n\n    def inorder(self) -> list:\n        """Returns sorted list of keys."""\n        result = []\n        def _inorder(node):\n            if node:\n                _inorder(node.left)\n                result.append(node.key)\n                _inorder(node.right)\n        _inorder(self._root)\n        return result\n\n    def level_order(self) -> list[list]:\n        """BFS traversal — returns list of levels."""\n        from collections import deque\n        if not self._root:\n            return []\n        result, queue = [], deque([self._root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.key)\n                if node.left:  queue.append(node.left)\n                if node.right: queue.append(node.right)\n            result.append(level)\n        return result'
+      },
+      assign: {
+        n: 11, title: "binary_search_tree.py", due: 12,
+        desc: "Implement a complete BST with all traversals and several analysis functions.",
+        reqs: [
+          "Implement BST with: insert, search, delete (all 3 cases), min, max, __len__, __contains__",
+          "Implement all four traversals: inorder, preorder, postorder (recursive), level_order (iterative with queue)",
+          "Implement height(node) and is_balanced(node) — a tree is balanced if |left_height - right_height| <= 1 for every node",
+          "Demonstrate that inserting [1,2,3,4,5] produces a degenerate O(n) tree; inserting [4,2,6,1,3,5,7] produces a balanced O(log n) tree",
+          "Implement find_kth_smallest(k) using inorder traversal",
+          "Implement lowest_common_ancestor(root, a, b)"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 3",
+        topics: "Weeks 9-11: quicksort/heapsort, hashing, binary trees",
+        format: "15 multiple-choice + 2 diagram problems + 1 code-writing (30 min)",
+        samples: [
+          "Draw the BST produced by inserting: 50, 30, 70, 20, 40, 60, 80. What does inorder traversal return?",
+          "What is the worst-case time complexity of inserting n elements into a BST? When does this occur?",
+          "Describe two collision resolution strategies and their trade-offs."
+        ]
+      }
+    },
+    {
+      n: 12, title: "Heaps and Priority Queues", badge: null,
+      objectives: [
+        "Implement a binary min-heap from scratch using an array",
+        "Perform heapify, insert, and extract-min in O(log n)",
+        "Apply heaps to heapsort and priority-queue-based algorithms"
+      ],
+      topics: [
+        "Binary heap property: min-heap and max-heap",
+        "Complete binary tree stored in an array: parent at i, children at 2i+1 and 2i+2",
+        "Sift-up (bubble-up): used after insert",
+        "Sift-down (heapify-down): used after extract-min",
+        "Building a heap from an array: O(n) heapify",
+        "Heapsort: build heap + n extract-min = O(n log n), in-place",
+        "Python's heapq module: heappush, heappop, heapify, nlargest, nsmallest",
+        "Priority Queue applications: Dijkstra, task scheduling, merge k sorted lists"
+      ],
+      concept: null,
+      activity: {
+        title: '"Heap Visualizer"',
+        desc: "Students draw the array representation and tree diagram of a heap as they perform insert and extract-min operations. Then implement a MinHeap class from scratch and verify it against Python's heapq.",
+        code: 'class MinHeap:\n    """Binary min-heap backed by a list."""\n\n    def __init__(self):\n        self._data: list = []\n\n    def push(self, item) -> None:\n        self._data.append(item)\n        self._sift_up(len(self._data) - 1)\n\n    def pop(self):\n        if not self._data:\n            raise IndexError("pop from empty heap")\n        self._data[0], self._data[-1] = self._data[-1], self._data[0]\n        val = self._data.pop()\n        if self._data:\n            self._sift_down(0)\n        return val\n\n    def peek(self):\n        return self._data[0]\n\n    def _sift_up(self, i: int) -> None:\n        while i > 0:\n            parent = (i - 1) // 2\n            if self._data[i] < self._data[parent]:\n                self._data[i], self._data[parent] = self._data[parent], self._data[i]\n                i = parent\n            else:\n                break\n\n    def _sift_down(self, i: int) -> None:\n        n = len(self._data)\n        while True:\n            smallest, left, right = i, 2*i+1, 2*i+2\n            if left < n and self._data[left] < self._data[smallest]:\n                smallest = left\n            if right < n and self._data[right] < self._data[smallest]:\n                smallest = right\n            if smallest == i:\n                break\n            self._data[i], self._data[smallest] = self._data[smallest], self._data[i]\n            i = smallest\n\n    @classmethod\n    def heapify(cls, lst: list):\n        h = cls()\n        h._data = lst[:]\n        for i in range(len(h._data) // 2 - 1, -1, -1):\n            h._sift_down(i)\n        return h'
+      },
+      assign: {
+        n: 12, title: "heap_applications.py", due: 13,
+        desc: "Implement a min-heap and apply it to three classic problems.",
+        reqs: [
+          "Implement MinHeap with: push, pop, peek, __len__, heapify(lst) class method",
+          "Implement heap_sort(arr) using your MinHeap — O(n log n), returning a new sorted list",
+          "Solve: merge_k_sorted_lists(lists) — merge k sorted lists into one sorted list in O(n log k) using a heap",
+          "Solve: find_k_largest(arr, k) — return the k largest elements in O(n log k)",
+          "Solve: task_scheduler(tasks, cooldown) — using a max-heap and a cooldown queue, find minimum time to execute all tasks"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 13, title: "Balanced Trees and Tree Applications", badge: null,
+      objectives: [
+        "Explain why balance is essential for guaranteed O(log n) BST operations",
+        "Describe AVL tree rotations and balance maintenance",
+        "Use Python's bisect module and sortedcontainers for sorted data"
+      ],
+      topics: [
+        "Motivation: degenerate BST is O(n) — we need guaranteed O(log n)",
+        "AVL trees: balance factor, single and double rotations",
+        "Right rotation, left rotation, left-right, right-left rotation cases",
+        "AVL insert: rebalance up the path",
+        "Red-Black trees: conceptual overview, 5 properties",
+        "B-trees: motivation for databases and file systems",
+        "Python tools: bisect module for sorted lists, sortedcontainers library",
+        "Trie (prefix tree): insert and search for string problems"
+      ],
+      concept: null,
+      activity: {
+        title: '"AVL Rotation Workshop"',
+        desc: "Students receive a sequence of inserts that would unbalance a BST. They manually identify the imbalance case (LL, RR, LR, RL) and draw the rotation on paper before implementing it in code.",
+        code: 'class AVLNode:\n    def __init__(self, key):\n        self.key = key\n        self.left = None\n        self.right = None\n        self.height = 1\n\ndef height(node) -> int:\n    return node.height if node else 0\n\ndef balance_factor(node) -> int:\n    return height(node.left) - height(node.right)\n\ndef update_height(node) -> None:\n    node.height = 1 + max(height(node.left), height(node.right))\n\ndef rotate_right(z):\n    y = z.left\n    T3 = y.right\n    y.right = z\n    z.left = T3\n    update_height(z)\n    update_height(y)\n    return y   # new root of this subtree\n\ndef rotate_left(z):\n    y = z.right\n    T2 = y.left\n    y.left = z\n    z.right = T2\n    update_height(z)\n    update_height(y)\n    return y\n\ndef rebalance(node):\n    update_height(node)\n    bf = balance_factor(node)\n    if bf > 1:    # left-heavy\n        if balance_factor(node.left) < 0:   # LR case\n            node.left = rotate_left(node.left)\n        return rotate_right(node)\n    if bf < -1:   # right-heavy\n        if balance_factor(node.right) > 0:  # RL case\n            node.right = rotate_right(node.right)\n        return rotate_left(node)\n    return node'
+      },
+      assign: {
+        n: 13, title: "avl_tree.py", due: 14,
+        desc: "Implement an AVL tree and compare its performance to an unbalanced BST.",
+        reqs: [
+          "Implement AVLTree with: insert, search, delete, height, __len__ — maintaining balance after every insert/delete",
+          "Demonstrate: insert [1,2,3,4,5,6,7] into both BST and AVL; print height of each (BST=7, AVL=3)",
+          "Implement Trie with: insert(word), search(word), starts_with(prefix)",
+          "Solve: autocomplete(prefix, trie) — return all words in the trie with the given prefix",
+          "Use Python's bisect module to implement a SortedList class with O(log n) search and O(n) insert that maintains sorted order"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 14, title: "Graphs: Representation and Traversal", badge: "Quiz 4",
+      objectives: [
+        "Represent graphs as adjacency lists and adjacency matrices",
+        "Implement depth-first search (DFS) and breadth-first search (BFS)",
+        "Detect cycles and find connected components using DFS"
+      ],
+      topics: [
+        "Graph terminology: vertices, edges, directed/undirected, weighted, degree",
+        "Adjacency matrix: O(V²) space, O(1) edge lookup",
+        "Adjacency list: O(V + E) space, O(degree) neighbor lookup",
+        "When to use each representation",
+        "DFS: recursive and iterative (using a stack), O(V + E)",
+        "BFS: queue-based, O(V + E), finds shortest path in unweighted graphs",
+        "Applications of DFS: cycle detection, connected components, topological sort preview",
+        "Applications of BFS: shortest path, level-order traversal"
+      ],
+      concept: null,
+      activity: {
+        title: '"Graph Explorer"',
+        desc: "Students are given a graph as an edge list and must: build the adjacency list, run DFS and BFS by hand tracing on paper, then implement both in code. Race to find the shortest path from vertex A to vertex F.",
+        code: 'from collections import defaultdict, deque\nfrom typing import Optional\n\nclass Graph:\n    """Undirected graph using adjacency list."""\n\n    def __init__(self):\n        self._adj: dict[int, list[int]] = defaultdict(list)\n        self._vertices: set[int] = set()\n\n    def add_edge(self, u: int, v: int) -> None:\n        self._adj[u].append(v)\n        self._adj[v].append(u)\n        self._vertices.update([u, v])\n\n    def dfs(self, start: int) -> list[int]:\n        """Return vertices in DFS order."""\n        visited, order = set(), []\n        def _dfs(v):\n            visited.add(v)\n            order.append(v)\n            for neighbor in self._adj[v]:\n                if neighbor not in visited:\n                    _dfs(neighbor)\n        _dfs(start)\n        return order\n\n    def bfs(self, start: int) -> list[int]:\n        """Return vertices in BFS order (level by level)."""\n        visited = {start}\n        queue = deque([start])\n        order = []\n        while queue:\n            v = queue.popleft()\n            order.append(v)\n            for neighbor in self._adj[v]:\n                if neighbor not in visited:\n                    visited.add(neighbor)\n                    queue.append(neighbor)\n        return order\n\n    def shortest_path(self, src: int, dst: int) -> Optional[list[int]]:\n        """BFS shortest path — returns list of vertices or None."""\n        parent = {src: None}\n        queue = deque([src])\n        while queue:\n            v = queue.popleft()\n            if v == dst:\n                path = []\n                while v is not None:\n                    path.append(v)\n                    v = parent[v]\n                return path[::-1]\n            for nb in self._adj[v]:\n                if nb not in parent:\n                    parent[nb] = v\n                    queue.append(nb)\n        return None'
+      },
+      assign: {
+        n: 14, title: "graph_traversal.py", due: 15,
+        desc: "Build a Graph class and implement graph traversal and analysis algorithms.",
+        reqs: [
+          "Implement Graph with adjacency list: add_edge, remove_edge, add_vertex, neighbors, __len__",
+          "Implement DFS (recursive), DFS (iterative with explicit stack), and BFS",
+          "Implement has_cycle(graph) for both directed and undirected graphs",
+          "Implement connected_components(graph) — return a list of lists, each containing one component's vertices",
+          "Implement shortest_path(src, dst) using BFS — return the path as a list of vertices",
+          "Implement is_bipartite(graph) using BFS 2-coloring"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 4",
+        topics: "Weeks 12-14: heaps, balanced trees, graph representation and traversal",
+        format: "15 multiple-choice + 1 graph traversal trace + 1 code-writing (30 min)",
+        samples: [
+          "Given the graph with edges {(A,B),(A,C),(B,D),(C,D),(D,E)}, list the DFS traversal order starting from A.",
+          "What is the space complexity of an adjacency matrix vs. adjacency list for a sparse graph with V vertices and E << V² edges?",
+          "Explain in 2-3 sentences why heapify(arr) runs in O(n), not O(n log n)."
+        ]
+      }
+    },
+    {
+      n: 15, title: "Graph Algorithms: Shortest Paths and MSTs", badge: null,
+      objectives: [
+        "Implement Dijkstra's algorithm for single-source shortest paths",
+        "Build minimum spanning trees with Kruskal's and Prim's algorithms",
+        "Perform topological sort on a directed acyclic graph (DAG)"
+      ],
+      topics: [
+        "Weighted graphs: edge weights and path cost",
+        "Dijkstra's algorithm: greedy, O((V + E) log V) with a priority queue",
+        "Why Dijkstra fails with negative weights (brief mention of Bellman-Ford)",
+        "Minimum Spanning Tree (MST): Kruskal's (sort edges + Union-Find) O(E log E)",
+        "Prim's algorithm: grow MST greedily with a priority queue O((V + E) log V)",
+        "Topological sort: DFS-based (reverse finish order) and Kahn's BFS algorithm",
+        "Applications: dependency resolution, task scheduling, build systems"
+      ],
+      concept: null,
+      activity: {
+        title: '"Network Optimizer"',
+        desc: "Students are given a weighted graph representing a city road network. They run Dijkstra's (shortest drive time) and Kruskal's (minimum cable to connect all neighborhoods) by hand, then implement both.",
+        code: 'import heapq\nfrom collections import defaultdict\n\ndef dijkstra(graph: dict, src: int) -> dict[int, float]:\n    """Single-source shortest paths. graph = {v: [(neighbor, weight)]}."""\n    dist = defaultdict(lambda: float("inf"))\n    dist[src] = 0\n    pq = [(0, src)]    # (distance, vertex)\n    while pq:\n        d, v = heapq.heappop(pq)\n        if d > dist[v]:\n            continue   # stale entry\n        for neighbor, weight in graph[v]:\n            new_dist = dist[v] + weight\n            if new_dist < dist[neighbor]:\n                dist[neighbor] = new_dist\n                heapq.heappush(pq, (new_dist, neighbor))\n    return dict(dist)\n\n# Union-Find for Kruskal\'s MST\nclass UnionFind:\n    def __init__(self, n):\n        self.parent = list(range(n))\n        self.rank = [0] * n\n\n    def find(self, x):\n        if self.parent[x] != x:\n            self.parent[x] = self.find(self.parent[x])  # path compression\n        return self.parent[x]\n\n    def union(self, x, y) -> bool:\n        rx, ry = self.find(x), self.find(y)\n        if rx == ry:\n            return False   # already connected\n        if self.rank[rx] < self.rank[ry]:\n            rx, ry = ry, rx\n        self.parent[ry] = rx\n        if self.rank[rx] == self.rank[ry]:\n            self.rank[rx] += 1\n        return True\n\ndef kruskal_mst(vertices: int, edges: list) -> list:\n    """edges = [(weight, u, v)]. Returns MST edge list."""\n    edges.sort()\n    uf = UnionFind(vertices)\n    mst = []\n    for w, u, v in edges:\n        if uf.union(u, v):\n            mst.append((w, u, v))\n        if len(mst) == vertices - 1:\n            break\n    return mst'
+      },
+      assign: {
+        n: 15, title: "graph_algorithms.py", due: 16,
+        desc: "Implement Dijkstra, Kruskal, and topological sort, then apply them to real scenarios.",
+        reqs: [
+          "Implement dijkstra(graph, src) returning a {vertex: shortest_distance} dict and also reconstruct the path",
+          "Implement kruskal_mst(vertices, edges) using a Union-Find with path compression and union by rank",
+          "Implement prim_mst(graph, src) using a min-heap priority queue",
+          "Implement topological_sort(graph) using DFS and verify it works correctly on a dependency DAG",
+          "Solve: course_schedule(num_courses, prerequisites) — return True if all courses can be completed (no cycle in DAG)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 16, title: "Final Project Presentations and Final Exam", badge: "Final",
+      objectives: [
+        "Demonstrate mastery of all data structures and algorithms from the course",
+        "Present a substantial algorithmic project with correct, efficient solutions",
+        "Explain design trade-offs and complexity analysis clearly"
+      ],
+      topics: [
+        "Final project presentations (8-10 min each)",
+        "Final exam — 90 minutes",
+        "Dynamic programming preview: overlapping subproblems, optimal substructure",
+        "Course retrospective: what data structure/algorithm would you choose and when?"
+      ],
+      concept: null,
+      activity: {
+        title: "Final Project Presentations",
+        desc: "Students present their final project: demonstrate the program, explain which data structures and algorithms they used and why, analyze the time and space complexity of their solution, and answer questions from the class.",
+        code: null
+      },
+      assign: {
+        n: 16, title: "Final Project", due: 16,
+        desc: "Build a substantial program that meaningfully applies multiple data structures and algorithms from the course.",
+        reqs: [
+          "Choose a domain: social network analyzer, route planner, search engine index, game AI, or propose your own",
+          "Must demonstrate: at least 3 distinct ADTs from the course (e.g., graph + heap + hash table)",
+          "Must include: Big-O analysis for every major operation as comments",
+          "Must include: a test suite with at least 15 test cases covering edge cases",
+          "Must include: a written design document (README.md) explaining structure and algorithmic choices",
+          "Bonus: compare two different algorithmic approaches to the same problem and benchmark them"
+        ]
+      },
+      assess: {
+        type: "final", label: "Final Exam + Final Project",
+        desc: "A 90-minute exam covering all 16 weeks, plus a graded final project and 8-10 minute live presentation.",
+        examSections: [
+          "Multiple Choice (25 pts) — definitions, complexity classes, trade-offs",
+          "Code Tracing (20 pts) — trace DFS, Dijkstra, heap operations and give exact output",
+          "Complexity Analysis (20 pts) — determine Big-O/Omega/Theta for 5 code snippets",
+          "Implementation (35 pts) — write 2-3 algorithms or data structure methods from scratch"
+        ],
+        rubric: [
+          { c: "Functionality and correctness",             p: 30 },
+          { c: "Use of appropriate data structures",        p: 25 },
+          { c: "Big-O analysis and code comments",          p: 20 },
+          { c: "Test suite quality",                        p: 15 },
+          { c: "Presentation and design document",          p: 10 }
+        ]
+      }
+    }
+  ]
+};
+
+/* ═══════════════════════════
+   HELPERS
+═══════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function codeBlock(code) {
+  if (!code) return '';
+  return `<div class="code-block"><div class="code-dots"><span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span></div><pre>${esc(code)}</pre></div>`;
+}
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+/* ═══════════════════════════
+   RENDER: OVERVIEW
+═══════════════════════════ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Course Overview';
+  document.getElementById('topChip').textContent  = '16 Weeks · Intermediate CS · Python';
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const grading = data.grading.map(g => `<tr><td>${esc(g.c)}</td><td>${esc(g.w)}</td></tr>`).join('');
+  const res     = data.resources.map(r => `<div class="resource-card" onclick="window.open('${r.url}','_blank')"><div class="r-icon">${r.icon}</div><div class="r-title">${esc(r.title)}</div><div class="r-desc">${esc(r.desc)}</div></div>`).join('');
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Data Structures &amp; Algorithms</h1>
+      <div class="tagline">Abstract data types, algorithm analysis, sorting, trees, hashing, graphs, and applications — in Python</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">16</div><div class="lbl">Weeks</div></div>
+        <div class="stat-box"><div class="val">14</div><div class="lbl">Assignments</div></div>
+        <div class="stat-box"><div class="val">4</div><div class="lbl">Quizzes</div></div>
+        <div class="stat-box"><div class="val">1</div><div class="lbl">Midterm</div></div>
+      </div>
+    </div>
+    <div class="prereq">
+      <div class="prereq-icon">📚</div>
+      <div>
+        <strong>Prerequisite:</strong> Beginning Python or equivalent. Students must be comfortable with Python classes, loops, functions, and file I/O. Familiarity with basic OOP (from Intermediate Python or equivalent) is strongly recommended. This course covers the topics traditionally taught with Java, adapted fully for Python.
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e0f2f1">🎯</span> Course Goals</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">📊</span> Grading Breakdown</div>
+        <table class="grade-table"><tbody>${grading}</tbody></table>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px">Code correctness AND Big-O analysis are both graded on all assignments.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">🗺️</span> Course Arc</div>
+        <ul class="check-list">
+          <li>Weeks 1-3: ADTs, Big-O, recursion → Quiz 1</li>
+          <li>Weeks 4-6: Stacks, queues, linked lists → Quiz 2</li>
+          <li>Week 8: Midterm Exam</li>
+          <li>Weeks 9-11: Sorting, hashing, BSTs → Quiz 3</li>
+          <li>Weeks 12-14: Heaps, AVL trees, graphs → Quiz 4</li>
+          <li>Weeks 15-16: Graph algorithms, final project</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#e3f2fd">🔗</span> Recommended Resources</div>
+      <div class="row3" style="margin-bottom:0;margin-top:4px">${res}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: SCHEDULE
+═══════════════════════════ */
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = 'Full Course Schedule';
+  document.getElementById('topChip').textContent  = 'All 16 Weeks';
+  const rows = data.weeks.map(w => {
+    let assess = '<span style="color:#bbb">—</span>';
+    if (w.assess) {
+      const cls = w.assess.type === 'quiz' ? 'tbl-quiz' : w.assess.type === 'midterm' ? 'tbl-midterm' : 'tbl-final';
+      assess = `<span class="tbl-pill ${cls}">${esc(w.assess.label)}</span>`;
+    }
+    const asgn = w.assign && w.assign.title !== "Midterm Exam" ? `A${w.assign.n}: ${esc(w.assign.title)}` : '<span style="color:#bbb">—</span>';
+    return `<tr onclick="go('week-${w.n}')"><td class="wk-col">Week ${w.n}</td><td>${esc(w.title)}</td><td>${asgn}</td><td>${assess}</td></tr>`;
+  }).join('');
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Assignment</th><th>Assessment</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that week.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: COMPLEXITY REFERENCE
+═══════════════════════════ */
+function renderComplexity() {
+  document.getElementById('topTitle').textContent = 'Complexity Reference';
+  document.getElementById('topChip').textContent  = 'Big-O Quick Reference';
+  function colorO(s) {
+    if (!s) return s;
+    if (s.includes('1') && !s.includes('log') && !s.includes('n')) return `<span class="o-good">${esc(s)}</span>`;
+    if (s.includes('log n') && !s.includes('n log')) return `<span class="o-good">${esc(s)}</span>`;
+    if (s === 'O(n)' || s === 'O(n log n)' || s === 'O(V + E)') return `<span class="o-ok">${esc(s)}</span>`;
+    return `<span class="o-bad">${esc(s)}</span>`;
+  }
+  const rows = data.complexity.map(r =>
+    `<tr><td>${esc(r.ds)}</td><td>${colorO(r.avg)}</td><td>${colorO(r.worst)}</td><td>${esc(r.space)}</td></tr>`
+  ).join('');
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div style="margin-bottom:16px">
+      <h2 style="font-size:22px;font-weight:900;margin-bottom:6px">Complexity Cheat Sheet</h2>
+      <p style="font-size:13.5px;color:var(--muted)">Reference for all data structures and algorithms covered in this course. <span class="o-good">Green</span> = fast, <span class="o-ok">orange</span> = acceptable, <span class="o-bad">red</span> = slow.</p>
+    </div>
+    <div class="complexity-table-wrap">
+      <table class="complexity-table">
+        <thead><tr><th>Data Structure / Algorithm</th><th>Average Case</th><th>Worst Case</th><th>Space</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--muted)">* Amortized O(1) — occasional O(n) resize but averages out. V = vertices, E = edges, h = tree height.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: WEEK
+═══════════════════════════ */
+function renderWeek(num) {
+  const w = data.weeks.find(x => x.n === num);
+  if (!w) return;
+  document.getElementById('topTitle').textContent = `Week ${w.n}: ${w.title}`;
+  document.getElementById('topChip').textContent  = `Week ${w.n} of 16`;
+  let html = '<div class="fade-in">';
+
+  let banner = '';
+  if (w.assess) {
+    const cls = { quiz:'banner-quiz', midterm:'banner-midterm', final:'banner-final' }[w.assess.type];
+    const ico = { quiz:'📝', midterm:'📄', final:'🎓' }[w.assess.type];
+    banner = `<div class="banner ${cls}">${ico} Assessment this week: <strong>${esc(w.assess.label)}</strong></div>`;
+  }
+  const objs   = w.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = w.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Week ${w.n}</div>
+    <h2>${esc(w.title)}</h2>
+    ${banner}
+    <div class="ot-grid">
+      <div class="ot-section"><h4>Learning Objectives</h4><ul class="ot-list obj-list">${objs}</ul></div>
+      <div class="ot-section"><h4>Topics Covered</h4><ul class="ot-list top-list">${topics}</ul></div>
+    </div>
+  </div>`;
+
+  if (w.concept) {
+    const pts = w.concept.points.map(p => `<li>${esc(p)}</li>`).join('');
+    html += `<div class="sec concept">
+      <div class="sec-hdr"><div class="sec-icon">💡</div><h3>Key Concept: ${esc(w.concept.title)}</h3></div>
+      <p class="desc">${esc(w.concept.desc)}</p>
+      <ul>${pts}</ul>
+    </div>`;
+  }
+
+  if (w.activity) {
+    html += `<div class="sec activity">
+      <div class="sec-hdr"><div class="sec-icon">🎮</div><h3>In-Class Activity: ${esc(w.activity.title)}</h3></div>
+      <p class="desc">${esc(w.activity.desc)}</p>
+      ${codeBlock(w.activity.code)}
+    </div>`;
+  }
+
+  if (w.assign && w.assess?.type !== 'midterm') {
+    const reqs = w.assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec assign">
+      <div class="sec-hdr"><div class="sec-icon">📝</div><h3>Assignment ${w.assign.n}: ${esc(w.assign.title)}</h3><span class="due-tag">Due Week ${w.assign.due}</span></div>
+      <p class="desc">${esc(w.assign.desc)}</p>
+      <ul>${reqs}</ul>
+    </div>`;
+  }
+
+  if (w.assess) {
+    if (w.assess.type === 'quiz') {
+      const samples = w.assess.samples.map(s => `<li>${esc(s)}</li>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr"><div class="sec-icon">📋</div><h3>${esc(w.assess.label)}</h3><span class="due-tag">End of Week ${w.n}</span></div>
+        <p><strong>Topics:</strong> ${esc(w.assess.topics)}</p>
+        <p><strong>Format:</strong> ${esc(w.assess.format)}</p>
+        <div class="sample-qs"><h5>Sample Questions</h5><ul>${samples}</ul></div>
+      </div>`;
+    } else if (w.assess.type === 'midterm') {
+      const reqs   = w.assess.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      const rubric = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr"><div class="sec-icon">📄</div><h3>Midterm Exam — 90 Minutes</h3><span class="due-tag">Week 8</span></div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul>${reqs}</ul>
+        <div class="sec-label">Point Distribution</div>
+        <table class="rubric-table"><tbody>${rubric}<tr style="border-top:2px solid rgba(245,124,0,.35)"><td><strong>Total</strong></td><td><strong>100 pts</strong></td></tr></tbody></table>
+      </div>`;
+    } else if (w.assess.type === 'final') {
+      const sections = w.assess.examSections.map(s => `<li>${esc(s)}</li>`).join('');
+      const rubric   = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      const preqs    = data.weeks[15].assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      html += `<div class="sec assign">
+        <div class="sec-hdr"><div class="sec-icon">🏗️</div><h3>Final Project Requirements</h3><span class="due-tag">Due Week 16</span></div>
+        <p class="desc">${esc(data.weeks[15].assign.desc)}</p>
+        <ul>${preqs}</ul>
+      </div>
+      <div class="sec assess">
+        <div class="sec-hdr"><div class="sec-icon">🎓</div><h3>Final Exam + Project Presentation</h3><span class="due-tag">Week 16</span></div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul class="exam-list">${sections}</ul>
+        <div class="sec-label">Project Rubric (100 pts total)</div>
+        <table class="rubric-table"><tbody>${rubric}<tr style="border-top:2px solid rgba(245,124,0,.35)"><td><strong>Total</strong></td><td><strong>100 pts</strong></td></tr></tbody></table>
+      </div>`;
+    }
+  }
+
+  const prev = num > 1  ? num - 1 : null;
+  const next = num < 16 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('week-${prev}')">&#8592; Week ${prev ?? ''}</button>
+    <span style="font-size:12px;color:var(--muted)">Week ${num} of 16</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('week-${next}')">Week ${next ?? ''} &#8594;</button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ═══════════════════════════
+   NAVIGATION
+═══════════════════════════ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')           renderOverview();
+  else if (view === 'schedule')      renderSchedule();
+  else if (view === 'complexity')    renderComplexity();
+  else if (view.startsWith('week-')) renderWeek(+view.replace('week-', ''));
+}
+function toggleNav() { document.getElementById('navScroll').classList.toggle('open'); }
+
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.weeks.forEach(w => {
+    let pillHtml = '';
+    if (w.badge) {
+      const cls = w.badge.includes('Quiz') ? 'quiz' : w.badge === 'Midterm' ? 'midterm' : 'final';
+      pillHtml = `<span class="pill pill-${cls}">${esc(w.badge)}</span>`;
+    }
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-week-${w.n}`;
+    item.onclick = () => go(`week-${w.n}`);
+    item.innerHTML = `<div class="nav-num">${w.n}</div><span class="nav-label">${esc(w.title)}</span>${pillHtml}`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
