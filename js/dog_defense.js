@@ -634,10 +634,10 @@ function drawSidebar() {
   // Wave button
   let bx=sx+8, by=106, bw=SB-16, bh=28;
   let canSend = !waveActive && waveNum<WAVES.length && spawnQueue.length===0;
+  let nextChangesPath = (waveNum > 0 && waveNum % 5 === 0 && waveNum < WAVES.length);
   let btnColor = !canSend ? color(75,78,90) : nextChangesPath ? color(200,130,30) : color(55,185,85);
   fill(btnColor); noStroke(); rect(bx,by,bw,bh,6);
   fill(255); textAlign(CENTER,CENTER); textSize(12); textStyle(BOLD);
-  let nextChangesPath = (waveNum > 0 && waveNum % 5 === 0 && waveNum < WAVES.length);
   let btnTxt = waveActive ? 'Wave in progress...'
              : (waveNum>=WAVES.length&&!waveActive&&enemies.length===0 ? 'All Waves Done!'
              : nextChangesPath ? 'Wave '+(waveNum+1)+' — PATH CHANGES!'
