@@ -11,20 +11,44 @@ const CW = COLS * CS + SB;             // total canvas width  (1010)
 const CH = ROWS * CS;                  // canvas height       (600)
 const GW = COLS * CS;                  // game area width     (800)
 
-// ── Path (grid col,row pairs from left edge → right edge) ────────
-const RAW_PATH = [
-  {c:0,r:3},{c:1,r:3},{c:2,r:3},{c:3,r:3},{c:4,r:3},{c:5,r:3},
-  {c:5,r:2},{c:5,r:1},
-  {c:6,r:1},{c:7,r:1},{c:8,r:1},{c:9,r:1},{c:10,r:1},{c:11,r:1},
-  {c:11,r:2},{c:11,r:3},{c:11,r:4},{c:11,r:5},
-  {c:10,r:5},{c:9,r:5},{c:8,r:5},{c:7,r:5},{c:6,r:5},
-  {c:5,r:5},{c:4,r:5},{c:3,r:5},
-  {c:3,r:6},{c:3,r:7},{c:3,r:8},{c:3,r:9},
-  {c:4,r:9},{c:5,r:9},{c:6,r:9},{c:7,r:9},{c:8,r:9},
-  {c:9,r:9},{c:10,r:9},{c:11,r:9},{c:12,r:9},{c:13,r:9},
-  {c:13,r:8},{c:13,r:7},{c:13,r:6},
-  {c:14,r:6},{c:15,r:6}
+// ── Path turning-point definitions (10 paths, one per 5-wave block) ─
+// Each entry is an array of [col, row] turning points.
+// expandPath() interpolates all intermediate cells automatically.
+const ALL_PATHS = [
+  // 0 – waves  1- 5: Classic S-curve
+  [[0,3],[5,3],[5,1],[11,1],[11,5],[3,5],[3,9],[13,9],[13,6],[15,6]],
+  // 1 – waves  6-10: Z-shape (top → bottom)
+  [[0,1],[12,1],[12,6],[3,6],[3,10],[15,10]],
+  // 2 – waves 11-15: Reverse-Z (bottom → top)
+  [[0,10],[12,10],[12,4],[2,4],[2,1],[15,1]],
+  // 3 – waves 16-20: Snake (down ↓ up ↑ down ↓)
+  [[0,2],[5,2],[5,9],[10,9],[10,2],[15,2]],
+  // 4 – waves 21-25: Tight S
+  [[0,6],[4,6],[4,2],[8,2],[8,9],[12,9],[12,5],[15,5]],
+  // 5 – waves 26-30: Checkerboard zigzag
+  [[0,4],[3,4],[3,1],[6,1],[6,7],[9,7],[9,3],[12,3],[12,10],[15,10]],
+  // 6 – waves 31-35: Comb (many short verticals)
+  [[0,8],[2,8],[2,5],[5,5],[5,9],[8,9],[8,3],[11,3],[11,8],[13,8],[13,4],[15,4]],
+  // 7 – waves 36-40: Wide zigzag
+  [[0,3],[1,3],[1,10],[4,10],[4,6],[7,6],[7,1],[10,1],[10,7],[13,7],[13,3],[15,3]],
+  // 8 – waves 41-45: Wave pattern
+  [[0,9],[3,9],[3,2],[6,2],[6,8],[9,8],[9,2],[12,2],[12,9],[15,9]],
+  // 9 – waves 46-50: Labyrinth (longest, most complex)
+  [[0,5],[1,5],[1,1],[5,1],[5,8],[2,8],[2,10],[6,10],[6,6],[8,6],[8,2],[11,2],[11,9],[13,9],[13,5],[15,5]],
 ];
+
+// Expands an array of [col,row] turning points into every individual grid cell.
+function expandPath(pts) {
+  let out = [{c:pts[0][0], r:pts[0][1]}];
+  for (let i=1; i<pts.length; i++) {
+    let [pc,pr]=pts[i-1], [nc,nr]=pts[i];
+    let dc=nc>pc?1:nc<pc?-1:0, dr=nr>pr?1:nr<pr?-1:0;
+    let c=pc+dc, r=pr+dr;
+    while (c!==nc||r!==nr) { out.push({c,r}); c+=dc; r+=dr; }
+    out.push({c:nc,r:nr});
+  }
+  return out;
+}
 
 // ── Dog tower definitions ─────────────────────────────────────────
 // size: 'small'|'medium'|'large'   slow: drool slows enemies
@@ -120,6 +144,10 @@ let hovCell = null;
 let grid;         // grid[r][c]: null | 'path' | 'tower'
 let pathSet;      // Set of "c,r" strings for path collision
 let waypoints;    // pixel-centre waypoints along path
+let currentPath    = [];  // expanded path cells for the active path
+let currentPathIdx = -1;  // which ALL_PATHS entry is active
+let pathMsg        = '';  // on-screen announcement when path changes
+let pathMsgTimer   = 0;
 
 // ════════════════════════════════════════════════════════════════
 // p5.js SETUP
@@ -147,13 +175,13 @@ function initGame() {
   selDog     = -1;
   selTower   = null;
 
-  // Build path data
-  waypoints = RAW_PATH.map(p => ({ x: p.c * CS + CS/2, y: p.r * CS + CS/2 }));
-  pathSet   = new Set(RAW_PATH.map(p => `${p.c},${p.r}`));
-
-  // Build grid
-  grid = Array.from({length: ROWS}, () => Array(COLS).fill(null));
-  for (let p of RAW_PATH) grid[p.r][p.c] = 'path';
+  // Build grid (path cells filled by changePath)
+  grid           = Array.from({length: ROWS}, () => Array(COLS).fill(null));
+  currentPath    = [];
+  currentPathIdx = -1;
+  pathMsg        = '';
+  pathMsgTimer   = 0;
+  changePath(0);   // sets currentPath, waypoints, pathSet, and marks grid cells
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -172,6 +200,20 @@ function draw() {
   for (let p of particles)   { p.draw(); }
   for (let f of floatingTexts){ f.draw(); }
   drawSidebar();
+  // Path-change announcement banner
+  if (pathMsgTimer > 0) {
+    pathMsgTimer--;
+    let alpha = pathMsgTimer > 30 ? 255 : map(pathMsgTimer, 0, 30, 0, 255);
+    let pulse  = 1 + 0.06 * sin(frameCount * 0.15);
+    fill(0, 0, 0, alpha * 0.55); noStroke();
+    rectMode(CENTER);
+    rect(GW/2, CH/2, 480*pulse, 60*pulse, 12);
+    rectMode(CORNER);
+    fill(255, 220, 50, alpha); textAlign(CENTER,CENTER);
+    textSize(28*pulse); textStyle(BOLD);
+    text(pathMsg, GW/2, CH/2);
+    textStyle(NORMAL);
+  }
   if (gState === 'gameover') drawOverlay('GAME OVER!','The enemies got through!', color(255,70,70));
   if (gState === 'win')      drawOverlay('YOU WIN! 🎉','Your dogs saved the yard!', color(80,255,100));
 }
@@ -220,9 +262,54 @@ function gameUpdate() {
 
 function launchWave() {
   if (waveActive || waveNum >= WAVES.length || spawnQueue.length > 0) return;
+  // Switch path every 5 waves (path 0 for waves 1-5, path 1 for 6-10, …)
+  let newIdx = min(floor(waveNum / 5), ALL_PATHS.length - 1);
+  if (newIdx !== currentPathIdx) changePath(newIdx);
   let def = WAVES[waveNum++];
   for (let g of def) spawnQueue.push({...g});
   spawnTimer = 0;
+}
+
+// ── Switch the active path ────────────────────────────────────────
+function changePath(idx) {
+  // 1. Erase old path cells from the grid
+  for (let p of currentPath) {
+    if (grid[p.r] && grid[p.r][p.c] === 'path') grid[p.r][p.c] = null;
+  }
+
+  // 2. Build new path data
+  let expanded = expandPath(ALL_PATHS[idx]);
+  let newSet   = new Set(expanded.map(p => `${p.c},${p.r}`));
+
+  // 3. Auto-sell any tower that the new path runs through (50% refund)
+  towers = towers.filter(t => {
+    if (newSet.has(`${t.col},${t.row}`)) {
+      let refund = floor(t.totalSpent * 0.5);
+      coins += refund;
+      addFT('+$'+refund+' (path)', t.x, t.y, color(255,220,0));
+      grid[t.row][t.col] = null;
+      return false;
+    }
+    return true;
+  });
+  if (selTower && !towers.includes(selTower)) selTower = null;
+
+  // 4. Clear enemies (they were following the old path)
+  enemies     = [];
+  projectiles = [];
+
+  // 5. Commit new path
+  currentPathIdx = idx;
+  currentPath    = expanded;
+  waypoints      = expanded.map(p => ({x: p.c*CS+CS/2, y: p.r*CS+CS/2}));
+  pathSet        = newSet;
+  for (let p of expanded) grid[p.r][p.c] = 'path';
+
+  // 6. Announce (skip silent first-load)
+  if (idx > 0) {
+    pathMsg      = '⚠ PATH ' + idx + '/9 UNLOCKED!';
+    pathMsgTimer = 210;  // ~3.5 s
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -486,7 +573,7 @@ function drawBG() {
 
 function drawPathCells() {
   fill(190,155,90); noStroke();
-  for (let p of RAW_PATH) rect(p.c*CS,p.r*CS,CS,CS);
+  for (let p of currentPath) rect(p.c*CS,p.r*CS,CS,CS);
   // Path outline
   stroke(160,128,65,180); strokeWeight(2); noFill();
   beginShape();
@@ -541,14 +628,19 @@ function drawSidebar() {
   let tierCol = waveNum<=10?color(160,220,120):waveNum<=20?color(255,220,80):waveNum<=30?color(255,160,60):waveNum<=40?color(255,80,80):color(255,60,220);
   fill(tierCol); textSize(11); textStyle(BOLD);
   text('['+tier+']', sx+SB/2, sy+52);
+  fill(160,170,200); textSize(9); textStyle(NORMAL);
+  text('Path '+(currentPathIdx+1)+' / '+ALL_PATHS.length, sx+SB/2, sy+65);
 
   // Wave button
   let bx=sx+8, by=106, bw=SB-16, bh=28;
   let canSend = !waveActive && waveNum<WAVES.length && spawnQueue.length===0;
-  fill(canSend?color(55,185,85):color(75,78,90)); noStroke(); rect(bx,by,bw,bh,6);
+  let btnColor = !canSend ? color(75,78,90) : nextChangesPath ? color(200,130,30) : color(55,185,85);
+  fill(btnColor); noStroke(); rect(bx,by,bw,bh,6);
   fill(255); textAlign(CENTER,CENTER); textSize(12); textStyle(BOLD);
+  let nextChangesPath = (waveNum > 0 && waveNum % 5 === 0 && waveNum < WAVES.length);
   let btnTxt = waveActive ? 'Wave in progress...'
              : (waveNum>=WAVES.length&&!waveActive&&enemies.length===0 ? 'All Waves Done!'
+             : nextChangesPath ? 'Wave '+(waveNum+1)+' — PATH CHANGES!'
              : 'Send Wave '+(waveNum+1)+' !');
   text(btnTxt, sx+SB/2, by+bh/2);
 
