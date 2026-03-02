@@ -611,20 +611,36 @@ function countUnclosed(code) {
  */
 function findErrorLine(rawCode) {
   const lines = rawCode.split('\n');
-  for (let i = 1; i <= lines.length; i++) {
-    const partial = lines.slice(0, i).join('\n');
+
+  // Build padded code for prefix of N lines and test it.
+  // Returns true if it throws a SyntaxError, false otherwise.
+  function testLine(n) {
+    const partial = lines.slice(0, n).join('\n');
     const { b, p, br } = countUnclosed(partial);
-    // Pad to close any unclosed openers so new Function doesn't fail trivially.
-    // The '\n' ensures padding isn't swallowed by a trailing // comment.
+    // '\n' before padding so a trailing // comment doesn't swallow the brackets.
     const padded = partial + '\n'
       + (br > 0 ? ']'.repeat(br) : '')
       + (p  > 0 ? ')'.repeat(p)  : '')
       + (b  > 0 ? '}'.repeat(b)  : '');
-    try {
-      new Function(padded);
-    } catch (e) {
-      if (e instanceof SyntaxError) return i;
+    try { new Function(padded); return false; }
+    catch (e) { return e instanceof SyntaxError; }
+  }
+
+  let i = 1;
+  while (i <= lines.length) {
+    if (testLine(i)) {
+      // Lookahead: if including the NEXT line resolves the error, the current
+      // line was simply part of a valid multi-line expression — the padding
+      // created a false positive.  Advance one line and keep scanning.
+      // Example: `if (mouseX > 100 &&`  alone looks broken, but with the
+      // next line `    mouseY > 100) {` it becomes valid.
+      if (i < lines.length && !testLine(i + 1)) {
+        i++;
+        continue;
+      }
+      return i;
     }
+    i++;
   }
   return null;
 }
@@ -1125,19 +1141,25 @@ pop(); <span class="comment">// ✅ restores state</span></span>`
   }
 
   /* 3i – Infinite loop patterns */
-  const infLoops = [
-    { pat: /\bwhile\s*\(\s*true\s*\)/, label: 'while(true)' },
-    { pat: /\bwhile\s*\(\s*1\s*\)/,    label: 'while(1)' },
-    { pat: /\bfor\s*\(\s*;\s*;\s*\)/,  label: 'for(;;)' },
+
+  // ── Always-true condition loops ───────────────────────────────────────────
+  const alwaysTrueLoops = [
+    { pat: /\bwhile\s*\(\s*true\s*\)/,    label: 'while(true)' },
+    { pat: /\bwhile\s*\(\s*1\s*\)/,       label: 'while(1)' },
+    { pat: /\bwhile\s*\(\s*!0\s*\)/,      label: 'while(!0)' },
+    // for(;;) — all three clauses empty
+    { pat: /\bfor\s*\(\s*;\s*;\s*\)/,     label: 'for(;;)' },
+    // for(init; ; update) — non-empty init but empty condition (always true in JS)
+    { pat: /\bfor\s*\([^;]+;\s*;/,        label: 'for(...; ;...) — no stop condition' },
   ];
-  for (const { pat, label } of infLoops) {
+  for (const { pat, label } of alwaysTrueLoops) {
     if (pat.test(clean)) {
       const ln = findLine(pat);
       issues.push({
         type: 'logical', severity: 'error', line: ln,
         title: `Potential infinite loop — \`${label}\``,
-        explanation: `A loop that runs forever will freeze the browser tab. JavaScript runs in a single thread, so an infinite loop prevents p5.js from ever reaching the next <code>draw()</code> frame or responding to user input. The page will appear to hang.`,
-        fix: `Replace the infinite loop with a condition that eventually becomes false, or redesign the logic to work frame-by-frame inside <code>draw()</code>.`,
+        explanation: `A loop with an always-true condition will run forever unless it exits via <code>break</code> or <code>return</code>. JavaScript is single-threaded — an infinite loop blocks p5.js from drawing the next frame or responding to user input, causing the browser tab to freeze.`,
+        fix: `Replace the loop with a condition that eventually becomes <code>false</code>, or use <code>draw()</code>'s built-in loop for animation. If you need the loop to exit, ensure there is a reachable <code>break</code> or <code>return</code> inside.`,
         example: `<span class="bad">while (true) {  <span class="comment">// ❌ browser freezes</span>
   x += 1;
 }</span>
@@ -1150,6 +1172,30 @@ function draw() {
 }</span>`
       });
     }
+  }
+
+  // ── for loop with non-empty condition but empty update clause ─────────────
+  // Capture the condition between the two semicolons; if it's non-blank the
+  // always-true patterns above won't have flagged it, so this is a new issue.
+  const emptyUpdateRe = /\bfor\s*\([^;]+;([^;]+);\s*\)/g;
+  let euMatch;
+  while ((euMatch = emptyUpdateRe.exec(clean)) !== null) {
+    const condPart = euMatch[1];
+    if (/^\s*$/.test(condPart)) continue; // blank condition → already caught above
+    const ln = lineAt(rawCode, euMatch.index);
+    issues.push({
+      type: 'logical', severity: 'warning', line: ln,
+      title: 'Possible infinite loop — `for` loop with no update expression',
+      explanation: `This <code>for</code> loop's third clause (the update / increment) appears to be empty. If the loop variable is never modified inside the loop body either, the condition will never become <code>false</code> and the loop will run forever, freezing the browser.`,
+      fix: `Add the counter update to the <code>for</code> loop's third clause — for example <code>for (let i = 0; i &lt; 10; i++)</code> — or update the variable inside the loop body.`,
+      example: `<span class="bad">for (let i = 0; i &lt; 10; ) {  <span class="comment">// ❌ i never increments!</span>
+  x += i;
+}</span>
+
+<span class="good">for (let i = 0; i &lt; 10; i++) {  <span class="comment">// ✅ i increments each step</span>
+  x += i;
+}</span>`
+    });
   }
 
   /* 3j – noLoop() inside draw() unconditionally */
