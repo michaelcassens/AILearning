@@ -243,10 +243,15 @@
       line-height: 1.4;
     }
     .card-line {
-      font-size: 0.72rem;
-      color: #55558a;
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: #9999cc;
+      background: #1e1e3c;
+      border: 1px solid #2a2a50;
+      padding: 1px 7px;
+      border-radius: 4px;
       white-space: nowrap;
-      margin-top: 3px;
+      flex-shrink: 0;
     }
     .chevron {
       color: #44446a;
@@ -575,6 +580,55 @@ function hasFn(code, name) {
   return new RegExp(`function\\s+${name}\\s*\\(|(?:let|var|const)?\\s*${name}\\s*=\\s*(?:async\\s*)?(?:function|\\()`).test(code);
 }
 
+/**
+ * Count unclosed { ( [ in a code snippet (skipping strings and comments).
+ * Returns { b: braces, p: parens, br: brackets } — negative means extra closers.
+ */
+function countUnclosed(code) {
+  let b = 0, p = 0, br = 0, inStr = false, strCh = '', inCmt = false;
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i], prev = code[i - 1];
+    if (inCmt) { if (c === '\n') inCmt = false; continue; }
+    if (!inStr && c === '/' && code[i + 1] === '/') { inCmt = true; continue; }
+    if (!inStr && c === '/' && code[i + 1] === '*') {
+      const e = code.indexOf('*/', i + 2); if (e !== -1) i = e + 1; continue;
+    }
+    if (!inStr && (c === '"' || c === "'" || c === '`')) { inStr = true; strCh = c; continue; }
+    if (inStr && c === strCh && prev !== '\\') { inStr = false; continue; }
+    if (inStr) continue;
+    if (c === '{') b++; if (c === '}') b--;
+    if (c === '(') p++; if (c === ')') p--;
+    if (c === '[') br++; if (c === ']') br--;
+  }
+  return { b, p, br };
+}
+
+/**
+ * Find the line number of a JS syntax error by scanning line-by-line.
+ * For each prefix, we pad any unclosed { ( [ so new Function() doesn't
+ * fail due to "incomplete code" — only real errors cause a throw.
+ * Returns the 1-based line number, or null if no real error is found.
+ */
+function findErrorLine(rawCode) {
+  const lines = rawCode.split('\n');
+  for (let i = 1; i <= lines.length; i++) {
+    const partial = lines.slice(0, i).join('\n');
+    const { b, p, br } = countUnclosed(partial);
+    // Pad to close any unclosed openers so new Function doesn't fail trivially.
+    // The '\n' ensures padding isn't swallowed by a trailing // comment.
+    const padded = partial + '\n'
+      + (br > 0 ? ']'.repeat(br) : '')
+      + (p  > 0 ? ')'.repeat(p)  : '')
+      + (b  > 0 ? '}'.repeat(b)  : '');
+    try {
+      new Function(padded);
+    } catch (e) {
+      if (e instanceof SyntaxError) return i;
+    }
+  }
+  return null;
+}
+
 /* ════════════════════════════════════════════════════════════
    1. SYNTAX CHECKS
    ════════════════════════════════════════════════════════════ */
@@ -582,21 +636,23 @@ function checkSyntax(rawCode) {
   const errors = [];
   const clean = stripStrings(stripComments(rawCode));
 
-  /* 1a – JS engine parse */
+  /* 1a – JS engine parse
+     Detect a syntax error first, then use findErrorLine() to pinpoint
+     which line introduced it (V8 doesn't expose this in the stack trace). */
   try {
     new Function(rawCode);
   } catch (e) {
     if (e instanceof SyntaxError) {
-      const lm = e.stack ? e.stack.match(/<anonymous>:(\d+)/) : null;
-      const ln = lm ? parseInt(lm[1]) : null;
+      const ln = findErrorLine(rawCode);
+      const lineTag = ln ? ` on line ${ln}` : '';
 
       let explanation = `JavaScript's parser found something it didn't expect.`;
-      let fix = `Look near line ${ln || '?'} for a missing comma, bracket, keyword typo, or extra/missing punctuation.`;
+      let fix = `Look at line ${ln || '?'} for a missing comma, bracket, keyword typo, or extra/missing punctuation.`;
       let example = '';
 
       if (/Unexpected end of input/i.test(e.message)) {
         explanation = `The code ended before JavaScript expected it to. This almost always means a curly brace <code>{</code>, parenthesis <code>(</code>, or bracket <code>[</code> was opened but never closed.`;
-        fix = `Count your opening <code>{ ( [</code> characters and make sure each one has a matching closing <code>} ) ]</code>.`;
+        fix = `Count your opening <code>{ ( [</code> characters and make sure each one has a matching closing <code>} ) ]</code>.${ln ? ` Start by checking near line ${ln}.` : ''}`;
         example = `<span class="bad">// ❌ Missing closing brace
 function draw() {
   background(220);
@@ -607,8 +663,8 @@ function draw() {
   background(220);
 }</span>`;
       } else if (/Unexpected token/i.test(e.message)) {
-        explanation = `JavaScript found a character or keyword where it wasn't expecting one. Common causes: a missing comma between arguments, a missing closing bracket, or a typo in a keyword.`;
-        fix = `Check the code around line ${ln || '?'}. Look for: missing commas, an unclosed parenthesis on the previous line, or a misspelled keyword (e.g. <em>functoin</em>).`;
+        explanation = `JavaScript found a character or keyword where it wasn't expecting one${lineTag}. Common causes: a missing comma between arguments, a missing closing bracket, or a typo in a keyword.`;
+        fix = `Go to line ${ln || '?'} and check the code there and on the line above it. Look for: missing commas, an unclosed parenthesis on the previous line, or a misspelled keyword (e.g. <em>functoin</em>).`;
         example = `<span class="bad">// ❌ Missing comma + missing closing paren
 fill(255 0 0;
 ellipse(100, 100, 40, 40);</span>
@@ -617,8 +673,8 @@ ellipse(100, 100, 40, 40);</span>
 fill(255, 0, 0);
 ellipse(100, 100, 40, 40);</span>`;
       } else if (/Invalid or unexpected/i.test(e.message)) {
-        explanation = `A token appeared in a position where JavaScript didn't expect it — often caused by using Java/Processing keywords like <code>void</code>, <code>int</code>, or <code>float</code> in JavaScript.`;
-        fix = `Remove Java-style type declarations. In p5.js use <code>let</code>, <code>const</code>, or <code>var</code> for all variables, and <code>function</code> for functions (no <code>void</code>).`;
+        explanation = `A token appeared${lineTag} where JavaScript didn't expect it — often caused by using Java/Processing keywords like <code>void</code>, <code>int</code>, or <code>float</code> in JavaScript.`;
+        fix = `Go to line ${ln || '?'}. Remove Java-style type declarations — in p5.js use <code>let</code>, <code>const</code>, or <code>var</code> for variables, and <code>function</code> instead of <code>void</code>.`;
         example = `<span class="bad">// ❌ Processing / Java syntax
 void setup() { }
 int x = 0;
@@ -630,24 +686,32 @@ let x = 0;
 let speed = 1.5;</span>`;
       }
 
-      errors.push({
-        type: 'syntax', line: ln,
-        title: `Syntax Error — ${e.message}`,
-        explanation, fix, example
-      });
+      // Only report the JS-engine error when we know the exact line.
+      // If findErrorLine returned null (unclosed bracket, no specific line),
+      // skip this and let check 1b identify the problematic bracket with its line.
+      if (ln !== null) {
+        errors.push({
+          type: 'syntax', line: ln,
+          title: `Syntax Error${lineTag} — ${e.message}`,
+          explanation, fix, example
+        });
+      }
     }
   }
 
-  /* 1b – Bracket balance (only if no parse error already found) */
-  if (errors.length === 0) {
-    const pairs = [
-      ['{', '}', 'curly brace', 'function bodies, if-statements, and loops'],
-      ['(', ')', 'parenthesis', 'function calls and conditions'],
-      ['[', ']', 'square bracket', 'arrays and property access'],
-    ];
+  /* 1b – Bracket balance with per-bracket line tracking.
+     Always runs — it catches unclosed-bracket cases that check 1a can't
+     pinpoint (findErrorLine returns null), and it gives the exact opener line. */
+  {
+    const closeToOpen = { '}': '{', ')': '(', ']': '[' };
+    const meta = {
+      '{': { name: 'curly brace',    close: '}', context: 'function bodies, if-statements, and loops' },
+      '(': { name: 'parenthesis',    close: ')', context: 'function calls and conditions' },
+      '[': { name: 'square bracket', close: ']', context: 'arrays and property access' },
+    };
+    // Stack of { open: char, line: N } for each bracket type
+    const stacks = { '{': [], '(': [], '[': [] };
     let inStr = false, strCh = '', inComment = false;
-    const counts = { '{': 0, '(': 0, '[': 0 };
-    const closes = { '}': '{', ')': '(', ']': '[' };
 
     for (let i = 0; i < rawCode.length; i++) {
       const c = rawCode[i], p = rawCode[i - 1];
@@ -660,32 +724,58 @@ let speed = 1.5;</span>`;
       if (!inStr && (c === '"' || c === "'" || c === '`')) { inStr = true; strCh = c; continue; }
       if (inStr && c === strCh && p !== '\\') { inStr = false; continue; }
       if (inStr) continue;
-      if (counts[c] !== undefined) counts[c]++;
-      if (closes[c]) counts[closes[c]]--;
+
+      if (stacks[c] !== undefined) {
+        stacks[c].push(lineAt(rawCode, i));            // push opener line
+      } else if (closeToOpen[c]) {
+        const opener = closeToOpen[c];
+        if (stacks[opener].length > 0) {
+          stacks[opener].pop();                         // matched — discard
+        } else {
+          // Extra closer with no matching opener
+          const ln = lineAt(rawCode, i);
+          const { name } = meta[opener];
+          errors.push({
+            type: 'syntax', line: ln,
+            title: `Extra closing '${c}' on line ${ln} — no matching '${opener}'`,
+            explanation: `There is a closing <code>${c}</code> on line ${ln} but no opening <code>${opener}</code> before it to match it. This usually happens when you accidentally type an extra one or delete an opening bracket.`,
+            fix: `Go to line ${ln} and remove the extra <code>${c}</code>, or scroll up and add the missing opening <code>${opener}</code> in the right place.`,
+            example: ''
+          });
+        }
+      }
     }
 
-    for (const [open, close, name, context] of pairs) {
-      const n = counts[open];
-      if (n > 0) errors.push({
-        type: 'syntax', title: `Unmatched opening ${name} — missing ${n} closing '${close}'`,
-        explanation: `You opened ${n} ${name}(s) <code>${open}</code> that were never closed. Every ${name} must have a matching <code>${close}</code>. ${name.charAt(0).toUpperCase() + name.slice(1)}es wrap ${context}.`,
-        fix: `Search for every <code>${open}</code> and make sure it has a corresponding <code>${close}</code>. Most code editors can highlight matching brackets — place your cursor next to a bracket to see its pair.`,
-        example: `<span class="bad">// ❌ Missing closing ${name}
-function draw(${open === '(' ? '' : ')'} {
-  background(220);${open === '{' ? '' : ''}
-  ellipse(100, 100, 40, 40${open === ')' ? '' : ''};</span>
-
-<span class="good">// ✅ Fixed — all ${name}s closed
+    // Report each bracket type that still has unclosed openers
+    for (const [open, stack] of Object.entries(stacks)) {
+      if (stack.length === 0) continue;
+      const { name, close, context } = meta[open];
+      const count  = stack.length;
+      const first  = stack[0];          // first unclosed — earliest in file
+      const others = stack.slice(1).map(l => `line ${l}`).join(', ');
+      const allLines = stack.map(l => `line ${l}`).join(', ');
+      errors.push({
+        type: 'syntax', line: first,
+        title: `Unclosed ${name} '${open}' — ${count} missing '${close}'`,
+        explanation: `${count === 1
+          ? `The <code>${open}</code> on line ${first} was never closed.`
+          : `There are ${count} unclosed <code>${open}</code> characters (on ${allLines}) with no matching <code>${close}</code>.`
+        } Every ${name} that wraps ${context} must have a matching <code>${close}</code>.`,
+        fix: `Go to line ${first} and find the <code>${open}</code> there. Trace the code downward and add the missing <code>${close}</code> at the correct indentation level. Most editors highlight the matching bracket when your cursor sits next to one.`,
+        example: `<span class="bad">// ❌ Unclosed ${name} — line ${first} never closed
 function draw() {
   background(220);
-  ellipse(100, 100, 40, 40);
+  if (mouseIsPressed) {
+    ellipse(mouseX, mouseY, 40, 40);
+  <span class="comment">// ← missing ${close} to close the if-block</span></span>
+
+<span class="good">// ✅ Fixed — every ${open} has its ${close}
+function draw() {
+  background(220);
+  if (mouseIsPressed) {
+    ellipse(mouseX, mouseY, 40, 40);
+  }
 }</span>`
-      });
-      if (n < 0) errors.push({
-        type: 'syntax', title: `Extra closing ${name} — ${Math.abs(n)} unexpected '${close}'`,
-        explanation: `There are ${Math.abs(n)} more closing ${name}(s) <code>${close}</code> than opening ones <code>${open}</code>. This usually happens when you accidentally type an extra one or delete an opening bracket.`,
-        fix: `Find and remove the extra <code>${close}</code>, or add back the missing opening <code>${open}</code>.`,
-        example: ''
       });
     }
   }
