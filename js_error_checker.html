@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS & jQuery Error Checker — Educational Tool</title>
+
+  <!-- CodeMirror Editor -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.js"></script>
+
+  <!-- Acorn JS Parser (syntax + AST) -->
+  <script src="https://unpkg.com/acorn@8.11.3/dist/acorn.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #12121e;
+      --surface:   #1a1a2e;
+      --surface2:  #20203a;
+      --border:    #2d2d50;
+      --accent:    #e94560;
+      --blue:      #00b4d8;
+      --text:      #e4e4f0;
+      --dim:       #7a7a9a;
+      --c-syntax:  #ff6b6b;
+      --c-runtime: #ff9f43;
+      --c-logical: #ffe066;
+      --c-jquery:  #c084fc;
+      --c-info:    #60a5fa;
+      --c-ok:      #4ade80;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .header-title { font-size: 1.1rem; font-weight: 700; color: var(--blue); }
+    .header-title span { color: var(--accent); }
+    .header-sub { font-size: 0.75rem; color: var(--dim); }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+
+    /* toggle switch */
+    .toggle-wrap { display: flex; align-items: center; gap: 7px; font-size: 0.82rem; color: var(--dim); cursor: pointer; }
+    .toggle-wrap input { display: none; }
+    .toggle-slider {
+      width: 40px; height: 20px; background: var(--border);
+      border-radius: 20px; position: relative; transition: .3s; cursor: pointer;
+    }
+    .toggle-slider::after {
+      content: ''; position: absolute;
+      width: 14px; height: 14px; background: #fff;
+      border-radius: 50%; top: 3px; left: 3px; transition: .3s;
+    }
+    .toggle-wrap input:checked ~ .toggle-slider { background: var(--c-jquery); }
+    .toggle-wrap input:checked ~ .toggle-slider::after { transform: translateX(20px); }
+
+    /* example dropdown */
+    select.example-picker {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 6px 10px; font-size: 0.82rem; cursor: pointer;
+    }
+    select.example-picker option { background: var(--surface2); }
+
+    .btn {
+      border: none; border-radius: 6px; padding: 7px 16px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity .2s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: transparent; color: var(--dim);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--dim); }
+
+    /* ── MAIN LAYOUT ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── EDITOR ── */
+    .editor-panel {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      border-right: 2px solid var(--border);
+    }
+    .panel-label {
+      background: var(--surface);
+      padding: 6px 14px;
+      font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .editor-panel .CodeMirror { height: 100%; font-size: 13.5px; line-height: 1.65; }
+
+    /* line highlights */
+    .hl-syntax  { background: rgba(255,107,107,.18) !important; }
+    .hl-runtime { background: rgba(255,159, 67,.18) !important; }
+    .hl-logical { background: rgba(255,224,102,.12) !important; }
+    .hl-jquery  { background: rgba(192,132,252,.18) !important; }
+
+    /* ── RESULTS PANEL ── */
+    .results-panel {
+      width: 430px; min-width: 380px;
+      display: flex; flex-direction: column;
+      overflow: hidden; flex-shrink: 0;
+    }
+
+    /* filter tabs */
+    .filter-row {
+      background: var(--surface);
+      display: flex; gap: 4px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; flex-wrap: wrap;
+    }
+    .ftab {
+      padding: 3px 9px; border-radius: 12px;
+      font-size: 0.72rem; cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--dim);
+      transition: all .2s;
+    }
+    .ftab:hover { color: var(--text); }
+    .ftab.active-all    { color: var(--text); border-color: var(--text); background: rgba(255,255,255,.08); }
+    .ftab.active-syntax  { color: var(--c-syntax);  border-color: var(--c-syntax);  background: rgba(255,107,107,.1); }
+    .ftab.active-runtime { color: var(--c-runtime); border-color: var(--c-runtime); background: rgba(255,159, 67,.1); }
+    .ftab.active-logical { color: var(--c-logical); border-color: var(--c-logical); background: rgba(255,224,102,.1); }
+    .ftab.active-jquery  { color: var(--c-jquery);  border-color: var(--c-jquery);  background: rgba(192,132,252,.1); }
+
+    /* results list */
+    .results-list {
+      flex: 1; overflow-y: auto;
+      padding: 10px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .results-list::-webkit-scrollbar { width: 5px; }
+    .results-list::-webkit-scrollbar-track { background: var(--surface); }
+    .results-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* empty / ok states */
+    .state-box {
+      text-align: center; padding: 40px 20px; color: var(--dim);
+    }
+    .state-box .ico { font-size: 2.6rem; margin-bottom: 10px; }
+    .state-box h3 { font-size: .95rem; color: var(--text); margin-bottom: 6px; }
+    .state-box p  { font-size: .82rem; line-height: 1.5; }
+    .state-box.ok h3 { color: var(--c-ok); }
+
+    /* ── ERROR CARD ── */
+    .ecard {
+      background: var(--surface);
+      border-left: 4px solid;
+      border-radius: 7px;
+      overflow: hidden;
+      transition: transform .1s;
+    }
+    .ecard:hover { transform: translateX(2px); }
+    .ecard.syntax  { border-color: var(--c-syntax); }
+    .ecard.runtime { border-color: var(--c-runtime); }
+    .ecard.logical { border-color: var(--c-logical); }
+    .ecard.jquery  { border-color: var(--c-jquery); }
+    .ecard.info    { border-color: var(--c-info); }
+
+    .ecard-head {
+      padding: 9px 13px;
+      display: flex; align-items: flex-start; gap: 9px;
+      cursor: pointer;
+    }
+    .ecard-head:hover { background: rgba(255,255,255,.03); }
+
+    .ebadge {
+      font-size: .62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; padding: 2px 6px;
+      border-radius: 4px; white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+    }
+    .bs { background: rgba(255,107,107,.2);  color: var(--c-syntax); }
+    .br { background: rgba(255,159, 67,.2);  color: var(--c-runtime); }
+    .bl { background: rgba(255,224,102,.18); color: var(--c-logical); }
+    .bj { background: rgba(192,132,252,.2);  color: var(--c-jquery); }
+    .bi { background: rgba( 96,165,250,.2);  color: var(--c-info); }
+
+    .etitle-area { flex: 1; min-width: 0; }
+    .etitle { font-size: .86rem; font-weight: 600; line-height: 1.3; }
+    .eline  { font-size: .73rem; color: var(--dim); margin-top: 3px; }
+    .eline a { color: var(--blue); cursor: pointer; text-decoration: none; }
+    .eline a:hover { text-decoration: underline; }
+    .earrow { color: var(--dim); font-size: .85rem; flex-shrink: 0; transition: transform .2s; }
+    .earrow.open { transform: rotate(180deg); }
+
+    .ecard-body { padding: 0 13px 13px; display: none; }
+    .ecard-body.open { display: block; }
+
+    .esection { margin-bottom: 9px; }
+    .eslabel {
+      font-size: .65rem; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--dim); margin-bottom: 4px;
+    }
+    .escontent {
+      font-size: .81rem; line-height: 1.65; color: var(--text);
+    }
+    .escontent code {
+      background: rgba(255,255,255,.09);
+      padding: 1px 4px; border-radius: 3px;
+      font-family: 'Consolas', monospace; font-size: .88em;
+    }
+    .fix-box {
+      background: rgba(74,222,128,.07);
+      border: 1px solid rgba(74,222,128,.2);
+      border-radius: 5px; padding: 8px 11px;
+    }
+    .fix-box .escontent { color: #a7f3c8; }
+
+    /* context section */
+    .ctx-section {
+      background: rgba(0,180,216,.07);
+      border: 1px solid rgba(0,180,216,.25);
+      border-radius: 5px; padding: 9px 11px; margin-top: 8px;
+    }
+    .ctx-label { font-size: .72rem; color: var(--blue); margin-bottom: 6px; }
+    .ctx-q { font-size: .8rem; line-height: 1.55; color: var(--text); margin-bottom: 8px; }
+    textarea.ctx-input {
+      width: 100%; background: rgba(255,255,255,.05);
+      border: 1px solid var(--border); color: var(--text);
+      padding: 6px 9px; border-radius: 5px; font-size: .8rem;
+      resize: vertical; min-height: 55px; font-family: inherit;
+      margin-bottom: 7px;
+    }
+    textarea.ctx-input:focus { outline: none; border-color: var(--blue); }
+    .ctx-submit {
+      background: var(--blue); color: #000;
+      border: none; padding: 5px 13px; border-radius: 4px;
+      cursor: pointer; font-size: .78rem; font-weight: 700;
+    }
+    .ctx-response {
+      margin-top: 9px; padding: 8px 10px;
+      background: rgba(255,255,255,.05); border-radius: 5px;
+      font-size: .8rem; line-height: 1.55; color: var(--text);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<div class="header">
+  <div>
+    <div class="header-title">JS &amp; <span>jQuery</span> Error Checker</div>
+    <div class="header-sub">Syntax · Runtime · Logical — Educational Tool</div>
+  </div>
+  <div class="header-controls">
+    <label class="toggle-wrap">
+      <input type="checkbox" id="jqMode">
+      <span class="toggle-slider"></span>
+      jQuery Mode
+    </label>
+    <select class="example-picker" id="examplePicker" onchange="loadExample(this.value)">
+      <option value="">⬇ Load Example…</option>
+      <option value="syntax">Syntax Errors</option>
+      <option value="runtime">Runtime Errors</option>
+      <option value="logical">Logical Errors</option>
+      <option value="jquery">jQuery Errors</option>
+      <option value="mixed">Mixed (All Types)</option>
+    </select>
+    <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+    <button class="btn btn-primary" onclick="checkCode()">▶ Check Code</button>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- Editor -->
+  <div class="editor-panel">
+    <div class="panel-label">Code Editor — JavaScript / jQuery &nbsp;·&nbsp; Ctrl+Enter to check</div>
+    <textarea id="codeEditor">// Paste or type your JavaScript here, then click "Check Code"
+// Or use "Load Example" to see the checker in action!
+
+function greetUser(name) {
+  if (name == null) {
+    console.log("Hello, stranger!");
+  } else {
+    console.log("Hello, " + name + "!");
+  }
+}
+
+// Classic var-in-loop closure trap
+for (var i = 0; i < 3; i++) {
+  setTimeout(function() {
+    console.log(i); // prints 3, 3, 3 — not 0, 1, 2
+  }, 100);
+}
+
+// Accidental assignment in condition
+var score = 10;
+if (score = 5) {
+  console.log("score is five");
+}
+</textarea>
+  </div>
+
+  <!-- Results -->
+  <div class="results-panel">
+    <div class="filter-row" id="filterRow">
+      <button class="ftab active-all" data-filter="all"     onclick="setFilter('all')">All</button>
+      <button class="ftab"            data-filter="syntax"  onclick="setFilter('syntax')">Syntax</button>
+      <button class="ftab"            data-filter="runtime" onclick="setFilter('runtime')">Runtime</button>
+      <button class="ftab"            data-filter="logical" onclick="setFilter('logical')">Logical</button>
+      <button class="ftab"            data-filter="jquery"  onclick="setFilter('jquery')">jQuery</button>
+    </div>
+    <div class="results-list" id="resultsList">
+      <div class="state-box">
+        <div class="ico">🔍</div>
+        <h3>Ready to Analyze</h3>
+        <p>Paste your JavaScript or jQuery code in the editor and click <strong>Check Code</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────
+//  CODEMIRROR SETUP
+// ─────────────────────────────────────────────────────────
+let editor;
+let lineMarks = []; // stores {ln, type} pairs for removal
+let allFindings = [];
+let renderedFindings = [];
+let currentFilter = 'all';
+
+window.addEventListener('load', () => {
+  editor = CodeMirror.fromTextArea(document.getElementById('codeEditor'), {
+    mode: 'javascript', theme: 'dracula',
+    lineNumbers: true, styleActiveLine: true,
+    matchBrackets: true, indentUnit: 2, tabSize: 2,
+    lineWrapping: true
+  });
+});
+
+// ─────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────
+function clearMarks() {
+  lineMarks.forEach(({ ln, type }) => {
+    editor.removeLineClass(ln, 'background', `hl-${type}`);
+  });
+  lineMarks = [];
+}
+
+function markLine(lineNum, type) {
+  const ln = lineNum - 1;
+  if (ln < 0 || ln >= editor.lineCount()) return;
+  editor.addLineClass(ln, 'background', `hl-${type}`);
+  lineMarks.push({ ln, type });
+}
+
+function jumpToLine(ln) {
+  const line = ln - 1;
+  editor.setCursor({ line, ch: 0 });
+  editor.scrollIntoView({ line, ch: 0 }, 120);
+  editor.focus();
+}
+
+function clearAll() {
+  editor.setValue('');
+  clearMarks();
+  allFindings = [];
+  showEmpty();
+}
+
+function showEmpty() {
+  document.getElementById('resultsList').innerHTML = `
+    <div class="state-box">
+      <div class="ico">🔍</div>
+      <h3>Ready to Analyze</h3>
+      <p>Paste your JavaScript or jQuery code in the editor and click <strong>Check Code</strong>.</p>
+    </div>`;
+}
+
+// Safely escape html AND convert `backtick` spans to <code>
+function fmt(str) {
+  const esc = String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return esc.replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+// ─────────────────────────────────────────────────────────
+//  MINIMAL AST WALKER (no external walk library needed)
+// ─────────────────────────────────────────────────────────
+const SKIP_KEYS = new Set(['type','start','end','loc','sourceType','raw']);
+
+function walk(node, visitors, ancestors) {
+  if (!node || typeof node !== 'object' || !node.type) return;
+  ancestors = ancestors || [];
+  const fn = visitors[node.type];
+  if (fn) fn(node, ancestors);
+  const ch = [...ancestors, node];
+  for (const k of Object.keys(node)) {
+    if (SKIP_KEYS.has(k)) continue;
+    const v = node[k];
+    if (Array.isArray(v)) v.forEach(c => walk(c, visitors, ch));
+    else if (v && typeof v === 'object' && v.type) walk(v, visitors, ch);
+  }
+}
+
+// ─────────────────────────────────────────────────────────
+//  SYNTAX ERROR HINT
+// ─────────────────────────────────────────────────────────
+function syntaxHint(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes('unexpected token }')) return 'You have an extra `}`. Check that every opening `{` has a matching closing `}`.';
+  if (m.includes('unexpected token )')) return 'You have an extra `)`. Check that every `(` has a matching `)`.';
+  if (m.includes('unexpected token ]')) return 'You have an extra `]`. Check that every `[` has a matching `]`.';
+  if (m.includes('unexpected end of input')) return 'The code ends abruptly. You likely have an unclosed `{`, `(`, or `[`. Count your opening and closing delimiters.';
+  if (m.includes('invalid left-hand side')) return 'The left side of an assignment is not assignable. You might be doing `5 = x` or `fn() = value` by mistake.';
+  if (m.includes('identifier')) return 'A variable name was expected here. You may have used a reserved keyword or left a name blank.';
+  if (m.includes('unexpected token')) return 'Unexpected character found. Check for typos, stray symbols, or missing operators near this line.';
+  return 'Review the syntax near this line. Look for missing commas, unclosed strings, or wrong keywords.';
+}
+
+// ─────────────────────────────────────────────────────────
+//  RULES
+// ─────────────────────────────────────────────────────────
+
+// ── RULE: Loose Equality ──────────────────────────────────
+function rLooseEquality(ast) {
+  const out = [];
+  walk(ast, {
+    BinaryExpression(node) {
+      if (node.operator !== '==' && node.operator !== '!=') return;
+      const L = node.left, R = node.right;
+      const isNullCheck =
+        (R.type === 'Literal' && R.value === null) || (L.type === 'Literal' && L.value === null) ||
+        (R.type === 'Identifier' && R.name === 'undefined') || (L.type === 'Identifier' && L.name === 'undefined');
+      out.push({
+        type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+        title: `Loose equality \`${node.operator}\` — type coercion may cause bugs`,
+        explain: `The \`${node.operator}\` operator converts both sides to the same type before comparing (type coercion). This causes surprises:\n• \`0 == ""\` → \`true\`\n• \`false == 0\` → \`true\`\n• \`"5" == 5\` → \`true\`\n• \`null == undefined\` → \`true\`\nThese silent type conversions make bugs very hard to find.`,
+        fix: `Replace \`${node.operator}\` with \`${node.operator === '==' ? '===' : '!=='}\` (strict equality). It checks both **value** and **type** with no conversion.\n• Before: \`x ${node.operator} y\`\n• After:  \`x ${node.operator === '==' ? '===' : '!=='} y\``,
+        ctx: isNullCheck,
+        ctxQ: isNullCheck ? `Using \`${node.operator} null\` checks for **both** \`null\` and \`undefined\` at once (a known JS pattern). Is that intentional? If you only want to match \`null\`, use \`=== null\`. If you want both null/undefined, the \`== null\` pattern is acceptable — just add a comment explaining the intent.` : null
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: Assignment in Condition ────────────────────────
+function rAssignInCond(ast) {
+  const out = [];
+  const testNodes = new Set();
+  walk(ast, {
+    IfStatement(n)          { if (n.test) testNodes.add(n.test); },
+    WhileStatement(n)       { if (n.test) testNodes.add(n.test); },
+    DoWhileStatement(n)     { if (n.test) testNodes.add(n.test); },
+    ConditionalExpression(n){ if (n.test) testNodes.add(n.test); },
+    ForStatement(n)         { if (n.test) testNodes.add(n.test); }
+  });
+  testNodes.forEach(t => {
+    if (t && t.type === 'AssignmentExpression') {
+      out.push({
+        type: 'logical', line: t.loc.start.line, col: t.loc.start.column + 1,
+        title: `Assignment \`=\` inside a condition (did you mean \`===\`?)`,
+        explain: `You used \`=\` (assignment) where a comparison was expected. JavaScript will **assign** the value and then use the result as the condition — not compare.\n\nFor example: \`if (x = 5)\` sets \`x\` to \`5\` and then the condition is \`5\` (truthy), so it always runs. This is almost always a typo.`,
+        fix: `If you meant to **compare**, change \`=\` to \`===\`:\n• \`if (x === 5)\`\n\nIf you truly meant to assign inside a condition (rare), wrap in double parentheses to make it obvious:\n• \`if ((x = getValue()))\``,
+        ctx: false, ctxQ: null
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: Unreachable Code ────────────────────────────────
+function rUnreachable(ast) {
+  const out = [];
+  function checkBlock(stmts) {
+    if (!stmts) return;
+    for (let i = 0; i < stmts.length - 1; i++) {
+      const s = stmts[i];
+      if (['ReturnStatement','ThrowStatement','BreakStatement','ContinueStatement'].includes(s.type)) {
+        const next = stmts[i + 1];
+        if (next.type !== 'FunctionDeclaration') {
+          out.push({
+            type: 'logical', line: next.loc.start.line, col: next.loc.start.column + 1,
+            title: `Unreachable code after \`${s.type.replace('Statement','').toLowerCase()}\``,
+            explain: `The code on this line can **never execute** because the \`${s.type.replace('Statement','').toLowerCase()}\` on line ${s.loc.start.line} always exits before reaching it. JavaScript silently skips unreachable code, which usually means there's a logic error.`,
+            fix: `Options:\n1. **Remove** the unreachable code if it shouldn't be there.\n2. **Move** it before the \`${s.type.replace('Statement','').toLowerCase()}\` if it should run.\n3. **Restructure** the logic (e.g., use \`if/else\` instead of an early return).`,
+            ctx: false, ctxQ: null
+          });
+          break;
+        }
+      }
+    }
+  }
+  walk(ast, {
+    BlockStatement(n) { checkBlock(n.body); },
+    Program(n)        { checkBlock(n.body); },
+    SwitchCase(n)     { checkBlock(n.consequent); }
+  });
+  return out;
+}
+
+// ── RULE: var in loop with callback ──────────────────────
+function rVarInLoop(ast) {
+  const out = [];
+  const loopTypes = new Set(['ForStatement','ForInStatement','ForOfStatement','WhileStatement','DoWhileStatement']);
+
+  walk(ast, {
+    ForStatement(node, ancestors) {
+      if (!node.init || node.init.type !== 'VariableDeclaration' || node.init.kind !== 'var') return;
+      let hasCallback = false;
+      walk(node.body, {
+        FunctionExpression()      { hasCallback = true; },
+        ArrowFunctionExpression() { hasCallback = true; }
+      });
+      if (hasCallback) {
+        out.push({
+          type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `\`var\` loop variable + callback = closure trap`,
+          explain: `Using \`var\` in a \`for\` loop with a callback (like \`setTimeout\`, event listeners, etc.) is a classic JavaScript bug. All the callbacks share **one single variable** — not a copy per iteration. By the time they run, the loop is done and they all see the final value.\n\nExample: \`for (var i=0; i<3; i++) { setTimeout(() => console.log(i), 0); }\` prints \`3, 3, 3\` — not \`0, 1, 2\`.`,
+          fix: `Simply change \`var\` to \`let\`:\n• Before: \`for (var i = 0; ...)\`\n• After:  \`for (let i = 0; ...)\`\n\n\`let\` creates a **new binding per iteration**, so each callback captures its own \`i\`.`,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: for...in on suspected array ────────────────────
+function rForIn(ast) {
+  const out = [];
+  walk(ast, {
+    ForInStatement(node) {
+      out.push({
+        type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+        title: `\`for...in\` iterates keys — usually wrong for arrays`,
+        explain: `\`for...in\` iterates over **enumerable property names** (as strings), not values. For arrays:\n• You get index strings like \`"0"\`, \`"1"\`, not the values\n• It may also iterate over inherited prototype properties\n• The order is not guaranteed in older engines\n\n\`for...in\` is designed for plain objects, not arrays.`,
+        fix: `For **arrays**, use:\n• \`for (const item of arr)\` — iterate values (modern)\n• \`arr.forEach((item, i) => ...)\` — functional style\n• \`for (let i = 0; i < arr.length; i++)\` — classic indexed\n\nFor **objects** (iterating keys), \`for...in\` is correct — just use \`hasOwnProperty\` to skip inherited keys.`,
+        ctx: true, ctxQ: `Are you iterating over an **array** or a plain **object**? \`for...in\` is fine for plain objects like \`{ a: 1, b: 2 }\`. If this is an array, switch to \`for...of\` or \`.forEach()\`.`
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: NaN comparison ─────────────────────────────────
+function rNaN(ast) {
+  const out = [];
+  walk(ast, {
+    BinaryExpression(node) {
+      const isNaN = n => n.type === 'Identifier' && n.name === 'NaN';
+      if (isNaN(node.left) || isNaN(node.right)) {
+        out.push({
+          type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `Comparing with \`NaN\` always returns \`false\``,
+          explain: `\`NaN\` is the only JavaScript value **not equal to itself**:\n• \`NaN === NaN\` → \`false\`\n• \`NaN == NaN\`  → \`false\`\n• \`NaN !== NaN\` → \`true\`\n\nSo any comparison using \`==\`, \`===\`, \`!=\`, \`!==\` with \`NaN\` will never work as expected.`,
+          fix: `Use \`Number.isNaN(value)\` (strict) or \`isNaN(value)\` (permissive):\n• Before: \`if (x === NaN)\`\n• After:  \`if (Number.isNaN(x))\`\n\n\`Number.isNaN\` only returns \`true\` for actual NaN. \`isNaN\` also converts strings/etc. first, which can be surprising.`,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: parseInt without radix ─────────────────────────
+function rParseInt(ast) {
+  const out = [];
+  walk(ast, {
+    CallExpression(node) {
+      if (node.callee.type === 'Identifier' && node.callee.name === 'parseInt' && node.arguments.length < 2) {
+        out.push({
+          type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `\`parseInt()\` missing radix argument`,
+          explain: `Without a second argument (the radix), \`parseInt\` guesses the number base. Old browsers would treat strings starting with \`"0"\` as **octal** (base 8), so \`parseInt("08")\` returned \`0\` instead of \`8\`. Even in modern JS, omitting it is considered bad practice because it obscures your intent.`,
+          fix: `Always pass \`10\` for decimal numbers:\n• Before: \`parseInt("42")\`\n• After:  \`parseInt("42", 10)\`\n\nFor hex: \`parseInt("0xff", 16)\``,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: Empty catch block ───────────────────────────────
+function rEmptyCatch(ast) {
+  const out = [];
+  walk(ast, {
+    TryStatement(node) {
+      if (node.handler && node.handler.body && node.handler.body.body.length === 0) {
+        out.push({
+          type: 'logical', line: node.handler.loc.start.line, col: node.handler.loc.start.column + 1,
+          title: `Empty \`catch\` block silently swallows errors`,
+          explain: `An empty \`catch\` block suppresses every error with no feedback. When something goes wrong in the \`try\` block, the error disappears completely — your program continues as if nothing happened. This makes debugging extremely painful because you have no clue something failed.`,
+          fix: `At minimum, log the error:\n\`catch (err) { console.error("Error:", err); }\`\n\nFor production: show the user a message, retry the operation, or rethrow the error with \`throw err\` if you can't handle it here.`,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: Duplicate object keys ───────────────────────────
+function rDupKeys(ast) {
+  const out = [];
+  walk(ast, {
+    ObjectExpression(node) {
+      const seen = {};
+      node.properties.forEach(p => {
+        if (p.type !== 'Property') return;
+        const k = p.key.type === 'Identifier' ? p.key.name
+                : p.key.type === 'Literal'    ? String(p.key.value) : null;
+        if (!k) return;
+        if (seen[k]) {
+          out.push({
+            type: 'logical', line: p.loc.start.line, col: p.loc.start.column + 1,
+            title: `Duplicate object key \`${k}\` — earlier value silently overwritten`,
+            explain: `You defined the property \`${k}\` more than once in the same object literal. JavaScript keeps only the **last** definition — all earlier ones are silently discarded. This is almost always a copy-paste accident.`,
+            fix: `Remove or rename the duplicate entry. Decide which value you intended and keep only that one.`,
+            ctx: false, ctxQ: null
+          });
+        }
+        seen[k] = true;
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: typeof comparison with wrong string ─────────────
+function rTypeofString(ast) {
+  const VALID = new Set(['undefined','boolean','number','bigint','string','symbol','function','object']);
+  const out = [];
+  walk(ast, {
+    BinaryExpression(node) {
+      if (!['===','==','!==','!='].includes(node.operator)) return;
+      let typeofNode = null, strNode = null;
+      if (node.left.type === 'UnaryExpression' && node.left.operator === 'typeof')
+        { typeofNode = node.left; strNode = node.right; }
+      else if (node.right.type === 'UnaryExpression' && node.right.operator === 'typeof')
+        { typeofNode = node.right; strNode = node.left; }
+      if (!typeofNode || !strNode || strNode.type !== 'Literal' || typeof strNode.value !== 'string') return;
+      if (!VALID.has(strNode.value)) {
+        out.push({
+          type: 'logical', line: strNode.loc.start.line, col: strNode.loc.start.column + 1,
+          title: `\`typeof\` compared to invalid string \`"${strNode.value}"\``,
+          explain: `\`typeof\` can only ever return one of 8 strings: \`"undefined"\`, \`"boolean"\`, \`"number"\`, \`"bigint"\`, \`"string"\`, \`"symbol"\`, \`"function"\`, \`"object"\`. Comparing it to \`"${strNode.value}"\` will always be \`false\`.\n\nCommon traps:\n• \`typeof x === "null"\` — \`typeof null\` returns \`"object"\` (a historic JS bug)\n• \`typeof x === "array"\` — arrays are \`"object"\`; use \`Array.isArray(x)\``,
+          fix: `Fix the string to a valid \`typeof\` result, or use a different check:\n• Checking for null: \`x === null\`\n• Checking for array: \`Array.isArray(x)\`\n• Checking for integer: \`typeof x === "number" && Number.isInteger(x)\``,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: Null/undefined literal property access ──────────
+function rNullAccess(ast) {
+  const out = [];
+  walk(ast, {
+    MemberExpression(node) {
+      const isNull = node.object.type === 'Literal' && node.object.value === null;
+      const isUndef = node.object.type === 'Identifier' && node.object.name === 'undefined';
+      if (isNull || isUndef) {
+        const which = isNull ? '`null`' : '`undefined`';
+        out.push({
+          type: 'runtime', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `Property access on ${which} — will throw \`TypeError\``,
+          explain: `You're accessing a property directly on ${which}. At runtime this will throw:\n\`TypeError: Cannot read properties of ${isNull ? 'null' : 'undefined'}\`\n\nThis is one of the most common JavaScript runtime crashes.`,
+          fix: `Guard before accessing:\n\`if (value != null) { value.property; }\`\n\nOr use optional chaining (ES2020+):\n\`value?.property\`\n\nOr nullish coalescing:\n\`(value ?? fallback).property\``,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: const reassignment ──────────────────────────────
+function rConstReassign(ast) {
+  const out = [];
+  const constLines = new Map();
+  walk(ast, {
+    VariableDeclaration(node) {
+      if (node.kind === 'const') {
+        node.declarations.forEach(d => {
+          if (d.id.type === 'Identifier') constLines.set(d.id.name, node.loc.start.line);
+        });
+      }
+    }
+  });
+  walk(ast, {
+    AssignmentExpression(node) {
+      const name = node.left.type === 'Identifier' ? node.left.name : null;
+      if (name && constLines.has(name)) {
+        out.push({
+          type: 'runtime', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `Cannot reassign \`const\` variable \`${name}\``,
+          explain: `\`${name}\` was declared with \`const\` on line ${constLines.get(name)}. Reassigning it will throw:\n\`TypeError: Assignment to constant variable.\`\n\nNote: \`const\` only prevents **reassignment of the binding** — if the value is an object/array, you can still mutate its contents.`,
+          fix: `• Change the declaration to \`let\` if the value needs to change.\n• Or use a new variable name for the new value.\n• Remember: \`const arr = []; arr.push(1);\` is allowed — only \`arr = []\` is not.`,
+          ctx: false, ctxQ: null
+        });
+      }
+    },
+    UpdateExpression(node) {
+      const name = node.argument.type === 'Identifier' ? node.argument.name : null;
+      if (name && constLines.has(name)) {
+        out.push({
+          type: 'runtime', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `Cannot use \`${node.operator}\` on \`const\` variable \`${name}\``,
+          explain: `\`${node.operator}\` assigns a new value, which is not allowed for \`const\`. This will throw at runtime.`,
+          fix: `Change \`const ${name}\` to \`let ${name}\` on line ${constLines.get(name)}.`,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: Division by zero (literal) ─────────────────────
+function rDivByZero(ast) {
+  const out = [];
+  walk(ast, {
+    BinaryExpression(node) {
+      if (node.operator === '/' && node.right.type === 'Literal' && node.right.value === 0) {
+        out.push({
+          type: 'runtime', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `Division by zero — produces \`Infinity\` or \`NaN\``,
+          explain: `JavaScript doesn't throw on division by zero — it returns special values:\n• \`5 / 0\`  → \`Infinity\`\n• \`-5 / 0\` → \`-Infinity\`\n• \`0 / 0\`  → \`NaN\`\n\nThese values propagate silently and cause confusing results later in your code.`,
+          fix: `Guard before dividing:\n\`const result = divisor !== 0 ? value / divisor : 0;\`\n\nOr throw an explicit error: \`if (divisor === 0) throw new Error("Cannot divide by zero");\``,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: Literal condition (always true/false) ───────────
+function rLiteralCondition(ast) {
+  const out = [];
+  walk(ast, {
+    IfStatement(node) {
+      if (node.test.type !== 'Literal') return;
+      const val = node.test.value;
+      out.push({
+        type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+        title: `Condition is literal \`${JSON.stringify(val)}\` — always ${!!val ? 'true' : 'false'}`,
+        explain: `The condition \`${JSON.stringify(val)}\` is a fixed literal value that always evaluates to \`${!!val}\`. ${!!val ? 'The `else` branch (if any) will never execute.' : 'The `if` body will never execute.'} This is almost certainly a mistake — you probably meant to use a variable.`,
+        fix: `Replace the literal with the actual expression you want to test:\n• \`if (isReady)\`, \`if (count > 0)\`, \`if (user !== null)\`, etc.`,
+        ctx: false, ctxQ: null
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: eval() usage ────────────────────────────────────
+function rEval(ast) {
+  const out = [];
+  walk(ast, {
+    CallExpression(node) {
+      if (node.callee.type === 'Identifier' && node.callee.name === 'eval') {
+        out.push({
+          type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `\`eval()\` is dangerous and prevents optimization`,
+          explain: `\`eval()\` executes a string as JavaScript code. Problems:\n• **Security**: If the string comes from user input, attackers can inject malicious code.\n• **Performance**: Prevents JavaScript engines from optimizing the surrounding function.\n• **Debugging**: Evaluated code doesn't appear in the source map.\n• **Strict mode**: Behaves differently and has restricted scope.`,
+          fix: `Restructure to avoid eval:\n• Dynamic property access: \`obj[propName]\` instead of \`eval("obj." + propName)\`\n• Parse JSON: \`JSON.parse(str)\` instead of \`eval(str)\`\n• Lookup tables: \`const fns = { doA, doB }; fns[name]()\` instead of \`eval(name + "()")\``,
+          ctx: true, ctxQ: `What are you trying to accomplish with \`eval()\`? Describe the use case and there is almost certainly a safer alternative. Common ones: dynamic property access, JSON parsing, or calling functions by string name.`
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ── RULE: with statement ──────────────────────────────────
+function rWith(ast) {
+  const out = [];
+  walk(ast, {
+    WithStatement(node) {
+      out.push({
+        type: 'logical', line: node.loc.start.line, col: node.loc.start.column + 1,
+        title: `\`with\` statement is forbidden in strict mode`,
+        explain: `\`with\` adds an object to the scope chain, making it impossible to know at a glance which scope a variable belongs to. It prevents JavaScript engine optimizations and is banned in strict mode (\`"use strict"\`).`,
+        fix: `Use destructuring instead:\n• Before: \`with (math) { sin(x) + cos(x) }\`\n• After:  \`const { sin, cos } = math; sin(x) + cos(x);\``,
+        ctx: false, ctxQ: null
+      });
+    }
+  });
+  return out;
+}
+
+// ── RULE: Missing semicolons check (hint only) ────────────
+function rSemicolonHint(ast, code) {
+  // We only surface this if the parse passed — meaning ASI handled it.
+  // We detect it when a line that ends a statement doesn't have a semicolon.
+  // This is a lightweight heuristic — only flagging obvious cases.
+  // Skipped — relies on ASI working correctly; would generate too many false positives.
+  return [];
+}
+
+// ═══════════════════════════════════════════
+//  JQUERY RULES
+// ═══════════════════════════════════════════
+
+const JQ_DEPRECATED = {
+  live:       { ver:'1.9', fix:'Use `.on()` with event delegation:\n• Before: `$(sel).live("click", fn)`\n• After:  `$(document).on("click", sel, fn)`' },
+  die:        { ver:'1.9', fix:'Use `.off()` with event delegation:\n• Before: `$(sel).die("click", fn)`\n• After:  `$(document).off("click", sel, fn)`' },
+  size:       { ver:'3.0', fix:'Use `.length` property:\n• Before: `$(sel).size()`\n• After:  `$(sel).length`' },
+  success:    { ver:'3.0', fix:'Use `.done()` instead:\n• Before: `$.ajax(...).success(fn)`\n• After:  `$.ajax(...).done(fn)`' },
+  error:      { ver:'3.0', fix:'Use `.on("error", fn)`:\n• Before: `$(img).error(fn)`\n• After:  `$(img).on("error", fn)`' },
+  complete:   { ver:'3.0', fix:'Use `.always()` instead:\n• Before: `$.ajax(...).complete(fn)`\n• After:  `$.ajax(...).always(fn)`' },
+  bind:       { ver:'3.0', fix:'Use `.on()`:\n• Before: `$(sel).bind("click", fn)`\n• After:  `$(sel).on("click", fn)`' },
+  unbind:     { ver:'3.0', fix:'Use `.off()`:\n• Before: `$(sel).unbind("click", fn)`\n• After:  `$(sel).off("click", fn)`' },
+  delegate:   { ver:'3.0', fix:'Use `.on()` with delegation:\n• Before: `$(parent).delegate(sel, "click", fn)`\n• After:  `$(parent).on("click", sel, fn)`' },
+  undelegate: { ver:'3.0', fix:'Use `.off()` with delegation:\n• Before: `$(parent).undelegate(sel, "click", fn)`\n• After:  `$(parent).off("click", sel, fn)`' },
+  unload:     { ver:'3.0', fix:'Use `.on("unload", fn)` instead.' },
+  load:       { ver:'3.0', fix:'For the load event, use `.on("load", fn)`:\n• Before: `$(window).load(fn)`\n• After:  `$(window).on("load", fn)` or `$(document).ready(fn)`' }
+};
+
+function rjqDeprecated(ast) {
+  const out = [];
+  walk(ast, {
+    CallExpression(node) {
+      if (node.callee.type !== 'MemberExpression' || node.callee.property.type !== 'Identifier') return;
+      const m = node.callee.property.name;
+      if (JQ_DEPRECATED[m]) {
+        const info = JQ_DEPRECATED[m];
+        out.push({
+          type: 'jquery', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `jQuery: \`.${m}()\` was removed in jQuery ${info.ver}`,
+          explain: `\`.${m}()\` no longer exists in modern jQuery. Calling it will throw:\n\`TypeError: $(selector).${m} is not a function\`\n\nThis is one of the most common issues when upgrading jQuery versions.`,
+          fix: info.fix,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+function rjqParseJSON(ast) {
+  const out = [];
+  walk(ast, {
+    MemberExpression(node) {
+      if (!['$','jQuery'].includes(node.object.name)) return;
+      if (node.property.name === 'parseJSON') {
+        out.push({
+          type: 'jquery', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `jQuery: \`$.parseJSON()\` is deprecated — use \`JSON.parse()\``,
+          explain: `\`$.parseJSON()\` was deprecated in jQuery 3.0 because the native \`JSON.parse()\` does exactly the same thing and is available in all modern browsers without jQuery.`,
+          fix: `• Before: \`$.parseJSON(str)\`\n• After:  \`JSON.parse(str)\`\n\nBoth throw on invalid JSON, so wrap in \`try/catch\` if the input is untrusted.`,
+          ctx: false, ctxQ: null
+        });
+      }
+      if (node.property.name === 'trim') {
+        out.push({
+          type: 'jquery', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `jQuery: \`$.trim()\` is deprecated — use native \`.trim()\``,
+          explain: `\`$.trim()\` was deprecated in jQuery 3.5. The native \`String.prototype.trim()\` method has been available since IE9 and does the same thing.`,
+          fix: `• Before: \`$.trim(str)\`\n• After:  \`str.trim()\``,
+          ctx: false, ctxQ: null
+        });
+      }
+      if (node.property.name === 'now') {
+        out.push({
+          type: 'jquery', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `jQuery: \`$.now()\` is deprecated — use \`Date.now()\``,
+          explain: `\`$.now()\` was just a wrapper around \`Date.now()\`. It was deprecated in jQuery 3.3.`,
+          fix: `• Before: \`$.now()\`\n• After:  \`Date.now()\``,
+          ctx: false, ctxQ: null
+        });
+      }
+    }
+  });
+  return out;
+}
+
+function rjqArrowThis(ast) {
+  const out = [];
+  const jqEventMethods = new Set(['on','off','click','submit','keyup','keydown','keypress',
+    'change','focus','blur','hover','mouseenter','mouseleave','ready','each','map','filter','tap']);
+  walk(ast, {
+    CallExpression(node) {
+      if (node.callee.type !== 'MemberExpression') return;
+      if (!jqEventMethods.has(node.callee.property.name)) return;
+      node.arguments.forEach(arg => {
+        if (arg.type !== 'ArrowFunctionExpression') return;
+        let usesThis = false;
+        walk(arg, { ThisExpression() { usesThis = true; } });
+        if (usesThis) {
+          out.push({
+            type: 'jquery', line: arg.loc.start.line, col: arg.loc.start.column + 1,
+            title: `jQuery: \`this\` inside arrow function won't refer to the element`,
+            explain: `Arrow functions **do not have their own \`this\`** — they inherit it from the surrounding scope. jQuery sets \`this\` to the matched DOM element inside event/each callbacks, but arrow functions ignore this and capture the outer \`this\` instead (often \`window\` or \`undefined\` in strict mode).`,
+            fix: `Use a regular \`function\` expression when you need jQuery's \`this\`:\n• Before: \`$(sel).on("click", () => { $(this).addClass("active"); })\`\n• After:  \`$(sel).on("click", function() { $(this).addClass("active"); })\`\n\nAlternatively, use the event object: \`$(event.target)\``,
+            ctx: false, ctxQ: null
+          });
+        }
+      });
+    }
+  });
+  return out;
+}
+
+function rjqReady(ast) {
+  const out = [];
+  let hasReady = false;
+  const topLevelJQcalls = [];
+
+  walk(ast, {
+    CallExpression(node, ancestors) {
+      // detect $(document).ready() or $(function(){})
+      if (node.callee.type === 'MemberExpression' && node.callee.property.name === 'ready') hasReady = true;
+      if (['$','jQuery'].includes(node.callee.name)) {
+        const arg0 = node.arguments[0];
+        if (arg0 && (arg0.type === 'FunctionExpression' || arg0.type === 'ArrowFunctionExpression')) hasReady = true;
+        // top-level DOM query
+        if (arg0 && arg0.type === 'Literal' && typeof arg0.value === 'string' && ancestors.length <= 3)
+          topLevelJQcalls.push(node);
+      }
+    }
+  });
+
+  if (!hasReady && topLevelJQcalls.length > 0) {
+    out.push({
+      type: 'jquery', line: topLevelJQcalls[0].loc.start.line, col: topLevelJQcalls[0].loc.start.column + 1,
+      title: `jQuery: DOM query possibly outside \`$(document).ready()\``,
+      explain: `If this code runs before the DOM is fully loaded (e.g. script in \`<head>\`), your selectors will match **nothing** — no error is thrown, the code just silently does nothing. This is one of the most common jQuery beginner bugs.`,
+      fix: `Wrap all DOM-touching code in a ready callback:\n\`$(document).ready(function() {\n  // your code here\n});\`\n\nOr shorthand:\n\`$(function() {\n  // your code here\n});\`\n\nOr place your \`<script>\` tag just before \`</body>\`.`,
+      ctx: true, ctxQ: `Is your \`<script>\` tag placed at the **bottom of the HTML** (just before \`</body>\`) or does it have a \`defer\` attribute? If so, the DOM is already loaded and you don't need \`$(document).ready()\`. This only matters if the script could run before DOM parsing is complete.`
+    });
+  }
+  return out;
+}
+
+function rjqAjaxNoError(ast) {
+  const out = [];
+  walk(ast, {
+    CallExpression(node) {
+      if (node.callee.type !== 'MemberExpression') return;
+      if (!['$','jQuery'].includes(node.callee.object.name)) return;
+      if (!['ajax','get','post','getJSON','getScript'].includes(node.callee.property.name)) return;
+      let hasErr = false;
+      if (node.callee.property.name === 'ajax' && node.arguments[0]?.type === 'ObjectExpression') {
+        hasErr = node.arguments[0].properties.some(p => p.key && ['error','fail'].includes(p.key.name));
+      }
+      if (!hasErr) {
+        out.push({
+          type: 'jquery', line: node.loc.start.line, col: node.loc.start.column + 1,
+          title: `jQuery: AJAX call without error handler`,
+          explain: `AJAX calls can fail for many reasons: network error, server error (404, 500), timeout, CORS blocked. Without an error handler, failures are **silently ignored** — users see nothing happen and you have no diagnostic information.`,
+          fix: `Chain a \`.fail()\` handler:\n\`$.get("/api/data")\n  .done(function(data) { /* handle data */ })\n  .fail(function(jqXHR, status, err) {\n    console.error("Request failed:", status, err);\n  });\`\n\nFor \`$.ajax()\`, add an \`error:\` option in the settings object.`,
+          ctx: true, ctxQ: `Do you have a \`.fail()\` or \`.catch()\` chained elsewhere that wasn't detected here? If error handling is attached in a separate chain, this warning may not apply.`
+        });
+      }
+    }
+  });
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────
+//  MAIN ANALYSIS
+// ─────────────────────────────────────────────────────────
+function analyzeCode(code, jqMode) {
+  let ast;
+  try {
+    ast = acorn.parse(code, { ecmaVersion: 2020, sourceType: 'script', locations: true, allowReserved: false });
+  } catch (e) {
+    return [{
+      type: 'syntax', line: e.loc ? e.loc.line : 1, col: e.loc ? e.loc.column + 1 : 1,
+      title: `Syntax Error: ${e.message.split(' (')[0]}`,
+      explain: `JavaScript's parser could not understand your code:\n"${e.message}"\n\nSyntax errors prevent the entire file from running — the browser won't execute a single line if there's a syntax error anywhere.`,
+      fix: syntaxHint(e.message),
+      ctx: false, ctxQ: null
+    }];
+  }
+
+  const findings = [
+    ...rLooseEquality(ast),
+    ...rAssignInCond(ast),
+    ...rUnreachable(ast),
+    ...rVarInLoop(ast),
+    ...rForIn(ast),
+    ...rNaN(ast),
+    ...rParseInt(ast),
+    ...rEmptyCatch(ast),
+    ...rDupKeys(ast),
+    ...rTypeofString(ast),
+    ...rNullAccess(ast),
+    ...rConstReassign(ast),
+    ...rDivByZero(ast),
+    ...rLiteralCondition(ast),
+    ...rEval(ast),
+    ...rWith(ast),
+    ...(jqMode ? [
+      ...rjqDeprecated(ast),
+      ...rjqParseJSON(ast),
+      ...rjqArrowThis(ast),
+      ...rjqReady(ast),
+      ...rjqAjaxNoError(ast)
+    ] : [])
+  ];
+
+  findings.sort((a, b) => (a.line - b.line) || (a.col - b.col));
+  return findings;
+}
+
+// ─────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────
+const BADGE_CLASS = { syntax:'bs', runtime:'br', logical:'bl', jquery:'bj', info:'bi' };
+const BADGE_LABEL = { syntax:'Syntax', runtime:'Runtime', logical:'Logical', jquery:'jQuery', info:'Info' };
+
+function renderFindings(findings) {
+  clearMarks();
+  const list = document.getElementById('resultsList');
+
+  const filtered = currentFilter === 'all' ? findings : findings.filter(f => f.type === currentFilter);
+  renderedFindings = filtered;
+
+  if (findings.length === 0) {
+    list.innerHTML = `<div class="state-box ok"><div class="ico">✅</div><h3>No Issues Found!</h3><p>Your code passed all checks. Well done!</p></div>`;
+    return;
+  }
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="state-box"><div class="ico">🎉</div><h3>No ${currentFilter} issues</h3><p>No ${currentFilter} problems detected. Check other categories.</p></div>`;
+    findings.forEach(f => markLine(f.line, f.type));
+    return;
+  }
+
+  findings.forEach(f => markLine(f.line, f.type));
+
+  let html = '';
+  filtered.forEach((f, idx) => {
+    const bc = BADGE_CLASS[f.type] || 'bi';
+    const bl = BADGE_LABEL[f.type] || f.type;
+    const expHtml = f.explain ? fmt(f.explain).replace(/\n/g, '<br>') : '';
+    const fixHtml = f.fix    ? fmt(f.fix).replace(/\n/g, '<br>')    : '';
+
+    html += `
+      <div class="ecard ${f.type}" id="card-${idx}">
+        <div class="ecard-head" onclick="toggleCard(${idx})">
+          <span class="ebadge ${bc}">${bl}</span>
+          <div class="etitle-area">
+            <div class="etitle">${fmt(f.title)}</div>
+            <div class="eline">Line <a onclick="event.stopPropagation();jumpToLine(${f.line})">${f.line}</a>, Col ${f.col}</div>
+          </div>
+          <span class="earrow" id="arr-${idx}">▼</span>
+        </div>
+        <div class="ecard-body" id="body-${idx}">
+          ${expHtml ? `<div class="esection"><div class="eslabel">What's wrong</div><div class="escontent">${expHtml}</div></div>` : ''}
+          ${fixHtml ? `<div class="esection"><div class="eslabel">How to fix it</div><div class="fix-box"><div class="escontent">${fixHtml}</div></div></div>` : ''}
+          ${f.ctx && f.ctxQ ? `
+          <div class="ctx-section" id="ctx-${idx}">
+            <div class="ctx-label">🤔 Need more context to be sure</div>
+            <div class="ctx-q">${fmt(f.ctxQ)}</div>
+            <textarea class="ctx-input" id="ctxIn-${idx}" placeholder="Describe your situation…"></textarea>
+            <button class="ctx-submit" onclick="answerCtx(${idx})">Get Guidance</button>
+            <div id="ctxRes-${idx}"></div>
+          </div>` : ''}
+        </div>
+      </div>`;
+  });
+
+  list.innerHTML = html;
+  if (filtered.length > 0) toggleCard(0); // auto-expand first
+}
+
+function toggleCard(idx) {
+  const body = document.getElementById(`body-${idx}`);
+  const arr  = document.getElementById(`arr-${idx}`);
+  if (!body) return;
+  body.classList.toggle('open');
+  arr.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────────────────────
+//  CONTEXT GUIDANCE
+// ─────────────────────────────────────────────────────────
+function answerCtx(idx) {
+  const input = document.getElementById(`ctxIn-${idx}`);
+  const res   = document.getElementById(`ctxRes-${idx}`);
+  const answer = (input?.value || '').trim();
+  if (!answer) { res.innerHTML = '<div style="color:var(--c-syntax);font-size:.78rem;margin-top:6px">Please provide some context first.</div>'; return; }
+
+  const f = renderedFindings[idx];
+  let msg = '';
+  const a = answer.toLowerCase();
+  const q = (f.ctxQ || '').toLowerCase();
+
+  if (q.includes('ready') || q.includes('defer') || q.includes('</body>')) {
+    if (a.includes('bottom') || a.includes('defer') || a.includes('body'))
+      msg = `✅ Great — if your script is at the bottom of the page or uses \`defer\`, the DOM is ready when it runs. This warning doesn't apply to you.`;
+    else
+      msg = `⚠️ If the script is in \`<head>\` without \`defer\`, the DOM may not be ready. Wrap in \`$(function() { ... })\` to be safe.`;
+  } else if (q.includes('var') && q.includes('let')) {
+    if (a.includes('let') || a.includes('const'))
+      msg = `✅ You're already using \`let\` — each loop iteration gets its own binding. The closure trap doesn't apply here. You're fine!`;
+    else if (a.includes('var'))
+      msg = `⚠️ With \`var\`, all callbacks share one variable. Change it to \`let\` to give each iteration its own copy.`;
+    else
+      msg = `If you're using \`var\`, change it to \`let\`. If you're already using \`let\`, this warning doesn't apply.`;
+  } else if (q.includes('null') && q.includes('undefined')) {
+    if (a.includes('both') || a.includes('null and undef') || a.includes('either'))
+      msg = `✅ Using \`== null\` to match both \`null\` and \`undefined\` is an accepted pattern. Add a comment like \`// checks for null or undefined\` to make the intent obvious.`;
+    else if (a.includes('only null') || a.includes('just null'))
+      msg = `✅ Use \`=== null\` to check only for \`null\` — this won't match \`undefined\`.`;
+    else
+      msg = `\`== null\` matches both \`null\` and \`undefined\`. Use \`=== null\` if you only want \`null\`.`;
+  } else if (q.includes('array') || q.includes('object')) {
+    if (a.includes('array') || a.includes('arr') || a.includes('list'))
+      msg = `⚠️ \`for...in\` on arrays is problematic. Use \`for (const item of arr)\` or \`.forEach()\` to iterate values safely.`;
+    else if (a.includes('object') || a.includes('key') || a.includes('prop'))
+      msg = `✅ \`for...in\` is designed for objects. Just consider \`if (obj.hasOwnProperty(key))\` to skip inherited properties.`;
+    else
+      msg = `If iterating an array, switch to \`for...of\`. If iterating an object's keys, \`for...in\` is appropriate.`;
+  } else if (q.includes('ajax') || q.includes('.fail')) {
+    if (a.includes('.fail') || a.includes('error') || a.includes('catch') || a.includes('handled'))
+      msg = `✅ If your error handling is chained elsewhere or in a \`catch\` block, this warning may not apply. The checker only detects \`error:\` option inside \`$.ajax()\`.`;
+    else
+      msg = `Add a \`.fail(fn)\` to handle network/server errors and inform the user something went wrong.`;
+  } else if (q.includes('eval')) {
+    if (a.includes('property') || a.includes('lookup') || a.includes('dynamic key'))
+      msg = `✅ Use bracket notation instead: \`obj[propName]\` — no need for \`eval\`.`;
+    else if (a.includes('json') || a.includes('parse'))
+      msg = `✅ Use \`JSON.parse(str)\` — it's safer, faster, and specifically designed for this.`;
+    else if (a.includes('function') || a.includes('call by name'))
+      msg = `✅ Use a lookup table: \`const fns = { doA, doB }; fns[name]();\` — much safer than \`eval\`.`;
+    else
+      msg = `Describe what you're doing and I can suggest the right alternative. \`eval\` can almost always be replaced.`;
+  } else {
+    msg = `Thanks for the context: "${answer}". Review the fix suggestion above — if your situation matches a safe exception, this warning may not apply.`;
+  }
+
+  res.innerHTML = `<div class="ctx-response">${fmt(msg)}</div>`;
+}
+
+// ─────────────────────────────────────────────────────────
+//  FILTER
+// ─────────────────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.ftab').forEach(t => {
+    t.className = 'ftab';
+    if (t.dataset.filter === f) t.classList.add(`active-${f}`);
+  });
+  renderFindings(allFindings);
+}
+
+function updateFilterCounts(findings) {
+  const counts = { syntax:0, runtime:0, logical:0, jquery:0 };
+  findings.forEach(f => { if (f.type in counts) counts[f.type]++; });
+  document.querySelectorAll('.ftab').forEach(t => {
+    const type = t.dataset.filter;
+    if (type === 'all') {
+      t.textContent = findings.length > 0 ? `All (${findings.length})` : 'All';
+    } else {
+      const n = counts[type] || 0;
+      const label = type.charAt(0).toUpperCase() + type.slice(1);
+      t.textContent = n > 0 ? `${label} (${n})` : label;
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────
+//  CHECK
+// ─────────────────────────────────────────────────────────
+function checkCode() {
+  const code = editor.getValue();
+  if (!code.trim()) { showEmpty(); return; }
+  const jqMode = document.getElementById('jqMode').checked;
+  allFindings = analyzeCode(code, jqMode);
+  updateFilterCounts(allFindings);
+  renderFindings(allFindings);
+  document.getElementById('examplePicker').value = '';
+}
+
+// ─────────────────────────────────────────────────────────
+//  EXAMPLE SNIPPETS
+// ─────────────────────────────────────────────────────────
+const EXAMPLES = {
+  syntax: `// ── SYNTAX ERRORS ──────────────────────────────────
+// These prevent the file from running at all.
+
+function greet(name {   // missing closing ) for params
+  console.log("Hello, " + name);
+}
+
+var obj = {
+  key: "value"
+  missing: "comma"   // missing comma between properties
+};`,
+
+  runtime: `// ── RUNTIME ERRORS ──────────────────────────────────
+// These crash the program when the code actually runs.
+
+// 1. Property access on null (throws TypeError immediately)
+var element = null;
+console.log(element.innerHTML);
+
+// 2. Reassigning a const variable
+const MAX_SIZE = 100;
+MAX_SIZE = 200;    // TypeError: Assignment to constant variable
+
+// 3. Division by zero
+var speed = 60;
+var time = 0;
+var distance = speed / 0;   // produces Infinity
+
+// 4. Incrementing a const
+const counter = 0;
+counter++;   // TypeError`,
+
+  logical: `// ── LOGICAL ERRORS ──────────────────────────────────
+// These don't crash — they just produce wrong results.
+
+// 1. Loose equality type coercion
+if (0 == "") {
+  console.log("This runs! 0 == '' is true in JS");
+}
+
+// 2. Accidental assignment in condition
+var userLevel = 3;
+if (userLevel = 1) {   // sets level to 1, always truthy
+  console.log("This always runs no matter what level was");
+}
+
+// 3. var in loop closure trap
+for (var i = 0; i < 3; i++) {
+  setTimeout(function() {
+    console.log(i);   // prints 3, 3, 3 — not 0, 1, 2
+  }, 100);
+}
+
+// 4. Comparing with NaN
+var result = parseInt("abc");
+if (result === NaN) {   // always false — NaN !== NaN
+  console.log("Not a number");
+}
+
+// 5. Unreachable code
+function calculate(x) {
+  return x * 2;
+  console.log("done");   // never reached
+}
+
+// 6. parseInt without radix
+var num = parseInt("09");   // ambiguous base
+
+// 7. Duplicate object key
+var config = {
+  host: "localhost",
+  port: 3000,
+  host: "production.server.com"   // silent overwrite!
+};`,
+
+  jquery: `// ── JQUERY ERRORS ────────────────────────────────────
+// Enable "jQuery Mode" toggle to detect these.
+// These require jQuery to be loaded on the page.
+
+// 1. Using removed .live() method (jQuery 1.9+)
+$("button").live("click", function() {
+  alert("clicked!");
+});
+
+// 2. Arrow function with $(this) — this won't be the element
+$(".item").on("click", (event) => {
+  $(this).addClass("selected");   // 'this' is wrong here!
+});
+
+// 3. $.parseJSON is deprecated
+var data = $.parseJSON('{"name":"Alice"}');
+
+// 4. $.trim is deprecated
+var clean = $.trim("  hello  ");
+
+// 5. Ajax without error handler
+$.get("/api/users", function(data) {
+  console.log(data);
+});   // what if the request fails?
+
+// 6. .bind() is deprecated
+$(".btn").bind("click", function() {
+  console.log("clicked");
+});`,
+
+  mixed: `// ── MIXED: ALL ERROR TYPES ────────────────────────────
+// A sampling of syntax, runtime, and logical errors.
+// Turn on jQuery Mode to see jQuery checks too.
+
+// SYNTAX: missing closing brace on function (uncomment to test)
+// function broken(x {
+//   return x * 2;
+// }
+
+// RUNTIME: null dereference
+var user = null;
+var name = user.firstName;   // TypeError!
+
+// LOGICAL: assignment in if-condition
+var score = 0;
+if (score = 100) {   // assigns 100, always true!
+  console.log("Perfect score!");
+}
+
+// LOGICAL: NaN comparison
+var input = parseInt("hello");
+if (input === NaN) {   // always false — use Number.isNaN()
+  console.log("Invalid number");
+}
+
+// LOGICAL: var closure in loop
+for (var j = 0; j < 5; j++) {
+  setTimeout(function() {
+    console.log("j is: " + j);   // always prints 5
+  }, j * 100);
+}
+
+// LOGICAL: loose equality
+console.log(false == 0);   // true? Really?
+console.log("" == false);  // also true!
+
+// LOGICAL: unreachable code
+function getDiscount(member) {
+  if (member) return 0.2;
+  return 0;
+  console.log("Calculating...");   // never runs
+}`
+};
+
+function loadExample(key) {
+  if (!key) return;
+  editor.setValue(EXAMPLES[key] || '');
+  clearMarks();
+  allFindings = [];
+  showEmpty();
+  updateFilterCounts([]);
+  // Auto-enable jQuery mode for jQuery example
+  document.getElementById('jqMode').checked = (key === 'jquery' || key === 'mixed');
+}
+
+// Keyboard shortcut: Ctrl/Cmd+Enter = check
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') checkCode();
+});
+</script>
+</body>
+</html>
