@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P5.js Error Checker — Educational Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      background: #1a1a2e;
+      border-bottom: 2px solid #e94560;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 1.25rem; color: #fff; }
+    .edu-badge {
+      background: #e94560;
+      color: #fff;
+      padding: 2px 9px;
+      border-radius: 12px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .header-sub {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: #6666aa;
+    }
+
+    /* ── Two-panel layout ────────────────────────────────────── */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Panel shared ────────────────────────────────────────── */
+    .panel { display: flex; flex-direction: column; overflow: hidden; }
+    .editor-panel { border-right: 1px solid #232345; }
+    .panel-header {
+      background: #16162a;
+      padding: 8px 14px;
+      font-size: 0.78rem;
+      color: #7777aa;
+      border-bottom: 1px solid #232345;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .panel-header select {
+      margin-left: auto;
+      background: #1e1e38;
+      color: #c0c0e0;
+      border: 1px solid #2a2a4a;
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+
+    /* ── Editor ─────────────────────────────────────────────── */
+    .editor-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    #line-numbers {
+      width: 42px;
+      background: #14142a;
+      border-right: 1px solid #1e1e38;
+      padding: 12px 0;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.83rem;
+      line-height: 1.58;
+      color: #404060;
+      overflow: hidden;
+      user-select: none;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    #line-numbers span { display: block; padding-right: 8px; }
+    #code {
+      flex: 1;
+      background: #111125;
+      color: #d8d8f8;
+      border: none;
+      outline: none;
+      padding: 12px 10px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.83rem;
+      line-height: 1.58;
+      resize: none;
+      tab-size: 2;
+      overflow-y: scroll;
+    }
+    #code::selection { background: #3a3a70; }
+
+    /* ── Editor footer ──────────────────────────────────────── */
+    .editor-footer {
+      padding: 9px 14px;
+      background: #16162a;
+      border-top: 1px solid #232345;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .btn-check {
+      background: #e94560;
+      color: #fff;
+      border: none;
+      padding: 8px 22px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: background 0.15s;
+    }
+    .btn-check:hover { background: #c73050; }
+    .btn-clear {
+      background: transparent;
+      color: #7777aa;
+      border: 1px solid #2a2a4a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .btn-clear:hover { border-color: #9999cc; color: #d0d0f0; }
+    .char-count { margin-left: auto; font-size: 0.75rem; color: #4a4a7a; }
+
+    /* ── Results panel ──────────────────────────────────────── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .count-chip {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: none;
+    }
+    .count-chip.syntax  { background: #4a1020; color: #ff7788; }
+    .count-chip.runtime { background: #3a2000; color: #ffbb44; }
+    .count-chip.logical { background: #102040; color: #6ab4ff; }
+    .count-chip.warning { background: #302810; color: #ffd060; }
+    .count-chip.visible { display: inline-block; }
+
+    .results-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .results-list::-webkit-scrollbar { width: 6px; }
+    .results-list::-webkit-scrollbar-track { background: transparent; }
+    .results-list::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+
+    /* ── Placeholder / All-clear ─────────────────────────────── */
+    .placeholder, .all-clear {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 12px;
+      text-align: center;
+      padding: 30px;
+      color: #3a3a6a;
+    }
+    .placeholder .icon, .all-clear .icon { font-size: 3rem; }
+    .placeholder p, .all-clear p { font-size: 0.88rem; line-height: 1.6; }
+    .all-clear { color: #3a8a6a; }
+    .all-clear .icon { color: #3acc80; }
+    .all-clear strong { color: #50ee99; }
+
+    /* ── Error card ─────────────────────────────────────────── */
+    .error-card {
+      background: #16162a;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 4px solid;
+      overflow: hidden;
+    }
+    .error-card.syntax  { border-color: #ff5566; }
+    .error-card.runtime { border-color: #ffaa33; }
+    .error-card.logical { border-color: #5599ff; }
+    .error-card.warning { border-color: #ffcc33; }
+
+    .card-header {
+      padding: 10px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .card-header:hover { background: #1e1e3a; }
+
+    .type-badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+    .syntax  .type-badge { background: #4a1020; color: #ff7788; }
+    .runtime .type-badge { background: #3a2000; color: #ffbb44; }
+    .logical .type-badge { background: #102040; color: #6ab4ff; }
+    .warning .type-badge { background: #302810; color: #ffd060; }
+
+    .card-title {
+      flex: 1;
+      font-size: 0.88rem;
+      color: #dde0ff;
+      line-height: 1.4;
+    }
+    .card-line {
+      font-size: 0.72rem;
+      color: #55558a;
+      white-space: nowrap;
+      margin-top: 3px;
+    }
+    .chevron {
+      color: #44446a;
+      font-size: 0.75rem;
+      transition: transform 0.18s;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .error-card.open .chevron { transform: rotate(180deg); }
+
+    /* ── Card body ──────────────────────────────────────────── */
+    .card-body {
+      display: none;
+      padding: 0 14px 14px 14px;
+      border-top: 1px solid #1e1e3a;
+    }
+    .error-card.open .card-body { display: block; }
+
+    .section-label {
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #55558a;
+      margin-top: 11px;
+      margin-bottom: 4px;
+    }
+    .section-text {
+      font-size: 0.84rem;
+      color: #c0c0e0;
+      line-height: 1.55;
+    }
+    .code-block {
+      background: #0c0c1e;
+      border-radius: 5px;
+      padding: 9px 11px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      line-height: 1.55;
+      white-space: pre;
+      overflow-x: auto;
+      margin-top: 6px;
+    }
+    .code-block .bad  { color: #ff7788; }
+    .code-block .good { color: #66ddaa; }
+    .code-block .comment { color: #555580; }
+
+    /* ── Summary bar ────────────────────────────────────────── */
+    .summary-bar {
+      padding: 7px 14px;
+      background: #111125;
+      border-top: 1px solid #1e1e38;
+      font-size: 0.78rem;
+      color: #44447a;
+      display: flex;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+    .summary-bar span { color: #7777bb; }
+
+    /* ── Scrollbar for code ─────────────────────────────────── */
+    #code::-webkit-scrollbar { width: 6px; }
+    #code::-webkit-scrollbar-track { background: transparent; }
+    #code::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>P5.js Error Checker</h1>
+  <span class="edu-badge">Educational</span>
+  <span class="header-sub">Paste your p5.js code → click Check Code</span>
+</header>
+
+<div class="workspace">
+
+  <!-- ── LEFT: Editor ──────────────────────────────────────── -->
+  <div class="panel editor-panel">
+    <div class="panel-header">
+      Code Editor
+      <select id="sample-select" title="Load a sample">
+        <option value="">Load a sample…</option>
+        <option value="blank">Blank canvas</option>
+        <option value="syntax_err">Example: Syntax errors</option>
+        <option value="runtime_err">Example: Runtime / p5.js errors</option>
+        <option value="logical_err">Example: Logical errors</option>
+        <option value="clean">Clean working sketch</option>
+      </select>
+    </div>
+
+    <div class="editor-body">
+      <div id="line-numbers"><span>1</span></div>
+      <textarea id="code" spellcheck="false" placeholder="Paste your p5.js code here…"></textarea>
+    </div>
+
+    <div class="editor-footer">
+      <button class="btn-check" onclick="runCheck()">&#x25B6; Check Code</button>
+      <button class="btn-clear" onclick="clearAll()">Clear</button>
+      <span class="char-count" id="char-count">0 lines</span>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Results ────────────────────────────────────── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="results-header" id="results-header">
+        Results
+        <span class="count-chip syntax"  id="chip-syntax"></span>
+        <span class="count-chip runtime" id="chip-runtime"></span>
+        <span class="count-chip logical" id="chip-logical"></span>
+        <span class="count-chip warning" id="chip-warning"></span>
+      </div>
+    </div>
+
+    <div class="results-list" id="results-list">
+      <div class="placeholder">
+        <div class="icon">🔍</div>
+        <p>Write or paste your p5.js sketch on the left,<br>then click <strong>Check Code</strong> to analyse it.</p>
+        <p style="font-size:0.75rem;color:#2a2a5a;margin-top:8px">Checks for syntax errors, p5.js runtime issues, and logical mistakes with plain-English explanations.</p>
+      </div>
+    </div>
+
+    <div class="summary-bar" id="summary-bar" style="display:none">
+      <span id="summary-text"></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   SAMPLES
+   ════════════════════════════════════════════════════════════ */
+const SAMPLES = {
+  blank: `function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(220);
+}`,
+
+  syntax_err: `// ⚠ This sketch has syntax errors — can you spot them?
+let x = 0
+let speed = 2;
+
+function setup() {
+  createCanvas(400, 400);
+  background(30;   // missing closing parenthesis
+}
+
+function draw() {
+  background(30);
+  fill(255, 0, 0)
+  ellipse(x, 200, 50, 50;
+  x = x + speed;
+  if (x > width {    // missing closing parenthesis
+    x = 0;
+  }
+`,
+
+  runtime_err: `// ⚠ This sketch has p5.js runtime / API errors
+void setup() {
+  size(400, 400);
+  println("Starting sketch");
+}
+
+void draw() {
+  backgroud(220);
+  fill(255, 0, 0);
+  elipse(mouseX, mouseY, 40, 40);
+
+  let img = image("cat.png", 0, 0);
+}`,
+
+  logical_err: `// ⚠ This sketch has logical errors that won't crash but cause wrong behaviour
+let x = 0;
+
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  createCanvas(400, 400);  // called every frame!
+  fill(255, 0, 0);
+  ellipse(x, 200, 50, 50); // no background — trails left
+  x = x + 2;
+
+  push();
+  translate(200, 200);
+  rotate(0.1);
+  // forgot pop()!
+
+  frameRate(60); // should be in setup
+
+  while (true) {  // infinite loop!
+    x++;
+    break;        // only safe because of break
+  }
+}`,
+
+  clean: `// ✅ A clean, correct p5.js sketch
+let x = 0;
+let speed = 3;
+let ballColor;
+
+function setup() {
+  createCanvas(400, 400);
+  frameRate(60);
+  ballColor = color(255, 80, 80);
+}
+
+function draw() {
+  background(30);
+
+  fill(ballColor);
+  noStroke();
+  ellipse(x, height / 2, 50, 50);
+
+  x += speed;
+  if (x > width + 25) x = -25;
+}
+
+function mousePressed() {
+  speed = -speed; // reverse on click
+}`
+};
+
+/* ════════════════════════════════════════════════════════════
+   EDITOR HELPERS
+   ════════════════════════════════════════════════════════════ */
+const codeEl  = document.getElementById('code');
+const lnEl    = document.getElementById('line-numbers');
+const ccEl    = document.getElementById('char-count');
+
+function updateLineNumbers() {
+  const lines = codeEl.value.split('\n');
+  lnEl.innerHTML = lines.map((_, i) => `<span>${i + 1}</span>`).join('');
+  lnEl.scrollTop = codeEl.scrollTop;
+  ccEl.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''}`;
+}
+
+codeEl.addEventListener('input', updateLineNumbers);
+codeEl.addEventListener('scroll', () => { lnEl.scrollTop = codeEl.scrollTop; });
+codeEl.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = codeEl.selectionStart;
+    codeEl.value = codeEl.value.slice(0, s) + '  ' + codeEl.value.slice(codeEl.selectionEnd);
+    codeEl.selectionStart = codeEl.selectionEnd = s + 2;
+    updateLineNumbers();
+  }
+});
+
+document.getElementById('sample-select').addEventListener('change', function () {
+  if (this.value && SAMPLES[this.value]) {
+    codeEl.value = SAMPLES[this.value];
+    updateLineNumbers();
+    this.value = '';
+    clearResults();
+  }
+});
+
+function clearAll() {
+  codeEl.value = '';
+  updateLineNumbers();
+  clearResults();
+}
+
+function clearResults() {
+  document.getElementById('results-list').innerHTML = `
+    <div class="placeholder">
+      <div class="icon">🔍</div>
+      <p>Write or paste your p5.js sketch on the left,<br>then click <strong>Check Code</strong> to analyse it.</p>
+    </div>`;
+  ['syntax','runtime','logical','warning'].forEach(t => {
+    const el = document.getElementById('chip-' + t);
+    el.classList.remove('visible');
+  });
+  document.getElementById('summary-bar').style.display = 'none';
+}
+
+updateLineNumbers();
+
+/* ════════════════════════════════════════════════════════════
+   ANALYSIS UTILITIES
+   ════════════════════════════════════════════════════════════ */
+
+/** Strip // and /* comments, preserving line count */
+function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, m => '\n'.repeat((m.match(/\n/g) || []).length))
+    .replace(/\/\/[^\n]*/g, '');
+}
+
+/** Strip string literals, preserving length */
+function stripStrings(code) {
+  return code.replace(/(["'`])(?:(?!\1)[^\\]|\\.)*\1/g,
+    m => m[0] + ' '.repeat(Math.max(0, m.length - 2)) + m[0]);
+}
+
+/** Get a line number (1-based) for a character offset */
+function lineAt(code, idx) {
+  return code.slice(0, idx).split('\n').length;
+}
+
+/** Extract body of a named function (returns {body, start, end} or null) */
+function getFunctionBody(code, name) {
+  const pat = new RegExp(
+    `(?:function\\s+${name}\\s*\\([^)]*\\)|` +
+    `(?:let|var|const)?\\s*${name}\\s*=\\s*(?:async\\s*)?(?:function\\s*\\w*\\s*)?\\([^)]*\\)\\s*(?:=>\\s*)?)\\s*\\{`,
+    'i'
+  );
+  const m = pat.exec(code);
+  if (!m) return null;
+  const open = code.indexOf('{', m.index + m[0].length - 1);
+  let depth = 1, i = open + 1;
+  while (i < code.length && depth > 0) {
+    if (code[i] === '{') depth++;
+    else if (code[i] === '}') depth--;
+    i++;
+  }
+  return { body: code.slice(open + 1, i - 1), start: open + 1, end: i - 1 };
+}
+
+function hasFn(code, name) {
+  return new RegExp(`function\\s+${name}\\s*\\(|(?:let|var|const)?\\s*${name}\\s*=\\s*(?:async\\s*)?(?:function|\\()`).test(code);
+}
+
+/* ════════════════════════════════════════════════════════════
+   1. SYNTAX CHECKS
+   ════════════════════════════════════════════════════════════ */
+function checkSyntax(rawCode) {
+  const errors = [];
+  const clean = stripStrings(stripComments(rawCode));
+
+  /* 1a – JS engine parse */
+  try {
+    new Function(rawCode);
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      const lm = e.stack ? e.stack.match(/<anonymous>:(\d+)/) : null;
+      const ln = lm ? parseInt(lm[1]) : null;
+
+      let explanation = `JavaScript's parser found something it didn't expect.`;
+      let fix = `Look near line ${ln || '?'} for a missing comma, bracket, keyword typo, or extra/missing punctuation.`;
+      let example = '';
+
+      if (/Unexpected end of input/i.test(e.message)) {
+        explanation = `The code ended before JavaScript expected it to. This almost always means a curly brace <code>{</code>, parenthesis <code>(</code>, or bracket <code>[</code> was opened but never closed.`;
+        fix = `Count your opening <code>{ ( [</code> characters and make sure each one has a matching closing <code>} ) ]</code>.`;
+        example = `<span class="bad">// ❌ Missing closing brace
+function draw() {
+  background(220);
+         // ← nothing closes this!</span>
+
+<span class="good">// ✅ Fixed
+function draw() {
+  background(220);
+}</span>`;
+      } else if (/Unexpected token/i.test(e.message)) {
+        explanation = `JavaScript found a character or keyword where it wasn't expecting one. Common causes: a missing comma between arguments, a missing closing bracket, or a typo in a keyword.`;
+        fix = `Check the code around line ${ln || '?'}. Look for: missing commas, an unclosed parenthesis on the previous line, or a misspelled keyword (e.g. <em>functoin</em>).`;
+        example = `<span class="bad">// ❌ Missing comma + missing closing paren
+fill(255 0 0;
+ellipse(100, 100, 40, 40);</span>
+
+<span class="good">// ✅ Fixed
+fill(255, 0, 0);
+ellipse(100, 100, 40, 40);</span>`;
+      } else if (/Invalid or unexpected/i.test(e.message)) {
+        explanation = `A token appeared in a position where JavaScript didn't expect it — often caused by using Java/Processing keywords like <code>void</code>, <code>int</code>, or <code>float</code> in JavaScript.`;
+        fix = `Remove Java-style type declarations. In p5.js use <code>let</code>, <code>const</code>, or <code>var</code> for all variables, and <code>function</code> for functions (no <code>void</code>).`;
+        example = `<span class="bad">// ❌ Processing / Java syntax
+void setup() { }
+int x = 0;
+float speed = 1.5;</span>
+
+<span class="good">// ✅ p5.js / JavaScript syntax
+function setup() { }
+let x = 0;
+let speed = 1.5;</span>`;
+      }
+
+      errors.push({
+        type: 'syntax', line: ln,
+        title: `Syntax Error — ${e.message}`,
+        explanation, fix, example
+      });
+    }
+  }
+
+  /* 1b – Bracket balance (only if no parse error already found) */
+  if (errors.length === 0) {
+    const pairs = [
+      ['{', '}', 'curly brace', 'function bodies, if-statements, and loops'],
+      ['(', ')', 'parenthesis', 'function calls and conditions'],
+      ['[', ']', 'square bracket', 'arrays and property access'],
+    ];
+    let inStr = false, strCh = '', inComment = false;
+    const counts = { '{': 0, '(': 0, '[': 0 };
+    const closes = { '}': '{', ')': '(', ']': '[' };
+
+    for (let i = 0; i < rawCode.length; i++) {
+      const c = rawCode[i], p = rawCode[i - 1];
+      if (inComment) { if (c === '\n') inComment = false; continue; }
+      if (!inStr && c === '/' && rawCode[i + 1] === '/') { inComment = true; continue; }
+      if (!inStr && c === '/' && rawCode[i + 1] === '*') {
+        const end = rawCode.indexOf('*/', i + 2);
+        if (end !== -1) { i = end + 1; } continue;
+      }
+      if (!inStr && (c === '"' || c === "'" || c === '`')) { inStr = true; strCh = c; continue; }
+      if (inStr && c === strCh && p !== '\\') { inStr = false; continue; }
+      if (inStr) continue;
+      if (counts[c] !== undefined) counts[c]++;
+      if (closes[c]) counts[closes[c]]--;
+    }
+
+    for (const [open, close, name, context] of pairs) {
+      const n = counts[open];
+      if (n > 0) errors.push({
+        type: 'syntax', title: `Unmatched opening ${name} — missing ${n} closing '${close}'`,
+        explanation: `You opened ${n} ${name}(s) <code>${open}</code> that were never closed. Every ${name} must have a matching <code>${close}</code>. ${name.charAt(0).toUpperCase() + name.slice(1)}es wrap ${context}.`,
+        fix: `Search for every <code>${open}</code> and make sure it has a corresponding <code>${close}</code>. Most code editors can highlight matching brackets — place your cursor next to a bracket to see its pair.`,
+        example: `<span class="bad">// ❌ Missing closing ${name}
+function draw(${open === '(' ? '' : ')'} {
+  background(220);${open === '{' ? '' : ''}
+  ellipse(100, 100, 40, 40${open === ')' ? '' : ''};</span>
+
+<span class="good">// ✅ Fixed — all ${name}s closed
+function draw() {
+  background(220);
+  ellipse(100, 100, 40, 40);
+}</span>`
+      });
+      if (n < 0) errors.push({
+        type: 'syntax', title: `Extra closing ${name} — ${Math.abs(n)} unexpected '${close}'`,
+        explanation: `There are ${Math.abs(n)} more closing ${name}(s) <code>${close}</code> than opening ones <code>${open}</code>. This usually happens when you accidentally type an extra one or delete an opening bracket.`,
+        fix: `Find and remove the extra <code>${close}</code>, or add back the missing opening <code>${open}</code>.`,
+        example: ''
+      });
+    }
+  }
+
+  return errors;
+}
+
+/* ════════════════════════════════════════════════════════════
+   2. RUNTIME / API CHECKS
+   ════════════════════════════════════════════════════════════ */
+function checkRuntime(rawCode) {
+  const errors = [];
+  const clean = stripStrings(stripComments(rawCode));
+  const lines  = rawCode.split('\n');
+
+  /* Helper: find the first line number of a pattern */
+  function findLine(pat) {
+    const m = pat.exec(rawCode);
+    return m ? lineAt(rawCode, m.index) : null;
+  }
+
+  /* 2a – Processing.js / Java syntax used in p5.js */
+  const procPatterns = [
+    {
+      pat: /\bvoid\s+setup\s*\(/,
+      title: 'Processing syntax — void setup()',
+      explanation: `<code>void setup()</code> is Java/Processing syntax. In p5.js (JavaScript) functions do not have return-type keywords before them.`,
+      fix: `Replace <code>void setup()</code> with <code>function setup()</code>.`,
+      example: `<span class="bad">void setup() { ... }</span>\n<span class="good">function setup() { ... }</span>`
+    },
+    {
+      pat: /\bvoid\s+draw\s*\(/,
+      title: 'Processing syntax — void draw()',
+      explanation: `<code>void draw()</code> is Java/Processing syntax. JavaScript doesn't use type keywords before function names.`,
+      fix: `Replace <code>void draw()</code> with <code>function draw()</code>.`,
+      example: `<span class="bad">void draw() { ... }</span>\n<span class="good">function draw() { ... }</span>`
+    },
+    {
+      pat: /\bsize\s*\(\s*\d+\s*,\s*\d+\s*\)/,
+      title: 'Processing syntax — size() is not a p5.js function',
+      explanation: `<code>size()</code> is used in Processing to set the canvas size, but it doesn't exist in p5.js. This will cause a runtime error.`,
+      fix: `Replace <code>size(w, h)</code> with <code>createCanvas(w, h)</code> inside <code>setup()</code>.`,
+      example: `<span class="bad">size(400, 400);</span>\n<span class="good">createCanvas(400, 400);</span>`
+    },
+    {
+      pat: /\bprintln\s*\(/,
+      title: 'Processing syntax — println() does not exist in p5.js',
+      explanation: `<code>println()</code> is a Processing function. In p5.js you can use <code>print()</code> (which maps to <code>console.log</code>) or call <code>console.log()</code> directly.`,
+      fix: `Replace <code>println(...)</code> with <code>print(...)</code> or <code>console.log(...)</code>.`,
+      example: `<span class="bad">println("hello");</span>\n<span class="good">print("hello");\n<span class="comment">// or</span>\nconsole.log("hello");</span>`
+    },
+    {
+      pat: /\bint\s+[a-zA-Z_]\w*\s*[=;]/,
+      title: 'Java-style type declaration — int',
+      explanation: `<code>int x = 0;</code> is Java/Processing syntax. JavaScript is dynamically typed — you don't write the type.`,
+      fix: `Replace <code>int</code> with <code>let</code> (or <code>const</code> if the value won't change).`,
+      example: `<span class="bad">int x = 0;\nint speed = 2;</span>\n<span class="good">let x = 0;\nlet speed = 2;</span>`
+    },
+    {
+      pat: /\bfloat\s+[a-zA-Z_]\w*\s*[=;]/,
+      title: 'Java-style type declaration — float',
+      explanation: `<code>float speed = 1.5;</code> is Java/Processing syntax. JavaScript doesn't have separate integer and float types.`,
+      fix: `Replace <code>float</code> with <code>let</code>.`,
+      example: `<span class="bad">float speed = 1.5;</span>\n<span class="good">let speed = 1.5;</span>`
+    },
+    {
+      pat: /\bboolean\s+[a-zA-Z_]\w*\s*[=;]/,
+      title: 'Java-style type declaration — boolean',
+      explanation: `<code>boolean running = true;</code> is Java/Processing syntax.`,
+      fix: `Replace <code>boolean</code> with <code>let</code>.`,
+      example: `<span class="bad">boolean running = true;</span>\n<span class="good">let running = true;</span>`
+    },
+    {
+      pat: /\bString\s+[a-zA-Z_]\w*\s*[=;]/,
+      title: 'Java-style type declaration — String',
+      explanation: `<code>String name = "Alice";</code> is Java/Processing syntax. In JavaScript, strings are declared with <code>let</code>.`,
+      fix: `Replace <code>String</code> with <code>let</code>.`,
+      example: `<span class="bad">String name = "Alice";</span>\n<span class="good">let name = "Alice";</span>`
+    },
+  ];
+
+  for (const rule of procPatterns) {
+    if (rule.pat.test(clean)) {
+      errors.push({ type: 'runtime', line: findLine(rule.pat), ...rule });
+    }
+  }
+
+  /* 2b – Common p5.js function name typos */
+  const typos = [
+    { pat: /\belipse\s*\(/, correct: 'ellipse', tip: '<code>ellipse(x, y, w, h)</code> draws an oval. It has two <em>l</em>s.' },
+    { pat: /\brectangle\s*\(/, correct: 'rect', tip: 'In p5.js the rectangle function is called <code>rect()</code>, not <code>rectangle()</code>.' },
+    { pat: /\bcolour\s*\(/, correct: 'color', tip: 'p5.js uses American English spelling: <code>color()</code>.' },
+    { pat: /\bbackgroud\s*\(/, correct: 'background', tip: 'Check your spelling — it\'s <code>background()</code>.' },
+    { pat: /\bbackround\s*\(/, correct: 'background', tip: 'Check your spelling — it\'s <code>background()</code>.' },
+    { pat: /\bbackgorund\s*\(/, correct: 'background', tip: 'Check your spelling — it\'s <code>background()</code>.' },
+    { pat: /\bcreatcanvas\s*\(/, correct: 'createCanvas', tip: 'Missing the letter <em>e</em>: it\'s <code>createCanvas()</code>.' },
+    { pat: /\bcreatecanvas\s*\(/, correct: 'createCanvas', tip: 'JavaScript is case-sensitive. The C in Canvas is uppercase: <code>createCanvas()</code>.' },
+    { pat: /\bnoloop\s*\(/, correct: 'noLoop', tip: 'The L in Loop is uppercase: <code>noLoop()</code>.' },
+    { pat: /\bloadimage\s*\(/, correct: 'loadImage', tip: 'The I in Image is uppercase: <code>loadImage()</code>.' },
+    { pat: /\btriange\s*\(/, correct: 'triangle', tip: 'It\'s <code>triangle()</code> — the <em>l</em> is missing.' },
+    { pat: /\bstrokeweight\s*\(/, correct: 'strokeWeight', tip: 'The W in Weight is uppercase: <code>strokeWeight()</code>.' },
+    { pat: /\bframerate\s*\(/, correct: 'frameRate', tip: 'The R in Rate is uppercase: <code>frameRate()</code>.' },
+    { pat: /\btextsize\s*\(/, correct: 'textSize', tip: 'The S in Size is uppercase: <code>textSize()</code>.' },
+    { pat: /\bmousepressed\s*\(/, correct: 'mousePressed', tip: 'The P in Pressed is uppercase: <code>mousePressed()</code>.' },
+    { pat: /\bkeypressed\s*\(/, correct: 'keyPressed', tip: 'The P in Pressed is uppercase: <code>keyPressed()</code>.' },
+    { pat: /\bnofill\s*\(/, correct: 'noFill', tip: 'The F in Fill is uppercase: <code>noFill()</code>.' },
+  ];
+
+  for (const { pat, correct, tip } of typos) {
+    if (pat.test(clean)) {
+      const ln = findLine(pat);
+      errors.push({
+        type: 'runtime', line: ln,
+        title: `Typo — did you mean \`${correct}()\`?`,
+        explanation: tip,
+        fix: `Change the function call to <code>${correct}()</code>. p5.js function names are case-sensitive and must be spelled exactly right.`,
+        example: `<span class="bad">// ❌ Wrong spelling / case\n${pat.source.replace(/\\s\*\\\(/, '(').replace(/\\b|[(]/g,'').replace(/\(i\)$/,'').trim()}(...);</span>\n<span class="good">// ✅ Correct\n${correct}(...);</span>`
+      });
+    }
+  }
+
+  /* 2c – image() called without loadImage anywhere */
+  if (/\bimage\s*\(/.test(clean) && !/\bloadImage\s*\(/.test(clean)) {
+    errors.push({
+      type: 'runtime',
+      title: '`image()` used but no `loadImage()` found',
+      explanation: `You're calling <code>image()</code> to display an image, but there's no <code>loadImage()</code> call to actually load it first. This will throw a runtime error because the variable will be <code>undefined</code>.`,
+      fix: `Load the image inside <code>preload()</code> and store it in a global variable, then use <code>image()</code> in <code>draw()</code>.`,
+      example: `<span class="good">let img;
+
+function preload() {
+  img = loadImage('photo.png'); <span class="comment">// loads before sketch starts</span>
+}
+
+function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(220);
+  image(img, 0, 0); <span class="comment">// now safe to use</span>
+}</span>`
+    });
+  }
+
+  /* 2d – updatePixels / loadPixels usage */
+  if (/\.pixels\b/.test(clean) && !/\bloadPixels\s*\(/.test(clean)) {
+    errors.push({
+      type: 'runtime',
+      title: '`.pixels` accessed without calling `loadPixels()` first',
+      explanation: `The <code>.pixels</code> array is not populated automatically. You must call <code>loadPixels()</code> before reading or writing pixel values, and <code>updatePixels()</code> after writing to apply the changes.`,
+      fix: `Call <code>loadPixels()</code> before accessing <code>pixels[]</code>, and call <code>updatePixels()</code> when you're done.`,
+      example: `<span class="good">loadPixels();
+for (let i = 0; i < pixels.length; i += 4) {
+  pixels[i] = 255; <span class="comment">// red channel</span>
+}
+updatePixels();</span>`
+    });
+  }
+
+  /* 2e – Capitalised p5 core function calls (common beginner mistake) */
+  const caseErrors = [
+    { pat: /\bBackground\s*\(/, fn: 'background' },
+    { pat: /\bFill\s*\(/, fn: 'fill' },
+    { pat: /\bStroke\s*\(/, fn: 'stroke' },
+    { pat: /\bRect\s*\(/, fn: 'rect' },
+    { pat: /\bEllipse\s*\(/, fn: 'ellipse' },
+    { pat: /\bLine\s*\(/, fn: 'line' },
+    { pat: /\bText\s*\(/, fn: 'text' },
+    { pat: /\bPush\s*\(/, fn: 'push' },
+    { pat: /\bPop\s*\(/, fn: 'pop' },
+    { pat: /\bTranslate\s*\(/, fn: 'translate' },
+    { pat: /\bRotate\s*\(/, fn: 'rotate' },
+  ];
+  for (const { pat, fn } of caseErrors) {
+    if (pat.test(clean)) {
+      errors.push({
+        type: 'runtime', line: findLine(pat),
+        title: `Wrong capitalisation — \`${fn.charAt(0).toUpperCase() + fn.slice(1)}()\` should be \`${fn}()\``,
+        explanation: `JavaScript is case-sensitive. <code>${fn.charAt(0).toUpperCase() + fn.slice(1)}()</code> is not a defined function — you need lowercase <code>${fn}()</code>.`,
+        fix: `Change <code>${fn.charAt(0).toUpperCase() + fn.slice(1)}()</code> to <code>${fn}()</code>.`,
+        example: `<span class="bad">${fn.charAt(0).toUpperCase() + fn.slice(1)}(...);</span>\n<span class="good">${fn}(...);</span>`
+      });
+    }
+  }
+
+  return errors;
+}
+
+/* ════════════════════════════════════════════════════════════
+   3. LOGICAL CHECKS
+   ════════════════════════════════════════════════════════════ */
+function checkLogical(rawCode) {
+  const issues = [];
+  const clean  = stripStrings(stripComments(rawCode));
+
+  function findLine(pat) {
+    const m = pat.exec(rawCode);
+    return m ? lineAt(rawCode, m.index) : null;
+  }
+
+  const setupBody  = getFunctionBody(clean, 'setup');
+  const drawBody   = getFunctionBody(clean, 'draw');
+  const preloadBody= getFunctionBody(clean, 'preload');
+  const hasSetup   = hasFn(clean, 'setup');
+  const hasDraw    = hasFn(clean, 'draw');
+
+  /* 3a – Missing setup() */
+  if (!hasSetup) {
+    issues.push({
+      type: 'logical', severity: 'error',
+      title: 'Missing `setup()` function',
+      explanation: `Every p5.js sketch needs a <code>setup()</code> function. It runs once at the start and is where you initialise your canvas, set frame rate, and prepare variables.`,
+      fix: `Add a <code>setup()</code> function that calls <code>createCanvas()</code>.`,
+      example: `<span class="good">function setup() {
+  createCanvas(400, 400);
+}</span>`
+    });
+  }
+
+  /* 3b – Missing draw() */
+  if (!hasDraw) {
+    issues.push({
+      type: 'logical', severity: 'error',
+      title: 'Missing `draw()` function',
+      explanation: `<code>draw()</code> is called by p5.js repeatedly (typically 60× per second) and is where your animation and drawing code goes. Without it, the sketch will only run once and nothing will animate.`,
+      fix: `Add a <code>draw()</code> function. If you only want a static image that never changes, add <code>noLoop();</code> inside it.`,
+      example: `<span class="good">function draw() {
+  background(220);
+  ellipse(mouseX, mouseY, 40, 40);
+}</span>`
+    });
+  }
+
+  /* 3c – createCanvas() missing */
+  if (hasSetup && !/\bcreateCanvas\s*\(/.test(clean)) {
+    issues.push({
+      type: 'logical', severity: 'error',
+      title: '`createCanvas()` not called',
+      explanation: `p5.js needs to know the size of the drawing surface. Without <code>createCanvas()</code> it creates a tiny default canvas (100 × 100 px) which is easy to miss.`,
+      fix: `Call <code>createCanvas(width, height)</code> at the start of <code>setup()</code>.`,
+      example: `<span class="good">function setup() {
+  createCanvas(400, 400); <span class="comment">// width, height in pixels</span>
+}</span>`
+    });
+  }
+
+  /* 3d – createCanvas() inside draw() */
+  if (drawBody && /\bcreateCanvas\s*\(/.test(drawBody.body)) {
+    issues.push({
+      type: 'logical', severity: 'error',
+      title: '`createCanvas()` called inside `draw()`',
+      explanation: `<code>draw()</code> runs up to 60 times per second. Calling <code>createCanvas()</code> inside it creates a brand-new canvas element every single frame, which causes memory leaks and visual glitches.`,
+      fix: `Move <code>createCanvas()</code> into <code>setup()</code> — it should only run once.`,
+      example: `<span class="bad">function draw() {
+  createCanvas(400, 400); <span class="comment">// ❌ creates a new canvas every frame</span>
+  background(220);
+}</span>
+
+<span class="good">function setup() {
+  createCanvas(400, 400); <span class="comment">// ✅ runs once</span>
+}
+function draw() {
+  background(220);
+}</span>`
+    });
+  }
+
+  /* 3e – background() not in draw() — objects will leave trails */
+  if (hasDraw && drawBody && !/\bbackground\s*\(/.test(drawBody.body)) {
+    issues.push({
+      type: 'logical', severity: 'warning',
+      title: '`background()` not called in `draw()` — shapes will leave trails',
+      explanation: `p5.js does not automatically clear the canvas each frame. Without calling <code>background()</code> at the start of <code>draw()</code>, every shape you draw is painted on top of everything from previous frames, leaving smears and trails.`,
+      fix: `Add <code>background(color)</code> as the first line of <code>draw()</code> to clear the canvas each frame.`,
+      example: `<span class="good">function draw() {
+  background(220); <span class="comment">// clear canvas first — prevents trails</span>
+  ellipse(mouseX, mouseY, 40, 40);
+}</span>`
+    });
+  }
+
+  /* 3f – frameRate() inside draw() */
+  if (drawBody && /\bframeRate\s*\(/.test(drawBody.body)) {
+    issues.push({
+      type: 'logical', severity: 'warning',
+      title: '`frameRate()` called inside `draw()`',
+      explanation: `<code>frameRate()</code> sets the target frame rate. Calling it inside <code>draw()</code> resets it every single frame, which is unnecessary and can slightly affect performance.`,
+      fix: `Move <code>frameRate()</code> into <code>setup()</code>, where it only needs to be set once.`,
+      example: `<span class="bad">function draw() {
+  frameRate(60); <span class="comment">// ❌ resets every frame</span>
+}</span>
+
+<span class="good">function setup() {
+  createCanvas(400, 400);
+  frameRate(60); <span class="comment">// ✅ set once</span>
+}</span>`
+    });
+  }
+
+  /* 3g – Mismatched push() / pop() */
+  const pushCount = (clean.match(/\bpush\s*\(\s*\)/g) || []).length;
+  const popCount  = (clean.match(/\bpop\s*\(\s*\)/g)  || []).length;
+  if (pushCount !== popCount) {
+    issues.push({
+      type: 'logical', severity: 'error',
+      title: `Mismatched push() / pop() — ${pushCount} push vs ${popCount} pop`,
+      explanation: `<code>push()</code> saves the current drawing state (transforms, colours, stroke settings) and <code>pop()</code> restores it. They must always be used in pairs. Having more pushes than pops causes the graphics state to drift each frame; more pops than pushes throws a runtime error.`,
+      fix: `Ensure every <code>push()</code> is followed by a matching <code>pop()</code>. Think of them like parentheses — always balanced.`,
+      example: `<span class="bad">push();
+translate(100, 100);
+rotate(0.5);
+rect(0, 0, 50, 50);
+<span class="comment">// ❌ forgot pop()!</span></span>
+
+<span class="good">push();
+translate(100, 100);
+rotate(0.5);
+rect(0, 0, 50, 50);
+pop(); <span class="comment">// ✅ restores state</span></span>`
+    });
+  }
+
+  /* 3h – translate/rotate outside any push/pop guard */
+  const hasTransform = /\b(?:translate|rotate|scale)\s*\(/.test(clean);
+  const hasPushPop   = pushCount > 0 && popCount > 0;
+  if (hasTransform && !hasPushPop && hasDraw) {
+    issues.push({
+      type: 'logical', severity: 'warning',
+      title: '`translate()` / `rotate()` used without `push()` / `pop()`',
+      explanation: `Transforms like <code>translate()</code> and <code>rotate()</code> are cumulative — they stack frame after frame. Without wrapping them in <code>push()</code> / <code>pop()</code>, your drawings will drift, spin, or scale uncontrollably over time.`,
+      fix: `Wrap transforms in <code>push()</code> before and <code>pop()</code> after so they only apply to the intended shapes.`,
+      example: `<span class="bad">function draw() {
+  background(220);
+  translate(mouseX, mouseY); <span class="comment">// ❌ accumulates!</span>
+  rect(-25, -25, 50, 50);
+}</span>
+
+<span class="good">function draw() {
+  background(220);
+  push();
+  translate(mouseX, mouseY); <span class="comment">// ✅ isolated</span>
+  rect(-25, -25, 50, 50);
+  pop();
+}</span>`
+    });
+  }
+
+  /* 3i – Infinite loop patterns */
+  const infLoops = [
+    { pat: /\bwhile\s*\(\s*true\s*\)/, label: 'while(true)' },
+    { pat: /\bwhile\s*\(\s*1\s*\)/,    label: 'while(1)' },
+    { pat: /\bfor\s*\(\s*;\s*;\s*\)/,  label: 'for(;;)' },
+  ];
+  for (const { pat, label } of infLoops) {
+    if (pat.test(clean)) {
+      const ln = findLine(pat);
+      issues.push({
+        type: 'logical', severity: 'error', line: ln,
+        title: `Potential infinite loop — \`${label}\``,
+        explanation: `A loop that runs forever will freeze the browser tab. JavaScript runs in a single thread, so an infinite loop prevents p5.js from ever reaching the next <code>draw()</code> frame or responding to user input. The page will appear to hang.`,
+        fix: `Replace the infinite loop with a condition that eventually becomes false, or redesign the logic to work frame-by-frame inside <code>draw()</code>.`,
+        example: `<span class="bad">while (true) {  <span class="comment">// ❌ browser freezes</span>
+  x += 1;
+}</span>
+
+<span class="good"><span class="comment">// ✅ use draw() for animation — it loops safely</span>
+function draw() {
+  background(220);
+  x += 1;
+  ellipse(x, 200, 40, 40);
+}</span>`
+      });
+    }
+  }
+
+  /* 3j – noLoop() inside draw() unconditionally */
+  if (drawBody) {
+    const dLines = drawBody.body.split('\n');
+    for (const dl of dLines) {
+      if (/^\s*noLoop\s*\(\s*\)\s*;?\s*$/.test(dl)) {
+        issues.push({
+          type: 'logical', severity: 'warning',
+          title: '`noLoop()` called unconditionally inside `draw()`',
+          explanation: `Calling <code>noLoop()</code> every frame stops the draw loop after the very first frame. This makes your sketch behave like a static image. This is sometimes intentional, but is often a mistake.`,
+          fix: `If you want to stop the loop based on a condition, wrap it in an <code>if</code> statement. If you want a static image, call <code>noLoop()</code> in <code>setup()</code> instead.`,
+          example: `<span class="bad">function draw() {
+  background(220);
+  ellipse(200, 200, 80, 80);
+  noLoop(); <span class="comment">// stops after 1 frame — likely unintentional</span>
+}</span>
+
+<span class="good"><span class="comment">// If you want a static image:</span>
+function setup() {
+  createCanvas(400, 400);
+  noLoop(); <span class="comment">// draw runs once, then stops</span>
+}</span>`
+        });
+        break;
+      }
+    }
+  }
+
+  /* 3k – Empty setup() */
+  if (setupBody && setupBody.body.trim() === '') {
+    issues.push({
+      type: 'logical', severity: 'warning',
+      title: '`setup()` function is empty',
+      explanation: `Your <code>setup()</code> exists but contains no code. At minimum it should call <code>createCanvas()</code> to define the canvas size.`,
+      fix: `Add <code>createCanvas(width, height)</code> inside <code>setup()</code>.`,
+      example: `<span class="bad">function setup() {
+  <span class="comment">// nothing here</span>
+}</span>
+
+<span class="good">function setup() {
+  createCanvas(400, 400);
+}</span>`
+    });
+  }
+
+  /* 3l – Empty draw() */
+  if (drawBody && drawBody.body.trim() === '') {
+    issues.push({
+      type: 'logical', severity: 'warning',
+      title: '`draw()` function is empty',
+      explanation: `Your <code>draw()</code> function exists but is empty. p5.js will keep calling it 60× per second doing nothing. Add your drawing code here.`,
+      fix: `Start by adding <code>background(220);</code> and then your shapes or animations.`,
+      example: `<span class="good">function draw() {
+  background(220);
+  ellipse(mouseX, mouseY, 40, 40);
+}</span>`
+    });
+  }
+
+  /* 3m – Out-of-range hardcoded color values */
+  const colorFns = ['fill', 'stroke', 'background', 'color'];
+  for (const fn of colorFns) {
+    const re = new RegExp(`\\b${fn}\\s*\\(([^)]+)\\)`, 'g');
+    let m;
+    while ((m = re.exec(clean)) !== null) {
+      const args = m[1].split(',').map(s => parseFloat(s.trim()));
+      const ln = lineAt(rawCode, m.index);
+      for (const val of args) {
+        if (!isNaN(val) && (val < 0 || val > 255)) {
+          issues.push({
+            type: 'logical', severity: 'warning', line: ln,
+            title: `Color value ${val} is out of range in \`${fn}()\``,
+            explanation: `p5.js color values in RGB mode range from 0 to 255. Using a value like <code>${val}</code> will be automatically clamped — the colour you see will not be what you intended.`,
+            fix: `Clamp the value to the 0–255 range. If you want colours beyond 255, switch to a different colour mode with <code>colorMode(HSB, 360, 100, 100)</code>.`,
+            example: `<span class="bad">${fn}(${val}); <span class="comment">// ❌ outside 0–255</span></span>
+<span class="good">${fn}(constrain(${val}, 0, 255));\n<span class="comment">// or use colorMode(HSB) for hue-based colours</span></span>`
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  /* 3n – random() with max < min */
+  const randRe = /\brandom\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+  let rm;
+  while ((rm = randRe.exec(clean)) !== null) {
+    const lo = parseFloat(rm[1]), hi = parseFloat(rm[2]);
+    if (lo > hi) {
+      issues.push({
+        type: 'logical', severity: 'warning', line: lineAt(rawCode, rm.index),
+        title: `\`random(${lo}, ${hi})\` — min is greater than max`,
+        explanation: `<code>random(min, max)</code> expects the first argument to be smaller than the second. When min &gt; max, the function returns unexpected values.`,
+        fix: `Swap the arguments: <code>random(${hi}, ${lo})</code>.`,
+        example: `<span class="bad">random(${lo}, ${hi}); <span class="comment">// ❌ min > max</span></span>\n<span class="good">random(${hi}, ${lo}); <span class="comment">// ✅ correct order</span></span>`
+      });
+    }
+  }
+
+  /* 3o – Variables named 'width' or 'height' (shadows p5 built-ins) */
+  const shadowRe = /\b(?:let|var|const)\s+(width|height)\b/g;
+  let sm;
+  while ((sm = shadowRe.exec(clean)) !== null) {
+    issues.push({
+      type: 'logical', severity: 'warning', line: lineAt(rawCode, sm.index),
+      title: `Variable \`${sm[1]}\` shadows the p5.js built-in`,
+      explanation: `p5.js provides global variables <code>width</code> and <code>height</code> that always reflect the canvas size. Declaring your own variable with the same name hides the p5 version and will cause unpredictable behaviour wherever you use it.`,
+      fix: `Rename your variable to something that doesn't conflict, e.g. <code>boxWidth</code> or <code>myHeight</code>.`,
+      example: `<span class="bad">let width = 200; <span class="comment">// ❌ hides p5's width!</span>\nellipse(width / 2, height / 2, 40, 40); <span class="comment">// uses your 200, not canvas width</span></span>
+
+<span class="good">let boxWidth = 200; <span class="comment">// ✅ no conflict</span>\nellipse(width / 2, height / 2, 40, 40); <span class="comment">// uses canvas width correctly</span></span>`
+    });
+  }
+
+  /* 3p – strokeWeight(0) or negative */
+  const swRe = /\bstrokeWeight\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)/g;
+  let sw;
+  while ((sw = swRe.exec(clean)) !== null) {
+    const v = parseFloat(sw[1]);
+    if (v <= 0) {
+      issues.push({
+        type: 'logical', severity: 'warning', line: lineAt(rawCode, sw.index),
+        title: `\`strokeWeight(${v})\` — value is zero or negative`,
+        explanation: `A stroke weight of 0 or less makes strokes invisible. This is sometimes intentional, but is a common source of confusion when you expect to see an outline.`,
+        fix: `Use a positive value like <code>strokeWeight(1)</code>, or call <code>noStroke()</code> explicitly if you want no outline.`,
+        example: `<span class="bad">strokeWeight(0); <span class="comment">// invisible stroke</span></span>\n<span class="good">noStroke();      <span class="comment">// explicit — clearer intent</span></span>`
+      });
+    }
+  }
+
+  return issues;
+}
+
+/* ════════════════════════════════════════════════════════════
+   DISPLAY RESULTS
+   ════════════════════════════════════════════════════════════ */
+function displayResults(all) {
+  const list = document.getElementById('results-list');
+  const types = ['syntax', 'runtime', 'logical', 'warning'];
+
+  /* update chips */
+  for (const t of types) {
+    const count = all.filter(e => e.type === t).length;
+    const chip  = document.getElementById('chip-' + t);
+    if (count > 0) {
+      chip.textContent = `${t === 'logical' ? 'logical' : t} ${count}`;
+      chip.classList.add('visible');
+    } else {
+      chip.classList.remove('visible');
+    }
+  }
+
+  if (all.length === 0) {
+    list.innerHTML = `
+      <div class="all-clear">
+        <div class="icon">✅</div>
+        <strong>No issues found!</strong>
+        <p>Your code passed all checks. That doesn't guarantee it will run perfectly, but it's a great sign.<br>
+        Try loading it in a browser to test the actual behaviour.</p>
+      </div>`;
+    document.getElementById('summary-bar').style.display = 'flex';
+    document.getElementById('summary-text').textContent = '0 issues found';
+    return;
+  }
+
+  list.innerHTML = '';
+
+  const order = ['syntax', 'runtime', 'logical', 'warning'];
+  const sorted = [...all].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+
+  for (const err of sorted) {
+    const card = document.createElement('div');
+    card.className = `error-card ${err.type}`;
+
+    const badgeText = err.type === 'logical' && err.severity === 'warning' ? 'warning' : err.type;
+    const lineInfo  = err.line ? `<span class="card-line">Line ${err.line}</span>` : '';
+
+    card.innerHTML = `
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="type-badge">${badgeText}</span>
+        <span class="card-title">${escHtml(err.title)}</span>
+        ${lineInfo}
+        <span class="chevron">▼</span>
+      </div>
+      <div class="card-body">
+        <div class="section-label">What went wrong</div>
+        <div class="section-text">${err.explanation}</div>
+        <div class="section-label">How to fix it</div>
+        <div class="section-text">${err.fix}</div>
+        ${err.example ? `<div class="section-label">Example</div><div class="code-block">${err.example}</div>` : ''}
+      </div>`;
+    list.appendChild(card);
+  }
+
+  /* auto-expand the first error */
+  const first = list.querySelector('.error-card');
+  if (first) {
+    first.classList.add('open');
+  }
+
+  /* summary */
+  const sc = all.filter(e => e.type === 'syntax').length;
+  const rc = all.filter(e => e.type === 'runtime').length;
+  const lc = all.filter(e => e.type === 'logical').length;
+  const parts = [];
+  if (sc) parts.push(`${sc} syntax`);
+  if (rc) parts.push(`${rc} runtime`);
+  if (lc) parts.push(`${lc} logical`);
+  document.getElementById('summary-bar').style.display = 'flex';
+  document.getElementById('summary-text').textContent = `${all.length} issue${all.length !== 1 ? 's' : ''} found — ${parts.join(', ')}`;
+}
+
+function toggleCard(header) {
+  header.parentElement.classList.toggle('open');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/`([^`]+)`/g,'<code>$1</code>');
+}
+
+/* ════════════════════════════════════════════════════════════
+   MAIN ENTRY POINT
+   ════════════════════════════════════════════════════════════ */
+function runCheck() {
+  const code = codeEl.value.trim();
+  if (!code) {
+    alert('Please paste some p5.js code first.');
+    return;
+  }
+  const syntax  = checkSyntax(code);
+  const runtime = checkRuntime(code);
+  const logical = checkLogical(code);
+  displayResults([...syntax, ...runtime, ...logical]);
+}
+
+/* Allow Ctrl+Enter to run check */
+codeEl.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runCheck();
+});
+</script>
+</body>
+</html>
