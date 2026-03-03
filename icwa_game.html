@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1A0D08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ICWA: The Circle Unbroken">
+<title>ICWA: The Circle Unbroken</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1A0D08;--surface:#2A180E;--surface2:#3D2A1A;--border:#5C4030;
+  --primary:#D4922E;--primary-light:#F0C870;--secondary:#7B1D3E;--sec-light:#FF8FB1;
+  --text:#F5EDD8;--dim:#C4A878;--success:#4CAF50;--error:#EF5350;--warn:#FF9800;
+  --r:12px;--shadow:0 4px 24px rgba(0,0,0,.6);
+}
+html,body{height:100%;width:100%;overflow:hidden;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  user-select:none;-webkit-user-select:none;}
+#app{width:100%;height:100%;max-width:500px;margin:0 auto;
+  position:relative;overflow:hidden;display:flex;flex-direction:column;}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;transition:opacity .25s ease;}
+.screen.active{opacity:1;pointer-events:all;}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+  padding:16px 16px 80px;}
+
+/* ── TOP BAR ── */
+.top-bar{padding:10px 16px 8px;background:var(--bg);display:flex;align-items:center;
+  gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:5;}
+.back-btn{width:36px;height:36px;background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:18px;flex-shrink:0;transition:opacity .2s;}
+.back-btn:active{opacity:.7}
+.bar-title{font-size:14px;font-weight:700;color:var(--primary);flex:1;}
+.bar-info{font-size:12px;color:var(--dim);}
+
+/* ── BOTTOM NAV ── */
+#bnav{height:58px;background:var(--surface);border-top:1px solid var(--border);
+  display:flex;align-items:stretch;flex-shrink:0;}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;cursor:pointer;border:none;background:none;
+  color:var(--dim);font-size:10px;font-weight:600;transition:color .2s;}
+.bnav-btn.act{color:var(--primary);}
+.bnav-icon{font-size:22px;line-height:1;}
+
+/* ── PROGRESS BAR ── */
+.prog-bar{height:3px;background:var(--surface2);}
+.prog-fill{height:100%;background:var(--primary);transition:width .4s ease;}
+
+/* ── TITLE SCREEN ── */
+#s-title{background:linear-gradient(170deg,#2E0A1C 0%,#1A0D08 60%,#0A0804 100%);
+  align-items:center;justify-content:center;text-align:center;padding:32px;}
+.title-circle{width:110px;height:110px;margin:0 auto 24px;border-radius:50%;
+  background:var(--surface);border:3px solid var(--primary);
+  display:flex;align-items:center;justify-content:center;font-size:52px;
+  box-shadow:0 0 40px rgba(212,146,46,.3);}
+.game-title{font-size:30px;font-weight:900;color:var(--primary);line-height:1.15;margin-bottom:8px;}
+.game-sub{font-size:15px;color:var(--dim);margin-bottom:12px;}
+.game-by{font-size:11px;color:var(--border);margin-bottom:48px;font-style:italic;}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:40px;}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;
+  padding:4px 10px;font-size:11px;color:var(--dim);}
+
+/* ── BUTTONS ── */
+.btn{padding:14px 20px;border-radius:var(--r);font-size:15px;font-weight:700;
+  border:none;cursor:pointer;transition:all .2s;text-align:center;width:100%;display:block;}
+.btn:active{transform:scale(.97);}
+.btn-p{background:var(--primary);color:#1A0D08;}
+.btn-o{background:transparent;color:var(--primary);border:1.5px solid var(--primary);}
+.btn-s{background:var(--surface);color:var(--text);border:1.5px solid var(--border);}
+.choice-btn{background:var(--surface);color:var(--text);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:12px 14px;font-size:14px;cursor:pointer;
+  width:100%;text-align:left;margin-bottom:8px;display:block;transition:all .2s;
+  line-height:1.45;}
+.choice-btn:active{transform:scale(.98);}
+.choice-btn.c-right{border-color:var(--success);background:rgba(76,175,80,.12);}
+.choice-btn.c-wrong{border-color:var(--error);background:rgba(239,83,80,.12);}
+.judge-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.btn-yes{background:rgba(76,175,80,.15);border:1.5px solid var(--success);
+  color:var(--success);border-radius:var(--r);padding:12px;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-no{background:rgba(239,83,80,.15);border:1.5px solid var(--error);
+  color:var(--error);border-radius:var(--r);padding:12px;font-size:14px;
+  font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-yes:active,.btn-no:active{transform:scale(.97);}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;}
+.card-q{background:var(--surface);border-left:3px solid var(--primary);
+  border-radius:0 var(--r) var(--r) 0;padding:16px;font-style:italic;
+  font-size:14px;line-height:1.6;}
+.q-attr{margin-top:8px;font-size:11px;color:var(--primary);font-style:normal;
+  font-weight:700;letter-spacing:.5px;}
+.ev-card{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .2s;
+  display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.ev-card:active{transform:scale(.98);}
+.ev-check{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .2s;}
+.ev-card.sel-good .ev-check{background:var(--success);border-color:var(--success);color:#fff;}
+.ev-card.sel-good{border-color:var(--success);background:rgba(76,175,80,.1);}
+.ev-card.sel-bad .ev-check{background:var(--error);border-color:var(--error);color:#fff;}
+.ev-card.sel-bad{border-color:var(--error);background:rgba(239,83,80,.1);}
+.ev-text{font-size:13px;line-height:1.5;color:var(--text);}
+.ev-law{font-size:11px;color:var(--dim);margin-top:3px;}
+
+/* ── FEEDBACK ── */
+.fb{padding:14px;border-radius:var(--r);font-size:13px;line-height:1.55;margin-top:10px;}
+.fb-ok{background:rgba(76,175,80,.12);border:1px solid var(--success);color:var(--success);}
+.fb-bad{background:rgba(239,83,80,.12);border:1px solid var(--error);color:var(--error);}
+.fb-warn{background:rgba(255,152,0,.12);border:1px solid var(--warn);color:var(--warn);}
+.fb-info{background:rgba(212,146,46,.12);border:1px solid var(--primary);color:var(--primary-light);}
+.law-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+  padding:12px;margin-top:10px;}
+.law-label{font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--primary);
+  margin-bottom:4px;}
+
+/* ── TYPOGRAPHY ── */
+h1{font-size:22px;font-weight:800;color:var(--text);}
+h2{font-size:19px;font-weight:700;color:var(--text);}
+h3{font-size:15px;font-weight:700;color:var(--primary);}
+p{font-size:14px;line-height:1.65;color:var(--dim);}
+.intro-text{font-size:14px;line-height:1.65;color:var(--text);}
+.label-sm{font-size:11px;font-weight:700;letter-spacing:1.2px;color:var(--primary);
+  text-transform:uppercase;margin-bottom:6px;}
+.divider{height:1px;background:var(--border);margin:12px 0;}
+
+/* ── CHAPTER MAP ── */
+.map-header{background:linear-gradient(135deg,var(--surface),var(--surface2));
+  border-radius:var(--r);padding:20px;margin-bottom:16px;text-align:center;}
+.ch-card{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:16px;display:flex;align-items:center;
+  gap:14px;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.ch-card:active{transform:scale(.98);}
+.ch-card.locked{opacity:.45;cursor:not-allowed;}
+.ch-card.done{border-color:var(--success);}
+.ch-card.act-ch{border-color:var(--primary);}
+.ch-icon{width:54px;height:54px;border-radius:12px;background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.ch-info h3{font-size:15px;color:var(--text);margin-bottom:2px;}
+.ch-info p{font-size:12px;color:var(--dim);}
+.ch-badge{margin-left:auto;font-size:20px;}
+
+/* ── CASE FILE ── */
+.case-hdr{background:linear-gradient(135deg,#5A1030,#3D0A1E);
+  border-radius:var(--r);padding:20px;margin-bottom:4px;}
+.case-stamp{font-size:10px;font-weight:800;letter-spacing:2px;color:var(--primary);margin-bottom:6px;}
+.case-name{font-size:24px;font-weight:900;color:var(--text);}
+.case-tribe{font-size:13px;color:rgba(245,237,216,.65);margin-top:4px;}
+.topic-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.topic-tag{background:rgba(212,146,46,.15);color:var(--primary-light);
+  border:1px solid rgba(212,146,46,.3);border-radius:20px;
+  padding:3px 10px;font-size:11px;font-weight:600;}
+
+/* ── TIMELINE ── */
+.tl{padding-left:20px;position:relative;}
+.tl::before{content:'';position:absolute;left:6px;top:6px;bottom:0;
+  width:2px;background:var(--border);}
+.tl-item{position:relative;padding:0 0 18px 18px;cursor:pointer;}
+.tl-item::before{content:'';position:absolute;left:-14px;top:5px;
+  width:10px;height:10px;border-radius:50%;background:var(--primary);
+  border:2px solid var(--bg);transition:transform .2s;}
+.tl-item:active::before{transform:scale(1.4);}
+.tl-year{font-size:11px;font-weight:800;color:var(--primary);letter-spacing:.5px;}
+.tl-text{font-size:13px;color:var(--text);margin-top:2px;line-height:1.5;}
+.tl-more{font-size:12px;color:var(--dim);margin-top:3px;display:none;}
+.tl-item.open .tl-more{display:block;}
+
+/* ── STATS ── */
+.stat-row{display:flex;gap:10px;margin-bottom:10px;}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;text-align:center;}
+.stat-num{font-size:32px;font-weight:900;color:var(--primary);line-height:1;}
+.stat-lbl{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.4;}
+
+/* ── VOICES/QUOTES ── */
+.voice-nav{display:flex;align-items:center;gap:10px;margin-top:10px;}
+.voice-dot{width:8px;height:8px;border-radius:50%;background:var(--border);
+  transition:background .2s;flex-shrink:0;}
+.voice-dot.on{background:var(--primary);}
+.voice-btn{background:var(--surface);border:1px solid var(--border);
+  border-radius:8px;padding:8px 14px;color:var(--text);font-size:13px;
+  cursor:pointer;flex-shrink:0;}
+
+/* ── FLASHCARDS ── */
+.fc-wrap{perspective:1000px;height:170px;cursor:pointer;margin-bottom:6px;}
+.fc-inner{position:relative;width:100%;height:100%;
+  transition:transform .45s;transform-style:preserve-3d;}
+.fc-wrap.flipped .fc-inner{transform:rotateY(180deg);}
+.fc-face{position:absolute;inset:0;backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;border-radius:var(--r);
+  border:1.5px solid var(--border);display:flex;align-items:center;
+  justify-content:center;padding:16px;text-align:center;}
+.fc-front{background:var(--surface);font-size:20px;font-weight:800;color:var(--primary);}
+.fc-back{background:var(--surface2);transform:rotateY(180deg);
+  font-size:13px;line-height:1.55;color:var(--text);}
+.fc-nav{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+.fc-count{font-size:12px;color:var(--dim);}
+
+/* ── ACTIVE EFFORTS GAME ── */
+.ae-scenario{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:18px;min-height:100px;font-size:14px;
+  line-height:1.6;color:var(--text);}
+.ae-counter{font-size:18px;font-weight:800;text-align:center;margin:10px 0;}
+.ae-correct-count{color:var(--success);}
+.ae-total{color:var(--dim);}
+
+/* ── PLACEMENT SORT ── */
+.ps-bank{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.ps-item{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:12px 14px;font-size:13px;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;gap:10px;}
+.ps-item:active{transform:scale(.98);}
+.ps-item.selected{border-color:var(--primary);background:rgba(212,146,46,.1);}
+.ps-slots{display:flex;flex-direction:column;gap:8px;}
+.ps-slot{border:2px dashed var(--border);border-radius:var(--r);padding:12px 14px;
+  min-height:52px;display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--dim);cursor:pointer;transition:all .2s;}
+.ps-slot.filled{border-style:solid;border-color:var(--border);
+  background:var(--surface);color:var(--text);}
+.ps-slot.correct{border-color:var(--success);background:rgba(76,175,80,.1);}
+.ps-slot.wrong{border-color:var(--error);background:rgba(239,83,80,.1);}
+.ps-num{width:28px;height:28px;border-radius:50%;background:var(--secondary);
+  color:var(--text);font-weight:800;font-size:13px;display:flex;
+  align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── CHAPTER COMPLETE ── */
+.badge-circle{width:100px;height:100px;border-radius:50%;
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
+  border:3px solid var(--primary);display:flex;align-items:center;
+  justify-content:center;font-size:48px;margin:0 auto 16px;
+  box-shadow:0 0 30px rgba(212,146,46,.3);}
+
+/* ── VERDICT ── */
+.verdict-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;
+  border-bottom:1px solid var(--border);}
+.verdict-item:last-child{border-bottom:none;}
+.v-bullet{color:var(--primary);font-size:18px;flex-shrink:0;margin-top:1px;}
+.v-text{font-size:13px;line-height:1.55;color:var(--text);}
+
+/* ── CLASSIFICATION GAME ── */
+.cl-card{background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:18px;margin-bottom:10px;text-align:center;
+  font-size:15px;font-weight:600;color:var(--text);min-height:80px;
+  display:flex;align-items:center;justify-content:center;}
+.cl-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.cl-btn{border-radius:var(--r);padding:12px;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;}
+.cl-btn:active{transform:scale(.97);}
+.cl-political{background:rgba(212,146,46,.15);border:1.5px solid var(--primary);color:var(--primary);}
+.cl-racial{background:rgba(123,29,62,.2);border:1.5px solid var(--sec-light);color:var(--sec-light);}
+.cl-score{font-size:24px;font-weight:900;text-align:center;margin:10px 0;}
+
+/* ── GLOSSARY ── */
+.glos-search{width:100%;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:11px 14px;color:var(--text);font-size:14px;
+  outline:none;margin-bottom:12px;}
+.glos-item{background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:8px;overflow:hidden;}
+.glos-term{padding:13px 16px;font-weight:700;font-size:14px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;color:var(--text);}
+.glos-def{padding:0 16px;max-height:0;overflow:hidden;transition:all .3s;
+  font-size:13px;color:var(--dim);line-height:1.6;}
+.glos-def.open{max-height:300px;padding:0 16px 14px;}
+
+/* ── COMPLETION ── */
+.cert{border:3px solid var(--primary);border-radius:16px;padding:24px;
+  background:var(--surface);text-align:center;margin:8px 0;}
+.stars-row{font-size:32px;margin:12px 0;letter-spacing:4px;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes shine{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+.anim{animation:fadeUp .35s ease forwards;}
+.a1{animation-delay:.05s;opacity:0;}
+.a2{animation-delay:.12s;opacity:0;}
+.a3{animation-delay:.19s;opacity:0;}
+.a4{animation-delay:.26s;opacity:0;}
+.a5{animation-delay:.33s;opacity:0;}
+
+/* ── OBJECTION ── */
+.obj-box{background:linear-gradient(135deg,var(--secondary),#3D0F1F);
+  border:2px solid var(--secondary);border-radius:var(--r);padding:16px;
+  text-align:center;margin-bottom:14px;}
+.obj-word{font-size:26px;font-weight:900;color:var(--primary);
+  letter-spacing:3px;text-transform:uppercase;}
+.obj-sub{font-size:13px;color:var(--dim);margin-top:4px;}
+
+/* ── MISC ── */
+.gap{height:12px;}
+.gap-sm{height:6px;}
+.section-hdr{font-size:11px;font-weight:800;letter-spacing:1.5px;
+  color:var(--primary);text-transform:uppercase;margin-bottom:8px;}
+@media(min-width:501px){#app{border:1px solid var(--border);box-shadow:var(--shadow);}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="screen-container">
+    <div class="screen active" id="s-title"></div>
+    <div class="screen" id="s-map"></div>
+    <div class="screen" id="s-ch1"></div>
+    <div class="screen" id="s-ch2"></div>
+    <div class="screen" id="s-cases"></div>
+    <div class="screen" id="s-case"></div>
+    <div class="screen" id="s-glossary"></div>
+    <div class="screen" id="s-done"></div>
+  </div>
+  <nav id="bnav" style="display:none">
+    <button class="bnav-btn act" data-nav="map" onclick="goTo('map')">
+      <span class="bnav-icon">🗺️</span>Journey
+    </button>
+    <button class="bnav-btn" data-nav="cases" onclick="goTo('cases')">
+      <span class="bnav-icon">📁</span>Cases
+    </button>
+    <button class="bnav-btn" data-nav="glossary" onclick="goTo('glossary')">
+      <span class="bnav-icon">📖</span>Glossary
+    </button>
+  </nav>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const GLOSSARY_DATA = [
+  {term:"Active Efforts",def:"Affirmative, active, thorough, and timely efforts to maintain or reunite an Indian child with their family. Must be tailored to the facts of each case. Higher standard than 'reasonable efforts' — requires actual engagement, not just referrals. Under MICWA: referral alone is NOT active efforts."},
+  {term:"Indian Child",def:"An unmarried person under 18 who is (a) a member of an Indian Tribe, OR (b) eligible for membership AND the biological child of a tribe member. (25 U.S.C. § 1903(4)). Tribal membership is determined by the Tribe — not the state."},
+  {term:"Indian Custodian",def:"An Indian person who under Tribal law, Tribal custom, or state law has legal or temporary physical custody of an Indian child — OR to whom a parent has transferred temporary care, physical custody, and control of the Indian child. Does NOT require a court order."},
+  {term:"Extended Family Member",def:"Defined by tribal law or custom. If no tribal law, includes: grandparent, aunt/uncle, brother/sister, brother/sister-in-law, niece/nephew, first or second cousin, or stepparent. Extended family members are the #1 preferred placement under ICWA."},
+  {term:"Placement Preferences (Foster/Pre-adoptive)",def:"Order required by ICWA § 1915(b): (1) Extended family member, (2) Foster home licensed/approved by the Tribe, (3) Indian foster home licensed by non-Indian authority, (4) Tribally approved institution. These apply even if the Tribe has not intervened."},
+  {term:"Placement Preferences (Adoptive)",def:"Order required by ICWA § 1915(a): (1) Extended family member, (2) Other members of the child's Tribe, (3) Indian foster home licensed by non-Indian authority, (4) Tribally approved institution."},
+  {term:"Diligent Search",def:"A thorough, documented search for preferred ICWA placements. Under MICWA/SB147: this is an ONGOING obligation throughout the entire case. The court must inquire about search efforts at every hearing. Status hearings required every 30 days for non-preferred placements."},
+  {term:"Qualified Expert Witness (QEW)",def:"Required in ICWA proceedings. Must be qualified in: (1) likelihood of serious harm, AND (2) prevailing social and cultural standards of the Indian child's tribe. MICWA prohibition: department CPS specialists cannot serve as QEWs in their own cases. Tribe must be consulted on QEW selection."},
+  {term:"Political Classification",def:"American Indian/Alaska Native identity is a political classification — not a race. Tribes are sovereign nations recognized in the U.S. Constitution and through treaty. ICWA's protections are based on political status, which is why the Supreme Court upheld them in Haaland v. Brackeen (2023)."},
+  {term:"Good Cause Exception",def:"Courts may depart from ICWA placement preferences only with 'good cause.' Under MICWA, the following CANNOT be good cause: prior proceedings where no transfer was filed; advanced stage of case; potential effect on placement; child's cultural connections; socioeconomic conditions; negative perceptions of tribal courts. SB 147 adds: ordinary bonding from time in non-preferred placement CANNOT justify departure."},
+  {term:"MICWA (Montana ICWA)",def:"Montana Indian Child Welfare Act (HB 317, signed 2023; made permanent by SB 147, May 12, 2025). Builds on federal ICWA with stronger active efforts requirements, detailed placement preference rules, QEW standards, tribal consultation requirements, and cultural compact provisions."},
+  {term:"Termination of Parental Rights (TPR)",def:"The most extreme child welfare action. Under ICWA, requires: (1) proof BEYOND A REASONABLE DOUBT that active efforts were made AND failed, AND (2) that continued custody is likely to cause serious emotional or physical damage. Under SB 147: bonding between child and foster parent cannot be a factor in TPR."},
+  {term:"Transfer of Jurisdiction",def:"A tribe can request jurisdiction over ICWA cases. Must be granted absent objection by either parent, unless there is 'good cause to the contrary.' Under MICWA: denial must be in writing. Socioeconomic conditions and negative perceptions of tribal courts cannot be good cause to deny transfer."},
+  {term:"Cultural Compact",def:"Under SB 147 (2025): prospective adoptive parents/guardians who are not tribal members must enter a cultural compact with the child's tribe. Must be specific to each child, evolve as child matures, become part of the court record, and be enforceable by the court."},
+  {term:"Haaland v. Brackeen (2023)",def:"U.S. Supreme Court 7-2 decision upholding ICWA against all constitutional challenges. Confirmed: (1) Congress has authority to enact ICWA under its unique relationship with tribal nations, (2) ICWA does not discriminate based on race — it uses political classification based on tribal membership, (3) States can pass their own ICWA laws that provide even greater protections."},
+  {term:"Evidentiary Standards",def:"ICWA uses different standards based on the proceeding: Foster care placement = clear and convincing evidence. Termination of parental rights = beyond a reasonable doubt. In both cases, the STATE bears the burden of proof. QEW testimony is required."},
+  {term:"Tribal Sovereignty",def:"The inherent authority of indigenous tribes to govern themselves. Tribes predate the United States and retain sovereign powers not expressly taken by Congress. Federal Indian policy — including ICWA — is grounded in the government-to-government relationship between the U.S. and tribal nations."}
+];
+
+const CH1_SCREENS = [
+  {id:'c1s0', type:'intro',
+   title:'The Roots: Why ICWA Exists',
+   heading:'Before We Begin',
+   body:`The Indian Child Welfare Act was not created in a vacuum. It was a direct response to a century of government policy designed to break apart American Indian families and erase Indigenous cultures. To understand ICWA — and why it matters — we must first understand what it was built to address.`,
+   quote:`"The legacy reaches us today, and is reflected in the wounds people continue to experience in communities across the United States." — Bryan Newland, Assistant Secretary – Indian Affairs`,
+   progress:'1 of 6'},
+  {id:'c1s1', type:'timeline',
+   title:'A Timeline of Removal',
+   heading:'History of Forced Separation',
+   intro:'Tap any event to learn more.',
+   progress:'2 of 6',
+   events:[
+     {year:'1819',short:'Civilization Fund Act — boarding schools begin',more:'The U.S. establishes the first Indian boarding schools, funded to assimilate Native children into Euro-American culture. The motto: "Kill the Indian, Save the Man."'},
+     {year:'1860s–1900s',short:'Peak of boarding school era',more:'Between 1819 and 1969, the U.S. funded 417 Federal Indian boarding schools across 37 states. The federal government spent over $23.3 billion (2023 inflation-adjusted) on this system. Children were forcibly removed from families, forbidden to speak their languages or practice their cultures.'},
+     {year:'1969',short:'End of federally funded boarding school era',more:'The boarding school era formally ends, but its legacy — intergenerational trauma, severed family bonds, loss of language and culture — continues to shape Indigenous communities to this day.'},
+     {year:'1970s',short:'25–35% of Indian children separated from families',more:'State agencies removed massive numbers of Native children with little justification. 75–80% of Native families on some reservations lost at least one child to foster care. 90% of these placements were with non-Native, non-relative families. Tribes began organizing and demanding change.'},
+     {year:'1978',short:'ICWA becomes federal law',more:'Congress passes the Indian Child Welfare Act, recognizing that tribes have a vital interest in the welfare of their children, and that state agencies had been systematically failing to protect Native families. ICWA sets minimum standards for child custody proceedings involving Indian children.'},
+     {year:'2023',short:'Supreme Court upholds ICWA; Montana passes MICWA',more:'The Supreme Court rules 7-2 in Haaland v. Brackeen, upholding ICWA against all constitutional challenges. Montana simultaneously passes House Bill 317 — the Montana Indian Child Welfare Act — building on federal ICWA with stronger protections.'},
+     {year:'2025',short:'MICWA made permanent by SB 147',more:'Gov. Gianforte signs SB 147 on May 12, 2025, making MICWA permanent (removing the sunset date) and adding stronger requirements for active efforts, tribal consultation, guardianships, and cultural compacts.'}
+   ]},
+  {id:'c1s2', type:'stats',
+   title:'The Crisis Behind ICWA',
+   heading:'By the Numbers',
+   intro:'These statistics — drawn from congressional testimony and court records — are why ICWA was necessary.',
+   progress:'3 of 6',
+   stats:[
+     {num:'75–80%',label:'of Native families on reservations lost at least one child to foster care before ICWA'},
+     {num:'90%',label:'of those placements were with non-Native, non-relative families'},
+     {num:'4×',label:'American Indian children in Montana are in foster care at nearly 4x their share of the state\'s population'},
+     {num:'35%',label:'of Montana\'s foster care population is Native American — though they are only 9% of the child population'}
+   ]},
+  {id:'c1s3', type:'voices',
+   title:'Survivor Voices',
+   heading:'Voices From the Road to Healing',
+   intro:'These are real testimonies collected by the federal government\'s Road to Healing initiative. Tap the arrows to read each voice.',
+   progress:'4 of 6',
+   quotes:[
+     {text:'"The worst part of it was at night, listening to all the other children crying themselves to sleep — it would start really slow and then pretty soon, you could hear the whole dorm crying."',attr:'Road to Healing Participant'},
+     {text:'"I was in boarding school and I was told I wouldn\'t make a good mother. And I would tell God when I have children I will love them and care for them. And treat them like a person — because in boarding school you\'re not a person. You\'re not even a human being."',attr:'Road to Healing, Minnesota'},
+     {text:'"Nobody wants to share things like that. I\'ve learned how to be tough because you couldn\'t cry. Couldn\'t do that."',attr:'Road to Healing, South Dakota'},
+     {text:'"She said, \'Here, it\'s from your brother.\' I asked, \'Is he here?\' She said, \'No, he\'s dead.\' I could still see her standing there and I was still a little girl."',attr:'Road to Healing, Minnesota'},
+     {text:'"Officials set out to eliminate \'the warm reciprocal affection existing between parents and children\' by dissolving Indian families."',attr:'Justice Gorsuch, Haaland v. Brackeen (2023)'},
+     {text:'"Montana is the child removal capital of America. Montana is the worst state in the country for removing children — three times higher than the national average."',attr:'Sharon Kickingwoman, January 27, 2025'}
+   ]},
+  {id:'c1s4', type:'reflection',
+   title:'Why Was ICWA Needed?',
+   heading:'Reflect',
+   question:'Which statement best describes why ICWA was created and why its protections are constitutional?',
+   progress:'5 of 6',
+   choices:[
+     {text:'To give Native Americans special racial privileges in child welfare proceedings',
+      correct:false,
+      fb:'Not quite. The Supreme Court confirmed in Haaland v. Brackeen (2023) that ICWA is NOT based on race — it\'s based on the political status of tribal nations as sovereign governments recognized in the U.S. Constitution and through treaty.'},
+     {text:'To keep Indian children connected to their families, tribes, and cultural heritage — addressing decades of state-sanctioned family separation',
+      correct:true,
+      fb:'Correct! ICWA recognizes that tribes have a sovereign interest in the welfare of their children, and that the history of forcible removal caused profound harm. It sets minimum standards to ensure child custody proceedings respect these interests.'},
+     {text:'To prevent all foster care placements of Native children',
+      correct:false,
+      fb:'ICWA doesn\'t prevent foster placement when children are genuinely at risk — it ensures that when the state intervenes, the process respects tribal sovereignty and prioritizes family and cultural connections.'},
+     {text:'To require state agencies to defer all decisions to tribal courts',
+      correct:false,
+      fb:'ICWA creates a process for tribal involvement and gives tribes the right to intervene or request transfer — but it doesn\'t require automatic deference. States must follow the law\'s standards while tribes have meaningful participation rights.'}
+   ]},
+  {id:'c1s5', type:'complete',
+   title:'Chapter 1 Complete',
+   badge:'🌱',badge_title:'Roots Badge',
+   summary:'You\'ve grounded yourself in the history that makes ICWA essential. The wounds of forced separation run deep — and this law was built to prevent them from continuing.',
+   next:'ch2'}
+];
+
+const CH2_SCREENS = [
+  {id:'c2s0', type:'intro',
+   title:'The Foundation: How ICWA Works',
+   heading:'Understanding the Law',
+   body:`ICWA is considered the "gold standard" for child welfare law. But understanding it requires mastering several key concepts — starting with why American Indian rights are political, not racial. Each concept in this chapter protects children while honoring tribal sovereignty.`,
+   quote:`"ICWA is the floor — meaning that the state is free to pass laws that provide even greater protections for tribes and Indian families." — Brooke Barker Taylor, Montana House Committee, 2023`,
+   progress:'1 of 6'},
+  {id:'c2s1', type:'classification',
+   title:'Political, Not Racial',
+   heading:'A Critical Distinction',
+   intro:'American Indian identity is a POLITICAL classification — not a race. This is fundamental to understanding why ICWA is constitutional. Identify each concept correctly: is it a political classification or a racial classification?',
+   progress:'2 of 6',
+   items:[
+     {text:'Tribal membership recognized by a federally acknowledged tribe',political:true,
+      fb:'Political! Tribal membership is a political status determined by tribes — like citizenship in a sovereign nation. It is NOT based on race or ancestry alone.'},
+     {text:'Treaty rights between a tribe and the U.S. government',political:true,
+      fb:'Political! Treaties are government-to-government agreements between the U.S. and tribal nations. These are not racial — they are legal and political obligations.'},
+     {text:'Government-to-government relationship between tribes and the federal government',political:true,
+      fb:'Political! The U.S. recognizes over 570 federally recognized tribes as sovereign nations with a unique government-to-government relationship. The Constitution explicitly references "Indian tribes."'},
+     {text:'Ancestry or ethnic heritage alone (not verified by tribal enrollment)',political:false,
+      fb:'Not a political classification! Cultural heritage or ancestry alone does not make someone an "Indian child" under ICWA. The child must be a member of — or eligible for membership in — a federally recognized tribe.'},
+     {text:'Physical appearance or skin color',political:false,
+      fb:'Definitely not! Race (including appearance) has no legal significance under ICWA. The Supreme Court confirmed in Haaland v. Brackeen (2023) that ICWA\'s classifications are political, not racial.'}
+   ]},
+  {id:'c2s2', type:'flashcards',
+   title:'Key ICWA Concepts',
+   heading:'Core Legal Concepts',
+   intro:'Tap each card to flip it and see the definition. Master these concepts — they appear in every ICWA case.',
+   progress:'3 of 6',
+   cards:[
+     {front:'Active Efforts',back:'Affirmative, active, thorough, and timely efforts to maintain or reunite an Indian child with family. Must be tailored to the case. HIGHER than "reasonable efforts." A referral alone is NOT active efforts.'},
+     {front:'Placement Preferences',back:'Required order: (1) Extended family, (2) Tribal foster home, (3) Indian foster home, (4) Tribally approved institution. Applies EVEN IF the tribe hasn\'t intervened. Cannot depart based on bonding from time in non-preferred placement.'},
+     {front:'Diligent Search',back:'Ongoing, documented search for preferred ICWA placements throughout the entire case. Under MICWA/SB147: must be in the record, reviewed at every hearing, with status hearings every 30 days for non-preferred placements.'},
+     {front:'Indian Custodian',back:'An Indian person with legal or physical custody under tribal law, custom, or state law — OR to whom a parent has transferred temporary care and custody. Does NOT require a court order. Tribal custom counts.'},
+     {front:'Qualified Expert Witness',back:'Required in ICWA proceedings. Must be qualified in: (1) likelihood of harm AND (2) tribal cultural standards. Under MICWA: CPS specialists cannot be QEWs in their own cases. Tribe consulted on selection.'}
+   ]},
+  {id:'c2s3', type:'active-efforts',
+   title:'Active Efforts Challenge',
+   heading:'Active Efforts or Not?',
+   intro:'Read each scenario. Decide whether it meets the ICWA "Active Efforts" standard. Score: 0/5',
+   progress:'4 of 6',
+   scenarios:[
+     {text:'The caseworker mailed a letter to the family listing three substance abuse programs they could contact.',
+      active:false,
+      fb:'NOT active efforts. Simply sending a referral letter is the minimum — not engagement. Active efforts require helping the family navigate services: assisting with paperwork, transportation, follow-up, and actually coordinating access.'},
+     {text:'The caseworker met with the Blackfeet Tribe\'s social services, identified a culturally appropriate parenting support program, and helped the mother schedule and attend her first appointment.',
+      active:true,
+      fb:'YES — active efforts. Involving the tribe, identifying culturally appropriate services, and providing direct assistance to access them is exactly what ICWA requires.'},
+     {text:'The caseworker called four extended family members, found that two were willing to be considered for placement, and helped one complete the foster licensing paperwork.',
+      active:true,
+      fb:'YES — active efforts. Conducting a diligent search for extended family AND actively helping with barriers to licensure are both active efforts requirements under MICWA.'},
+     {text:'The caseworker told the father he could have his son placed with him if he found a bigger apartment.',
+      active:false,
+      fb:'NOT active efforts. This shifts the burden to the parent. Active efforts require the agency to actively assist with barriers — exploring alternatives, helping with housing resources, working with the tribe to find solutions — not just setting conditions.'},
+     {text:'The caseworker facilitated weekly home visits between the child and parent, helped the parent enroll in a tribe-specific treatment program, and documented all efforts in the case file.',
+      active:true,
+      fb:'YES — active efforts. Supporting visitation in natural settings, using tribally-specific programs, and documenting everything are all hallmarks of genuine active efforts.'}
+   ]},
+  {id:'c2s4', type:'placement-sort',
+   title:'Placement Preferences',
+   heading:'Order the Placements',
+   intro:'Under ICWA § 1915, there is a required order of placement preference. Tap items to rank them from 1 (highest priority) to 4.',
+   progress:'5 of 6',
+   items:[
+     {text:'An Indian foster home licensed or approved by a non-Indian licensing authority',correct:3},
+     {text:'A member of the Indian child\'s extended family',correct:1},
+     {text:'A tribally approved institution for children with a suitable program',correct:4},
+     {text:'A foster home licensed, approved, or specified by the Indian child\'s tribe',correct:2}
+   ]},
+  {id:'c2s5', type:'complete',
+   title:'Chapter 2 Complete',
+   badge:'⚖️',badge_title:'Foundation Badge',
+   summary:'You understand the core mechanisms of ICWA: political classification, active efforts, placement preferences, diligent search, and the role of tribal consultation. Now apply it all to real cases.',
+   next:'cases'}
+];
+
+const CASES_DATA = [
+  {id:'c1',title:'A.N.',age:'Age 7',tribe:'Blackfeet Tribe',
+   topics:['Placement Preferences','Diligent Search','Tribal Consultation','Best Interests of Indian Children'],
+   brief:`A.N. is a 7-year-old affiliated with the Blackfeet Tribe. State CFS removed him from his mother due to substance use and homelessness. A.N.'s father has been sporadically involved and has not participated in the case. A.N. has been in foster care for 12 months with a non-Native, non-kin family. His mother has a large extended family — but the Department has not contacted any relatives. The Department filed a permanency plan with a concurrent plan of adoption by the current non-Native placement.`,
+   screens:[
+     {type:'brief', heading:'Read the Case File'},
+     {type:'evidence',
+      heading:'Gather Your Evidence',
+      intro:'You represent A.N. Tap each fact that reveals an ICWA violation in this case. Careful — not every fact is a violation.',
+      items:[
+        {text:'A.N. is placed with a non-Native, non-kin foster family',rel:true,
+         law:'Violates ICWA placement preferences (§1915) — extended family and tribal placements must be prioritized'},
+        {text:'Mother has a large extended family that has never been contacted',rel:true,
+         law:'Diligent search was never conducted — MICWA requires ongoing documented search for extended family'},
+        {text:'A.N. has been in foster care for 12 months',rel:true,
+         law:'Permanency hearing required within 12 months — and the proposed plan violates ICWA preferences'},
+        {text:'The Blackfeet Tribe was not consulted on the permanency plan',rel:true,
+         law:'Under SB 147 (2025): tribe must be consulted on permanency planning before adoption can proceed'},
+        {text:'A.N.\'s father has been sporadically involved',rel:true,
+         law:'Active efforts must include locating, engaging, and supporting the father — not treating his sporadic involvement as disqualifying'},
+        {text:'A.N.\'s mother used substances',rel:false,
+         law:'This is the basis for removal — not itself an ICWA violation. The violations are in what the Department did AFTER removal.'},
+        {text:'A.N. is 7 years old',rel:false,
+         law:'Age alone doesn\'t indicate an ICWA violation.'}
+      ]},
+     {type:'decision',
+      heading:'The Permanency Hearing',
+      scenario:`The Department is seeking to move forward with adoption by the current non-Native foster family. As A.N.'s attorney, what is your strongest ICWA argument?`,
+      choices:[
+        {text:'The foster parents are not relatives of A.N., so adoption should be denied.',
+         correct:false,
+         fb:'This points to a real concern, but the stronger argument addresses WHY the Department got here — the failure to search and consult. Non-relative status is the symptom; the diligent search failure is the violation.'},
+        {text:'The Department failed to conduct a diligent search for extended family AND failed to consult the Blackfeet Tribe — both required before adoption by a non-preferred placement can be approved.',
+         correct:true,
+         fb:'Correct! These are the core ICWA violations. MICWA and SB 147 require ongoing diligent search throughout the case AND tribal consultation before any permanency plan is finalized. Neither was done.'},
+        {text:'A.N. should be returned to his mother immediately since the removal was improper.',
+         correct:false,
+         fb:'The question is about the permanency plan hearing, not whether removal was proper. The ICWA issue is the failure to follow placement preferences and conduct required searches and consultations.'},
+        {text:'The foster parents have bonded with A.N. after 12 months — that bond is now in his best interest.',
+         correct:false,
+         fb:'WRONG — and importantly, SB 147 EXPLICITLY PROHIBITS this argument. "A placement may not depart from the preferences based solely on the ordinary bonding or attachment that developed from time spent in a nonpreferred placement."'}
+      ]},
+     {type:'objection',
+      heading:'Respond to the Department',
+      obj_title:'DEPARTMENT\'S ARGUMENT',
+      obj_text:`"We've had A.N. for 12 months. Moving him now would disrupt the bond he has formed with the foster family. That bond is what's in his best interest as an Indian child."`,
+      scenario:'The Department is using bonding to justify the current non-preferred placement. What does MICWA say?',
+      choices:[
+        {text:'The Department is correct — after 12 months, established bonds can override ICWA placement preferences.',
+         correct:false,
+         fb:'WRONG. This is precisely the argument Montana\'s SB 147 was written to defeat. The law explicitly states that bonding from time in a non-preferred placement CANNOT be the basis for departing from placement preferences.'},
+        {text:'MICWA (SB 147) prohibits using bonding from non-preferred placement as justification. The Department\'s own failure to search for preferred placements created this situation.',
+         correct:true,
+         fb:'Exactly right. The Department cannot create the very bond it now relies on — by ignoring ICWA placement requirements for 12 months — and then use that bond to justify continued non-compliance. The diligent search obligation was ongoing throughout.'}
+      ]},
+     {type:'verdict',
+      heading:'Case 1 Debrief',
+      outcome:'Under ICWA and MICWA properly applied:',
+      points:[
+        'The Department must conduct a documented diligent search for A.N.\'s extended family — grandparents, aunts, uncles, cousins — before adoption can proceed',
+        'The Blackfeet Tribe must be consulted on any permanency plan under SB 147 requirements',
+        'Adoption by the current non-Native placement cannot be approved based on bonding alone — SB 147 explicitly prohibits this',
+        'Status hearings every 30 days are required to review the Department\'s ongoing search for a preferred placement',
+        'Active efforts must include efforts to locate, engage, and support A.N.\'s father'
+      ],
+      law:'Key law: ICWA §1915 (Placement Preferences); MICWA diligent search requirements; SB 147 anti-bonding provision; SB 147 tribal consultation on permanency plans'}
+   ]},
+
+  {id:'c2',title:'E.L.',age:'Age 4',tribe:'Crow Tribe',
+   topics:['Active Efforts','Placement Preferences','Socioeconomic Barrier Prohibition'],
+   brief:`E.L. is a 4-year-old enrolled Crow member. He was removed from his mother due to unsafe living conditions and untreated mental health issues. His father, D.T., lives in a nearby city in a studio apartment. D.T. is steadily employed — starting his shift at 6 AM — has NO CPS history, and is a fit, willing parent. Despite this, the Department refuses to place E.L. with D.T., citing his work hours and small apartment. The Department has not facilitated any parent-child contact and has not explored any alternatives to address these barriers.`,
+   screens:[
+     {type:'brief', heading:'Read the Case File'},
+     {type:'evidence',
+      heading:'Identify the Violations',
+      intro:'Which facts constitute ICWA violations by the Department? Tap each violation.',
+      items:[
+        {text:'D.T. has no CPS history and is a fit, willing father',rel:true,
+         law:'A fit parent has a constitutional right to custody. Denying placement requires meeting ICWA\'s active efforts AND evidentiary standards — not just citing inconveniences.'},
+        {text:'Department refused placement citing only D.T.\'s 6 AM work schedule',rel:true,
+         law:'Work schedule is a socioeconomic factor. Under MICWA, socioeconomic conditions CANNOT be the sole basis for denying placement. Alternatives must be actively explored.'},
+        {text:'Department refused placement citing only the studio apartment',rel:true,
+         law:'Housing size alone cannot justify denying a fit parent\'s placement preference. Active efforts require exploring alternatives and solutions.'},
+        {text:'No parenting time was facilitated between E.L. and D.T.',rel:true,
+         law:'Active efforts require supporting regular visits with parents in natural settings. Denying all contact violates this requirement.'},
+        {text:'Department explored no alternatives to D.T.\'s work schedule barrier',rel:true,
+         law:'Active efforts are not just identifying barriers — they require actively exploring solutions: relative childcare, tribal support, schedule accommodations.'},
+        {text:'E.L.\'s mother had mental health issues',rel:false,
+         law:'This is the basis for removal from the mother — not a violation regarding the father\'s placement.'}
+      ]},
+     {type:'decision',
+      heading:'The Placement Dispute',
+      scenario:`You represent D.T. The Department argues: "D.T.'s 6 AM work shift and small apartment make placement impractical — E.L.'s safety requires the current foster placement." What is your strongest ICWA argument?`,
+      choices:[
+        {text:'D.T. should find childcare and a bigger apartment before we can consider placement.',
+         correct:false,
+         fb:'This is the Department\'s position — and it\'s an ICWA violation. Shifting the entire burden to the parent without active agency support is NOT active efforts.'},
+        {text:'D.T. is a fit parent with no CPS history. The refusal is based solely on socioeconomic factors — prohibited under MICWA. Active efforts require the Department to explore solutions: tribal childcare, relative support for morning hours, housing alternatives.',
+         correct:true,
+         fb:'Correct! MICWA prohibits departure from placement preferences based solely on socioeconomic conditions. A fit parent cannot be denied placement because of work hours and apartment size without the agency actively working to address those barriers.'},
+        {text:'E.L. should be placed with extended family instead of D.T.',
+         correct:false,
+         fb:'Extended family is a valid option — but the primary violation is that a fit, willing father is being denied placement without active efforts to address barriers. That\'s the central ICWA issue to argue first.'}
+      ]},
+     {type:'decision',
+      heading:'What Should Active Efforts Look Like?',
+      scenario:`The judge asks you: "Counsel, what specifically should active efforts have included in this case to address the father's barriers?" Choose the most complete response.`,
+      choices:[
+        {text:'The Department should have referred D.T. to parenting classes.',
+         correct:false,
+         fb:'Referrals alone are NOT active efforts! ICWA requires the Department to do more than hand a parent a list of programs.'},
+        {text:'Active efforts should have included: facilitating regular father-son contact immediately; consulting the Crow Tribe to identify childcare support for morning hours; assessing whether the apartment poses any actual safety risk with possible solutions; and actively helping D.T. navigate any real barriers rather than using them as disqualifiers.',
+         correct:true,
+         fb:'Excellent! Active efforts must be tailored to the facts. Here: address specific barriers with practical, coordinated support, involve the tribe, and facilitate the parent-child relationship from day one.'},
+        {text:'The Department should have set a timeline for D.T. to resolve his own barriers.',
+         correct:false,
+         fb:'ICWA requires the agency to actively assist — not set a timer and wait. The Department cannot shift the burden to a fit parent and call it active efforts.'}
+      ]},
+     {type:'verdict',
+      heading:'Case 2 Debrief',
+      outcome:'Under ICWA and MICWA correctly applied:',
+      points:[
+        'D.T.\'s placement as a fit, willing parent cannot be denied based solely on work hours or apartment size — these are socioeconomic factors',
+        'Active efforts must include exploring practical solutions: morning childcare coverage through the Crow Tribe or relatives, housing resources, schedule accommodations',
+        'Meaningful parent-child contact must be facilitated immediately — not withheld pending placement resolution',
+        'The Crow Tribe must be consulted on case planning, including identifying culturally relevant support services for D.T.',
+        'Refusal to explore alternatives is a failure of active efforts — it is not a valid justification for continued foster placement'
+      ],
+      law:'Key law: ICWA §1912(d) (Active Efforts); MICWA socioeconomic barrier prohibition; Placement Preferences §1915; fit parent rights'}
+  ]},
+
+  {id:'c3',title:'K.G.',age:'Age 10',tribe:'Three Affiliated Tribes',
+   topics:['Indian Custodian Rights','Evidentiary Burdens','Informal Tribal Customs','Placement Preferences'],
+   brief:`K.G. is a 10-year-old enrolled member of the Three Affiliated Tribes. Her parents — both tribal members — placed her informally with her maternal grandmother, Mrs. L., who lives in the same county. There is no formal court guardianship order. Mrs. L. has enrolled K.G. in school and maintained regular medical and dental care. CFS received an anonymous report of "neglect" and "abandonment." CFS investigated and found K.G. healthy and well-cared for with Mrs. L. — but because there was no formal documentation, the agency initiated a Dependent Neglect (DN) case.`,
+   screens:[
+     {type:'brief', heading:'Read the Case File'},
+     {type:'decision',
+      heading:'The Threshold Question',
+      scenario:`Is Mrs. L. an "Indian Custodian" under ICWA — even without a formal court guardianship order?`,
+      choices:[
+        {text:'No — without a court order, there is no legal custody, so Mrs. L. has no protected status under ICWA.',
+         correct:false,
+         fb:'Incorrect. ICWA\'s definition of "Indian Custodian" does NOT require a court order. It explicitly includes custody transferred under TRIBAL LAW OR CUSTOM. The parents\' decision to place K.G. with her grandmother — consistent with tribal family customs — is legally recognized.'},
+        {text:'Yes — ICWA defines Indian Custodian as including someone to whom a parent has transferred temporary care, physical custody, and control of the Indian child — which can occur under tribal law or custom without a court order.',
+         correct:true,
+         fb:'Correct! The MICWA definition: "Indian Custodian means an Indian person who under Tribal law, Tribal custom, or state law has legal or temporary physical custody of an Indian child or to whom the parent has transferred temporary care, physical custody, and control of the Indian child." Tribal custom of placing children with grandmothers is legally recognized.'}
+      ]},
+     {type:'decision',
+      heading:'The Evidentiary Burden',
+      scenario:`CFS\'s own investigation found K.G. healthy, enrolled in school, and receiving medical care. Despite this, CFS filed a DN case because the arrangement was informal. What must CFS prove to remove K.G. from Mrs. L.?`,
+      choices:[
+        {text:'Any reasonable concern about the informality of the arrangement.',
+         correct:false,
+         fb:'No. The lack of a court order does not lower the evidentiary burden under ICWA. Mrs. L. is an Indian Custodian, and ICWA\'s protective standards apply.'},
+        {text:'A preponderance of evidence that another arrangement would be better for K.G.',
+         correct:false,
+         fb:'This is a non-ICWA standard. ICWA requires a much higher bar to remove an Indian child from an Indian custodian.'},
+        {text:'Clear and convincing evidence — including qualified expert witness testimony — that active efforts were made AND that continued custody by Mrs. L. is likely to result in serious emotional or physical harm to K.G.',
+         correct:true,
+         fb:'Correct! Under ICWA §1912(e), foster care placement requires clear and convincing evidence, including QEW testimony, that continued custody by the Indian custodian is likely to result in serious harm. CFS\'s own investigation found the opposite.'}
+      ]},
+     {type:'evidence',
+      heading:'Build Your Defense',
+      intro:'Select the facts and legal arguments that support K.G. remaining with Mrs. L.',
+      items:[
+        {text:'K.G. is enrolled in school and attending regularly',rel:true,
+         law:'Evidence of stability and adequate care — directly contradicts the neglect allegation'},
+        {text:'K.G. has received regular medical and dental care',rel:true,
+         law:'Evidence of active, appropriate parenting by Mrs. L. — cuts directly against any neglect finding'},
+        {text:'K.G.\'s parents placed her with grandmother in accordance with tribal family custom',rel:true,
+         law:'Mrs. L. is an Indian Custodian under tribal custom — ICWA\'s full protections apply to this arrangement'},
+        {text:'There is no formal court guardianship order',rel:false,
+         law:'Legally irrelevant — ICWA recognizes custodianship through tribal law and custom, not just court orders'},
+        {text:'The neglect report was anonymous',rel:true,
+         law:'Anonymous reports require careful evaluation — there is no named complainant to substantiate the allegations, and CFS\'s investigation found no evidence of neglect'},
+        {text:'CFS\'s own investigation confirmed K.G. is healthy and well-cared for',rel:true,
+         law:'The state\'s own investigation fails to meet the evidentiary burden for removal — it undermines the basis for the DN case'}
+      ]},
+     {type:'verdict',
+      heading:'Case 3 Debrief',
+      outcome:'Under ICWA correctly applied:',
+      points:[
+        'Mrs. L. IS an Indian Custodian — the parents\' transfer of care under tribal custom is legally recognized under ICWA without requiring a court order',
+        'CFS must meet "clear and convincing evidence" (with QEW testimony) that continued custody would cause K.G. serious harm — their own investigation shows the opposite',
+        'Opening a DN case based solely on the informality of a tribally customary arrangement does not meet ICWA\'s evidentiary burden',
+        'K.G. is already in a preferred ICWA placement (extended family). Removal would require extraordinary justification.',
+        'The Three Affiliated Tribes must be notified and consulted. Tribal custom regarding family placement is legally relevant — not a problem to be corrected.'
+      ],
+      law:'Key law: ICWA Indian Custodian definition; §1912(e) evidentiary standards; MICWA QEW requirements; Placement Preferences §1915(b)'}
+   ]}
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+const S = {
+  screen: 'title',
+  ch1Slide: 0,
+  ch2Slide: 0,
+  caseIndex: 0,
+  caseSlide: 0,
+  progress: JSON.parse(localStorage.getItem('icwa_progress') || '{"ch1":false,"ch2":false,"cases":[false,false,false]}'),
+  // temp state per screen
+  voiceIdx: 0,
+  fcIdx: 0,
+  aeIdx: 0,
+  aeScore: 0,
+  psSelected: null,
+  psSlots: [null,null,null,null],
+  clIdx: 0,
+  clScore: 0,
+  evSelected: [],
+  evRevealed: false,
+  choiceMade: null,
+  choiceFb: null,
+  tlOpen: {}
+};
+
+function saveProgress(){localStorage.setItem('icwa_progress', JSON.stringify(S.progress));}
+
+/* ═══════════════════════════════════════════
+   SCREEN NAVIGATION
+═══════════════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById('s-'+id);
+  if(el) el.classList.add('active');
+  S.screen = id;
+  const bnav = document.getElementById('bnav');
+  bnav.style.display = (id==='title') ? 'none' : 'flex';
+  document.querySelectorAll('.bnav-btn').forEach(b=>{
+    b.classList.toggle('act', b.dataset.nav===id || (id.startsWith('case') && b.dataset.nav==='cases') ||
+      (id==='ch1' && b.dataset.nav==='map') || (id==='ch2' && b.dataset.nav==='map'));
+  });
+}
+
+function goTo(dest){
+  if(dest==='map'){renderMap(); showScreen('map');}
+  else if(dest==='cases'){renderCases(); showScreen('cases');}
+  else if(dest==='glossary'){renderGlossary(); showScreen('glossary');}
+  else if(dest==='title'){renderTitle(); showScreen('title');}
+  else if(dest==='ch1'){startCh1(); showScreen('ch1');}
+  else if(dest==='ch2'){
+    if(!S.progress.ch1){alert('Complete Chapter 1: The Roots first!'); return;}
+    startCh2(); showScreen('ch2');
+  }
+  else if(dest==='done'){renderDone(); showScreen('done');}
+}
+
+/* ═══════════════════════════════════════════
+   TITLE
+═══════════════════════════════════════════ */
+function renderTitle(){
+  document.getElementById('s-title').innerHTML = `
+  <div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;background:linear-gradient(170deg,#2E0A1C 0%,#1A0D08 60%,#080504 100%)">
+    <div class="title-circle">🪶</div>
+    <div class="game-title">ICWA:<br>The Circle Unbroken</div>
+    <div class="game-sub">An Interactive Guide to the Indian Child Welfare Act</div>
+    <div class="game-by">Based on the ICWA 2025 Guidebook — American Indian Governance & Policy Institute, University of Montana</div>
+    <div class="chip-row">
+      <span class="chip">⚖️ Federal & Montana Law</span>
+      <span class="chip">📜 History</span>
+      <span class="chip">📁 3 Case Simulations</span>
+      <span class="chip">📱 Works Offline</span>
+    </div>
+    <button class="btn btn-p" onclick="goTo('map')" style="max-width:280px">Begin the Journey →</button>
+    <button class="btn btn-o" onclick="goTo('glossary')" style="max-width:280px;margin-top:10px">📖 Open Glossary</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   MAP
+═══════════════════════════════════════════ */
+function renderMap(){
+  const p = S.progress;
+  const allCases = p.cases.every(Boolean);
+  document.getElementById('s-map').innerHTML = `
+  <div class="top-bar">
+    <div class="bar-title">🗺️ Your Journey</div>
+  </div>
+  <div class="scroll-area">
+    <div class="map-header">
+      <div style="font-size:28px;margin-bottom:8px">🪶</div>
+      <div style="font-size:16px;font-weight:700;color:var(--primary)">ICWA: The Circle Unbroken</div>
+      <div style="font-size:13px;color:var(--dim);margin-top:4px">Complete each chapter to unlock the next</div>
+      <div style="margin-top:12px">
+        <div class="prog-bar" style="margin:0"><div class="prog-fill" style="width:${((p.ch1?1:0)+(p.ch2?1:0)+p.cases.filter(Boolean).length)/5*100}%"></div></div>
+        <div style="font-size:11px;color:var(--dim);margin-top:4px;text-align:right">${((p.ch1?1:0)+(p.ch2?1:0)+p.cases.filter(Boolean).length)} / 5 complete</div>
+      </div>
+    </div>
+
+    <div class="ch-card ${p.ch1?'done':'act-ch'}" onclick="goTo('ch1')">
+      <div class="ch-icon">🌱</div>
+      <div class="ch-info">
+        <h3>Chapter 1: The Roots</h3>
+        <p>History of Indian boarding schools & why ICWA was created</p>
+      </div>
+      <div class="ch-badge">${p.ch1?'✅':'▶️'}</div>
+    </div>
+
+    <div class="ch-card ${!p.ch1?'locked':p.ch2?'done':'act-ch'}" onclick="goTo('ch2')">
+      <div class="ch-icon">⚖️</div>
+      <div class="ch-info">
+        <h3>Chapter 2: The Foundation</h3>
+        <p>Active efforts, placement preferences, and key ICWA concepts</p>
+      </div>
+      <div class="ch-badge">${p.ch2?'✅':p.ch1?'▶️':'🔒'}</div>
+    </div>
+
+    <div class="ch-card ${!p.ch2?'locked':'act-ch'}" onclick="${p.ch2?"goTo('cases')":"void(0)"}">
+      <div class="ch-icon">📁</div>
+      <div class="ch-info">
+        <h3>Chapter 3: The Cases</h3>
+        <p>Three real-world ICWA hypotheticals to argue</p>
+      </div>
+      <div class="ch-badge">${allCases?'✅':p.ch2?'▶️':'🔒'}</div>
+    </div>
+
+    ${(p.ch1||p.ch2||p.cases.some(Boolean))?`
+    <div style="height:12px"></div>
+    <button class="btn btn-o" onclick="goTo('glossary')">📖 ICWA Glossary (${GLOSSARY_DATA.length} terms)</button>`:''}
+    ${allCases&&p.ch1&&p.ch2?`<button class="btn btn-p" onclick="goTo('done')" style="margin-top:10px">🎓 View Completion Certificate</button>`:''}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   CHAPTER 1
+═══════════════════════════════════════════ */
+function startCh1(){
+  S.ch1Slide = 0;
+  S.voiceIdx = 0;
+  S.tlOpen = {};
+  S.choiceMade = null;
+  renderCh1Slide();
+}
+function renderCh1Slide(){
+  const sd = CH1_SCREENS[S.ch1Slide];
+  const el = document.getElementById('s-ch1');
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('map')">←</div>
+    <div class="bar-title">${sd.title}</div>
+    <div class="bar-info">${sd.progress||''}</div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" style="width:${(S.ch1Slide/5)*100}%"></div></div>
+  <div class="scroll-area" id="ch1-content">
+    ${renderCh1Content(sd)}
+  </div>`;
+}
+function renderCh1Content(sd){
+  if(sd.type==='intro') return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <div class="gap-sm"></div>
+    <p class="intro-text anim a2">${sd.body}</p>
+    <div class="gap"></div>
+    <div class="card-q anim a3">${sd.quote}</div>
+    <div class="gap"></div>
+    <button class="btn btn-p anim a4" onclick="ch1Next()">Continue →</button>`;
+
+  if(sd.type==='timeline') return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <p class="anim a2" style="margin:6px 0 14px">${sd.intro}</p>
+    <div class="tl">
+      ${sd.events.map((e,i)=>`
+        <div class="tl-item anim a${Math.min(i+2,5)}" onclick="toggleTl(${i})">
+          <div class="tl-year">${e.year}</div>
+          <div class="tl-text">${e.short}</div>
+          <div class="tl-more" id="tl-${i}">${e.more}</div>
+        </div>`).join('')}
+    </div>
+    <div class="gap"></div>
+    <button class="btn btn-p" onclick="ch1Next()">Continue →</button>`;
+
+  if(sd.type==='stats') return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <p class="anim a2" style="margin:6px 0 14px">${sd.intro}</p>
+    ${sd.stats.map((s,i)=>`
+      <div class="stat-box anim a${Math.min(i+2,5)}" style="margin-bottom:10px">
+        <div class="stat-num">${s.num}</div>
+        <div class="stat-lbl">${s.label}</div>
+      </div>`).join('')}
+    <div class="gap"></div>
+    <button class="btn btn-p" onclick="ch1Next()">Continue →</button>`;
+
+  if(sd.type==='voices'){
+    const q = sd.quotes[S.voiceIdx];
+    return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <p class="anim a2" style="margin:6px 0 14px">${sd.intro}</p>
+    <div class="card-q anim a3" style="min-height:160px">
+      "${q.text}"
+      <div class="q-attr">— ${q.attr}</div>
+    </div>
+    <div class="voice-nav anim a4">
+      <button class="voice-btn" onclick="voiceNav(-1)">‹ Prev</button>
+      <div style="flex:1;display:flex;gap:5px;justify-content:center">
+        ${sd.quotes.map((_,i)=>`<div class="voice-dot${i===S.voiceIdx?' on':''}"></div>`).join('')}
+      </div>
+      <button class="voice-btn" onclick="voiceNav(1)">Next ›</button>
+    </div>
+    <div style="font-size:12px;color:var(--dim);text-align:center;margin-top:6px">${S.voiceIdx+1} of ${sd.quotes.length}</div>
+    <div class="gap"></div>
+    <button class="btn btn-p" onclick="ch1Next()">Continue →</button>`;
+  }
+
+  if(sd.type==='reflection'){
+    const made = S.choiceMade;
+    return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <div class="gap-sm"></div>
+    <div class="card anim a2">
+      <p style="color:var(--text)">${sd.question}</p>
+    </div>
+    <div class="gap"></div>
+    ${sd.choices.map((c,i)=>`
+      <button class="choice-btn anim a${i+2} ${made!==null?(c.correct?'c-right':(made===i?'c-wrong':'')):''}"
+        onclick="${made===null?`ch1Choice(${i})`:'void(0)'}" ${made!==null?'disabled':''}>
+        ${c.text}
+      </button>`).join('')}
+    ${made!==null?`
+      <div class="fb ${sd.choices[made].correct?'fb-ok':'fb-bad'}">
+        ${sd.choices[made].correct?'✅ ':'❌ '}${sd.choices[made].fb}
+      </div>
+      <div class="gap"></div>
+      <button class="btn btn-p" onclick="ch1Next()">Continue →</button>`:''}`;
+  }
+
+  if(sd.type==='complete') return `
+    <div style="text-align:center;padding:20px 0">
+      <div class="badge-circle anim a1">${sd.badge}</div>
+      <h2 class="anim a2" style="margin:12px 0 6px">${sd.title}</h2>
+      <div class="anim a2" style="font-size:14px;color:var(--primary);font-weight:700;margin-bottom:16px">${sd.badge_title}</div>
+      <p class="anim a3" style="margin-bottom:24px">${sd.summary}</p>
+      <button class="btn btn-p anim a4" onclick="goTo('${sd.next}')">
+        ${sd.next==='ch2'?'Start Chapter 2: The Foundation →':'Go to Cases →'}
+      </button>
+      <button class="btn btn-s anim a5" onclick="goTo('map')" style="margin-top:10px">Back to Map</button>
+    </div>`;
+  return '';
+}
+function toggleTl(i){
+  S.tlOpen[i] = !S.tlOpen[i];
+  const el = document.getElementById('tl-'+i);
+  if(el) el.style.display = S.tlOpen[i]?'block':'none';
+  const item = el?.parentElement;
+  if(item) item.classList.toggle('open', S.tlOpen[i]);
+}
+function voiceNav(dir){
+  const sd = CH1_SCREENS[S.ch1Slide];
+  S.voiceIdx = Math.max(0, Math.min(sd.quotes.length-1, S.voiceIdx+dir));
+  document.getElementById('ch1-content').innerHTML = renderCh1Content(sd);
+}
+function ch1Choice(i){
+  S.choiceMade = i;
+  const el = document.getElementById('ch1-content');
+  el.innerHTML = renderCh1Content(CH1_SCREENS[S.ch1Slide]);
+}
+function ch1Next(){
+  if(S.ch1Slide < CH1_SCREENS.length-1){
+    S.ch1Slide++;
+    S.choiceMade = null;
+    S.voiceIdx = 0;
+    if(S.ch1Slide===CH1_SCREENS.length-1){S.progress.ch1=true;saveProgress();}
+    renderCh1Slide();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   CHAPTER 2
+═══════════════════════════════════════════ */
+function startCh2(){
+  S.ch2Slide = 0;
+  S.fcIdx = 0;
+  S.aeIdx = 0;
+  S.aeScore = 0;
+  S.clIdx = 0;
+  S.clScore = 0;
+  S.psSelected = null;
+  S.psSlots = [null,null,null,null];
+  S.choiceMade = null;
+  renderCh2Slide();
+}
+function renderCh2Slide(){
+  const sd = CH2_SCREENS[S.ch2Slide];
+  const el = document.getElementById('s-ch2');
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('map')">←</div>
+    <div class="bar-title">${sd.title}</div>
+    <div class="bar-info">${sd.progress||''}</div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" style="width:${(S.ch2Slide/5)*100}%"></div></div>
+  <div class="scroll-area" id="ch2-content">
+    ${renderCh2Content(sd)}
+  </div>`;
+}
+function renderCh2Content(sd){
+  if(sd.type==='intro') return `
+    <h2 class="anim a1">${sd.heading}</h2>
+    <div class="gap-sm"></div>
+    <p class="intro-text anim a2">${sd.body}</p>
+    <div class="gap"></div>
+    <div class="card-q anim a3">${sd.quote}</div>
+    <div class="gap"></div>
+    <button class="btn btn-p anim a4" onclick="ch2Next()">Continue →</button>`;
+
+  if(sd.type==='classification'){
+    const item = sd.items[S.clIdx];
+    const done = S.clIdx >= sd.items.length;
+    if(done) return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <div class="gap-sm"></div>
+      <div class="card anim a2" style="text-align:center;padding:24px">
+        <div style="font-size:36px">🎯</div>
+        <div class="cl-score" style="margin:8px 0">${S.clScore}/${sd.items.length}</div>
+        <p>${S.clScore===sd.items.length?'Perfect! You understand the critical distinction.':'Good effort. Remember: tribal membership is political, not racial — confirmed by the Supreme Court in Haaland v. Brackeen (2023).'}</p>
+      </div>
+      <div class="gap"></div>
+      <button class="btn btn-p anim a3" onclick="ch2Next()">Continue →</button>`;
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <p class="anim a2" style="margin:6px 0 12px">${sd.intro}</p>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">Question ${S.clIdx+1} of ${sd.items.length} • Score: ${S.clScore}/${S.clIdx}</div>
+      <div class="cl-card anim a3">${item.text}</div>
+      ${S.choiceMade===null?`
+        <div class="cl-btns anim a4">
+          <button class="cl-btn cl-political" onclick="clAnswer(true)">🏛️ Political Classification</button>
+          <button class="cl-btn cl-racial" onclick="clAnswer(false)">❌ Racial Classification</button>
+        </div>`:`
+        <div class="fb ${S.choiceMade===item.political?'fb-ok':'fb-bad'}" style="margin-top:10px">
+          ${S.choiceMade===item.political?'✅ Correct! ':'❌ Not quite. '}${item.fb}
+        </div>
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="clNext()">Next →</button>`}`;
+  }
+
+  if(sd.type==='flashcards'){
+    const card = sd.cards[S.fcIdx];
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <p class="anim a2" style="margin:6px 0 12px">${sd.intro}</p>
+      <div class="fc-wrap anim a3" id="fc-card" onclick="flipCard()">
+        <div class="fc-inner">
+          <div class="fc-face fc-front">${card.front}</div>
+          <div class="fc-face fc-back">${card.back}</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:12px;color:var(--dim);margin-top:4px">Tap card to flip</div>
+      <div class="fc-nav anim a4">
+        <button class="voice-btn" onclick="fcNav(-1)" ${S.fcIdx===0?'disabled':''}>‹ Prev</button>
+        <div style="font-size:13px;color:var(--dim)">${S.fcIdx+1} of ${sd.cards.length}</div>
+        <button class="voice-btn" onclick="fcNav(1)" ${S.fcIdx===sd.cards.length-1?'disabled':''}>Next ›</button>
+      </div>
+      <div class="gap"></div>
+      <button class="btn btn-p anim a5" onclick="ch2Next()">I've studied all cards →</button>`;
+  }
+
+  if(sd.type==='active-efforts'){
+    const done = S.aeIdx >= sd.scenarios.length;
+    if(done) return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <div class="card anim a2" style="text-align:center;padding:24px">
+        <div style="font-size:36px">⚖️</div>
+        <div class="ae-counter" style="margin:8px 0">
+          <span class="ae-correct-count">${S.aeScore}</span>
+          <span class="ae-total"> / ${sd.scenarios.length} correct</span>
+        </div>
+        <p>${S.aeScore>=4?'Excellent! You can identify active efforts under ICWA.':S.aeScore>=3?'Good work! Review the scenarios where you were unsure.':'Review the active efforts standard — engagement, not just referrals.'}</p>
+      </div>
+      <div class="gap"></div>
+      <button class="btn btn-p anim a3" onclick="ch2Next()">Continue →</button>`;
+    const sc = sd.scenarios[S.aeIdx];
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <p class="anim a2" style="margin:6px 0 12px">Does this action meet the ICWA <strong style="color:var(--primary)">Active Efforts</strong> standard?</p>
+      <div style="font-size:11px;color:var(--dim);margin-bottom:8px">Scenario ${S.aeIdx+1} of ${sd.scenarios.length} • Score: ${S.aeScore}/${S.aeIdx}</div>
+      <div class="ae-scenario anim a3">${sc.text}</div>
+      ${S.choiceMade===null?`
+        <div class="judge-btns anim a4">
+          <button class="btn-yes" onclick="aeAnswer(true)">✅ Active Efforts</button>
+          <button class="btn-no" onclick="aeAnswer(false)">❌ Not Enough</button>
+        </div>`:`
+        <div class="fb ${S.choiceMade===sc.active?'fb-ok':'fb-bad'}" style="margin-top:10px">
+          ${S.choiceMade===sc.active?'✅ Correct! ':'❌ '}${sc.fb}
+        </div>
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="aeNext()">Next Scenario →</button>`}`;
+  }
+
+  if(sd.type==='placement-sort'){
+    const shuffled = S.psOrder || (S.psOrder = [...sd.items].sort(()=>Math.random()-.5));
+    const verified = S.psVerified;
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <p class="anim a2" style="margin:6px 0 12px">${sd.intro}</p>
+      <div class="section-hdr" style="margin-top:8px">PLACEMENT OPTIONS — tap one, then tap a slot</div>
+      <div class="ps-bank anim a3">
+        ${shuffled.map((item,i)=>{
+          const placed = S.psSlots.some(s=>s===i);
+          return placed?'':`<div class="ps-item ${S.psSelected===i?'selected':''}" onclick="psSelectItem(${i})">${item.text}</div>`;
+        }).join('')}
+      </div>
+      <div class="section-hdr">RANK THEM (1 = highest priority)</div>
+      <div class="ps-slots">
+        ${[0,1,2,3].map(rank=>{
+          const placed = S.psSlots[rank];
+          const item = placed!==null ? shuffled[placed] : null;
+          let cls = 'ps-slot';
+          if(item){
+            cls += ' filled';
+            if(verified) cls += item.correct===rank+1?' correct':' wrong';
+          }
+          return `<div class="${cls}" onclick="psPlaceItem(${rank})">
+            <div class="ps-num">${rank+1}</div>
+            ${item?`<span>${item.text} ${verified?(item.correct===rank+1?'✅':'❌ (should be #'+item.correct+')'):'<span style="font-size:11px;color:var(--dim)">(tap to remove)</span>'}</span>`:`<span style="color:var(--dim)">Tap to place...</span>`}
+          </div>`;
+        }).join('')}
+      </div>
+      ${!verified&&S.psSlots.every(s=>s!==null)?`
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="psVerify()">Check My Order</button>`:''}
+      ${verified?`
+        <div class="fb ${S.psSlots.every((s,i)=>shuffled[s].correct===i+1)?'fb-ok':'fb-warn'}" style="margin-top:12px">
+          ${S.psSlots.every((s,i)=>shuffled[s].correct===i+1)?'✅ Perfect! Correct order.':'See corrections above. Remember: Extended Family → Tribal Foster Home → Indian Foster Home → Tribally Approved Institution.'}
+        </div>
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="ch2Next()">Continue →</button>`:''}`;
+  }
+
+  if(sd.type==='complete') return `
+    <div style="text-align:center;padding:20px 0">
+      <div class="badge-circle anim a1">${sd.badge}</div>
+      <h2 class="anim a2" style="margin:12px 0 6px">${sd.title}</h2>
+      <div class="anim a2" style="font-size:14px;color:var(--primary);font-weight:700;margin-bottom:16px">${sd.badge_title}</div>
+      <p class="anim a3" style="margin-bottom:24px">${sd.summary}</p>
+      <button class="btn btn-p anim a4" onclick="goTo('${sd.next}')">Go to Case Files →</button>
+      <button class="btn btn-s anim a5" onclick="goTo('map')" style="margin-top:10px">Back to Map</button>
+    </div>`;
+  return '';
+}
+function clAnswer(isPolitical){
+  const sd = CH2_SCREENS[S.ch2Slide];
+  const item = sd.items[S.clIdx];
+  S.choiceMade = isPolitical;
+  if(isPolitical===item.political) S.clScore++;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(sd);
+}
+function clNext(){
+  S.clIdx++;
+  S.choiceMade = null;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function flipCard(){
+  document.getElementById('fc-card')?.classList.toggle('flipped');
+}
+function fcNav(dir){
+  S.fcIdx = Math.max(0, Math.min(CH2_SCREENS[S.ch2Slide].cards.length-1, S.fcIdx+dir));
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function aeAnswer(isActive){
+  const sd = CH2_SCREENS[S.ch2Slide];
+  S.choiceMade = isActive;
+  if(isActive===sd.scenarios[S.aeIdx].active) S.aeScore++;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(sd);
+}
+function aeNext(){
+  S.aeIdx++;
+  S.choiceMade = null;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function psSelectItem(i){
+  S.psSelected = (S.psSelected===i) ? null : i;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function psPlaceItem(rank){
+  if(S.psSelected!==null && !S.psVerified){
+    // Check if rank already has something — swap back to bank
+    if(S.psSlots[rank]!==null){
+      S.psSelected = null;
+    } else {
+      S.psSlots[rank] = S.psSelected;
+      S.psSelected = null;
+    }
+  } else if(S.psSlots[rank]!==null && !S.psVerified){
+    // Remove from slot
+    S.psSlots[rank] = null;
+  }
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function psVerify(){
+  S.psVerified = true;
+  document.getElementById('ch2-content').innerHTML = renderCh2Content(CH2_SCREENS[S.ch2Slide]);
+}
+function ch2Next(){
+  if(S.ch2Slide < CH2_SCREENS.length-1){
+    S.ch2Slide++;
+    S.choiceMade = null;
+    S.fcIdx = 0;
+    S.psVerified = false;
+    S.psSlots = [null,null,null,null];
+    S.psSelected = null;
+    S.psOrder = null;
+    if(S.ch2Slide===CH2_SCREENS.length-1){S.progress.ch2=true;saveProgress();}
+    renderCh2Slide();
+  }
+}
+
+/* ═══════════════════════════════════════════
+   CASES LIST
+═══════════════════════════════════════════ */
+function renderCases(){
+  const el = document.getElementById('s-cases');
+  if(!S.progress.ch2){
+    el.innerHTML = `
+    <div class="top-bar">
+      <div class="back-btn" onclick="goTo('map')">←</div>
+      <div class="bar-title">📁 Case Files</div>
+    </div>
+    <div class="scroll-area">
+      <div class="card" style="text-align:center;padding:32px">
+        <div style="font-size:40px;margin-bottom:12px">🔒</div>
+        <h3>Complete Chapter 2 First</h3>
+        <p style="margin-top:8px">Finish "The Foundation" chapter to unlock the Case Files.</p>
+        <button class="btn btn-p" onclick="goTo('ch2')" style="margin-top:16px">Go to Chapter 2</button>
+      </div>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('map')">←</div>
+    <div class="bar-title">📁 Case Files</div>
+  </div>
+  <div class="scroll-area">
+    <div class="card anim a1" style="margin-bottom:14px">
+      <h3>You Are the Advocate</h3>
+      <p style="margin-top:6px">Each case is a real-world ICWA hypothetical. Review the facts, collect evidence, and make decisions as the child's attorney. Your choices affect the outcome.</p>
+    </div>
+    ${CASES_DATA.map((c,i)=>`
+      <div class="case-hdr anim a${i+2}" style="cursor:pointer;margin-bottom:12px" onclick="startCase(${i})">
+        <div class="case-stamp">CASE FILE ${i+1} ${S.progress.cases[i]?'• COMPLETE ✅':''}</div>
+        <div class="case-name">${c.title}</div>
+        <div class="case-tribe">${c.age} • ${c.tribe}</div>
+        <div class="topic-row">
+          ${c.topics.map(t=>`<span class="topic-tag">${t}</span>`).join('')}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   INDIVIDUAL CASE
+═══════════════════════════════════════════ */
+function startCase(idx){
+  S.caseIndex = idx;
+  S.caseSlide = 0;
+  S.choiceMade = null;
+  S.evSelected = [];
+  S.evRevealed = false;
+  renderCaseSlide();
+  showScreen('case');
+}
+function renderCaseSlide(){
+  const caseData = CASES_DATA[S.caseIndex];
+  const slides = [
+    {type:'brief', heading:'Read the Case File'},
+    ...caseData.screens
+  ];
+  // skip first 'brief' if it's duplicated in screens
+  const allSlides = [{type:'brief', heading:'Read the Case File'}, ...caseData.screens.filter(s=>s.type!=='brief')];
+  const sd = allSlides[S.caseSlide];
+  const el = document.getElementById('s-case');
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('cases')">←</div>
+    <div class="bar-title">${caseData.title} — ${caseData.tribe}</div>
+    <div class="bar-info">${S.caseSlide+1}/${allSlides.length}</div>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" style="width:${(S.caseSlide/(allSlides.length-1))*100}%"></div></div>
+  <div class="scroll-area" id="case-content">
+    ${renderCaseContent(caseData, allSlides, sd)}
+  </div>`;
+}
+function renderCaseContent(caseData, allSlides, sd){
+  if(sd.type==='brief') return `
+    <div class="case-hdr anim a1">
+      <div class="case-stamp">CASE FILE • CONFIDENTIAL</div>
+      <div class="case-name">${caseData.title}</div>
+      <div class="case-tribe">${caseData.age} • ${caseData.tribe}</div>
+      <div class="topic-row">
+        ${caseData.topics.map(t=>`<span class="topic-tag">${t}</span>`).join('')}
+      </div>
+    </div>
+    <div class="section-hdr anim a2">CASE SUMMARY</div>
+    <div class="card anim a2"><p style="color:var(--text);line-height:1.7">${caseData.brief}</p></div>
+    <div class="gap"></div>
+    <button class="btn btn-p anim a3" onclick="caseNext()">Begin Investigation →</button>`;
+
+  if(sd.type==='evidence'){
+    const selSet = new Set(S.evSelected);
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <p class="anim a2" style="margin:6px 0 12px">${sd.intro}</p>
+      <div id="ev-list">
+        ${sd.items.map((item,i)=>{
+          const picked = selSet.has(i);
+          let cls = 'ev-card anim a'+Math.min(i+2,5);
+          if(S.evRevealed){
+            cls += picked&&item.rel?' sel-good': picked&&!item.rel?' sel-bad':'';
+          } else {
+            cls += picked?' sel-good':'';
+          }
+          return `<div class="${cls}" onclick="${S.evRevealed?'void(0)':`evToggle(${i})`}">
+            <div class="ev-check">${picked?(S.evRevealed?(item.rel?'✓':'✗'):'+'):'○'}</div>
+            <div>
+              <div class="ev-text">${item.text}</div>
+              ${S.evRevealed&&picked?`<div class="ev-law">${S.evRevealed?(item.rel?'✅ ':'❌ ')+item.law:''}</div>`:''}
+              ${S.evRevealed&&item.rel&&!picked?`<div class="ev-law" style="color:var(--warn)">⚠️ Missed: ${item.law}</div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${!S.evRevealed&&selSet.size>0?`
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="evReveal()">Review My Evidence (${selSet.size} selected)</button>`:''}
+      ${S.evRevealed?`
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="caseNext()">Proceed to Argument →</button>`:''}
+      ${!S.evRevealed&&selSet.size===0?`<p style="text-align:center;font-size:12px;color:var(--dim);margin-top:8px">Tap evidence cards to select them</p>`:''}`;
+  }
+
+  if(sd.type==='decision'){
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <div class="card anim a2" style="margin:8px 0 14px">
+        <div class="label-sm">THE SITUATION</div>
+        <p style="color:var(--text)">${sd.scenario}</p>
+      </div>
+      <div class="section-hdr">YOUR ARGUMENT</div>
+      ${sd.choices.map((c,i)=>`
+        <button class="choice-btn anim a${Math.min(i+2,5)} ${S.choiceMade!==null?(c.correct?'c-right':(S.choiceMade===i?'c-wrong':'')):''}"
+          onclick="${S.choiceMade===null?`caseChoice(${i})`:'void(0)'}" ${S.choiceMade!==null?'disabled':''}>
+          ${c.text}
+        </button>`).join('')}
+      ${S.choiceMade!==null?`
+        <div class="fb ${sd.choices[S.choiceMade].correct?'fb-ok':'fb-bad'}" style="margin-top:6px">
+          ${sd.choices[S.choiceMade].correct?'⚖️ Strong argument! ':'⚖️ '}${sd.choices[S.choiceMade].fb}
+        </div>
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="caseNext()">Continue →</button>`:''}`;
+  }
+
+  if(sd.type==='objection'){
+    return `
+      <h2 class="anim a1">${sd.heading}</h2>
+      <div class="obj-box anim a2">
+        <div class="obj-word">⚠️ ${sd.obj_title}</div>
+        <div class="obj-sub" style="margin-top:8px;font-size:14px;color:var(--text);font-style:italic">"${sd.obj_text}"</div>
+      </div>
+      <div class="card anim a3" style="margin-bottom:14px">
+        <div class="label-sm">YOUR RESPONSE</div>
+        <p style="color:var(--text)">${sd.scenario}</p>
+      </div>
+      ${sd.choices.map((c,i)=>`
+        <button class="choice-btn anim a${i+3} ${S.choiceMade!==null?(c.correct?'c-right':(S.choiceMade===i?'c-wrong':'')):''}"
+          onclick="${S.choiceMade===null?`caseChoice(${i})`:'void(0)'}" ${S.choiceMade!==null?'disabled':''}>
+          ${c.text}
+        </button>`).join('')}
+      ${S.choiceMade!==null?`
+        <div class="fb ${sd.choices[S.choiceMade].correct?'fb-ok':'fb-bad'}" style="margin-top:6px">
+          ${sd.choices[S.choiceMade].correct?'🎯 Excellent! ':'⚠️ '}${sd.choices[S.choiceMade].fb}
+        </div>
+        <div class="gap"></div>
+        <button class="btn btn-p" onclick="caseNext()">Continue →</button>`:''}`;
+  }
+
+  if(sd.type==='verdict'){
+    return `
+      <div class="case-hdr anim a1" style="background:linear-gradient(135deg,#1A3A1A,#0A2010)">
+        <div class="case-stamp">⚖️ VERDICT & DEBRIEF</div>
+        <div class="case-name" style="font-size:18px">${sd.heading}</div>
+      </div>
+      <div class="section-hdr anim a2">${sd.outcome}</div>
+      <div class="card anim a3">
+        ${sd.points.map(p=>`
+          <div class="verdict-item">
+            <div class="v-bullet">▸</div>
+            <div class="v-text">${p}</div>
+          </div>`).join('')}
+      </div>
+      <div class="law-box anim a4">
+        <div class="law-label">KEY LAW</div>
+        <div style="font-size:13px;color:var(--dim);line-height:1.6">${sd.law}</div>
+      </div>
+      <div class="gap"></div>
+      <button class="btn btn-p anim a5" onclick="caseComplete()">Mark Case Complete ✅</button>
+      <button class="btn btn-s" onclick="goTo('cases')" style="margin-top:10px">Back to Cases</button>`;
+  }
+  return '';
+}
+function evToggle(i){
+  const idx = S.evSelected.indexOf(i);
+  if(idx===-1) S.evSelected.push(i);
+  else S.evSelected.splice(idx,1);
+  document.getElementById('case-content').innerHTML = renderCaseContent(
+    CASES_DATA[S.caseIndex],
+    [{type:'brief'}, ...CASES_DATA[S.caseIndex].screens.filter(s=>s.type!=='brief')],
+    CASES_DATA[S.caseIndex].screens.filter(s=>s.type!=='brief')[S.caseSlide-1] ||
+    {type:'brief'}
+  );
+  // Re-render
+  renderCaseSlide();
+}
+function evReveal(){
+  S.evRevealed = true;
+  renderCaseSlide();
+}
+function caseChoice(i){
+  S.choiceMade = i;
+  renderCaseSlide();
+}
+function caseNext(){
+  const caseData = CASES_DATA[S.caseIndex];
+  const allSlides = [{type:'brief'}, ...caseData.screens.filter(s=>s.type!=='brief')];
+  if(S.caseSlide < allSlides.length-1){
+    S.caseSlide++;
+    S.choiceMade = null;
+    S.evSelected = [];
+    S.evRevealed = false;
+    renderCaseSlide();
+  }
+}
+function caseComplete(){
+  S.progress.cases[S.caseIndex] = true;
+  saveProgress();
+  const allDone = S.progress.cases.every(Boolean) && S.progress.ch1 && S.progress.ch2;
+  if(allDone){
+    goTo('done');
+  } else {
+    goTo('cases');
+  }
+}
+
+/* ═══════════════════════════════════════════
+   GLOSSARY
+═══════════════════════════════════════════ */
+function renderGlossary(){
+  const el = document.getElementById('s-glossary');
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('map')">←</div>
+    <div class="bar-title">📖 ICWA Glossary</div>
+    <div class="bar-info">${GLOSSARY_DATA.length} terms</div>
+  </div>
+  <div class="scroll-area">
+    <input class="glos-search" type="text" placeholder="Search terms..." oninput="filterGlossary(this.value)" id="glos-input">
+    <div id="glos-list">
+      ${renderGlosItems(GLOSSARY_DATA)}
+    </div>
+  </div>`;
+}
+function renderGlosItems(items){
+  return items.map((g,i)=>`
+    <div class="glos-item">
+      <div class="glos-term" onclick="toggleGlos(${i})">
+        ${g.term}
+        <span style="color:var(--dim);font-size:16px">▾</span>
+      </div>
+      <div class="glos-def" id="gd-${i}">${g.def}</div>
+    </div>`).join('');
+}
+function toggleGlos(i){
+  const el = document.getElementById('gd-'+i);
+  if(el) el.classList.toggle('open');
+}
+function filterGlossary(q){
+  const filtered = q ? GLOSSARY_DATA.filter(g=>
+    g.term.toLowerCase().includes(q.toLowerCase()) ||
+    g.def.toLowerCase().includes(q.toLowerCase())
+  ) : GLOSSARY_DATA;
+  document.getElementById('glos-list').innerHTML = renderGlosItems(filtered);
+}
+
+/* ═══════════════════════════════════════════
+   COMPLETION
+═══════════════════════════════════════════ */
+function renderDone(){
+  const el = document.getElementById('s-done');
+  el.innerHTML = `
+  <div class="top-bar">
+    <div class="back-btn" onclick="goTo('map')">←</div>
+    <div class="bar-title">🎓 Completion</div>
+  </div>
+  <div class="scroll-area">
+    <div class="cert">
+      <div style="font-size:11px;letter-spacing:2px;color:var(--dim);text-transform:uppercase">Certificate of Completion</div>
+      <div style="font-size:40px;margin:12px 0">🪶</div>
+      <div style="font-size:22px;font-weight:900;color:var(--primary);margin-bottom:6px">ICWA: The Circle Unbroken</div>
+      <div style="font-size:14px;color:var(--dim);margin-bottom:16px">Indian Child Welfare Act Training — Montana</div>
+      <div class="divider"></div>
+      <div style="font-size:13px;color:var(--text);margin:16px 0;line-height:1.7">
+        Has demonstrated understanding of:<br>
+        <strong>Federal ICWA & Montana MICWA law</strong><br>
+        Active Efforts • Placement Preferences • Tribal Consultation<br>
+        Indian Custodian Rights • Evidentiary Standards<br>
+        Diligent Search • Haaland v. Brackeen
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;justify-content:center;gap:12px;margin:16px 0;font-size:28px">
+        🌱 ⚖️ 📁 📁 📁
+      </div>
+      <div style="font-size:11px;color:var(--dim);font-style:italic">
+        Based on: ICWA 2025 Guidebook<br>
+        American Indian Governance & Policy Institute<br>
+        University of Montana
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px;text-align:center">
+      <h3>What's Next?</h3>
+      <p style="margin-top:8px">Continue deepening your knowledge of ICWA and MICWA. Use the Glossary as a reference. Revisit cases to explore different decision paths.</p>
+    </div>
+    <button class="btn btn-o" onclick="goTo('glossary')" style="margin-top:12px">📖 Review Glossary</button>
+    <button class="btn btn-s" onclick="goTo('map')" style="margin-top:10px">🗺️ Back to Map</button>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+function init(){
+  renderTitle();
+  showScreen('title');
+}
+init();
+</script>
+</body>
+</html>
