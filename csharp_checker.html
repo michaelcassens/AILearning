@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C# Game Dev Error Checker — Educational Tool</title>
+
+  <!-- CodeMirror Editor -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d0d1a;
+      --surface:     #12122a;
+      --surface2:    #181834;
+      --border:      #252550;
+      --accent:      #00c8a8;
+      --accent2:     #7c4dff;
+      --text:        #e8e8f4;
+      --dim:         #6a6a9a;
+      --c-syntax:    #ff4757;
+      --c-runtime:   #ff7043;
+      --c-logical:   #ffd32a;
+      --c-gamedev:   #ae81ff;
+      --c-ok:        #2ed573;
+      --c-info:      #74b9ff;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 2px solid var(--accent);
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .header-left { display: flex; flex-direction: column; gap: 2px; }
+    .header-title { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+    .header-title span { color: var(--c-gamedev); }
+    .header-sub { font-size: 0.7rem; color: var(--dim); }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      flex-wrap: wrap;
+    }
+
+    select.example-picker {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: 5px 8px; font-size: 0.8rem; cursor: pointer;
+      max-width: 220px;
+    }
+    select.example-picker option { background: var(--surface2); }
+
+    .btn {
+      border: none; border-radius: 6px; padding: 6px 14px;
+      font-size: 0.82rem; font-weight: 600; cursor: pointer;
+      transition: opacity .18s, transform .1s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-secondary { background: var(--accent2); color: #fff; }
+    .btn-ghost {
+      background: transparent; color: var(--dim);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--dim); }
+    .btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+    /* ── MAIN LAYOUT ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── EDITOR PANEL ── */
+    .editor-panel {
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column;
+      border-right: 2px solid var(--border);
+    }
+    .panel-label {
+      background: var(--surface);
+      padding: 5px 12px;
+      font-size: 0.68rem; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    /* ── CodeMirror overrides ── */
+    .CodeMirror {
+      height: 100% !important;
+      font-size: 13.5px;
+      line-height: 1.7;
+      background: var(--bg) !important;
+      color: var(--text) !important;
+      font-family: 'Consolas', 'Fira Code', monospace;
+    }
+    .CodeMirror-scroll { height: 100%; }
+    .CodeMirror-gutters { background: var(--surface) !important; border-right: 1px solid var(--border) !important; }
+    .CodeMirror-linenumber { color: var(--dim) !important; font-size: 12px; }
+    .CodeMirror-activeline-background { background: rgba(0,200,168,.06) !important; }
+    .CodeMirror-matchingbracket { color: var(--accent) !important; font-weight: bold; }
+    .CodeMirror-cursor { border-left: 2px solid var(--accent) !important; }
+
+    /* Error highlight classes */
+    .hl-syntax  { background: rgba(255, 71, 87, .2)  !important; }
+    .hl-runtime { background: rgba(255,112, 67, .2)  !important; }
+    .hl-logical { background: rgba(255,211, 42, .15) !important; }
+    .hl-gamedev { background: rgba(174,129,255, .2)  !important; }
+
+    /* ── RESULTS PANEL ── */
+    .results-panel {
+      width: 440px; min-width: 360px;
+      display: flex; flex-direction: column;
+      overflow: hidden; flex-shrink: 0;
+    }
+
+    /* Filter tabs */
+    .filter-row {
+      background: var(--surface);
+      display: flex; gap: 4px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0; flex-wrap: wrap;
+    }
+    .ftab {
+      padding: 3px 9px; border-radius: 12px;
+      font-size: 0.7rem; cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent; color: var(--dim);
+      transition: all .15s;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .ftab:hover { color: var(--text); }
+    .ftab.active { border-color: transparent; color: #fff; }
+    .ftab[data-filter="all"].active    { background: #444464; }
+    .ftab[data-filter="syntax"].active { background: var(--c-syntax); }
+    .ftab[data-filter="runtime"].active{ background: var(--c-runtime); }
+    .ftab[data-filter="logical"].active{ background: #b8960a; color:#fff; }
+    .ftab[data-filter="gamedev"].active{ background: var(--accent2); }
+
+    .badge {
+      background: rgba(255,255,255,.15);
+      border-radius: 8px; padding: 0 5px;
+      font-size: 0.65rem; font-weight: 700; min-width: 16px;
+      text-align: center;
+    }
+
+    /* Results list */
+    .results-content {
+      flex: 1; overflow-y: auto;
+      padding: 8px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .results-content::-webkit-scrollbar { width: 6px; }
+    .results-content::-webkit-scrollbar-track { background: var(--bg); }
+    .results-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Empty / OK states */
+    .empty-state {
+      margin: auto; text-align: center;
+      color: var(--dim); font-size: 0.85rem; line-height: 1.7;
+      padding: 20px;
+    }
+    .empty-state strong { color: var(--accent); }
+    .ok-state {
+      margin: auto; text-align: center;
+      color: var(--c-ok); font-size: 0.9rem; line-height: 1.7;
+      padding: 20px;
+    }
+    .ok-state .ok-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    /* ── ERROR CARDS ── */
+    .error-card {
+      border-radius: 8px;
+      border-left: 4px solid #555;
+      background: var(--surface);
+      overflow: hidden;
+      transition: transform .12s;
+    }
+    .error-card:hover { transform: translateX(2px); }
+    .error-card[data-type="syntax"]  { border-left-color: var(--c-syntax); }
+    .error-card[data-type="runtime"] { border-left-color: var(--c-runtime); }
+    .error-card[data-type="logical"] { border-left-color: var(--c-logical); }
+    .error-card[data-type="gamedev"] { border-left-color: var(--c-gamedev); }
+
+    .card-header {
+      padding: 8px 10px;
+      display: flex; align-items: flex-start; gap: 8px;
+      cursor: pointer;
+    }
+    .card-header:hover { background: rgba(255,255,255,.03); }
+
+    .card-type-badge {
+      font-size: 0.62rem; font-weight: 700; border-radius: 4px;
+      padding: 2px 6px; white-space: nowrap; flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .badge-syntax  { background: rgba(255, 71, 87, .25); color: var(--c-syntax);  }
+    .badge-runtime { background: rgba(255,112, 67, .25); color: var(--c-runtime); }
+    .badge-logical { background: rgba(255,211, 42, .2);  color: var(--c-logical); }
+    .badge-gamedev { background: rgba(174,129,255, .2);  color: var(--c-gamedev); }
+
+    .card-line-chip {
+      font-size: 0.67rem; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 4px;
+      padding: 1px 6px; color: var(--accent); font-weight: 700;
+      white-space: nowrap; flex-shrink: 0; font-family: monospace;
+    }
+
+    .card-title {
+      font-size: 0.82rem; font-weight: 600;
+      color: var(--text); flex: 1;
+      line-height: 1.4;
+    }
+
+    .card-chevron {
+      margin-left: auto; color: var(--dim);
+      font-size: 0.8rem; flex-shrink: 0;
+      transition: transform .2s;
+    }
+    .error-card.open .card-chevron { transform: rotate(90deg); }
+
+    .card-body {
+      padding: 0 10px; max-height: 0;
+      overflow: hidden; transition: max-height .25s ease, padding .25s;
+    }
+    .error-card.open .card-body { max-height: 400px; padding: 0 10px 10px; }
+
+    .card-section { margin-top: 8px; }
+    .card-section-label {
+      font-size: 0.65rem; text-transform: uppercase; letter-spacing: .8px;
+      color: var(--dim); margin-bottom: 4px;
+    }
+    .card-explanation { font-size: 0.8rem; color: var(--text); line-height: 1.6; }
+    .card-fix {
+      font-size: 0.78rem; color: var(--c-ok);
+      background: rgba(46,213,115,.07);
+      border-radius: 6px; padding: 7px 10px;
+      border-left: 3px solid var(--c-ok);
+      line-height: 1.6;
+    }
+    .card-code {
+      font-family: 'Consolas', monospace;
+      font-size: 0.76rem; background: var(--bg);
+      border-radius: 5px; padding: 7px 9px;
+      color: #c8ccd4; border: 1px solid var(--border);
+      overflow-x: auto; white-space: pre;
+      margin-top: 5px;
+    }
+    .jump-btn {
+      margin-top: 8px; font-size: 0.72rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--accent); border-radius: 5px;
+      padding: 4px 10px; cursor: pointer;
+      transition: opacity .15s;
+    }
+    .jump-btn:hover { opacity: .8; }
+
+    /* Severity dot */
+    .sev-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: 5px;
+    }
+    .sev-error   { background: var(--c-syntax); }
+    .sev-warning { background: var(--c-logical); }
+    .sev-info    { background: var(--c-info); }
+
+    /* ── CONTEXT MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent2);
+      border-radius: 12px;
+      width: 500px; max-width: 95vw;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      animation: slideIn .2s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-16px) scale(.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .modal-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-title {
+      font-size: 1rem; font-weight: 700; color: var(--accent2);
+    }
+    .modal-subtitle {
+      font-size: 0.75rem; color: var(--dim); margin-top: 3px;
+    }
+    .modal-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+    .ctx-question {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+    }
+    .ctx-q-text { font-size: 0.83rem; color: var(--text); line-height: 1.5; margin-bottom: 8px; }
+    .ctx-q-context {
+      font-size: 0.73rem; color: var(--dim); margin-bottom: 10px;
+      font-style: italic;
+    }
+    .ctx-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ctx-opt {
+      padding: 5px 12px; border-radius: 20px; font-size: 0.78rem;
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--dim); cursor: pointer; transition: all .15s;
+    }
+    .ctx-opt:hover { border-color: var(--accent2); color: var(--text); }
+    .ctx-opt.selected { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+    .modal-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+
+    /* Status bar */
+    .status-bar {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 4px 14px; font-size: 0.68rem; color: var(--dim);
+      display: flex; gap: 16px; flex-shrink: 0;
+    }
+    .status-bar span { display: flex; align-items: center; gap: 4px; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+    .status-dot.ok { background: var(--c-ok); }
+    .status-dot.err { background: var(--c-syntax); }
+
+    /* Scrollbar for modal */
+    .modal::-webkit-scrollbar { width: 5px; }
+    .modal::-webkit-scrollbar-track { background: transparent; }
+    .modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-title">C# <span>Game Dev</span> Error Checker</div>
+    <div class="header-sub">Educational tool &mdash; Unity / C# focused &mdash; Syntax · Runtime · Logical</div>
+  </div>
+  <div class="header-controls">
+    <select class="example-picker" id="examplePicker">
+      <option value="">— Load Example —</option>
+      <optgroup label="Syntax Errors">
+        <option value="missingBrace">Missing Closing Brace</option>
+        <option value="missingSemicolon">Missing Semicolons</option>
+        <option value="elseWithoutIf">else Without if</option>
+      </optgroup>
+      <optgroup label="Runtime Errors">
+        <option value="nullReference">Null Reference Exception</option>
+        <option value="arrayOutOfBounds">Array Index Out of Bounds</option>
+        <option value="divisionByZero">Division by Zero</option>
+        <option value="uninitializedVar">Uninitialized Variable</option>
+      </optgroup>
+      <optgroup label="Logical Errors">
+        <option value="integerDivision">Integer Division Bug</option>
+        <option value="floatComparison">Float == Comparison</option>
+        <option value="offByOne">Off-by-One Loop</option>
+        <option value="infiniteLoop">Infinite while Loop</option>
+      </optgroup>
+      <optgroup label="Unity / Game Dev">
+        <option value="getComponentInUpdate">GetComponent in Update</option>
+        <option value="findInUpdate">FindObjectOfType in Update</option>
+        <option value="cameraMainInUpdate">Camera.main in Update</option>
+        <option value="physicsInUpdate">Physics AddForce in Update</option>
+        <option value="timeDeltaInFixed">Time.deltaTime in FixedUpdate</option>
+        <option value="eventLeak">Event Subscription Leak</option>
+        <option value="coroutineString">StartCoroutine with String</option>
+      </optgroup>
+    </select>
+    <button class="btn btn-ghost" id="clearBtn">Clear</button>
+    <button class="btn btn-primary" id="checkBtn">&#9654; Check Code</button>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- Editor -->
+  <div class="editor-panel">
+    <div class="panel-label">C# Source Code &mdash; paste or type below</div>
+    <textarea id="codeEditor"></textarea>
+  </div>
+
+  <!-- Results -->
+  <div class="results-panel">
+    <div class="filter-row" id="filterRow">
+      <button class="ftab active" data-filter="all">All <span class="badge" id="badge-all">0</span></button>
+      <button class="ftab" data-filter="syntax">Syntax <span class="badge" id="badge-syntax">0</span></button>
+      <button class="ftab" data-filter="runtime">Runtime <span class="badge" id="badge-runtime">0</span></button>
+      <button class="ftab" data-filter="logical">Logical <span class="badge" id="badge-logical">0</span></button>
+      <button class="ftab" data-filter="gamedev">Game Dev <span class="badge" id="badge-gamedev">0</span></button>
+    </div>
+    <div class="results-content" id="resultsContent">
+      <div class="empty-state">
+        Paste or type your C# code in the editor,<br>then click <strong>&#9654; Check Code</strong>.
+        <br><br>Load an <strong>example</strong> from the dropdown to see what kinds of bugs this tool detects.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar" id="statusBar">
+  <span><span class="status-dot" id="statusDot"></span><span id="statusText">Ready</span></span>
+  <span id="lineCount"></span>
+</div>
+
+<!-- ── CONTEXT MODAL ── -->
+<div class="modal-overlay" id="contextModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">&#x2753; Additional Context Needed</div>
+      <div class="modal-subtitle">Some patterns are ambiguous — answer these to get more accurate feedback.</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modalSkip">Skip — Analyze As-Is</button>
+      <button class="btn btn-secondary" id="modalConfirm">Analyze with My Answers</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════════
+// EXAMPLE SNIPPETS
+// ═══════════════════════════════════════════════════════
+const EXAMPLES = {
+  missingBrace: {
+    label: 'Missing Closing Brace',
+    code: `using UnityEngine;
+
+public class PlayerController : MonoBehaviour
+{
+    public float speed = 5f;
+
+    void Start()
+    {
+        Debug.Log("Player started");
+    }
+
+    void Update()
+    {
+        float h = Input.GetAxis("Horizontal");
+        transform.Translate(h * speed * Time.deltaTime, 0, 0);
+    // Missing closing brace for Update — and also for the class!`
+  },
+
+  missingSemicolon: {
+    label: 'Missing Semicolons',
+    code: `using UnityEngine;
+
+public class EnemyAI : MonoBehaviour
+{
+    public float moveSpeed = 3f
+    public int health = 100
+
+    void Start()
+    {
+        health = 100
+        Debug.Log("Enemy spawned")
+    }
+
+    void Update()
+    {
+        transform.Translate(0, 0, moveSpeed * Time.deltaTime)
+    }
+}`
+  },
+
+  elseWithoutIf: {
+    label: 'else Without if',
+    code: `using UnityEngine;
+
+public class DoorController : MonoBehaviour
+{
+    public bool isOpen = false;
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            isOpen = true;
+            Debug.Log("Door opened");
+        }
+
+        // Missing the if block — else has no matching if:
+        else
+        {
+            isOpen = false;
+            Debug.Log("Door closed");
+        }
+
+        else
+        {
+            Debug.Log("This else has no if at all!");
+        }
+    }
+}`
+  },
+
+  nullReference: {
+    label: 'Null Reference Exception',
+    code: `using UnityEngine;
+
+public class WeaponController : MonoBehaviour
+{
+    private Rigidbody rb;
+    private AudioSource audioSource;
+    private Animator anim;
+
+    void Start()
+    {
+        // ERROR: rb, audioSource, and anim were declared but never assigned!
+        // Calling .method() on a null reference throws NullReferenceException.
+        rb.AddForce(Vector3.up * 10f);
+        audioSource.Play();
+        anim.SetTrigger("Attack");
+    }
+}`
+  },
+
+  arrayOutOfBounds: {
+    label: 'Array Index Out of Bounds',
+    code: `using UnityEngine;
+
+public class GridManager : MonoBehaviour
+{
+    public GameObject[] tiles = new GameObject[5];
+
+    void Start()
+    {
+        // Array has indices 0..4, but we're accessing index 5!
+        tiles[5].SetActive(true);
+
+        // The loop goes one too far — i == tiles.Length is out of bounds
+        for (int i = 0; i <= tiles.Length; i++)
+        {
+            tiles[i].SetActive(true);
+        }
+    }
+}`
+  },
+
+  divisionByZero: {
+    label: 'Division by Zero',
+    code: `using UnityEngine;
+
+public class DamageCalculator : MonoBehaviour
+{
+    public int totalDamage = 100;
+    public int hitCount = 0;
+    public int divisor = 0;
+
+    void Start()
+    {
+        // Literal division by zero — always crashes!
+        float perHit = totalDamage / 0;
+
+        // Variable known to be 0 at this point
+        float avgDamage = totalDamage / hitCount;
+
+        // Denominator assigned to 0 above
+        float result = 50 / divisor;
+    }
+}`
+  },
+
+  uninitializedVar: {
+    label: 'Uninitialized Variable',
+    code: `using UnityEngine;
+
+public class ScoreManager : MonoBehaviour
+{
+    void Start()
+    {
+        int score;       // declared but never assigned
+        int bonus;
+        bonus = 50;
+
+        // 'score' is used before it was ever given a value
+        int total = score + bonus;
+        Debug.Log("Total: " + total);
+
+        string playerName;
+        // 'playerName' is used before assignment
+        Debug.Log("Player: " + playerName);
+    }
+}`
+  },
+
+  integerDivision: {
+    label: 'Integer Division Bug',
+    code: `using UnityEngine;
+
+public class LevelSystem : MonoBehaviour
+{
+    public int totalExp = 1000;
+    public int maxLevel = 30;
+
+    void Start()
+    {
+        // Integer division: 1000 / 30 = 33, NOT 33.333...
+        // Result is silently truncated — assigned to float, but damage already done.
+        float expPerLevel = totalExp / maxLevel;
+
+        // Another classic: 5 / 2 = 2, not 2.5
+        float half = 5 / 2;
+
+        // Speed halved incorrectly
+        float speed = 10;
+        float halfSpeed = speed / 2;   // This one is fine! float / int is fine
+        float wrongHalf = 10 / 2;      // But literal int / int is 5, not 5.0
+
+        Debug.Log("Exp per level: " + expPerLevel);
+    }
+}`
+  },
+
+  floatComparison: {
+    label: 'Float == Comparison',
+    code: `using UnityEngine;
+
+public class HealthSystem : MonoBehaviour
+{
+    public float health = 100f;
+    public float mana = 50.5f;
+
+    void Update()
+    {
+        // Dangerous! Floating-point arithmetic is imprecise.
+        // health may never be EXACTLY 0f due to rounding errors.
+        if (health == 0f)
+        {
+            Die();
+        }
+
+        // Even worse with computed values
+        if (mana == 50.5f)
+        {
+            UseMana();
+        }
+
+        // Timer comparisons are also problematic
+        float timer = 0f;
+        timer += Time.deltaTime;
+        if (timer == 1f)   // This condition may never be true!
+        {
+            Debug.Log("One second passed");
+        }
+    }
+
+    void Die() { }
+    void UseMana() { }
+}`
+  },
+
+  offByOne: {
+    label: 'Off-by-One Loop Error',
+    code: `using UnityEngine;
+
+public class WaveManager : MonoBehaviour
+{
+    public GameObject[] enemies = new GameObject[10];
+    public int[] scores = new int[5];
+
+    void Start()
+    {
+        // BUG: i <= enemies.Length goes from 0..10, but valid indices are 0..9
+        // At i==10, enemies[10] is out of bounds — throws IndexOutOfRangeException!
+        for (int i = 0; i <= enemies.Length; i++)
+        {
+            enemies[i].SetActive(true);
+        }
+
+        // Same bug with a different array
+        for (int j = 0; j <= scores.Length; j++)
+        {
+            scores[j] = j * 100;
+        }
+    }
+}`
+  },
+
+  infiniteLoop: {
+    label: 'Infinite while Loop',
+    code: `using UnityEngine;
+
+public class EnemySpawner : MonoBehaviour
+{
+    public GameObject enemyPrefab;
+
+    void Start()
+    {
+        SpawnEnemies();
+    }
+
+    void SpawnEnemies()
+    {
+        int count = 0;
+        // 'while (true)' with no break or yield — freezes the game forever!
+        while (true)
+        {
+            Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity);
+            count++;
+            // No break, no yield return — Unity will hang here.
+        }
+    }
+}`
+  },
+
+  getComponentInUpdate: {
+    label: 'GetComponent in Update',
+    code: `using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+    public float speed = 5f;
+
+    void Update()
+    {
+        // BAD: GetComponent is expensive — called every frame (60+ times/sec)!
+        Rigidbody rb = GetComponent<Rigidbody>();
+        rb.velocity = new Vector3(Input.GetAxis("Horizontal") * speed, rb.velocity.y, 0);
+
+        // Also bad: these are all expensive lookups in Update
+        Animator anim = GetComponent<Animator>();
+        AudioSource audio = GetComponent<AudioSource>();
+    }
+}`
+  },
+
+  findInUpdate: {
+    label: 'FindObjectOfType in Update',
+    code: `using UnityEngine;
+
+public class UI_Manager : MonoBehaviour
+{
+    void Update()
+    {
+        // FindObjectOfType scans ALL objects in the scene — very slow each frame!
+        GameManager gm = FindObjectOfType<GameManager>();
+        if (gm != null && gm.score > 100)
+        {
+            Debug.Log("High score!");
+        }
+
+        // GameObject.Find is equally bad — O(n) scene search every frame
+        GameObject player = GameObject.Find("Player");
+        player.transform.position = Vector3.zero;
+    }
+}`
+  },
+
+  cameraMainInUpdate: {
+    label: 'Camera.main in Update',
+    code: `using UnityEngine;
+
+public class CameraController : MonoBehaviour
+{
+    public Transform target;
+
+    void Update()
+    {
+        // Camera.main does a FindObjectWithTag("MainCamera") each call — slow!
+        Camera.main.transform.position = Vector3.Lerp(
+            Camera.main.transform.position,
+            target.position + new Vector3(0, 5, -10),
+            Time.deltaTime * 5f
+        );
+
+        // Another common misuse
+        Vector3 screenPos = Camera.main.WorldToScreenPoint(target.position);
+    }
+}`
+  },
+
+  physicsInUpdate: {
+    label: 'Physics AddForce in Update',
+    code: `using UnityEngine;
+
+public class BallController : MonoBehaviour
+{
+    private Rigidbody rb;
+    public float jumpForce = 10f;
+    public float thrustForce = 5f;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
+
+    void Update()
+    {
+        // AddForce should be in FixedUpdate — physics runs at a fixed rate.
+        // Calling it in Update ties physics to frame rate, causing inconsistent behaviour.
+        rb.AddForce(Vector3.forward * thrustForce);
+
+        // MovePosition is also a physics operation — belongs in FixedUpdate
+        rb.MovePosition(transform.position + Vector3.forward * 0.1f);
+    }
+}`
+  },
+
+  timeDeltaInFixed: {
+    label: 'Time.deltaTime in FixedUpdate',
+    code: `using UnityEngine;
+
+public class ProjectileMovement : MonoBehaviour
+{
+    public float speed = 20f;
+
+    void FixedUpdate()
+    {
+        // Time.deltaTime is the time since the last rendered frame — varies.
+        // Inside FixedUpdate you should use Time.fixedDeltaTime (constant interval).
+        transform.position += transform.forward * speed * Time.deltaTime;
+
+        // Same mistake with an accumulated timer
+        float timer = 0f;
+        timer += Time.deltaTime;
+    }
+}`
+  },
+
+  eventLeak: {
+    label: 'Event Subscription Memory Leak',
+    code: `using UnityEngine;
+using System;
+
+public class ButtonHandler : MonoBehaviour
+{
+    void Start()
+    {
+        // Subscribing to events without ever unsubscribing:
+        // When this GameObject is destroyed, the delegate still holds a reference to it,
+        // preventing garbage collection and possibly calling methods on a dead object.
+        EventManager.OnPlayerDied    += HandlePlayerDied;
+        EventManager.OnLevelComplete += HandleLevelComplete;
+        EventManager.OnScoreUpdated  += HandleScoreUpdated;
+        // No OnDisable or OnDestroy that calls -= to clean up!
+    }
+
+    void HandlePlayerDied()    { Debug.Log("Player died"); }
+    void HandleLevelComplete() { Debug.Log("Level complete"); }
+    void HandleScoreUpdated()  { Debug.Log("Score updated"); }
+}`
+  },
+
+  coroutineString: {
+    label: 'StartCoroutine with String',
+    code: `using UnityEngine;
+using System.Collections;
+
+public class AnimationController : MonoBehaviour
+{
+    void Start()
+    {
+        // String-based StartCoroutine: no compile-time checking,
+        // slower, and if you rename the method the string silently breaks.
+        StartCoroutine("PlayIntroAnimation");
+        StartCoroutine("SpawnEnemies");
+    }
+
+    IEnumerator PlayIntroAnimation()
+    {
+        yield return new WaitForSeconds(1f);
+        Debug.Log("Intro done");
+    }
+
+    IEnumerator SpawnEnemies()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(2f);
+            Debug.Log("Spawn!");
+        }
+    }
+}`
+  }
+};
+
+
+// ═══════════════════════════════════════════════════════
+// C# ANALYZER ENGINE
+// ═══════════════════════════════════════════════════════
+class CSharpAnalyzer {
+  constructor(code, userContext = {}) {
+    this.rawCode    = code;
+    this.rawLines   = code.split('\n');
+    this.userContext = userContext; // answers from context modal
+    this.errors     = [];
+    this.ambiguous  = []; // questions to ask user
+    this.strippedLines = this._stripComments();
+  }
+
+  // ── Strip block + line comments, preserving line count and positions
+  _stripComments() {
+    const lines  = this.rawLines;
+    const result = [];
+    let inBlock  = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line   = lines[i];
+      let out    = '';
+      let j      = 0;
+      let inStr  = false;
+      let inChar = false;
+      let inVerbatim = false;
+
+      while (j < line.length) {
+        const c = line[j], n = line[j + 1];
+
+        if (inBlock) {
+          if (c === '*' && n === '/') { inBlock = false; out += '  '; j += 2; }
+          else { out += ' '; j++; }
+          continue;
+        }
+        if (inVerbatim) {
+          if (c === '"' && n === '"') { out += '  '; j += 2; }
+          else if (c === '"') { inVerbatim = false; out += '"'; j++; }
+          else { out += ' '; j++; }
+          continue;
+        }
+        if (inStr) {
+          if (c === '\\') { out += '  '; j += 2; }
+          else if (c === '"') { inStr = false; out += '"'; j++; }
+          else { out += ' '; j++; }
+          continue;
+        }
+        if (inChar) {
+          if (c === '\\') { out += '  '; j += 2; }
+          else if (c === '\'') { inChar = false; out += '\''; j++; }
+          else { out += ' '; j++; }
+          continue;
+        }
+
+        if (c === '/' && n === '/') { break; } // rest of line is comment
+        if (c === '/' && n === '*') { inBlock = true; out += '  '; j += 2; continue; }
+        if (c === '@' && n === '"') { inVerbatim = true; out += '  '; j += 2; continue; }
+        if (c === '"') { inStr = true; out += '"'; j++; continue; }
+        if (c === '\'') { inChar = true; out += '\''; j++; continue; }
+
+        out += c; j++;
+      }
+      result.push(out);
+    }
+    return result;
+  }
+
+  // ── Find bounds (startLine, bodyEnd) for named Unity lifecycle methods
+  _computeMethodBounds() {
+    const UNITY_METHODS = [
+      'Awake', 'Start', 'OnEnable', 'OnDisable', 'OnDestroy',
+      'Update', 'FixedUpdate', 'LateUpdate',
+      'OnTriggerEnter', 'OnTriggerExit', 'OnTriggerStay',
+      'OnCollisionEnter', 'OnCollisionExit', 'OnCollisionStay',
+      'OnApplicationQuit', 'OnGUI'
+    ];
+    const bounds = {};
+    const lines  = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      for (const method of UNITY_METHODS) {
+        if (!new RegExp(`\\b${method}\\s*\\(`).test(trimmed)) continue;
+        // find opening brace (same line or within next 2 lines)
+        let braceStart = -1;
+        for (let k = i; k < Math.min(i + 3, lines.length); k++) {
+          if (lines[k].includes('{')) { braceStart = k; break; }
+        }
+        if (braceStart < 0) continue;
+
+        let depth = 0, started = false, endLine = braceStart;
+        for (let k = braceStart; k < lines.length; k++) {
+          for (const ch of lines[k]) {
+            if (ch === '{') { depth++; started = true; }
+            else if (ch === '}') {
+              depth--;
+              if (started && depth === 0) { endLine = k; break; }
+            }
+          }
+          if (started && depth === 0) break;
+        }
+        bounds[method] = { name: method, declLine: i, bodyStart: braceStart, bodyEnd: endLine };
+      }
+    }
+    return bounds;
+  }
+
+  _lineInMethod(lineIdx, methodName) {
+    const b = this._methodBounds[methodName];
+    if (!b) return false;
+    return lineIdx > b.bodyStart && lineIdx <= b.bodyEnd;
+  }
+
+  _lineInAnyUpdateLike(lineIdx) {
+    return this._lineInMethod(lineIdx, 'Update') ||
+           this._lineInMethod(lineIdx, 'FixedUpdate') ||
+           this._lineInMethod(lineIdx, 'LateUpdate');
+  }
+
+  // ── Detect class-level info
+  _detectClassInfo() {
+    this.isMonoBehaviour = false;
+    this.className = null;
+    this.hasRigidbodyField = false;
+    this.hasOnDisable = false;
+    this.hasOnDestroy = false;
+    let unsubscribes = 0;
+    let subscriptions = 0;
+
+    for (const line of this.strippedLines) {
+      const t = line.trim();
+      if (/\bclass\s+(\w+)\s*:/.test(t)) {
+        const m = t.match(/\bclass\s+(\w+)/);
+        if (m) this.className = m[1];
+        if (/:\s*(MonoBehaviour|NetworkBehaviour|ScriptableObject)\b/.test(t)) {
+          this.isMonoBehaviour = true;
+        }
+      }
+      if (/\bRigidbody\b/.test(t) && /\b(private|public|protected|internal|readonly)?\s*Rigidbody\b/.test(t)) {
+        this.hasRigidbodyField = true;
+      }
+      if (/\bOnDisable\s*\(/.test(t)) this.hasOnDisable = true;
+      if (/\bOnDestroy\s*\(/.test(t)) this.hasOnDestroy = true;
+      if (/\-=\s*\w/.test(t)) unsubscribes++;
+      if (/\+=\s*\w/.test(t)) subscriptions++;
+    }
+    this._eventSubscriptions = subscriptions;
+    this._eventUnsubscriptions = unsubscribes;
+  }
+
+  // ── Add error helper
+  _err(line0, type, sev, title, explanation, fix, codeExample = '') {
+    this.errors.push({
+      line: line0 + 1,   // 1-based for display
+      lineIdx: line0,    // 0-based for CodeMirror
+      type, sev, title, explanation, fix, codeExample
+    });
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Unbalanced braces
+  // ══════════════════════════════════
+  _checkBraces() {
+    const lines = this.strippedLines;
+    let openBrace = 0, openParen = 0, openBrack = 0;
+    let lastBrace = -1, lastParen = -1, lastBrack = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      for (const ch of lines[i]) {
+        if      (ch === '{') { openBrace++; lastBrace = i; }
+        else if (ch === '}') {
+          openBrace--;
+          if (openBrace < 0) {
+            this._err(i, 'syntax', 'error',
+              'Unexpected closing brace `}`',
+              `There is a closing brace \`}\` on line ${i+1} that has no matching opening \`{\`. Every code block (class, method, if, loop, etc.) needs exactly one opening brace for every closing brace.`,
+              'Remove the extra `}`, or add a matching `{` earlier in the code.',
+              '// Good:\nvoid Start() {\n    // code\n}'
+            );
+            openBrace = 0;
+          }
+        }
+        else if (ch === '(') { openParen++; lastParen = i; }
+        else if (ch === ')') {
+          openParen--;
+          if (openParen < 0) {
+            this._err(i, 'syntax', 'error',
+              'Unexpected closing parenthesis `)`',
+              `A closing parenthesis \`)\` on line ${i+1} has no matching opening \`(\`.`,
+              'Remove the extra `)` or add an opening `(` earlier.',
+            );
+            openParen = 0;
+          }
+        }
+        else if (ch === '[') { openBrack++; lastBrack = i; }
+        else if (ch === ']') {
+          openBrack--;
+          if (openBrack < 0) {
+            this._err(i, 'syntax', 'error',
+              'Unexpected closing bracket `]`',
+              `A closing bracket \`]\` on line ${i+1} has no matching opening \`[\`.`,
+              'Remove the extra `]` or add an opening `[` earlier.',
+            );
+            openBrack = 0;
+          }
+        }
+      }
+    }
+
+    if (openBrace > 0) {
+      this._err(lastBrace, 'syntax', 'error',
+        `Unclosed brace \`{\` — missing ${openBrace} closing \`}\``,
+        `The opening brace \`{\` near line ${lastBrace+1} was never closed. In C#, every class, method, if-statement, loop, etc. needs a matching closing \`}\` to tell the compiler where that block ends.`,
+        `Add ${openBrace} closing brace(s) \`}\` at the end of the file (or the correct location).`,
+        '// Every { must have a matching }:\npublic class Example {\n    void Start() {\n    } // closes Start\n} // closes class'
+      );
+    }
+    if (openParen > 0) {
+      this._err(lastParen, 'syntax', 'error',
+        `Unclosed parenthesis \`(\` — missing ${openParen} closing \`)\``,
+        `An opening parenthesis \`(\` near line ${lastParen+1} was never closed.`,
+        `Add the missing \`)\` to close the expression or parameter list.`
+      );
+    }
+    if (openBrack > 0) {
+      this._err(lastBrack, 'syntax', 'error',
+        `Unclosed bracket \`[\` — missing ${openBrack} closing \`]\``,
+        `An opening bracket \`[\` near line ${lastBrack+1} was never closed.`,
+        `Add the missing \`]\` to close the array access or attribute.`
+      );
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Missing semicolons
+  // ══════════════════════════════════
+  _checkSemicolons() {
+    const lines = this.strippedLines;
+    // Patterns that are definitely statements needing semicolons
+    const statementStart = /^\s*(return|throw|break|continue|yield\s+return|yield\s+break)\b/;
+    const varDecl = /^\s*(int|float|double|string|bool|char|byte|short|long|uint|ulong|ushort|sbyte|decimal|var|object|dynamic)\s+\w+(\s*=|;|\s*,)/;
+    const unityTypeDecl = /^\s*(GameObject|Transform|Vector[234]|Quaternion|Rigidbody|Collider|Renderer|Camera|Animator|AudioSource|Sprite|Texture2D?|Material|Color|Rect|RaycastHit|NavMeshAgent|Canvas|Text|Image)\b.*=.*[^;{,)]/;
+    // Generic collections
+    const collectionDecl = /^\s*(List|Dictionary|HashSet|Queue|Stack|IEnumerable|IList|Array|SortedList)<.*>\s+\w+/;
+    const methodCall = /^\s*\w[\w.<>\[\]]*\s*(\.[^\s(]+)?\s*\([^)]*\)\s*$/; // ends with )
+
+    const continuationChars = /^[\.\?\:\+\-\*\/\&\|\)\]]/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw    = lines[i];
+      const trimmed = raw.trim();
+      if (!trimmed) continue;
+
+      // Skip attribute lines, preprocessor, comments
+      if (trimmed.startsWith('[') || trimmed.startsWith('#')) continue;
+      // Skip lines that end with block starters/enders or commas
+      if (/[{},]$/.test(trimmed)) continue;
+      // Skip lines that already end with ;
+      if (trimmed.endsWith(';')) continue;
+      // Skip class/method/namespace/property declarations
+      if (/\b(class|namespace|struct|interface|enum)\b/.test(trimmed)) continue;
+      if (/\b(void|IEnumerator|async)\s+\w+\s*\(/.test(trimmed)) continue;
+      if (/\b(public|private|protected|internal|static|override|virtual|abstract|sealed)\s+(void|int|float|string|bool|IEnumerator)\s+\w+\s*\(/.test(trimmed)) continue;
+      // Skip access modifiers on their own / partial lines
+      if (/^(public|private|protected|internal)\s*$/.test(trimmed)) continue;
+      // Skip if/else/for/foreach/while/do/switch/try/catch/finally
+      if (/^(if|else|for|foreach|while|do|switch|try|catch|finally|using)\b/.test(trimmed)) continue;
+      // Skip lines ending with ) that are control structures (multiline conditions)
+      if (trimmed.endsWith(')') && /^(if|else if|while|for|foreach|switch)\s*\(/.test(trimmed)) continue;
+
+      // Check if next non-empty line is a continuation
+      let nextIdx = i + 1;
+      while (nextIdx < lines.length && !lines[nextIdx].trim()) nextIdx++;
+      const nextTrimmed = nextIdx < lines.length ? lines[nextIdx].trim() : '';
+      if (continuationChars.test(nextTrimmed)) continue;
+
+      // Now check if this line IS a statement needing a semicolon
+      const needsSemi =
+        statementStart.test(trimmed) ||
+        varDecl.test(trimmed) ||
+        unityTypeDecl.test(trimmed) ||
+        collectionDecl.test(trimmed);
+
+      if (needsSemi) {
+        this._err(i, 'syntax', 'error',
+          'Missing semicolon `;` at end of statement',
+          `Line ${i+1} looks like a statement that needs to end with a semicolon \`;\`. In C#, every statement — variable declarations, assignments, method calls, return values — must end with \`;\` so the compiler knows where the statement finishes.`,
+          `Add a semicolon \`;\` at the very end of line ${i+1}.`,
+          '// Examples of correct statements:\nint score = 0;\nreturn score;\nDebug.Log("Hi");'
+        );
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: else without matching if
+  // ══════════════════════════════════
+  _checkElseWithoutIf() {
+    const lines = this.strippedLines;
+    // Track if/else pairs with a simple state machine
+    let pendingElse = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (!trimmed) continue;
+
+      const isIf    = /^if\s*\(/.test(trimmed) || /^else\s+if\s*\(/.test(trimmed);
+      const isElse  = /^else\b/.test(trimmed) && !/^else\s+if\b/.test(trimmed);
+      const hasBlock = trimmed.includes('{');
+
+      // A standalone else with no preceding if is a syntax error
+      // Heuristic: look back for a closing } or a single-line if body
+      if (isElse) {
+        // look backward for what came before
+        let prev = '';
+        for (let k = i - 1; k >= Math.max(0, i - 5); k--) {
+          const t = lines[k].trim();
+          if (t) { prev = t; break; }
+        }
+        const prevIsIfEnd = /[}]$/.test(prev) ||        // closes an if block
+                            /^if\s*\(/.test(prev) ||      // single-line if on prev line
+                            /\)\s*$/.test(prev);          // end of if condition
+
+        if (!prevIsIfEnd) {
+          this._err(i, 'syntax', 'error',
+            '`else` without a matching `if`',
+            `The \`else\` on line ${i+1} doesn't appear to have a matching \`if\` statement immediately before it. Every \`else\` block must follow either an \`if { }\` block or a single-line \`if\` statement.`,
+            'Make sure you have a complete `if (condition) { ... }` block before each `else`.',
+            '// Correct:\nif (health <= 0)\n{\n    Die();\n}\nelse\n{\n    Heal();\n}'
+          );
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Null reference (fields used but never assigned)
+  // ══════════════════════════════════
+  _checkNullReferences() {
+    const lines = this.strippedLines;
+
+    // Collect private fields declared but never assigned via GetComponent or new
+    const fieldPattern = /^\s*(private|protected|public|internal)?\s*(Rigidbody|Animator|AudioSource|Camera|Collider|Renderer|NavMeshAgent|Canvas|Text|Image|SpriteRenderer|CharacterController|ParticleSystem|LineRenderer|TrailRenderer|BoxCollider|CapsuleCollider|MeshRenderer)\s+(\w+)\s*;/;
+
+    const declaredFields = new Map(); // name -> {line, type}
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      const m = t.match(fieldPattern);
+      if (m) declaredFields.set(m[3], { line: i, type: m[2] });
+    }
+
+    // Check if each field is assigned somewhere before use
+    for (const [name, info] of declaredFields) {
+      const assignPattern  = new RegExp(`\\b${name}\\s*=\\s*(GetComponent|FindObjectOfType|new |Camera\\.main|gameObject\\.GetComponent)`);
+      const checkPattern   = new RegExp(`\\b${name}\\s*!=\\s*null|null\\s*!=\\s*${name}|if\\s*\\(\\s*${name}\\s*\\)`);
+      let assigned = false;
+
+      for (let i = info.line + 1; i < lines.length; i++) {
+        if (assignPattern.test(lines[i])) { assigned = true; break; }
+      }
+
+      if (!assigned) {
+        // Find the first use of this field (after declaration)
+        for (let i = info.line + 1; i < lines.length; i++) {
+          const t2 = lines[i].trim();
+          if (new RegExp(`\\b${name}\\s*[\\.\\(\\[]`).test(t2)) {
+            this._err(i, 'runtime', 'error',
+              `NullReferenceException — \`${name}\` used but never assigned`,
+              `The field \`${name}\` (declared on line ${info.line+1} as type \`${info.type}\`) is used here but was never assigned — it is \`null\`. Calling any method or property on \`null\` throws a \`NullReferenceException\` at runtime, crashing your game.`,
+              `In \`Start()\` or \`Awake()\`, assign it:\n\`${name} = GetComponent<${info.type}>();\`\nAlso consider a null-check: \`if (${name} != null) { ... }\``,
+              `// Fix:\nvoid Start() {\n    ${name} = GetComponent<${info.type}>();\n    if (${name} == null) Debug.LogError("Missing ${info.type}!");\n}`
+            );
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Array index out of bounds
+  // ══════════════════════════════════
+  _checkArrayBounds() {
+    const lines = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+
+      // Pattern: array[array.Length] — always out of bounds
+      if (/\b(\w+)\s*\[\s*\1\s*\.Length\s*\]/.test(t)) {
+        this._err(i, 'runtime', 'error',
+          'Array index out of bounds — accessing `array[array.Length]`',
+          `Arrays in C# are zero-indexed. If an array has 5 elements, valid indices are \`0\` through \`4\`. The index \`array.Length\` (which equals 5 in this case) is one past the last valid index and will throw an \`IndexOutOfRangeException\`.`,
+          'Use `array[array.Length - 1]` to get the last element, or ensure loop conditions use `<` not `<=`.',
+          '// Access last element safely:\nvar last = myArray[myArray.Length - 1];'
+        );
+      }
+
+      // Pattern: for loop with <= .Length (off-by-one)
+      const loopMatch = t.match(/for\s*\(\s*int\s+(\w+)\s*=\s*\d+\s*;\s*\1\s*<=\s*(\w+)\.Length/);
+      if (loopMatch) {
+        this._err(i, 'runtime', 'error',
+          `Off-by-one: loop uses \`${loopMatch[1]} <= ${loopMatch[2]}.Length\` — should be \`<\``,
+          `The loop condition \`${loopMatch[1]} <= ${loopMatch[2]}.Length\` causes the loop to run one extra time. When \`${loopMatch[1]}\` equals \`${loopMatch[2]}.Length\`, accessing \`${loopMatch[2]}[${loopMatch[1]}]\` is one past the last element and throws \`IndexOutOfRangeException\`. Arrays are zero-indexed: a Length-5 array has indices 0, 1, 2, 3, 4 only.`,
+          `Change \`<=\` to \`<\`: \`for (int ${loopMatch[1]} = 0; ${loopMatch[1]} < ${loopMatch[2]}.Length; ${loopMatch[1]}++)\``,
+          `// Correct:\nfor (int i = 0; i < tiles.Length; i++)\n{\n    tiles[i].SetActive(true);\n}`
+        );
+      }
+
+      // Literal out-of-bound: array[5] where array is known size 5 (simplified check)
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Division by zero
+  // ══════════════════════════════════
+  _checkDivisionByZero() {
+    const lines = this.strippedLines;
+
+    // Collect variables assigned to 0
+    const zeroVars = new Set();
+    for (const line of lines) {
+      const m = line.match(/\b(\w+)\s*=\s*0\b/);
+      if (m && !/==/.test(line.slice(line.indexOf('=') - 1, line.indexOf('=') + 2))) {
+        zeroVars.add(m[1]);
+      }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+
+      // Literal /0
+      if (/\/\s*0[^x\d]/.test(t) && !/\/\s*0\./.test(t)) {
+        this._err(i, 'runtime', 'error',
+          'Division by zero — literal `/ 0`',
+          `You are dividing by the literal value \`0\`. In C#, integer division by zero throws a \`DivideByZeroException\` at runtime, crashing your game. Even floating-point division by 0 produces \`Infinity\` or \`NaN\`, which can corrupt game logic silently.`,
+          'Make sure your denominator can never be zero. Add a guard: `if (divisor != 0) { result = value / divisor; }`',
+          '// Safe division:\nif (divisor != 0)\n    float result = numerator / (float)divisor;'
+        );
+      }
+
+      // Division by a variable we know is 0
+      for (const varName of zeroVars) {
+        if (new RegExp(`/\\s*${varName}\\b`).test(t) && !new RegExp(`${varName}\\s*=\\s*[^0]`).test(t)) {
+          this._err(i, 'runtime', 'warning',
+            `Possible division by zero — \`${varName}\` may be 0`,
+            `The variable \`${varName}\` appears to be initialized to \`0\` and is used as a divisor here. If it hasn't been updated to a non-zero value before this line, this will throw a \`DivideByZeroException\`.`,
+            `Ensure \`${varName}\` is set to a non-zero value before the division, or add a guard: \`if (${varName} != 0)\``,
+            `if (${varName} != 0)\n    result = value / ${varName};`
+          );
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Uninitialized local variables
+  // ══════════════════════════════════
+  _checkUninitializedVars() {
+    const lines = this.strippedLines;
+    // Find local variable declarations without initialization
+    const declPattern = /^\s*(int|float|double|string|bool|char|byte)\s+(\w+)\s*;/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      const m = t.match(declPattern);
+      if (!m) continue;
+
+      const varName = m[2];
+      const varType = m[1];
+
+      // Look for use before assignment in subsequent lines (within ~30 lines / end of block)
+      let assigned = false;
+      let usedLine = -1;
+      let braceDepth = 0;
+
+      for (let k = i + 1; k < Math.min(i + 60, lines.length); k++) {
+        const lt = lines[k].trim();
+
+        // Track brace depth to stay in same scope
+        for (const ch of lt) {
+          if (ch === '{') braceDepth++;
+          else if (ch === '}') { braceDepth--; }
+        }
+        if (braceDepth < 0) break;
+
+        // Assignment check
+        if (new RegExp(`\\b${varName}\\s*=(?!=)`).test(lt)) {
+          assigned = true; break;
+        }
+
+        // Usage check (but not assignment)
+        if (new RegExp(`\\b${varName}\\b`).test(lt) && !new RegExp(`\\b${varName}\\s*=`).test(lt)) {
+          if (usedLine < 0) usedLine = k;
+        }
+      }
+
+      if (!assigned && usedLine >= 0) {
+        this._err(usedLine, 'runtime', 'error',
+          `Uninitialized variable \`${varName}\` used before assignment`,
+          `The variable \`${varName}\` (type \`${varType}\`, declared on line ${i+1}) is used on line ${usedLine+1} but was never given a value. In C#, reading an uninitialized local variable is a compile-time error — the compiler will refuse to build your project.`,
+          `Either assign a default value when you declare it (\`${varType} ${varName} = ${varType === 'string' ? '""' : '0'};\`), or make sure you assign it before you use it.`,
+          `// Fix — initialize at declaration:\n${varType} ${varName} = ${varType === 'string' ? '""' : varType === 'bool' ? 'false' : '0'};`
+        );
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Integer division to float
+  // ══════════════════════════════════
+  _checkIntegerDivision() {
+    const lines = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+
+      // Pattern: float/double variable = integer_literal / integer_literal
+      // e.g.  float x = 5 / 2;   or   float x = total / count;
+      const m = t.match(/\b(float|double)\s+\w+\s*=\s*(\d+)\s*\/\s*(\d+)/);
+      if (m) {
+        const a = parseInt(m[2], 10), b = parseInt(m[3], 10);
+        if (b !== 0) {
+          const intResult  = Math.trunc(a / b);
+          const floatResult = (a / b).toFixed(4).replace(/\.?0+$/, '');
+          this._err(i, 'logical', 'error',
+            `Integer division bug: \`${m[2]} / ${m[3]}\` = ${intResult}, not ${floatResult}`,
+            `Both \`${m[2]}\` and \`${m[3]}\` are integer literals. In C#, dividing two integers always performs integer division — the fractional part is truncated silently. So \`${m[2]} / ${m[3]}\` gives \`${intResult}\`, NOT \`${floatResult}\`. The result is then stored in a \`${m[1]}\`, but the damage is already done.`,
+            `Make at least one operand a float literal (add \`f\` suffix): \`${m[2]}f / ${m[3]}\` or cast: \`(float)${m[2]} / ${m[3]}\``,
+            `// Wrong:\nfloat x = ${m[2]} / ${m[3]};   // = ${intResult}\n// Correct:\nfloat x = ${m[2]}f / ${m[3]};  // = ${floatResult}`
+          );
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Float equality comparison
+  // ══════════════════════════════════
+  _checkFloatComparison() {
+    const lines = this.strippedLines;
+    // Match: == float_literal  or  == -float_literal (not ==null, !=null)
+    const floatLitPattern = /==\s*-?\d+\.\d*f?|==\s*-?\d+f\b/g;
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!t.startsWith('if') && !t.startsWith('while') && !t.startsWith('return') && !t.includes('==')) continue;
+
+      const matches = [...t.matchAll(floatLitPattern)];
+      for (const m of matches) {
+        this._err(i, 'logical', 'warning',
+          `Float equality comparison \`${m[0].trim()}\` is unreliable`,
+          `Floating-point numbers in computers can't represent most decimal values exactly. Due to tiny rounding errors, a variable that should mathematically equal \`0f\` might actually be \`0.0000001f\`. Using \`==\` to compare floats can produce \`false\` even when the values are functionally the same — this can make your "if health == 0 then die" condition never trigger.`,
+          'Use `Mathf.Approximately(a, b)` for near-equality, or compare with a small threshold: `Mathf.Abs(a - b) < 0.001f`. For "has reached zero" checks, use `<= 0f`.',
+          `// Instead of:\nif (health == 0f) { }\n// Use:\nif (health <= 0f) { }       // for "empty" checks\nif (Mathf.Approximately(val, target)) { }  // for equality`
+        );
+        break; // one error per line is enough
+      }
+    }
+  }
+
+  // ══════════════════════════════════
+  // CHECK: Infinite while(true) without yield/break
+  // ══════════════════════════════════
+  _checkInfiniteLoop() {
+    const lines = this.strippedLines;
+    const contextKey = 'isCoroutine';
+
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i].trim();
+      if (!/while\s*\(\s*true\s*\)/.test(t)) continue;
+
+      // Find the enclosing method — look backwards for IEnumerator
+      let isInCoroutine = false;
+      for (let k = i - 1; k >= Math.max(0, i - 30); k--) {
+        if (/\bIEnumerator\b/.test(lines[k])) { isInCoroutine = true; break; }
+        if (/\bvoid\b/.test(lines[k])) break;
+      }
+
+      // Scan body for yield return / break
+      let hasYield = false, hasBreak = false, depth = 0;
+      for (let k = i; k < Math.min(i + 60, lines.length); k++) {
+        for (const ch of lines[k]) {
+          if (ch === '{') depth++;
+          else if (ch === '}') { depth--; if (depth < 0) break; }
+        }
+        if (/\byield\s+return\b/.test(lines[k])) { hasYield = true; }
+        if (/\bbreak\s*;/.test(lines[k])) { hasBreak = true; }
+        if (depth < 0) break;
+      }
+
+      if (isInCoroutine && hasYield) continue; // intentional coroutine loop — fine
+
+      if (isInCoroutine && !hasYield) {
+        this._err(i, 'logical', 'error',
+          '`while (true)` in Coroutine — missing `yield return`',
+          `This \`while (true)\` loop is inside a Coroutine (IEnumerator), but there's no \`yield return\` inside the loop body. Without a yield, the Coroutine runs the loop non-stop in a single frame, freezing Unity completely. The yield statement is what makes the loop "pause" between frames.`,
+          'Add `yield return null;` (or `yield return new WaitForSeconds(x);`) inside the loop so Unity can advance between iterations.',
+          `// Correct Coroutine loop:\nwhile (true) {\n    DoWork();\n    yield return null;  // pause until next frame\n}`
+        );
+      } else if (!isInCoroutine && !hasBreak) {
+        // Ambiguous — might be intentional, so ask for context
+        const answer = this.userContext[contextKey];
+        if (answer === 'yes') {
+          // User said it's a coroutine (perhaps via base class method)
+        } else {
+          this._err(i, 'logical', 'error',
+            '`while (true)` loop — no exit condition detected',
+            `A \`while (true)\` loop in a regular (non-Coroutine) method with no \`break\` statement will run forever, hanging Unity and making it unresponsive. The game engine never gets a chance to render a frame or process input.`,
+            'Add a `break;` statement with a condition, or convert this to a Coroutine (IEnumerator) with `yield return null;` to spread work across frames.',
+            `// Option 1 — add a break:\nwhile (true) {\n    if (isDone) break;\n}\n// Option 2 — Coroutine:\nIEnumerator Loop() {\n    while (true) {\n        DoWork();\n        yield return null;\n    }\n}`
+          );
+          if (answer === undefined) {
+            this.ambiguous.push({
+              key: contextKey,
+              question: 'Is this `while (true)` loop inside a Coroutine (IEnumerator method), perhaps defined in a base class or called via StartCoroutine?',
+              context: `Line ${i+1}: \`while (true)\` with no yield or break found.`,
+              options: ['Yes — it\'s a Coroutine', 'No — it\'s a regular method']
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: GetComponent in Update/FixedUpdate/LateUpdate
+  // ══════════════════════════════════════════════════
+  _checkGetComponentInUpdate() {
+    const lines = this.strippedLines;
+    const pattern = /\bGetComponent\s*</;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!pattern.test(lines[i])) continue;
+      if (!this._lineInAnyUpdateLike(i)) continue;
+
+      const methodName = this._lineInMethod(i, 'FixedUpdate') ? 'FixedUpdate' :
+                         this._lineInMethod(i, 'LateUpdate')  ? 'LateUpdate' : 'Update';
+
+      this._err(i, 'gamedev', 'warning',
+        `\`GetComponent\` called inside \`${methodName}()\` — expensive every frame`,
+        `\`GetComponent<T>()\` searches the GameObject's component list every time it runs. Calling it inside \`${methodName}()\` means it runs every single frame (60+ times per second). This creates unnecessary overhead that compounds with every object in your scene and is one of the most common Unity performance mistakes.`,
+        `Cache the component in \`Awake()\` or \`Start()\` as a private field, and reuse that reference:\n\`private Rigidbody _rb;\nvoid Awake() { _rb = GetComponent<Rigidbody>(); }\nvoid ${methodName}() { _rb.AddForce(...); }\``,
+        `// Bad (in Update):\nvoid Update() {\n    GetComponent<Rigidbody>().velocity = ...;\n}\n// Good:\nprivate Rigidbody _rb;\nvoid Awake() { _rb = GetComponent<Rigidbody>(); }\nvoid Update() { _rb.velocity = ...; }`
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: FindObjectOfType / GameObject.Find in Update
+  // ══════════════════════════════════════════════════
+  _checkFindInUpdate() {
+    const lines = this.strippedLines;
+    const findPattern = /\b(FindObjectOfType|FindObjectsOfType|GameObject\.Find|GameObject\.FindWithTag|FindWithTag)\b/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(findPattern);
+      if (!m) continue;
+      if (!this._lineInAnyUpdateLike(i)) continue;
+
+      this._err(i, 'gamedev', 'warning',
+        `\`${m[1]}\` called in Update — scans every object every frame`,
+        `\`${m[1]}\` iterates over every object in the current scene to find a match. This is an O(n) search that Unity has to repeat every frame. In a scene with hundreds of objects it becomes a significant performance bottleneck. This is one of the most impactful mistakes you can make in Unity.`,
+        `Call \`${m[1]}\` once in \`Awake()\` or \`Start()\` and store the result in a private field. Alternatively, use a Singleton pattern or pass the reference via the Inspector.`,
+        `// Bad:\nvoid Update() {\n    var gm = FindObjectOfType<GameManager>();\n}\n// Good:\nprivate GameManager _gm;\nvoid Start() { _gm = FindObjectOfType<GameManager>(); }\nvoid Update() { /* use _gm */ }`
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: Camera.main in Update
+  // ══════════════════════════════════════════════════
+  _checkCameraMainInUpdate() {
+    const lines = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!/\bCamera\.main\b/.test(lines[i])) continue;
+      if (!this._lineInAnyUpdateLike(i)) continue;
+
+      this._err(i, 'gamedev', 'warning',
+        '`Camera.main` accessed in Update — slow tag-based lookup each call',
+        '`Camera.main` is a property getter that calls `FindWithTag("MainCamera")` internally every time it is accessed. Inside `Update()` (called every frame), this is a hidden, repeated scene search. It\'s equivalent to calling `GameObject.FindWithTag` every frame.',
+        'Cache `Camera.main` in `Awake()` or `Start()` into a private field:\n`private Camera _cam;\nvoid Awake() { _cam = Camera.main; }`\nThen use `_cam` instead of `Camera.main` in `Update`.',
+        `// Bad:\nvoid Update() { Camera.main.transform... }\n// Good:\nprivate Camera _cam;\nvoid Awake() { _cam = Camera.main; }\nvoid Update() { _cam.transform... }`
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: Physics operations in Update
+  // ══════════════════════════════════════════════════
+  _checkPhysicsInUpdate() {
+    const lines = this.strippedLines;
+    const physicsOps = /\b(rb|rigidbody|_rb)\.(AddForce|AddTorque|MovePosition|MoveRotation|AddRelativeForce|AddRelativeTorque)\s*\(/;
+
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(physicsOps);
+      if (!m) continue;
+      if (!this._lineInMethod(i, 'Update') && !this._lineInMethod(i, 'LateUpdate')) continue;
+
+      this._err(i, 'gamedev', 'warning',
+        `\`${m[2]}()\` physics call in \`Update()\` — should be in \`FixedUpdate()\``,
+        `Unity's physics engine runs at a fixed time-step (default 50 Hz), independent of your game's frame rate. \`Update()\` runs at the rendered frame rate, which varies. Applying forces or moving a Rigidbody in \`Update()\` means the physics results are frame-rate-dependent — faster machines will apply more force, slower machines less. This causes inconsistent, non-deterministic physics behavior.`,
+        `Move Rigidbody physics calls (\`AddForce\`, \`MovePosition\`, etc.) into \`FixedUpdate()\`. Input can still be read in \`Update()\` and stored in a variable, then applied in \`FixedUpdate()\`.`,
+        `// Bad:\nvoid Update() { rb.AddForce(Vector3.up); }\n// Good:\nprivate bool _jump;\nvoid Update() { if (Input.GetKeyDown(KeyCode.Space)) _jump = true; }\nvoid FixedUpdate() {\n    if (_jump) { rb.AddForce(Vector3.up * force, ForceMode.Impulse); _jump = false; }\n}`
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: Time.deltaTime in FixedUpdate
+  // ══════════════════════════════════════════════════
+  _checkDeltaTimeInFixed() {
+    const lines = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      if (!/\bTime\.deltaTime\b/.test(lines[i])) continue;
+      if (!this._lineInMethod(i, 'FixedUpdate')) continue;
+
+      this._err(i, 'gamedev', 'info',
+        '`Time.deltaTime` inside `FixedUpdate()` — use `Time.fixedDeltaTime`',
+        '`Time.deltaTime` returns the time since the last rendered frame, which varies with frame rate. Inside `FixedUpdate()`, the correct value is `Time.fixedDeltaTime`, which always returns the fixed physics time-step (by default 0.02 seconds). Using `deltaTime` in `FixedUpdate` introduces the same frame-rate dependency you were trying to avoid by using `FixedUpdate`.\n\nNote: Unity actually sets `Time.deltaTime == Time.fixedDeltaTime` when called from inside `FixedUpdate`, so this is a minor style/clarity issue rather than an outright bug — but it\'s better to be explicit.',
+        'Replace `Time.deltaTime` with `Time.fixedDeltaTime` inside `FixedUpdate()` for clarity and correctness.',
+        `// In FixedUpdate, use:\ntransform.position += dir * speed * Time.fixedDeltaTime;`
+      );
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: Event subscription without unsubscription
+  // ══════════════════════════════════════════════════
+  _checkEventLeaks() {
+    const lines = this.strippedLines;
+    if (this._eventSubscriptions === 0) return;
+
+    // Collect all subscriptions and their methods
+    const subs = [];
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(/(\w[\w.]+)\s*\+=\s*(\w+)\s*;/);
+      if (m && !lines[i].includes('++')) {
+        subs.push({ line: i, event: m[1], handler: m[2] });
+      }
+    }
+    if (subs.length === 0) return;
+
+    // Check each subscription has a matching unsubscription
+    for (const sub of subs) {
+      const unsubPattern = new RegExp(`\\b${sub.event.replace(/\./g, '\\.')}\\s*-=\\s*${sub.handler}\\b`);
+      let hasUnsub = this.strippedLines.some(l => unsubPattern.test(l));
+
+      if (!hasUnsub) {
+        const hasCleanup = this.hasOnDisable || this.hasOnDestroy;
+        this._err(sub.line, 'gamedev', 'warning',
+          `Event subscription \`+= ${sub.handler}\` never unsubscribed — memory leak risk`,
+          `You subscribe to \`${sub.event}\` with \`${sub.handler}\`, but there is no matching \`${sub.event} -= ${sub.handler}\` anywhere in this class.${!hasCleanup ? ' There\'s also no `OnDisable()` or `OnDestroy()` method to clean up.' : ''}\n\nWhen this GameObject is destroyed, the event system still holds a reference to this object's method. This prevents garbage collection (memory leak) and may cause the delegate to be called on a destroyed object, throwing a \`MissingReferenceException\`.`,
+          `Add an \`OnDisable()\` method (or \`OnDestroy()\`) that unsubscribes:\n\`void OnDisable() { ${sub.event} -= ${sub.handler}; }\`\nUsing \`OnDisable\` is preferred over \`OnDestroy\` because it also handles objects being deactivated.`,
+          `void OnEnable()  { ${sub.event} += ${sub.handler}; }\nvoid OnDisable() { ${sub.event} -= ${sub.handler}; }`
+        );
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: StartCoroutine with string argument
+  // ══════════════════════════════════════════════════
+  _checkCoroutineString() {
+    const lines = this.strippedLines;
+
+    for (let i = 0; i < lines.length; i++) {
+      // StartCoroutine("MethodName") — string-based
+      if (/\bStartCoroutine\s*\(\s*"/.test(lines[i])) {
+        const m = lines[i].match(/StartCoroutine\s*\(\s*"(\w+)"/);
+        const name = m ? m[1] : 'MethodName';
+
+        this._err(i, 'gamedev', 'warning',
+          `\`StartCoroutine("${name}")\` — use the method reference form instead`,
+          `\`StartCoroutine(string)\` finds the coroutine by its name at runtime (reflection-based lookup). This has two problems:\n1. **No compile-time safety**: if you rename the method, the string silently breaks at runtime.\n2. **Slower**: string-based lookup is less efficient than a direct method call.\n\nThe preferred form passes a direct \`IEnumerator\` reference.`,
+          `Replace the string with a direct method call:\n\`StartCoroutine(${name}());\`\nThis gives you compile-time checking and better performance.`,
+          `// Bad:\nStartCoroutine("${name}");\n// Good:\nStartCoroutine(${name}());`
+        );
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // GAME DEV: Ambiguous MonoBehaviour detection
+  // ══════════════════════════════════════════════════
+  _checkMonoBehaviourContext() {
+    const lines = this.strippedLines;
+    const hasUnityMethods = lines.some(l =>
+      /\b(void\s+(Start|Awake|Update|FixedUpdate|LateUpdate|OnEnable|OnDisable|OnDestroy)\s*\()/
+      .test(l)
+    );
+
+    if (hasUnityMethods && !this.isMonoBehaviour) {
+      const answer = this.userContext['isMonoBehaviour'];
+      if (answer === undefined) {
+        this.ambiguous.push({
+          key: 'isMonoBehaviour',
+          question: 'This class has Unity lifecycle methods (Start, Update, etc.) but doesn\'t explicitly inherit from MonoBehaviour in this snippet. Is it a MonoBehaviour?',
+          context: 'Some Unity-specific checks (GetComponent caching, physics rules) only apply to MonoBehaviour subclasses.',
+          options: ['Yes — it inherits MonoBehaviour (maybe via a base class)', 'No — it\'s not a MonoBehaviour']
+        });
+      } else if (answer === 'yes') {
+        this.isMonoBehaviour = true;
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════════════
+  // MAIN ANALYZE ENTRY POINT
+  // ══════════════════════════════════════════════════
+  analyze() {
+    this._methodBounds = this._computeMethodBounds();
+    this._detectClassInfo();
+
+    // Phase 1 — context collection (gather ambiguous questions first)
+    this._checkMonoBehaviourContext();
+    this._checkInfiniteLoop();
+
+    // Return early if we have unanswered questions and no forced run
+    if (this.ambiguous.length > 0 && Object.keys(this.userContext).length === 0) {
+      return { errors: [], ambiguous: this.ambiguous, needsContext: true };
+    }
+
+    // Phase 2 — syntax
+    this._checkBraces();
+    this._checkSemicolons();
+    this._checkElseWithoutIf();
+
+    // Phase 3 — runtime
+    this._checkNullReferences();
+    this._checkArrayBounds();
+    this._checkDivisionByZero();
+    this._checkUninitializedVars();
+
+    // Phase 4 — logical
+    this._checkIntegerDivision();
+    this._checkFloatComparison();
+    this._checkInfiniteLoop(); // re-run with context now set
+
+    // Phase 5 — game dev (only if MonoBehaviour or has Unity methods)
+    if (this.isMonoBehaviour || this.userContext['isMonoBehaviour'] === 'yes') {
+      this._checkGetComponentInUpdate();
+      this._checkFindInUpdate();
+      this._checkCameraMainInUpdate();
+      this._checkPhysicsInUpdate();
+      this._checkDeltaTimeInFixed();
+      this._checkEventLeaks();
+      this._checkCoroutineString();
+    }
+
+    // Deduplicate errors on the same line+type
+    const seen = new Set();
+    this.errors = this.errors.filter(e => {
+      const key = `${e.line}:${e.type}:${e.title.slice(0, 20)}`;
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    });
+
+    return { errors: this.errors.sort((a, b) => a.line - b.line), ambiguous: [], needsContext: false };
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════
+// UI — CodeMirror setup
+// ═══════════════════════════════════════════════════════
+let editor;
+const hlMarkers = [];
+
+function initEditor() {
+  const ta = document.getElementById('codeEditor');
+  editor = CodeMirror.fromTextArea(ta, {
+    mode:           'text/x-csharp',
+    theme:          'dracula',
+    lineNumbers:    true,
+    styleActiveLine: true,
+    matchBrackets:  true,
+    indentUnit:     4,
+    tabSize:        4,
+    indentWithTabs: false,
+    lineWrapping:   false,
+    autofocus:      true,
+    extraKeys: { 'Tab': cm => cm.replaceSelection('    ') }
+  });
+
+  editor.on('change', () => {
+    const lines = editor.lineCount();
+    document.getElementById('lineCount').textContent = `${lines} line${lines !== 1 ? 's' : ''}`;
+  });
+
+  // Start with blank + placeholder comment
+  editor.setValue(`// Paste your C# code here, or choose an example from the dropdown above.\nusing UnityEngine;\n\npublic class Example : MonoBehaviour\n{\n    void Start()\n    {\n        \n    }\n}`);
+}
+
+function clearHighlights() {
+  hlMarkers.forEach(m => m.clear());
+  hlMarkers.length = 0;
+  for (let i = 0; i < editor.lineCount(); i++) {
+    editor.removeLineClass(i, 'background', 'hl-syntax');
+    editor.removeLineClass(i, 'background', 'hl-runtime');
+    editor.removeLineClass(i, 'background', 'hl-logical');
+    editor.removeLineClass(i, 'background', 'hl-gamedev');
+  }
+}
+
+function highlightLine(lineIdx, type) {
+  const cls = `hl-${type}`;
+  if (lineIdx >= 0 && lineIdx < editor.lineCount()) {
+    editor.addLineClass(lineIdx, 'background', cls);
+  }
+}
+
+function jumpToLine(lineIdx) {
+  editor.setCursor({ line: lineIdx, ch: 0 });
+  editor.scrollIntoView({ line: lineIdx, ch: 0 }, 120);
+  editor.focus();
+}
+
+
+// ═══════════════════════════════════════════════════════
+// UI — Render results
+// ═══════════════════════════════════════════════════════
+let activeFilter = 'all';
+let lastErrors   = [];
+
+function sevLabel(sev) {
+  return sev === 'error' ? '🔴 Error' : sev === 'warning' ? '🟡 Warning' : '🔵 Info';
+}
+
+function renderResults(errors) {
+  lastErrors = errors;
+  clearHighlights();
+
+  const content = document.getElementById('resultsContent');
+  content.innerHTML = '';
+
+  // Badges
+  const counts = { syntax: 0, runtime: 0, logical: 0, gamedev: 0 };
+  for (const e of errors) counts[e.type] = (counts[e.type] || 0) + 1;
+  document.getElementById('badge-all').textContent    = errors.length;
+  document.getElementById('badge-syntax').textContent  = counts.syntax  || 0;
+  document.getElementById('badge-runtime').textContent = counts.runtime || 0;
+  document.getElementById('badge-logical').textContent = counts.logical || 0;
+  document.getElementById('badge-gamedev').textContent = counts.gamedev || 0;
+
+  // Status bar
+  const statusDot  = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  if (errors.length === 0) {
+    statusDot.className  = 'status-dot ok';
+    statusText.textContent = 'No issues found';
+  } else {
+    statusDot.className  = 'status-dot err';
+    statusText.textContent = `${errors.length} issue${errors.length !== 1 ? 's' : ''} found`;
+  }
+
+  // Filter
+  const visible = activeFilter === 'all' ? errors : errors.filter(e => e.type === activeFilter);
+
+  if (errors.length === 0) {
+    content.innerHTML = `<div class="ok-state"><div class="ok-icon">✅</div><strong>No issues detected!</strong><br><br>Your code looks clean for the patterns this tool checks. Remember: this is a heuristic tool — always test your game too.</div>`;
+    return;
+  }
+
+  if (visible.length === 0) {
+    content.innerHTML = `<div class="empty-state">No <strong>${activeFilter}</strong> issues found.<br>Switch filter to see other categories.</div>`;
+  }
+
+  for (const [idx, err] of visible.entries()) {
+    highlightLine(err.lineIdx, err.type);
+    const card = buildCard(err, idx);
+    content.appendChild(card);
+  }
+}
+
+function buildCard(err, idx) {
+  const card = document.createElement('div');
+  card.className  = 'error-card';
+  card.dataset.type = err.type;
+
+  const typeLabel = { syntax: 'Syntax', runtime: 'Runtime', logical: 'Logical', gamedev: 'Game Dev' }[err.type] || err.type;
+  const codeBlock = err.codeExample
+    ? `<div class="card-section"><div class="card-section-label">Example Fix</div><div class="card-code">${escHtml(err.codeExample)}</div></div>`
+    : '';
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="sev-dot sev-${err.sev}"></div>
+      <span class="card-type-badge badge-${err.type}">${typeLabel}</span>
+      <span class="card-line-chip">Line ${err.line}</span>
+      <span class="card-title">${escHtml(err.title)}</span>
+      <span class="card-chevron">▶</span>
+    </div>
+    <div class="card-body">
+      <div class="card-section">
+        <div class="card-section-label">What went wrong</div>
+        <div class="card-explanation">${mdToHtml(err.explanation)}</div>
+      </div>
+      <div class="card-section">
+        <div class="card-section-label">How to fix it</div>
+        <div class="card-fix">${mdToHtml(err.fix)}</div>
+      </div>
+      ${codeBlock}
+      <button class="jump-btn" data-line="${err.lineIdx}">↳ Jump to Line ${err.line}</button>
+    </div>
+  `;
+
+  // Toggle expand
+  card.querySelector('.card-header').addEventListener('click', () => {
+    card.classList.toggle('open');
+  });
+
+  // Jump button
+  card.querySelector('.jump-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    jumpToLine(err.lineIdx);
+    card.classList.add('open');
+  });
+
+  // Auto-open first 3
+  if (idx < 3) card.classList.add('open');
+
+  return card;
+}
+
+function escHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Minimal markdown-ish: backtick code, newlines, bold
+function mdToHtml(str) {
+  return escHtml(str)
+    .replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-family:monospace;font-size:.9em">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+
+// ═══════════════════════════════════════════════════════
+// UI — Context modal
+// ═══════════════════════════════════════════════════════
+let pendingContext  = {};
+let pendingQuestions = [];
+
+function showContextModal(questions) {
+  pendingQuestions = questions;
+  pendingContext   = {};
+  const body = document.getElementById('modalBody');
+  body.innerHTML   = '';
+
+  for (const q of questions) {
+    const div = document.createElement('div');
+    div.className = 'ctx-question';
+    div.innerHTML = `
+      <div class="ctx-q-text">${escHtml(q.question)}</div>
+      <div class="ctx-q-context">${escHtml(q.context)}</div>
+      <div class="ctx-options">
+        ${q.options.map((opt, i) =>
+          `<button class="ctx-opt" data-key="${escHtml(q.key)}" data-val="${i === 0 ? 'yes' : 'no'}">${escHtml(opt)}</button>`
+        ).join('')}
+      </div>
+    `;
+    body.appendChild(div);
+  }
+
+  // Click handlers
+  body.querySelectorAll('.ctx-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      body.querySelectorAll(`.ctx-opt[data-key="${btn.dataset.key}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      pendingContext[btn.dataset.key] = btn.dataset.val;
+    });
+  });
+
+  document.getElementById('contextModal').style.display = 'flex';
+}
+
+function hideModal() {
+  document.getElementById('contextModal').style.display = 'none';
+}
+
+
+// ═══════════════════════════════════════════════════════
+// MAIN CHECK FLOW
+// ═══════════════════════════════════════════════════════
+function runCheck(forcedContext = null) {
+  const code = editor.getValue();
+  if (!code.trim()) {
+    renderResults([]);
+    return;
+  }
+
+  const ctx      = forcedContext || {};
+  const analyzer = new CSharpAnalyzer(code, ctx);
+  const result   = analyzer.analyze();
+
+  if (result.needsContext && result.ambiguous.length > 0) {
+    showContextModal(result.ambiguous);
+    return;
+  }
+
+  renderResults(result.errors);
+}
+
+function runCheckWithContext() {
+  hideModal();
+  runCheck(pendingContext);
+}
+
+function runCheckSkipContext() {
+  hideModal();
+  // Run with empty context — ambiguous issues will still be flagged
+  const code = editor.getValue();
+  const analyzer = new CSharpAnalyzer(code, { _skip: true });
+  const result   = analyzer.analyze();
+  renderResults(result.errors);
+}
+
+
+// ═══════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initEditor();
+
+  // Check button
+  document.getElementById('checkBtn').addEventListener('click', () => runCheck());
+
+  // Clear button
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    editor.setValue('');
+    clearHighlights();
+    document.getElementById('resultsContent').innerHTML =
+      '<div class="empty-state">Editor cleared. Paste your C# code and click <strong>&#9654; Check Code</strong>.</div>';
+    ['all','syntax','runtime','logical','gamedev'].forEach(k =>
+      document.getElementById(`badge-${k}`).textContent = '0');
+    document.getElementById('statusDot').className  = 'status-dot';
+    document.getElementById('statusText').textContent = 'Ready';
+  });
+
+  // Example picker
+  document.getElementById('examplePicker').addEventListener('change', e => {
+    const key = e.target.value;
+    if (key && EXAMPLES[key]) {
+      editor.setValue(EXAMPLES[key].code);
+      clearHighlights();
+      document.getElementById('resultsContent').innerHTML =
+        '<div class="empty-state">Example loaded. Click <strong>&#9654; Check Code</strong> to analyze it.</div>';
+    }
+    e.target.value = '';
+  });
+
+  // Filter tabs
+  document.getElementById('filterRow').addEventListener('click', e => {
+    const tab = e.target.closest('.ftab');
+    if (!tab) return;
+    document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeFilter = tab.dataset.filter;
+    renderResults(lastErrors);
+  });
+
+  // Modal buttons
+  document.getElementById('modalConfirm').addEventListener('click', runCheckWithContext);
+  document.getElementById('modalSkip').addEventListener('click', runCheckSkipContext);
+
+  // Close modal on overlay click
+  document.getElementById('contextModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('contextModal')) runCheckSkipContext();
+  });
+
+  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to check
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runCheck();
+    }
+  });
+});
+</script>
+</body>
+</html>
