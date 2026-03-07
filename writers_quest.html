@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Writer's Quest - Master the Art of Writing</title>
+<style>
+  :root {
+    --bg: #0d0d1a;
+    --surface: #12122a;
+    --surface2: #1a1a3e;
+    --surface3: #222255;
+    --border: #252550;
+    --text: #e0e0f0;
+    --text-dim: #8888aa;
+    --accent: #4fc3f7;
+    --accent2: #ab47bc;
+    --gold: #ffd54f;
+    --green: #66bb6a;
+    --red: #ef5350;
+    --orange: #ffa726;
+    --teal: #26a69a;
+    --pink: #ec407a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo { font-size: 1.4em; font-weight: 700; }
+  .logo span { color: var(--accent); }
+  .logo .quill { color: var(--gold); font-size: 1.2em; }
+
+  .xp-bar-wrap {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .level-badge {
+    background: linear-gradient(135deg, var(--accent2), var(--pink));
+    color: #fff; font-weight: 700; font-size: 0.75em;
+    padding: 3px 10px; border-radius: 12px;
+    white-space: nowrap;
+  }
+  .xp-bar-outer {
+    width: 160px; height: 10px;
+    background: var(--surface3); border-radius: 5px;
+    overflow: hidden;
+  }
+  .xp-bar-inner {
+    height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 5px; transition: width 0.5s ease;
+  }
+  .xp-label { font-size: 0.75em; color: var(--text-dim); white-space: nowrap; }
+
+  .streak-badge {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface3); padding: 4px 10px;
+    border-radius: 12px; font-size: 0.8em; color: var(--orange);
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .nav-btn {
+    background: none; border: none; color: var(--text-dim);
+    padding: 12px 20px; cursor: pointer; font-size: 0.9em;
+    white-space: nowrap; transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+  }
+  .nav-btn:hover { color: var(--text); background: var(--surface2); }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Main Content ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card h3 { color: var(--accent); margin-bottom: 10px; font-size: 1.1em; }
+  .card p { color: var(--text-dim); line-height: 1.6; font-size: 0.92em; }
+
+  /* ── Sentence Lab ── */
+  .structure-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .structure-card:hover { border-color: var(--accent); }
+  .structure-header {
+    padding: 14px 18px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .structure-header h4 { color: var(--text); font-size: 0.95em; }
+  .structure-tag {
+    font-size: 0.7em; padding: 2px 8px; border-radius: 8px;
+    font-weight: 600;
+  }
+  .tag-basic { background: #1b5e20; color: #a5d6a7; }
+  .tag-intermediate { background: #e65100; color: #ffcc80; }
+  .tag-advanced { background: #4a148c; color: #ce93d8; }
+  .structure-body {
+    padding: 0 18px 16px;
+    display: none;
+  }
+  .structure-body.open { display: block; }
+  .structure-formula {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px; margin: 8px 0;
+    font-family: 'Consolas', monospace;
+    font-size: 0.88em; color: var(--gold);
+    border-radius: 0 6px 6px 0;
+  }
+  .structure-example {
+    background: var(--surface3);
+    padding: 10px 14px; margin: 6px 0;
+    border-radius: 6px; font-style: italic;
+    color: var(--text); font-size: 0.9em;
+    line-height: 1.5;
+  }
+  .structure-explain {
+    color: var(--text-dim); font-size: 0.85em;
+    line-height: 1.5; margin-top: 8px;
+  }
+
+  .practice-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px; margin-top: 20px;
+  }
+  .practice-area h3 { color: var(--gold); margin-bottom: 12px; }
+  .practice-prompt {
+    background: var(--surface2);
+    padding: 12px 16px; border-radius: 8px;
+    margin-bottom: 12px; color: var(--text);
+    font-size: 0.92em;
+  }
+  .practice-prompt strong { color: var(--accent); }
+
+  textarea {
+    width: 100%; min-height: 80px;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; color: var(--text);
+    font-family: inherit; font-size: 0.92em;
+    resize: vertical; outline: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 8px;
+    border: none; cursor: pointer;
+    font-family: inherit; font-size: 0.88em;
+    font-weight: 600; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--accent); color: #000; }
+  .btn-primary:hover { filter: brightness(1.15); }
+  .btn-gold { background: var(--gold); color: #000; }
+  .btn-gold:hover { filter: brightness(1.1); }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { filter: brightness(1.1); }
+  .btn-outline {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm { padding: 5px 12px; font-size: 0.8em; }
+
+  /* ── Paper Blueprint ── */
+  .blueprint-section {
+    display: flex; gap: 16px; margin-bottom: 16px;
+  }
+  .blueprint-num {
+    flex-shrink: 0; width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 0.9em;
+    color: #fff;
+  }
+  .blueprint-content { flex: 1; }
+  .blueprint-content h4 { color: var(--text); margin-bottom: 6px; }
+  .blueprint-content p { color: var(--text-dim); font-size: 0.88em; line-height: 1.6; }
+  .blueprint-checklist {
+    list-style: none; margin-top: 8px;
+  }
+  .blueprint-checklist li {
+    padding: 4px 0; font-size: 0.85em; color: var(--text-dim);
+  }
+  .blueprint-checklist li::before {
+    content: '\2713'; color: var(--green); margin-right: 8px;
+    font-weight: 700;
+  }
+
+  /* ── Tips ── */
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex; gap: 14px; align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+  .tip-card:hover { border-color: var(--gold); }
+  .tip-icon {
+    flex-shrink: 0; width: 32px; height: 32px;
+    background: var(--surface3); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1em;
+  }
+  .tip-text h4 { color: var(--text); font-size: 0.92em; margin-bottom: 4px; }
+  .tip-text p { color: var(--text-dim); font-size: 0.85em; line-height: 1.5; }
+
+  .confidence-track {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px; margin-top: 20px;
+  }
+  .confidence-track h3 { color: var(--teal); margin-bottom: 12px; }
+  .milestone {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0;
+  }
+  .milestone-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--surface3); flex-shrink: 0;
+    border: 2px solid var(--border);
+  }
+  .milestone-dot.reached {
+    background: var(--green); border-color: var(--green);
+    box-shadow: 0 0 8px rgba(102,187,106,0.4);
+  }
+  .milestone-label { font-size: 0.88em; color: var(--text-dim); }
+  .milestone-label.reached { color: var(--green); }
+
+  /* ── Evaluator ── */
+  .eval-textarea {
+    min-height: 200px;
+  }
+  .eval-controls {
+    display: flex; gap: 10px; margin: 14px 0;
+    flex-wrap: wrap; align-items: center;
+  }
+  .eval-results { margin-top: 16px; }
+  .eval-grade-wrap {
+    text-align: center; padding: 20px;
+    margin-bottom: 16px;
+  }
+  .eval-grade {
+    font-size: 4em; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .eval-grade-label { color: var(--text-dim); font-size: 0.9em; margin-top: 4px; }
+  .eval-score-bar {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .eval-score-label {
+    width: 160px; font-size: 0.85em; color: var(--text-dim);
+    text-align: right; flex-shrink: 0;
+  }
+  .eval-bar-outer {
+    flex: 1; height: 14px; background: var(--surface3);
+    border-radius: 7px; overflow: hidden;
+  }
+  .eval-bar-inner {
+    height: 100%; border-radius: 7px;
+    transition: width 0.6s ease;
+  }
+  .eval-bar-value { width: 40px; font-size: 0.8em; color: var(--text-dim); text-align: right; }
+  .eval-feedback {
+    background: var(--surface2);
+    border-radius: 8px; padding: 14px 18px;
+    margin-top: 14px;
+  }
+  .eval-feedback h4 { color: var(--gold); margin-bottom: 8px; }
+  .eval-feedback li {
+    color: var(--text-dim); font-size: 0.88em;
+    line-height: 1.6; margin-bottom: 4px;
+  }
+  .eval-stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px; margin-bottom: 16px;
+  }
+  .eval-stat {
+    background: var(--surface2); padding: 12px;
+    border-radius: 8px; text-align: center;
+  }
+  .eval-stat-val { font-size: 1.5em; font-weight: 700; color: var(--accent); }
+  .eval-stat-lbl { font-size: 0.75em; color: var(--text-dim); margin-top: 2px; }
+
+  /* ── Progress ── */
+  .progress-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px; margin-bottom: 20px;
+  }
+  @media (max-width: 700px) {
+    .progress-grid { grid-template-columns: 1fr; }
+  }
+  .progress-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+  }
+  .progress-card h4 { color: var(--accent); margin-bottom: 10px; font-size: 0.95em; }
+  .history-entry {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85em;
+  }
+  .history-entry:last-child { border-bottom: none; }
+  .history-date { color: var(--text-dim); }
+  .history-score { font-weight: 700; }
+  .trend-indicator {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 8px; font-size: 0.8em;
+    font-weight: 600;
+  }
+  .trend-up { background: #1b5e20; color: #a5d6a7; }
+  .trend-same { background: #37474f; color: #90a4ae; }
+  .trend-down { background: #b71c1c; color: #ef9a9a; }
+
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+  }
+  .chart-container h4 { color: var(--accent); margin-bottom: 10px; }
+  canvas.progress-chart {
+    width: 100%; height: 200px;
+  }
+
+  .badges-grid {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 12px;
+  }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface2); padding: 6px 12px;
+    border-radius: 20px; font-size: 0.8em;
+    border: 1px solid var(--border);
+  }
+  .badge.earned { border-color: var(--gold); }
+  .badge.earned .badge-icon { opacity: 1; }
+  .badge-icon { font-size: 1.1em; opacity: 0.3; }
+  .badge-label { color: var(--text-dim); }
+  .badge.earned .badge-label { color: var(--gold); }
+
+  /* ── Dashboard ── */
+  .dash-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 20px;
+  }
+  .dash-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+    text-align: center;
+  }
+  .dash-stat-icon { font-size: 1.6em; margin-bottom: 6px; }
+  .dash-stat-val { font-size: 1.8em; font-weight: 700; color: var(--accent); }
+  .dash-stat-lbl { font-size: 0.78em; color: var(--text-dim); margin-top: 2px; }
+
+  .welcome-card {
+    background: linear-gradient(135deg, var(--surface2), var(--surface3));
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    margin-bottom: 20px;
+  }
+  .welcome-card h2 { color: var(--text); margin-bottom: 8px; }
+  .welcome-card h2 span { color: var(--accent); }
+  .welcome-card p { color: var(--text-dim); line-height: 1.6; font-size: 0.92em; }
+
+  .quick-actions {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .daily-challenge {
+    background: var(--surface);
+    border: 1px solid var(--gold);
+    border-radius: 10px; padding: 18px;
+    margin-bottom: 16px;
+  }
+  .daily-challenge h3 {
+    color: var(--gold); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  /* ── Notification ── */
+  .notif {
+    position: fixed; top: 80px; right: 20px;
+    background: var(--surface2); border: 1px solid var(--green);
+    border-radius: 10px; padding: 12px 18px;
+    color: var(--green); font-size: 0.88em;
+    z-index: 200; transform: translateX(120%);
+    transition: transform 0.3s ease;
+    max-width: 300px;
+  }
+  .notif.show { transform: translateX(0); }
+  .notif .notif-xp { color: var(--gold); font-weight: 700; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .header { flex-direction: column; gap: 8px; }
+    .nav-btn { padding: 10px 14px; font-size: 0.82em; }
+    .main { padding: 14px; }
+    .blueprint-section { flex-direction: column; }
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--border); }
+
+  /* ── Animations ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .section.active { animation: fadeIn 0.3s ease; }
+
+  .xp-popup {
+    position: fixed; pointer-events: none;
+    font-size: 1.2em; font-weight: 700;
+    color: var(--gold); z-index: 300;
+    animation: floatUp 1s ease forwards;
+  }
+  @keyframes floatUp {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-60px); }
+  }
+
+  .eval-comparison {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px;
+    margin-top: 16px;
+  }
+  .eval-comparison h4 { color: var(--teal); margin-bottom: 10px; }
+  .comparison-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; font-size: 0.88em;
+    border-bottom: 1px solid var(--border);
+  }
+  .comparison-row:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- Notification -->
+<div class="notif" id="notif"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo"><span class="quill">&#9998;</span> Writer's <span>Quest</span></div>
+    <div class="xp-bar-wrap">
+      <span class="level-badge" id="levelBadge">Lvl 1 - Novice</span>
+      <div class="xp-bar-outer"><div class="xp-bar-inner" id="xpBar" style="width:0%"></div></div>
+      <span class="xp-label" id="xpLabel">0 / 100 XP</span>
+    </div>
+  </div>
+  <div class="streak-badge" id="streakBadge">&#128293; 0 day streak</div>
+</div>
+
+<!-- Nav -->
+<div class="nav">
+  <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+  <button class="nav-btn" data-tab="sentences">Sentence Lab</button>
+  <button class="nav-btn" data-tab="blueprint">Paper Blueprint</button>
+  <button class="nav-btn" data-tab="tips">Writing Tips</button>
+  <button class="nav-btn" data-tab="evaluator">Paper Evaluator</button>
+  <button class="nav-btn" data-tab="progress">Progress</button>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div class="section active" id="sec-dashboard">
+  <div class="welcome-card">
+    <h2>Welcome to <span>Writer's Quest</span></h2>
+    <p>Master the craft of writing through interactive lessons, practice exercises, and real-time paper evaluation. Every lesson you complete and every paper you evaluate earns XP, helping you level up from Novice to Master Author.</p>
+    <div class="quick-actions">
+      <button class="btn btn-primary" onclick="switchTab('sentences')">Start a Lesson</button>
+      <button class="btn btn-gold" onclick="switchTab('evaluator')">Evaluate a Paper</button>
+      <button class="btn btn-outline" onclick="switchTab('tips')">Browse Tips</button>
+    </div>
+  </div>
+
+  <div class="daily-challenge" id="dailyChallenge">
+    <h3>&#127775; Daily Writing Challenge</h3>
+    <p id="dailyChallengeText" style="color:var(--text-dim);font-size:0.92em;margin-bottom:10px;"></p>
+    <textarea id="dailyChallengeInput" placeholder="Write your response here..."></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;">
+      <button class="btn btn-gold btn-sm" onclick="submitDailyChallenge()">Submit (+30 XP)</button>
+    </div>
+  </div>
+
+  <div class="dash-grid">
+    <div class="dash-stat">
+      <div class="dash-stat-icon">&#128218;</div>
+      <div class="dash-stat-val" id="dashLessons">0</div>
+      <div class="dash-stat-lbl">Lessons Studied</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-icon">&#128221;</div>
+      <div class="dash-stat-val" id="dashEvals">0</div>
+      <div class="dash-stat-lbl">Papers Evaluated</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-icon">&#127942;</div>
+      <div class="dash-stat-val" id="dashBadges">0</div>
+      <div class="dash-stat-lbl">Badges Earned</div>
+    </div>
+    <div class="dash-stat">
+      <div class="dash-stat-icon">&#128200;</div>
+      <div class="dash-stat-val" id="dashBest">--</div>
+      <div class="dash-stat-lbl">Best Eval Grade</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SENTENCE LAB ═══════════════ -->
+<div class="section" id="sec-sentences">
+  <div class="card">
+    <h3>&#128300; Sentence Structure Lab</h3>
+    <p>Master different sentence patterns to add variety and power to your writing. Click each structure to learn more, then practice below.</p>
+  </div>
+  <div id="structureList"></div>
+
+  <div class="practice-area">
+    <h3>&#9997; Practice Zone</h3>
+    <div class="practice-prompt" id="practicePrompt">
+      <strong>Challenge:</strong> <span id="practiceText">Select a sentence structure above, then try writing your own sentence using that pattern.</span>
+    </div>
+    <textarea id="practiceInput" placeholder="Write your practice sentence here..."></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-primary btn-sm" onclick="checkPractice()">Check My Sentence</button>
+      <button class="btn btn-outline btn-sm" onclick="newPracticePrompt()">New Prompt</button>
+      <span id="practiceFeedback" style="font-size:0.85em;color:var(--text-dim);margin-left:8px;"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAPER BLUEPRINT ═══════════════ -->
+<div class="section" id="sec-blueprint">
+  <div class="card">
+    <h3>&#128208; What Makes a Great Paper</h3>
+    <p>A strong paper isn't just good writing — it's a well-organized argument supported by evidence and expressed with clarity. Follow this blueprint to craft papers that impress.</p>
+  </div>
+  <div id="blueprintContent"></div>
+
+  <div class="card" style="margin-top:20px;">
+    <h3>&#128161; Paper Quality Checklist</h3>
+    <p style="margin-bottom:12px;">Before submitting any paper, run through this self-check:</p>
+    <div id="qualityChecklist"></div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-green btn-sm" onclick="completeChecklist()">I've reviewed all items (+20 XP)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ WRITING TIPS ═══════════════ -->
+<div class="section" id="sec-tips">
+  <div class="card">
+    <h3>&#128161; Tips to Become a Better Writer</h3>
+    <p>These practical tips will help you grow as a writer and build lasting confidence in your skills.</p>
+  </div>
+  <div id="tipsList"></div>
+
+  <div class="confidence-track">
+    <h3>&#127793; Your Confidence Path</h3>
+    <p style="color:var(--text-dim);font-size:0.88em;margin-bottom:14px;">
+      Writing is a journey. Here are the milestones that show you're growing:
+    </p>
+    <div id="confidenceMilestones"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAPER EVALUATOR ═══════════════ -->
+<div class="section" id="sec-evaluator">
+  <div class="card">
+    <h3>&#128203; Paper Evaluator</h3>
+    <p>Paste your paper below to get a detailed evaluation. The analyzer checks sentence variety, vocabulary, structure, readability, transitions, and more. Each evaluation is saved so you can track your improvement over time.</p>
+  </div>
+
+  <textarea class="eval-textarea" id="evalInput" placeholder="Paste your paper or essay here to receive a comprehensive evaluation..."></textarea>
+  <div class="eval-controls">
+    <button class="btn btn-primary" onclick="evaluatePaper()">Evaluate Paper (+25 XP)</button>
+    <button class="btn btn-outline" onclick="document.getElementById('evalInput').value='';document.getElementById('evalResults').innerHTML='';">Clear</button>
+    <span style="font-size:0.82em;color:var(--text-dim);" id="evalWordCount">0 words</span>
+  </div>
+  <div id="evalResults"></div>
+</div>
+
+<!-- ═══════════════ PROGRESS ═══════════════ -->
+<div class="section" id="sec-progress">
+  <div class="card">
+    <h3>&#128200; Your Writing Journey</h3>
+    <p>Track your improvement over time. Every evaluation, lesson, and exercise is recorded here.</p>
+  </div>
+
+  <div class="progress-grid">
+    <div class="progress-card">
+      <h4>Evaluation History</h4>
+      <div id="evalHistory"><p style="color:var(--text-dim);font-size:0.88em;">No evaluations yet. Go to the Paper Evaluator to get started.</p></div>
+    </div>
+    <div class="progress-card">
+      <h4>Improvement Trends</h4>
+      <div id="trendSummary"><p style="color:var(--text-dim);font-size:0.88em;">Complete at least 2 evaluations to see trends.</p></div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <h4>Score Over Time</h4>
+    <canvas class="progress-chart" id="progressChart"></canvas>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>&#127941; Badges & Achievements</h3>
+    <div class="badges-grid" id="badgesGrid"></div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <button class="btn btn-outline btn-sm" onclick="if(confirm('Reset all progress? This cannot be undone.')){localStorage.removeItem('writersQuest');location.reload();}">Reset All Progress</button>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+const LEVELS = [
+  { name: 'Novice', xp: 0 },
+  { name: 'Apprentice', xp: 100 },
+  { name: 'Scribe', xp: 250 },
+  { name: 'Wordsmith', xp: 500 },
+  { name: 'Storyteller', xp: 800 },
+  { name: 'Author', xp: 1200 },
+  { name: 'Essayist', xp: 1700 },
+  { name: 'Scholar', xp: 2400 },
+  { name: 'Sage', xp: 3200 },
+  { name: 'Master Author', xp: 4200 }
+];
+
+const DEFAULT_STATE = {
+  xp: 0,
+  lessonsViewed: [],
+  evalsCompleted: 0,
+  evalHistory: [],
+  practiceCount: 0,
+  dailyChallengesCompleted: [],
+  lastActive: null,
+  streak: 0,
+  checklistCompleted: false,
+  badgesEarned: []
+};
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('writersQuest'));
+    return s ? { ...DEFAULT_STATE, ...s } : { ...DEFAULT_STATE };
+  } catch { return { ...DEFAULT_STATE }; }
+}
+
+function saveState() {
+  localStorage.setItem('writersQuest', JSON.stringify(state));
+}
+
+function addXP(amount) {
+  const oldLevel = getLevel();
+  state.xp += amount;
+  saveState();
+  updateHeader();
+
+  const newLevel = getLevel();
+  if (newLevel.name !== oldLevel.name) {
+    showNotif(`Level Up! You are now a <strong>${newLevel.name}</strong>! +${amount} XP`, true);
+  } else {
+    showNotif(`+${amount} XP earned!`);
+  }
+
+  // floating xp
+  const popup = document.createElement('div');
+  popup.className = 'xp-popup';
+  popup.textContent = `+${amount} XP`;
+  popup.style.left = Math.random() * 200 + 100 + 'px';
+  popup.style.top = '70px';
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 1100);
+
+  checkBadges();
+  updateDashboard();
+}
+
+function getLevel() {
+  let lvl = LEVELS[0];
+  for (let i = LEVELS.length - 1; i >= 0; i--) {
+    if (state.xp >= LEVELS[i].xp) { lvl = LEVELS[i]; lvl.index = i; break; }
+  }
+  return lvl;
+}
+
+function showNotif(msg, isLevelUp) {
+  const n = document.getElementById('notif');
+  n.innerHTML = msg;
+  n.style.borderColor = isLevelUp ? 'var(--gold)' : 'var(--green)';
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
+
+// ── Streak ──
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (state.lastActive) {
+    const last = new Date(state.lastActive);
+    const diff = Math.floor((new Date(today) - last) / 86400000);
+    if (diff === 1) state.streak++;
+    else if (diff > 1) state.streak = 1;
+  } else {
+    state.streak = 1;
+  }
+  state.lastActive = today;
+  saveState();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HEADER
+// ═══════════════════════════════════════════════════════
+function updateHeader() {
+  const lvl = getLevel();
+  const nextLvl = LEVELS[Math.min((lvl.index || 0) + 1, LEVELS.length - 1)];
+  const xpInLevel = state.xp - lvl.xp;
+  const xpNeeded = nextLvl.xp - lvl.xp;
+  const pct = xpNeeded > 0 ? Math.min(100, (xpInLevel / xpNeeded) * 100) : 100;
+
+  document.getElementById('levelBadge').textContent = `Lvl ${(lvl.index || 0) + 1} - ${lvl.name}`;
+  document.getElementById('xpBar').style.width = pct + '%';
+  document.getElementById('xpLabel').textContent = `${state.xp} / ${nextLvl.xp} XP`;
+  document.getElementById('streakBadge').innerHTML = `&#128293; ${state.streak} day streak`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`.nav-btn[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('sec-' + tab).classList.add('active');
+  if (tab === 'progress') setTimeout(drawChart, 50);
+  if (tab === 'tips') renderTips();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SENTENCE STRUCTURES
+// ═══════════════════════════════════════════════════════
+const STRUCTURES = [
+  {
+    name: 'Simple Sentence',
+    tag: 'basic', level: 'Basic',
+    formula: 'Subject + Verb + Object',
+    example: 'The researcher analyzed the data carefully.',
+    explain: 'A simple sentence has one independent clause with a subject and predicate. It expresses a complete thought clearly and directly. Use these for emphasis and to break up complex passages.'
+  },
+  {
+    name: 'Compound Sentence',
+    tag: 'basic', level: 'Basic',
+    formula: 'Independent Clause + Conjunction (FANBOYS) + Independent Clause',
+    example: 'The experiment failed, but the team discovered an unexpected pattern in the results.',
+    explain: 'Two independent clauses joined by a coordinating conjunction (For, And, Nor, But, Or, Yet, So). Always place a comma before the conjunction. This structure shows how two equal ideas relate.'
+  },
+  {
+    name: 'Complex Sentence',
+    tag: 'intermediate', level: 'Intermediate',
+    formula: 'Dependent Clause + , + Independent Clause (or reversed without comma)',
+    example: 'Although the sample size was small, the findings were statistically significant.',
+    explain: 'Combines a dependent clause (starts with words like although, because, when, if) with an independent clause. When the dependent clause comes first, use a comma. This structure shows cause-effect and conditional relationships.'
+  },
+  {
+    name: 'Compound-Complex Sentence',
+    tag: 'advanced', level: 'Advanced',
+    formula: 'Dependent Clause + Independent Clause + Conjunction + Independent Clause',
+    example: 'When the funding was approved, the team expanded the study, and they recruited additional participants from three universities.',
+    explain: 'Has at least two independent clauses and one dependent clause. Use sparingly for nuanced ideas with multiple layers. Overuse makes writing hard to follow.'
+  },
+  {
+    name: 'Parallel Structure',
+    tag: 'intermediate', level: 'Intermediate',
+    formula: 'Item A, Item B, and Item C (same grammatical form)',
+    example: 'The program teaches students to think critically, write persuasively, and speak confidently.',
+    explain: 'Items in a list or comparison should follow the same grammatical pattern. Parallelism creates rhythm and clarity. Watch for mixing verb forms (e.g., "to run, jumping, and swam" is broken parallelism).'
+  },
+  {
+    name: 'Inverted Sentence',
+    tag: 'advanced', level: 'Advanced',
+    formula: 'Verb/Object + Subject (reverse normal order)',
+    example: 'Rarely have scientists observed such a rapid decline in biodiversity.',
+    explain: 'Flipping the normal subject-verb order creates emphasis and a formal tone. Best used sparingly for dramatic effect or to emphasize an unusual condition. Common in academic and persuasive writing.'
+  },
+  {
+    name: 'Appositive Sentence',
+    tag: 'intermediate', level: 'Intermediate',
+    formula: 'Subject + , + Appositive Phrase + , + Verb',
+    example: 'Dr. Chen, the lead researcher on the climate project, published her findings in Nature.',
+    explain: 'An appositive renames or describes a noun right next to it, set off by commas. It adds information without a separate clause, keeping your writing tight and informative.'
+  },
+  {
+    name: 'Periodic Sentence',
+    tag: 'advanced', level: 'Advanced',
+    formula: 'Modifying Phrases + , + Main Clause (at the end)',
+    example: 'After years of research, through countless failed experiments, and despite losing key funding, the team finally achieved a breakthrough.',
+    explain: 'The main idea is delayed until the end, building suspense and emphasis. The reader must wait for the payoff. Great for conclusions and persuasive writing, but use sparingly.'
+  },
+  {
+    name: 'Cumulative (Loose) Sentence',
+    tag: 'intermediate', level: 'Intermediate',
+    formula: 'Main Clause + , + Modifying Phrases',
+    example: 'The study revealed a clear trend, showing increased engagement among younger participants, particularly those in urban areas.',
+    explain: 'Starts with the main idea and then adds detail. This is the most natural English sentence pattern. It feels conversational and easy to follow, making it great for explanations and descriptions.'
+  },
+  {
+    name: 'Rhetorical Question',
+    tag: 'basic', level: 'Basic',
+    formula: 'Question that implies its own answer',
+    example: 'If we cannot protect our own environment, what legacy are we leaving for future generations?',
+    explain: 'A question asked for effect, not for an answer. Engages the reader and makes them think. Use in introductions, transitions, or to build an argument. Don\'t overuse — one per section is typically enough.'
+  }
+];
+
+function renderStructures() {
+  const el = document.getElementById('structureList');
+  el.innerHTML = STRUCTURES.map((s, i) => `
+    <div class="structure-card" data-idx="${i}">
+      <div class="structure-header" onclick="toggleStructure(${i})">
+        <h4>${s.name}</h4>
+        <span class="structure-tag tag-${s.tag}">${s.level}</span>
+      </div>
+      <div class="structure-body" id="struct-body-${i}">
+        <div class="structure-formula">${s.formula}</div>
+        <div class="structure-example">"${s.example}"</div>
+        <div class="structure-explain">${s.explain}</div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-primary btn-sm" onclick="practiceStructure(${i})">Practice This</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleStructure(i) {
+  const body = document.getElementById('struct-body-' + i);
+  const wasOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+
+  if (!wasOpen && !state.lessonsViewed.includes(i)) {
+    state.lessonsViewed.push(i);
+    saveState();
+    addXP(15);
+    updateDashboard();
+  }
+}
+
+let currentStructure = null;
+function practiceStructure(i) {
+  currentStructure = i;
+  const s = STRUCTURES[i];
+  document.getElementById('practiceText').textContent =
+    `Write a sentence using the "${s.name}" pattern: ${s.formula}`;
+  document.getElementById('practiceInput').value = '';
+  document.getElementById('practiceFeedback').textContent = '';
+  document.getElementById('practiceInput').focus();
+}
+
+function newPracticePrompt() {
+  const prompts = [
+    'Write a sentence about your favorite place using a compound structure.',
+    'Describe a recent discovery using a complex sentence.',
+    'Create a sentence with parallel structure listing three actions.',
+    'Write a periodic sentence about overcoming a challenge.',
+    'Use an appositive to describe a person you admire.',
+    'Write a cumulative sentence about a memorable experience.',
+    'Craft a rhetorical question about education.',
+    'Use an inverted sentence to emphasize something surprising.',
+    'Write a simple, powerful sentence about nature.',
+    'Create a compound-complex sentence about technology\'s impact.'
+  ];
+  const p = prompts[Math.floor(Math.random() * prompts.length)];
+  document.getElementById('practiceText').textContent = p;
+  currentStructure = null;
+  document.getElementById('practiceInput').value = '';
+  document.getElementById('practiceFeedback').textContent = '';
+}
+
+function checkPractice() {
+  const text = document.getElementById('practiceInput').value.trim();
+  if (!text) {
+    document.getElementById('practiceFeedback').textContent = 'Write something first!';
+    return;
+  }
+  if (text.split(/\s+/).length < 4) {
+    document.getElementById('practiceFeedback').textContent = 'Try writing a fuller sentence (at least 4 words).';
+    return;
+  }
+
+  const fb = document.getElementById('practiceFeedback');
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+  const words = text.split(/\s+/);
+  let feedback = [];
+
+  if (text[0] !== text[0].toUpperCase()) feedback.push('Start with a capital letter.');
+  if (!/[.!?]$/.test(text)) feedback.push('End with proper punctuation.');
+
+  if (currentStructure !== null) {
+    const s = STRUCTURES[currentStructure];
+    if (s.name === 'Compound Sentence' && !/,\s*(and|but|or|nor|for|yet|so)\s/i.test(text))
+      feedback.push('A compound sentence needs a comma + conjunction (and, but, or, etc.).');
+    if (s.name === 'Complex Sentence' && !/\b(although|because|when|while|if|since|after|before|unless|until)\b/i.test(text))
+      feedback.push('Try starting with a subordinating conjunction (although, because, when, if, etc.).');
+    if (s.name === 'Rhetorical Question' && !text.includes('?'))
+      feedback.push('A rhetorical question should end with a question mark.');
+    if (s.name === 'Parallel Structure' && (text.match(/,/g) || []).length < 1)
+      feedback.push('Try listing at least 3 parallel items separated by commas.');
+  }
+
+  if (feedback.length === 0) {
+    fb.style.color = 'var(--green)';
+    fb.textContent = 'Nice work! Your sentence looks well-structured.';
+    state.practiceCount++;
+    saveState();
+    addXP(10);
+  } else {
+    fb.style.color = 'var(--orange)';
+    fb.textContent = feedback.join(' ');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAPER BLUEPRINT
+// ═══════════════════════════════════════════════════════
+const BLUEPRINT = [
+  {
+    title: 'Strong Thesis Statement',
+    desc: 'Your thesis is the backbone of your paper. It should make a clear, arguable claim that the rest of your paper supports. A great thesis is specific, takes a position, and gives the reader a roadmap of what to expect.',
+    checks: ['States a clear, debatable claim', 'Is specific (not vague)', 'Previews the paper\'s main points']
+  },
+  {
+    title: 'Compelling Introduction',
+    desc: 'Hook the reader, provide context, and present your thesis. Start with something engaging: a surprising fact, a question, a brief anecdote, or a bold statement. Then narrow down to your thesis.',
+    checks: ['Opens with an engaging hook', 'Provides necessary background', 'Ends with a clear thesis statement']
+  },
+  {
+    title: 'Well-Organized Body Paragraphs',
+    desc: 'Each body paragraph should focus on ONE main idea that supports your thesis. Start with a topic sentence, provide evidence, explain how the evidence supports your point, and transition smoothly to the next paragraph.',
+    checks: ['Each paragraph has a clear topic sentence', 'Evidence supports the topic sentence', 'Analysis explains why the evidence matters', 'Smooth transitions between paragraphs']
+  },
+  {
+    title: 'Strong Evidence & Support',
+    desc: 'Back up your claims with concrete evidence: facts, statistics, expert quotes, examples, and research findings. Always explain how the evidence connects to your argument. Never drop a quote without analysis.',
+    checks: ['Uses credible, relevant sources', 'Quotes and data are properly cited', 'Each piece of evidence is analyzed', 'Evidence directly supports the thesis']
+  },
+  {
+    title: 'Effective Transitions',
+    desc: 'Transitions guide the reader through your argument. Use transition words and phrases between sentences and paragraphs. Good transitions show the logical relationship between ideas (contrast, addition, cause-effect, sequence).',
+    checks: ['Uses varied transition words', 'Paragraphs flow logically', 'Reader can follow the argument easily']
+  },
+  {
+    title: 'Powerful Conclusion',
+    desc: 'Restate your thesis in a new way, summarize your key points, and leave the reader with something to think about. Don\'t introduce new evidence here. End with a call to action, a question, or a broader implication.',
+    checks: ['Restates thesis without repeating it', 'Summarizes main points', 'Ends with impact (call to action, question, or insight)']
+  },
+  {
+    title: 'Clear & Polished Prose',
+    desc: 'Great papers are not just well-argued — they\'re well-written. Vary your sentence length and structure. Eliminate wordiness. Choose precise vocabulary. Read your paper aloud to catch awkward phrasing.',
+    checks: ['Varied sentence lengths', 'No unnecessary words', 'Precise word choices', 'Reads smoothly aloud']
+  }
+];
+
+function renderBlueprint() {
+  const el = document.getElementById('blueprintContent');
+  el.innerHTML = BLUEPRINT.map((b, i) => `
+    <div class="blueprint-section">
+      <div class="blueprint-num">${i + 1}</div>
+      <div class="blueprint-content">
+        <h4>${b.title}</h4>
+        <p>${b.desc}</p>
+        <ul class="blueprint-checklist">
+          ${b.checks.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+      </div>
+    </div>
+  `).join('');
+
+  // Quality checklist
+  const allChecks = BLUEPRINT.flatMap(b => b.checks);
+  const cl = document.getElementById('qualityChecklist');
+  cl.innerHTML = allChecks.map((c, i) => `
+    <label style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:0.88em;color:var(--text-dim);cursor:pointer;">
+      <input type="checkbox" id="qc-${i}" style="accent-color:var(--green);">
+      ${c}
+    </label>
+  `).join('');
+}
+
+function completeChecklist() {
+  const boxes = document.querySelectorAll('[id^="qc-"]');
+  const checked = Array.from(boxes).filter(b => b.checked).length;
+  if (checked < boxes.length / 2) {
+    showNotif('Review more items before claiming this reward.');
+    return;
+  }
+  if (state.checklistCompleted) {
+    showNotif('You already earned this reward today!');
+    return;
+  }
+  state.checklistCompleted = true;
+  saveState();
+  addXP(20);
+}
+
+// ═══════════════════════════════════════════════════════
+//  WRITING TIPS
+// ═══════════════════════════════════════════════════════
+const TIPS = [
+  { icon: '&#128214;', title: 'Read Widely and Often', text: 'The best writers are voracious readers. Reading exposes you to different styles, vocabularies, and ways of constructing arguments. Read outside your comfort zone: fiction, non-fiction, essays, journalism.' },
+  { icon: '&#9997;', title: 'Write Every Day', text: 'Writing is a muscle. Even 15 minutes of daily writing builds fluency and confidence. Keep a journal, write summaries of what you read, or try free-writing without editing.' },
+  { icon: '&#128200;', title: 'Outline Before You Draft', text: 'An outline organizes your thoughts before you commit them to prose. It helps you see if your argument flows logically and prevents you from going off-topic. Even a brief bullet-point outline makes a huge difference.' },
+  { icon: '&#9986;', title: 'Embrace Revision', text: 'Good writing is rewriting. Your first draft is never your best. Set your paper aside for a day, then revise with fresh eyes. Focus first on big-picture issues (argument, structure), then on sentence-level polish.' },
+  { icon: '&#128483;', title: 'Read Your Work Aloud', text: 'Your ear catches problems your eye misses. Reading aloud reveals awkward phrasing, run-on sentences, and rhythm issues. If you stumble while reading, your reader will stumble too.' },
+  { icon: '&#128161;', title: 'Show, Don\'t Tell', text: 'Instead of stating "The experiment was important," explain WHY: "The experiment revealed a 40% reduction in error rates, changing how engineers approach quality control." Specific details are more persuasive than vague claims.' },
+  { icon: '&#128296;', title: 'Eliminate Filler Words', text: 'Cut "very," "really," "basically," "in order to," "due to the fact that." Replace weak verbs (is, was, has) with strong action verbs. Shorter sentences are often stronger sentences.' },
+  { icon: '&#127919;', title: 'Know Your Audience', text: 'Adjust your tone, vocabulary, and level of detail based on who will read your work. An academic paper differs from a blog post. Understanding your audience helps you choose what to explain and what to assume.' },
+  { icon: '&#128218;', title: 'Master the Topic Sentence', text: 'Every paragraph should open with a clear topic sentence that states the paragraph\'s main idea. The rest of the paragraph supports that sentence. If a sentence doesn\'t relate to the topic sentence, it belongs elsewhere.' },
+  { icon: '&#129504;', title: 'Argue the Other Side', text: 'Strong writers acknowledge counterarguments and refute them. This shows critical thinking and strengthens your position. Use phrases like "While some may argue..." followed by your rebuttal.' },
+  { icon: '&#128221;', title: 'Use Active Voice', text: 'Active voice ("The team discovered a pattern") is clearer and more engaging than passive voice ("A pattern was discovered by the team"). Use passive voice only when the actor is unknown or unimportant.' },
+  { icon: '&#128170;', title: 'Build Confidence Through Practice', text: 'Every great writer started as a beginner. Don\'t compare your rough drafts to others\' finished work. Celebrate small wins: a well-crafted sentence, a clear paragraph, a complete draft. Growth comes from consistent effort, not perfection.' },
+  { icon: '&#128640;', title: 'Start Strong, End Stronger', text: 'Your first and last sentences carry the most weight. Open with a hook that grabs attention. Close with a line that resonates. Spend extra time crafting your opening and closing.' },
+  { icon: '&#128269;', title: 'Be Specific', text: 'Replace vague words with precise ones. Instead of "a lot of research," say "47 peer-reviewed studies." Instead of "things improved," say "graduation rates increased by 12%." Specificity builds credibility.' },
+  { icon: '&#128736;', title: 'Learn Grammar as a Tool', text: 'Grammar isn\'t about rigid rules — it\'s about clarity. Learn the rules so you can break them intentionally for effect. Focus on the errors that matter most: run-ons, fragments, subject-verb agreement, and comma splices.' }
+];
+
+function renderTips() {
+  const el = document.getElementById('tipsList');
+  el.innerHTML = TIPS.map(t => `
+    <div class="tip-card">
+      <div class="tip-icon">${t.icon}</div>
+      <div class="tip-text">
+        <h4>${t.title}</h4>
+        <p>${t.text}</p>
+      </div>
+    </div>
+  `).join('');
+
+  // Confidence milestones
+  const milestones = [
+    { text: 'You opened Writer\'s Quest and started learning', check: () => true },
+    { text: 'You studied your first sentence structure', check: () => state.lessonsViewed.length >= 1 },
+    { text: 'You practiced writing 3 sentences', check: () => state.practiceCount >= 3 },
+    { text: 'You evaluated your first paper', check: () => state.evalsCompleted >= 1 },
+    { text: 'You studied 5 different sentence types', check: () => state.lessonsViewed.length >= 5 },
+    { text: 'You completed 3 paper evaluations', check: () => state.evalsCompleted >= 3 },
+    { text: 'You achieved a B grade or higher', check: () => state.evalHistory.some(e => e.score >= 70) },
+    { text: 'You maintained a 3-day writing streak', check: () => state.streak >= 3 },
+    { text: 'You reached Level 5 (Storyteller)', check: () => state.xp >= 800 },
+    { text: 'You showed improvement across evaluations', check: () => {
+      const h = state.evalHistory;
+      return h.length >= 2 && h[h.length - 1].score > h[0].score;
+    }}
+  ];
+
+  const mel = document.getElementById('confidenceMilestones');
+  mel.innerHTML = milestones.map(m => {
+    const reached = m.check();
+    return `
+      <div class="milestone">
+        <div class="milestone-dot ${reached ? 'reached' : ''}"></div>
+        <div class="milestone-label ${reached ? 'reached' : ''}">${m.text}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAPER EVALUATOR
+// ═══════════════════════════════════════════════════════
+document.getElementById('evalInput').addEventListener('input', function() {
+  const wc = this.value.trim().split(/\s+/).filter(w => w).length;
+  document.getElementById('evalWordCount').textContent = wc + ' words';
+});
+
+function evaluatePaper() {
+  const text = document.getElementById('evalInput').value.trim();
+  if (!text || text.split(/\s+/).length < 20) {
+    showNotif('Please paste at least 20 words for a meaningful evaluation.');
+    return;
+  }
+
+  const result = analyzePaper(text);
+  displayEvalResults(result);
+
+  // Save to history
+  state.evalsCompleted++;
+  state.evalHistory.push({
+    date: new Date().toISOString(),
+    score: result.overall,
+    grade: result.grade,
+    wordCount: result.stats.wordCount,
+    metrics: result.metrics
+  });
+  saveState();
+  addXP(25);
+  updateDashboard();
+  renderProgress();
+}
+
+function analyzePaper(text) {
+  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+  const words = text.split(/\s+/).filter(w => w);
+  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim());
+  const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z']/g, '')).filter(w => w));
+
+  const wordCount = words.length;
+  const sentenceCount = sentences.length;
+  const paragraphCount = Math.max(paragraphs.length, 1);
+  const avgSentenceLen = sentenceCount > 0 ? wordCount / sentenceCount : 0;
+  const avgWordLen = words.reduce((a, w) => a + w.replace(/[^a-z]/gi, '').length, 0) / wordCount;
+  const vocabDiversity = wordCount > 0 ? (uniqueWords.size / wordCount) * 100 : 0;
+
+  // Sentence length variety
+  const sentLengths = sentences.map(s => s.split(/\s+/).length);
+  const avgLen = sentLengths.reduce((a, b) => a + b, 0) / sentLengths.length || 0;
+  const variance = sentLengths.reduce((a, l) => a + Math.pow(l - avgLen, 2), 0) / sentLengths.length || 0;
+  const stdDev = Math.sqrt(variance);
+  // stdDev of 3-4 = decent variety, 6+ = great variety
+  const sentVarietyScore = Math.min(100, 30 + stdDev * 12);
+
+  // Transition words
+  const transitions = ['however', 'therefore', 'furthermore', 'moreover', 'additionally',
+    'consequently', 'nevertheless', 'although', 'meanwhile', 'similarly',
+    'in contrast', 'for example', 'for instance', 'in addition', 'as a result',
+    'on the other hand', 'in conclusion', 'first', 'second', 'third',
+    'finally', 'next', 'then', 'thus', 'hence', 'accordingly',
+    'specifically', 'notably', 'indeed', 'conversely', 'subsequently'];
+  const textLower = text.toLowerCase();
+  const transCount = transitions.filter(t => textLower.includes(t)).length;
+  const transScore = Math.min(100, (transCount / Math.max(1, paragraphCount)) * 40);
+
+  // Passive voice detection
+  const passivePattern = /\b(is|are|was|were|been|being|be)\s+(being\s+)?\w+ed\b/gi;
+  const passiveMatches = text.match(passivePattern) || [];
+  const passiveRatio = sentenceCount > 0 ? passiveMatches.length / sentenceCount : 0;
+  const activeVoiceScore = Math.max(0, 100 - passiveRatio * 200);
+
+  // Readability (simplified Flesch-Kincaid)
+  function countSyllables(word) {
+    word = word.toLowerCase().replace(/[^a-z]/g, '');
+    if (word.length <= 3) return 1;
+    let count = 0;
+    const vowels = 'aeiouy';
+    let prevVowel = false;
+    for (let i = 0; i < word.length; i++) {
+      const isVowel = vowels.includes(word[i]);
+      if (isVowel && !prevVowel) count++;
+      prevVowel = isVowel;
+    }
+    if (word.endsWith('e') && count > 1) count--;
+    return Math.max(1, count);
+  }
+  const totalSyllables = words.reduce((a, w) => a + countSyllables(w), 0);
+  const fleschScore = sentenceCount > 0 ?
+    206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (totalSyllables / wordCount) : 50;
+  // Map Flesch score to a quality metric: sweet spot is 30-60 (college/professional level)
+  // Too easy (>80) or too hard (<10) both score lower
+  const readabilityScore = (() => {
+    if (fleschScore >= 30 && fleschScore <= 60) return Math.min(100, 70 + (fleschScore - 30));
+    if (fleschScore > 60 && fleschScore <= 80) return 70 + Math.round((80 - fleschScore) / 2);
+    if (fleschScore > 80) return Math.max(40, 80 - (fleschScore - 80) * 2);
+    if (fleschScore >= 10 && fleschScore < 30) return 50 + Math.round(fleschScore);
+    return Math.max(20, Math.round(fleschScore * 3));
+  })();
+
+  // Paragraph structure
+  const paraScore = (() => {
+    if (paragraphCount < 2 && wordCount > 100) return 30; // no paragraph breaks
+    if (paragraphCount < 3 && wordCount > 200) return 50;
+    const avgParaLen = wordCount / paragraphCount;
+    if (avgParaLen > 200) return 50; // paragraphs too long
+    if (avgParaLen < 30 && wordCount > 100) return 60; // too short
+    return Math.min(100, 60 + paragraphCount * 5);
+  })();
+
+  // Vocabulary sophistication
+  const commonWords = new Set(['the','be','to','of','and','a','in','that','have','i','it','for',
+    'not','on','with','he','as','you','do','at','this','but','his','by','from','they','we',
+    'say','her','she','or','an','will','my','one','all','would','there','their','what','so',
+    'up','out','if','about','who','get','which','go','me','when','make','can','like','time',
+    'no','just','him','know','take','people','into','year','your','good','some','could','them',
+    'see','other','than','then','now','look','only','come','its','over','think','also','back',
+    'after','use','two','how','our','work','first','well','way','even','new','want','because',
+    'any','these','give','day','most','us','is','are','was','were','been','has','had','did']);
+  const sophisticatedWords = Array.from(uniqueWords).filter(w => w.length > 4 && !commonWords.has(w));
+  const vocabScore = Math.min(100, (sophisticatedWords.length / Math.max(1, uniqueWords.size)) * 120);
+
+  // Opening & closing strength
+  const openingScore = (() => {
+    const firstSent = sentences[0] || '';
+    let score = 50;
+    if (firstSent.includes('?')) score += 15; // question hook
+    if (firstSent.split(/\s+/).length > 8) score += 10; // substantial opening
+    if (/\d/.test(firstSent)) score += 10; // includes a statistic
+    if (/^(in this|this paper|this essay|i am going|i will)/i.test(firstSent)) score -= 20; // weak opening
+    return Math.max(0, Math.min(100, score));
+  })();
+
+  // Compute metrics
+  const metrics = {
+    sentenceVariety: Math.round(sentVarietyScore),
+    transitions: Math.round(transScore),
+    activeVoice: Math.round(activeVoiceScore),
+    readability: Math.round(readabilityScore),
+    paragraphStructure: Math.round(paraScore),
+    vocabulary: Math.round(vocabScore),
+    opening: Math.round(openingScore)
+  };
+
+  // Overall score (weighted)
+  const overall = Math.round(
+    metrics.sentenceVariety * 0.15 +
+    metrics.transitions * 0.15 +
+    metrics.activeVoice * 0.10 +
+    metrics.readability * 0.15 +
+    metrics.paragraphStructure * 0.15 +
+    metrics.vocabulary * 0.15 +
+    metrics.opening * 0.15
+  );
+
+  // Grade
+  const grade = overall >= 93 ? 'A' : overall >= 85 ? 'A-' : overall >= 80 ? 'B+' :
+    overall >= 73 ? 'B' : overall >= 68 ? 'B-' : overall >= 63 ? 'C+' :
+    overall >= 55 ? 'C' : overall >= 48 ? 'C-' : overall >= 40 ? 'D' : 'F';
+
+  // Feedback
+  const feedback = [];
+  if (metrics.sentenceVariety < 50) feedback.push('Your sentences are similar in length. Mix short punchy sentences with longer descriptive ones for better rhythm.');
+  if (metrics.sentenceVariety >= 70) feedback.push('Great sentence variety! Your writing has a nice rhythm.');
+  if (metrics.transitions < 40) feedback.push('Add more transition words (however, therefore, for example, additionally) to connect your ideas smoothly.');
+  if (metrics.transitions >= 70) feedback.push('Excellent use of transitions. Your ideas flow well.');
+  if (metrics.activeVoice < 60) feedback.push('You\'re using a lot of passive voice. Try rewriting sentences to put the actor first (e.g., "The team discovered..." instead of "It was discovered by...").');
+  if (metrics.readability > 80) feedback.push('Your writing is very easy to read. If this is academic writing, consider adding some complexity.');
+  if (metrics.readability < 40) feedback.push('Your writing may be hard to follow. Try breaking up long sentences and using simpler words where possible.');
+  if (metrics.paragraphStructure < 50) feedback.push('Break your text into more paragraphs. Each paragraph should focus on one main idea.');
+  if (metrics.vocabulary < 40) feedback.push('Try incorporating more varied vocabulary. Replace common words with more precise alternatives where appropriate.');
+  if (metrics.vocabulary >= 70) feedback.push('Strong vocabulary usage! Your word choices add sophistication.');
+  if (metrics.opening < 50) feedback.push('Strengthen your opening. Try starting with a hook: a question, surprising fact, or vivid description instead of "In this essay..."');
+  if (wordCount < 100) feedback.push('Your piece is quite short. For a thorough evaluation, aim for at least 200-300 words.');
+  if (avgSentenceLen > 25) feedback.push('Some of your sentences are quite long (avg ' + Math.round(avgSentenceLen) + ' words). Consider breaking some into shorter sentences for clarity.');
+  if (feedback.length === 0) feedback.push('Your writing looks solid overall. Keep practicing to refine your style!');
+
+  return {
+    overall, grade, metrics, feedback,
+    stats: {
+      wordCount,
+      sentenceCount,
+      paragraphCount,
+      avgSentenceLen: Math.round(avgSentenceLen * 10) / 10,
+      vocabDiversity: Math.round(vocabDiversity),
+      uniqueWords: uniqueWords.size,
+      passiveCount: passiveMatches.length,
+      transitionCount: transCount
+    }
+  };
+}
+
+function getBarColor(val) {
+  if (val >= 70) return 'var(--green)';
+  if (val >= 50) return 'var(--orange)';
+  return 'var(--red)';
+}
+
+function displayEvalResults(r) {
+  const el = document.getElementById('evalResults');
+  el.innerHTML = `
+    <div class="eval-grade-wrap">
+      <div class="eval-grade">${r.grade}</div>
+      <div class="eval-grade-label">Overall Score: ${r.overall}/100</div>
+    </div>
+
+    <div class="eval-stat-grid">
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.wordCount}</div><div class="eval-stat-lbl">Words</div></div>
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.sentenceCount}</div><div class="eval-stat-lbl">Sentences</div></div>
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.paragraphCount}</div><div class="eval-stat-lbl">Paragraphs</div></div>
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.avgSentenceLen}</div><div class="eval-stat-lbl">Avg Words/Sentence</div></div>
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.vocabDiversity}%</div><div class="eval-stat-lbl">Vocab Diversity</div></div>
+      <div class="eval-stat"><div class="eval-stat-val">${r.stats.transitionCount}</div><div class="eval-stat-lbl">Transition Words</div></div>
+    </div>
+
+    <div class="card">
+      <h3>Detailed Scores</h3>
+      ${Object.entries(r.metrics).map(([key, val]) => `
+        <div class="eval-score-bar">
+          <div class="eval-score-label">${formatMetricName(key)}</div>
+          <div class="eval-bar-outer">
+            <div class="eval-bar-inner" style="width:${val}%;background:${getBarColor(val)}"></div>
+          </div>
+          <div class="eval-bar-value">${val}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="eval-feedback">
+      <h4>Feedback & Suggestions</h4>
+      <ul>${r.feedback.map(f => `<li>${f}</li>`).join('')}</ul>
+    </div>
+
+    ${renderComparison()}
+  `;
+}
+
+function formatMetricName(key) {
+  const names = {
+    sentenceVariety: 'Sentence Variety',
+    transitions: 'Transitions',
+    activeVoice: 'Active Voice',
+    readability: 'Readability',
+    paragraphStructure: 'Paragraph Structure',
+    vocabulary: 'Vocabulary',
+    opening: 'Opening Strength'
+  };
+  return names[key] || key;
+}
+
+function renderComparison() {
+  const h = state.evalHistory;
+  if (h.length < 2) return '';
+
+  const prev = h[h.length - 2];
+  const curr = h[h.length - 1];
+  const diff = curr.score - prev.score;
+  const arrow = diff > 0 ? '&#9650;' : diff < 0 ? '&#9660;' : '&#9644;';
+  const cls = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : 'trend-same';
+
+  let rows = '';
+  if (prev.metrics && curr.metrics) {
+    for (const key of Object.keys(curr.metrics)) {
+      const d = curr.metrics[key] - (prev.metrics[key] || 0);
+      const a = d > 0 ? '&#9650;' : d < 0 ? '&#9660;' : '&#9644;';
+      const c = d > 0 ? 'trend-up' : d < 0 ? 'trend-down' : 'trend-same';
+      rows += `<div class="comparison-row">
+        <span>${formatMetricName(key)}</span>
+        <span class="trend-indicator ${c}">${a} ${d > 0 ? '+' : ''}${d}</span>
+      </div>`;
+    }
+  }
+
+  return `
+    <div class="eval-comparison">
+      <h4>Compared to Your Previous Evaluation</h4>
+      <div class="comparison-row" style="font-weight:700;">
+        <span>Overall Score</span>
+        <span class="trend-indicator ${cls}">${arrow} ${diff > 0 ? '+' : ''}${diff} points (${prev.score} &#8594; ${curr.score})</span>
+      </div>
+      ${rows}
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROGRESS
+// ═══════════════════════════════════════════════════════
+function renderProgress() {
+  // Eval history
+  const hel = document.getElementById('evalHistory');
+  if (state.evalHistory.length === 0) {
+    hel.innerHTML = '<p style="color:var(--text-dim);font-size:0.88em;">No evaluations yet.</p>';
+  } else {
+    hel.innerHTML = state.evalHistory.slice().reverse().slice(0, 10).map(e => {
+      const d = new Date(e.date);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const scoreColor = e.score >= 70 ? 'var(--green)' : e.score >= 50 ? 'var(--orange)' : 'var(--red)';
+      return `<div class="history-entry">
+        <span class="history-date">${dateStr} - ${e.wordCount} words</span>
+        <span class="history-score" style="color:${scoreColor}">${e.grade} (${e.score})</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Trends
+  const tel = document.getElementById('trendSummary');
+  if (state.evalHistory.length < 2) {
+    tel.innerHTML = '<p style="color:var(--text-dim);font-size:0.88em;">Complete at least 2 evaluations to see trends.</p>';
+  } else {
+    const h = state.evalHistory;
+    const first = h[0].score;
+    const last = h[h.length - 1].score;
+    const diff = last - first;
+    const avg = Math.round(h.reduce((a, e) => a + e.score, 0) / h.length);
+    const best = Math.max(...h.map(e => e.score));
+    const cls = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : 'trend-same';
+
+    tel.innerHTML = `
+      <div style="margin-bottom:8px;">
+        <span style="color:var(--text-dim);font-size:0.88em;">Overall trend: </span>
+        <span class="trend-indicator ${cls}">${diff > 0 ? '&#9650; Improving' : diff < 0 ? '&#9660; Needs work' : '&#9644; Steady'} (${diff > 0 ? '+' : ''}${diff} pts)</span>
+      </div>
+      <div class="history-entry"><span class="history-date">First score</span><span>${h[0].grade} (${first})</span></div>
+      <div class="history-entry"><span class="history-date">Latest score</span><span>${h[h.length - 1].grade} (${last})</span></div>
+      <div class="history-entry"><span class="history-date">Average</span><span>${avg}</span></div>
+      <div class="history-entry"><span class="history-date">Best</span><span>${best}</span></div>
+    `;
+  }
+
+  // Chart
+  drawChart();
+
+  // Badges
+  renderBadges();
+}
+
+function drawChart() {
+  const canvas = document.getElementById('progressChart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.offsetWidth;
+  const h = 200;
+  canvas.width = w * 2;
+  canvas.height = h * 2;
+  ctx.scale(2, 2);
+
+  ctx.clearRect(0, 0, w, h);
+
+  const data = state.evalHistory.map(e => e.score);
+  if (data.length < 1) {
+    ctx.fillStyle = '#8888aa';
+    ctx.font = '13px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('Evaluate papers to see your progress chart', w / 2, h / 2);
+    return;
+  }
+
+  const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+  const chartW = w - padding.left - padding.right;
+  const chartH = h - padding.top - padding.bottom;
+
+  // Grid
+  ctx.strokeStyle = '#252550';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding.top + (chartH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(w - padding.right, y); ctx.stroke();
+    ctx.fillStyle = '#8888aa'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'right';
+    ctx.fillText(100 - i * 25, padding.left - 6, y + 3);
+  }
+
+  if (data.length === 1) {
+    const x = padding.left + chartW / 2;
+    const y = padding.top + chartH - (data[0] / 100) * chartH;
+    ctx.fillStyle = '#4fc3f7';
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e0e0f0'; ctx.font = '11px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText(data[0], x, y - 10);
+    return;
+  }
+
+  // Line
+  const stepX = chartW / (data.length - 1);
+  ctx.strokeStyle = '#4fc3f7';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = padding.left + stepX * i;
+    const y = padding.top + chartH - (v / 100) * chartH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill
+  const grad = ctx.createLinearGradient(0, padding.top, 0, h - padding.bottom);
+  grad.addColorStop(0, 'rgba(79,195,247,0.3)');
+  grad.addColorStop(1, 'rgba(79,195,247,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = padding.left + stepX * i;
+    const y = padding.top + chartH - (v / 100) * chartH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.lineTo(padding.left + stepX * (data.length - 1), padding.top + chartH);
+  ctx.lineTo(padding.left, padding.top + chartH);
+  ctx.fill();
+
+  // Points
+  data.forEach((v, i) => {
+    const x = padding.left + stepX * i;
+    const y = padding.top + chartH - (v / 100) * chartH;
+    ctx.fillStyle = '#4fc3f7';
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e0e0f0'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'center';
+    ctx.fillText(v, x, y - 8);
+  });
+
+  // X labels
+  ctx.fillStyle = '#8888aa'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'center';
+  data.forEach((_, i) => {
+    const x = padding.left + stepX * i;
+    ctx.fillText('#' + (i + 1), x, h - 8);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  BADGES
+// ═══════════════════════════════════════════════════════
+const BADGES = [
+  { id: 'first_lesson', icon: '&#128214;', name: 'First Lesson', check: () => state.lessonsViewed.length >= 1 },
+  { id: 'five_lessons', icon: '&#127891;', name: 'Studious', check: () => state.lessonsViewed.length >= 5 },
+  { id: 'all_lessons', icon: '&#127942;', name: 'Structure Master', check: () => state.lessonsViewed.length >= 10 },
+  { id: 'first_eval', icon: '&#128221;', name: 'First Evaluation', check: () => state.evalsCompleted >= 1 },
+  { id: 'five_evals', icon: '&#128202;', name: 'Evaluator', check: () => state.evalsCompleted >= 5 },
+  { id: 'ten_evals', icon: '&#128203;', name: 'Analyst', check: () => state.evalsCompleted >= 10 },
+  { id: 'grade_b', icon: '&#11088;', name: 'B Student', check: () => state.evalHistory.some(e => e.score >= 70) },
+  { id: 'grade_a', icon: '&#127775;', name: 'A Student', check: () => state.evalHistory.some(e => e.score >= 90) },
+  { id: 'practice_5', icon: '&#9997;', name: 'Practitioner', check: () => state.practiceCount >= 5 },
+  { id: 'practice_20', icon: '&#128170;', name: 'Dedicated Writer', check: () => state.practiceCount >= 20 },
+  { id: 'streak_3', icon: '&#128293;', name: 'On Fire', check: () => state.streak >= 3 },
+  { id: 'streak_7', icon: '&#9889;', name: 'Week Warrior', check: () => state.streak >= 7 },
+  { id: 'improved', icon: '&#128200;', name: 'Improving', check: () => {
+    const h = state.evalHistory;
+    return h.length >= 2 && h[h.length - 1].score > h[0].score;
+  }},
+  { id: 'level5', icon: '&#128640;', name: 'Storyteller', check: () => state.xp >= 800 },
+  { id: 'level10', icon: '&#128081;', name: 'Master Author', check: () => state.xp >= 4200 }
+];
+
+function checkBadges() {
+  let newBadge = false;
+  BADGES.forEach(b => {
+    if (!state.badgesEarned.includes(b.id) && b.check()) {
+      state.badgesEarned.push(b.id);
+      newBadge = true;
+    }
+  });
+  if (newBadge) saveState();
+}
+
+function renderBadges() {
+  const el = document.getElementById('badgesGrid');
+  el.innerHTML = BADGES.map(b => {
+    const earned = state.badgesEarned.includes(b.id);
+    return `<div class="badge ${earned ? 'earned' : ''}">
+      <span class="badge-icon">${b.icon}</span>
+      <span class="badge-label">${b.name}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  DAILY CHALLENGE
+// ═══════════════════════════════════════════════════════
+const DAILY_CHALLENGES = [
+  'Write 3 sentences about your morning routine. Use a simple, compound, and complex sentence.',
+  'Describe your favorite food in exactly 4 sentences, using at least 2 transition words.',
+  'Write a short paragraph (3-5 sentences) arguing why sleep is important. Include a thesis statement.',
+  'Rewrite this weak opening: "In this essay I will talk about dogs." Make it engaging.',
+  'Write 3 sentences about a recent news event using active voice only.',
+  'Create a paragraph about technology using at least 3 different sentence structures.',
+  'Write a concluding paragraph for an essay about the importance of reading.',
+  'Describe a place you love in 4 sentences. Use at least 2 sensory details.',
+  'Write an opening paragraph that starts with a rhetorical question about education.',
+  'Create 3 sentences with parallel structure about the benefits of exercise.',
+  'Write a short argument (4-5 sentences) with a clear claim, evidence, and analysis.',
+  'Rewrite using fewer words: "Due to the fact that it was raining outside, we made the decision to stay inside the house."',
+  'Write a periodic sentence about achieving a goal, then follow it with a short punchy sentence.',
+  'Create a paragraph that uses at least 4 transition words to connect ideas about healthy eating.'
+];
+
+function loadDailyChallenge() {
+  const today = new Date().toDateString();
+  const seed = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+  const idx = seed % DAILY_CHALLENGES.length;
+  document.getElementById('dailyChallengeText').textContent = DAILY_CHALLENGES[idx];
+
+  if (state.dailyChallengesCompleted.includes(today)) {
+    document.getElementById('dailyChallenge').style.opacity = '0.6';
+    document.getElementById('dailyChallengeInput').placeholder = 'You already completed today\'s challenge! Come back tomorrow.';
+  }
+}
+
+function submitDailyChallenge() {
+  const today = new Date().toDateString();
+  if (state.dailyChallengesCompleted.includes(today)) {
+    showNotif('You already completed today\'s challenge!');
+    return;
+  }
+  const text = document.getElementById('dailyChallengeInput').value.trim();
+  if (!text || text.split(/\s+/).length < 5) {
+    showNotif('Write at least 5 words to complete the challenge.');
+    return;
+  }
+  state.dailyChallengesCompleted.push(today);
+  state.practiceCount++;
+  saveState();
+  addXP(30);
+  document.getElementById('dailyChallenge').style.opacity = '0.6';
+  document.getElementById('dailyChallengeInput').placeholder = 'Challenge completed! Come back tomorrow.';
+}
+
+// ═══════════════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════════════
+function updateDashboard() {
+  document.getElementById('dashLessons').textContent = state.lessonsViewed.length;
+  document.getElementById('dashEvals').textContent = state.evalsCompleted;
+  document.getElementById('dashBadges').textContent = state.badgesEarned.length;
+  const best = state.evalHistory.length > 0 ?
+    state.evalHistory.reduce((a, e) => e.score > a.score ? e : a).grade : '--';
+  document.getElementById('dashBest').textContent = best;
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+updateStreak();
+updateHeader();
+renderStructures();
+renderBlueprint();
+renderTips();
+renderProgress();
+updateDashboard();
+loadDailyChallenge();
+checkBadges();
+</script>
+</body>
+</html>

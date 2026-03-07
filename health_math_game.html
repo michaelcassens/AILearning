@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Math Foundations — University of Montana</title>
+    <style>
+        /* ── Reset & Base ────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --maroon: #6b2035;
+            --maroon-dark: #4a1525;
+            --maroon-light: #8c3050;
+            --silver: #a7a9ac;
+            --silver-light: #d0d2d3;
+            --gold: #d4a843;
+            --gold-light: #e8c96a;
+            --bg: #0e0a12;
+            --surface: #1a1422;
+            --surface-2: #231c2e;
+            --surface-3: #2c243a;
+            --text: #ede8f2;
+            --text-muted: #9a8faa;
+            --border: #3a2f4a;
+            --correct: #2ecc71;
+            --correct-bg: rgba(46, 204, 113, 0.12);
+            --wrong: #e74c3c;
+            --wrong-bg: rgba(231, 76, 60, 0.12);
+            --info: #3498db;
+            --info-bg: rgba(52, 152, 219, 0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* ── Header ─────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon) 50%, var(--maroon-light) 100%);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid var(--gold);
+            box-shadow: 0 4px 30px rgba(107, 32, 53, 0.4);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .um-badge {
+            width: 48px;
+            height: 48px;
+            background: var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--maroon-dark);
+            letter-spacing: -0.5px;
+            flex-shrink: 0;
+        }
+
+        .header-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.3px;
+        }
+
+        .header-title span {
+            font-size: 12px;
+            color: var(--gold-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-pill {
+            background: rgba(255,255,255,0.12);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-pill .label { color: var(--silver-light); font-weight: 400; }
+        .stat-pill .value { color: var(--gold-light); }
+
+        /* ── Screens ────────────────────────────────────── */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* ── Welcome Screen ─────────────────────────────── */
+        .welcome {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .welcome-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--maroon), var(--gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 28px;
+            box-shadow: 0 8px 40px rgba(107, 32, 53, 0.4);
+        }
+
+        .welcome h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome p {
+            color: var(--text-muted);
+            font-size: 16px;
+            max-width: 600px;
+            margin: 0 auto 36px;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .category-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--maroon), var(--gold));
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .category-card:hover {
+            border-color: var(--maroon-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .category-card:hover::before { opacity: 1; }
+
+        .category-card.completed {
+            border-color: var(--correct);
+        }
+
+        .category-card.completed::before {
+            background: var(--correct);
+            opacity: 1;
+        }
+
+        .cat-icon {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .cat-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .cat-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .cat-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .cat-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .cat-badge.questions {
+            background: var(--info-bg);
+            color: var(--info);
+        }
+
+        .cat-badge.score {
+            background: var(--correct-bg);
+            color: var(--correct);
+        }
+
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(107, 32, 53, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(107, 32, 53, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--surface-2);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--surface-3);
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--maroon-dark);
+            box-shadow: 0 4px 15px rgba(212, 168, 67, 0.3);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(212, 168, 67, 0.4);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .start-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── Quiz Screen ────────────────────────────────── */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .quiz-progress {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .progress-bar-outer {
+            flex: 1;
+            height: 8px;
+            background: var(--surface-2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--maroon), var(--gold));
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .question-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .question-category-tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gold);
+            background: rgba(212, 168, 67, 0.12);
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+        }
+
+        .question-scenario {
+            background: var(--surface-2);
+            border-left: 3px solid var(--maroon);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            margin-bottom: 18px;
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        .question-text {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .question-text .highlight {
+            color: var(--gold-light);
+            font-weight: 700;
+        }
+
+        /* Multiple Choice */
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background: var(--surface-2);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            font-size: 15px;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: inherit;
+        }
+
+        .choice-btn:hover:not(.disabled) {
+            border-color: var(--maroon-light);
+            background: var(--surface-3);
+        }
+
+        .choice-letter {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--surface-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .choice-btn:hover:not(.disabled) .choice-letter {
+            background: var(--maroon);
+            color: #fff;
+        }
+
+        .choice-btn.correct {
+            border-color: var(--correct);
+            background: var(--correct-bg);
+        }
+
+        .choice-btn.correct .choice-letter {
+            background: var(--correct);
+            color: #fff;
+        }
+
+        .choice-btn.wrong {
+            border-color: var(--wrong);
+            background: var(--wrong-bg);
+        }
+
+        .choice-btn.wrong .choice-letter {
+            background: var(--wrong);
+            color: #fff;
+        }
+
+        .choice-btn.disabled {
+            cursor: default;
+            opacity: 0.7;
+        }
+
+        .choice-btn.disabled.correct { opacity: 1; }
+        .choice-btn.disabled.wrong { opacity: 1; }
+
+        /* Input-based questions */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .answer-input {
+            flex: 1;
+            min-width: 180px;
+            background: var(--surface-2);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-size: 16px;
+            color: var(--text);
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--maroon-light);
+        }
+
+        .answer-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .answer-unit {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Feedback */
+        .feedback {
+            margin-top: 18px;
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feedback.show { display: block; }
+
+        .feedback.correct {
+            background: var(--correct-bg);
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        .feedback.wrong {
+            background: var(--wrong-bg);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+        }
+
+        .feedback-header {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback.correct .feedback-header { color: var(--correct); }
+        .feedback.wrong .feedback-header { color: var(--wrong); }
+
+        .feedback-body {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .feedback-body strong {
+            color: var(--text);
+        }
+
+        .quiz-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* ── Results Screen ─────────────────────────────── */
+        .results {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 48px 24px;
+            text-align: center;
+        }
+
+        .results-icon {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            margin: 0 auto 24px;
+        }
+
+        .results-icon.great {
+            background: var(--correct-bg);
+            border: 2px solid var(--correct);
+        }
+
+        .results-icon.ok {
+            background: rgba(212, 168, 67, 0.15);
+            border: 2px solid var(--gold);
+        }
+
+        .results-icon.needs-work {
+            background: var(--wrong-bg);
+            border: 2px solid var(--wrong);
+        }
+
+        .results h2 {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .results .score-text {
+            font-size: 18px;
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+
+        .results .score-text strong {
+            color: var(--gold-light);
+            font-size: 22px;
+        }
+
+        .results-breakdown {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: left;
+        }
+
+        .results-breakdown h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breakdown-row:last-child { border-bottom: none; }
+
+        .breakdown-cat { font-size: 14px; font-weight: 500; }
+
+        .breakdown-score {
+            font-size: 14px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 10px;
+        }
+
+        .breakdown-score.perfect {
+            background: var(--correct-bg);
+            color: var(--correct);
+        }
+
+        .breakdown-score.partial {
+            background: rgba(212, 168, 67, 0.15);
+            color: var(--gold);
+        }
+
+        .breakdown-score.none {
+            background: var(--wrong-bg);
+            color: var(--wrong);
+        }
+
+        .results-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .results-tip {
+            margin-top: 24px;
+            background: var(--info-bg);
+            border: 1px solid rgba(52, 152, 219, 0.2);
+            border-radius: var(--radius-sm);
+            padding: 14px 18px;
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: left;
+        }
+
+        .results-tip strong {
+            color: var(--info);
+        }
+
+        /* ── Footer ─────────────────────────────────────── */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        /* ── Responsive ─────────────────────────────────── */
+        @media (max-width: 640px) {
+            .header { flex-direction: column; gap: 12px; text-align: center; }
+            .header-stats { justify-content: center; }
+            .welcome h2 { font-size: 24px; }
+            .category-grid { grid-template-columns: 1fr; }
+            .question-text { font-size: 15px; }
+            .input-group { flex-direction: column; }
+            .answer-input { min-width: 100%; }
+        }
+
+        /* ── Utility ────────────────────────────────────── */
+        .hidden { display: none !important; }
+
+        .formula-hint {
+            background: var(--surface-3);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .formula-hint code {
+            background: var(--surface);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--gold-light);
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══ HEADER ════════════════════════════════════════ -->
+<div class="header">
+    <div class="header-left">
+        <div class="um-badge">UM</div>
+        <div class="header-title">
+            <span>College of Health</span>
+            <h1>Health Math Foundations</h1>
+        </div>
+    </div>
+    <div class="header-stats" id="headerStats">
+        <div class="stat-pill">
+            <span class="label">Score</span>
+            <span class="value" id="statScore">0</span>
+        </div>
+        <div class="stat-pill">
+            <span class="label">Streak</span>
+            <span class="value" id="statStreak">0</span>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ WELCOME SCREEN ════════════════════════════════ -->
+<div class="screen active" id="welcomeScreen">
+    <div class="welcome">
+        <div class="welcome-icon">🏥</div>
+        <h2>Intro to Math for Health Sciences</h2>
+        <p>
+            Build the essential math skills you'll use every day in healthcare.
+            From dosage calculations to vital statistics, practice with real clinical scenarios
+            designed for University of Montana health students.
+        </p>
+
+        <div class="category-grid" id="categoryGrid">
+            <!-- Generated by JS -->
+        </div>
+
+        <div class="start-actions">
+            <button class="btn btn-primary" onclick="startFullQuiz()">
+                Play All Categories
+            </button>
+            <button class="btn btn-secondary" onclick="startRandomQuiz()">
+                Quick 10 — Random Mix
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ QUIZ SCREEN ═══════════════════════════════════ -->
+<div class="screen" id="quizScreen">
+    <div class="quiz-container">
+        <div class="quiz-progress">
+            <button class="btn btn-sm btn-secondary" onclick="exitQuiz()">Back</button>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progressBar" style="width:0%"></div>
+            </div>
+            <span class="progress-text" id="progressText">1 / 10</span>
+        </div>
+
+        <div id="questionArea">
+            <!-- Filled by JS -->
+        </div>
+
+        <div class="quiz-actions" id="quizActions" style="display:none;">
+            <button class="btn btn-gold" onclick="nextQuestion()">Next Question</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ RESULTS SCREEN ════════════════════════════════ -->
+<div class="screen" id="resultsScreen">
+    <div class="results" id="resultsContent">
+        <!-- Filled by JS -->
+    </div>
+</div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════ -->
+<div class="footer">
+    University of Montana — College of Health &nbsp;|&nbsp; Health Math Foundations Practice Tool
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  QUESTION BANK
+// ═══════════════════════════════════════════════════════
+
+const categories = [
+    { id: 'conversions', name: 'Unit Conversions', icon: '⚖️', desc: 'Metric, household, & apothecary units' },
+    { id: 'dosage', name: 'Dosage Calculations', icon: '💊', desc: 'Oral, injection & weight-based dosing' },
+    { id: 'ivdrip', name: 'IV Drip Rates', icon: '💉', desc: 'Flow rates, drip factors & infusion times' },
+    { id: 'proportions', name: 'Ratios & Proportions', icon: '📐', desc: 'Solution dilutions & concentrations' },
+    { id: 'percentages', name: 'Percentages', icon: '📊', desc: 'Concentrations, body comp & change' },
+    { id: 'statistics', name: 'Basic Statistics', icon: '📈', desc: 'Mean, median, mode & interpretation' },
+    { id: 'bmi', name: 'BMI & Body Metrics', icon: '🏃', desc: 'BMI, BSA & ideal body weight' },
+    { id: 'clinical', name: 'Clinical Math', icon: '🩺', desc: 'Intake/output, temps & lab values' },
+];
+
+const questions = [
+    // ── UNIT CONVERSIONS ──────────────────────────────
+    {
+        category: 'conversions',
+        scenario: 'A physician orders 0.5 g of amoxicillin for a patient at the Curry Health Center. The pharmacy stocks 500 mg tablets.',
+        question: 'How many milligrams are in 0.5 grams?',
+        type: 'choice',
+        choices: ['50 mg', '500 mg', '5,000 mg', '5 mg'],
+        answer: 1,
+        explanation: '<strong>1 g = 1,000 mg</strong>, so 0.5 g × 1,000 = 500 mg. This is one of the most common conversions in healthcare — memorize it!'
+    },
+    {
+        category: 'conversions',
+        scenario: 'You are recording a patient\'s fluid intake during clinical rotations at St. Patrick Hospital in Missoula.',
+        question: 'A patient drinks 1.5 liters of water. How many milliliters is that?',
+        type: 'input',
+        unit: 'mL',
+        answer: 1500,
+        tolerance: 0,
+        explanation: '<strong>1 L = 1,000 mL</strong>. So 1.5 L × 1,000 = 1,500 mL. Fluid intake and output are always charted in mL.'
+    },
+    {
+        category: 'conversions',
+        scenario: 'A pediatric patient weighs 44 pounds. The provider needs the weight in kilograms for dosing.',
+        question: 'Convert 44 lbs to kilograms. (Round to the nearest whole number)',
+        type: 'input',
+        unit: 'kg',
+        answer: 20,
+        tolerance: 0,
+        explanation: '<strong>1 kg = 2.2 lbs</strong>. So 44 ÷ 2.2 = 20 kg. Always convert lbs to kg before calculating pediatric doses.'
+    },
+    {
+        category: 'conversions',
+        scenario: 'A nurse needs to administer 2 tablespoons of liquid medication to a patient.',
+        question: 'How many milliliters are in 2 tablespoons?',
+        type: 'choice',
+        choices: ['15 mL', '20 mL', '30 mL', '10 mL'],
+        answer: 2,
+        explanation: '<strong>1 tablespoon = 15 mL</strong>. So 2 × 15 = 30 mL. Household-to-metric conversions are essential for patient education.'
+    },
+    {
+        category: 'conversions',
+        scenario: 'A patient\'s temperature reads 101.3°F and you need to document in Celsius.',
+        question: 'Convert 101.3°F to Celsius. (Round to one decimal place)',
+        type: 'input',
+        unit: '°C',
+        answer: 38.5,
+        tolerance: 0.1,
+        hint: 'Formula: <code>°C = (°F − 32) × 5/9</code>',
+        explanation: '<strong>°C = (°F − 32) × 5/9</strong>. (101.3 − 32) × 5/9 = 69.3 × 0.5556 ≈ 38.5°C. This indicates a fever (normal is ~37°C).'
+    },
+
+    // ── DOSAGE CALCULATIONS ───────────────────────────
+    {
+        category: 'dosage',
+        scenario: 'A provider orders 250 mg of cephalexin PO. The available suspension is 125 mg per 5 mL.',
+        question: 'How many mL should the nurse administer?',
+        type: 'input',
+        unit: 'mL',
+        answer: 10,
+        tolerance: 0,
+        hint: 'Formula: <code>(Desired ÷ Have) × Quantity</code>',
+        explanation: 'Using <strong>Desired/Have × Quantity</strong>: (250 mg ÷ 125 mg) × 5 mL = 2 × 5 = <strong>10 mL</strong>.'
+    },
+    {
+        category: 'dosage',
+        scenario: 'A patient weighing 70 kg needs a medication dosed at 5 mg/kg/day, divided into 2 equal doses.',
+        question: 'What is the dose (in mg) for each single administration?',
+        type: 'input',
+        unit: 'mg',
+        answer: 175,
+        tolerance: 0,
+        explanation: 'Total daily dose = 70 kg × 5 mg/kg = 350 mg/day. Divided into 2 doses: 350 ÷ 2 = <strong>175 mg per dose</strong>.'
+    },
+    {
+        category: 'dosage',
+        scenario: 'An order reads: "Administer heparin 8,000 units subQ." The vial contains 10,000 units/mL.',
+        question: 'How many mL should the nurse draw up?',
+        type: 'input',
+        unit: 'mL',
+        answer: 0.8,
+        tolerance: 0,
+        explanation: 'Desired/Have × Quantity: 8,000 ÷ 10,000 × 1 mL = <strong>0.8 mL</strong>.'
+    },
+    {
+        category: 'dosage',
+        scenario: 'A child weighs 15 kg. The provider orders ibuprofen at 10 mg/kg every 6 hours as needed. The suspension is 100 mg per 5 mL.',
+        question: 'How many mL should be given per dose?',
+        type: 'input',
+        unit: 'mL',
+        answer: 7.5,
+        tolerance: 0,
+        explanation: 'Dose = 15 kg × 10 mg/kg = 150 mg. Volume = (150 ÷ 100) × 5 mL = <strong>7.5 mL</strong>.'
+    },
+    {
+        category: 'dosage',
+        scenario: 'You have 500 mg tablets. The order says to give 1.5 g.',
+        question: 'How many tablets are needed?',
+        type: 'choice',
+        choices: ['2 tablets', '3 tablets', '1.5 tablets', '5 tablets'],
+        answer: 1,
+        explanation: 'First convert: 1.5 g = 1,500 mg. Then: 1,500 mg ÷ 500 mg/tablet = <strong>3 tablets</strong>.'
+    },
+
+    // ── IV DRIP RATES ─────────────────────────────────
+    {
+        category: 'ivdrip',
+        scenario: 'A provider orders 1,000 mL of Normal Saline to infuse over 8 hours. The drop factor is 15 gtt/mL.',
+        question: 'What is the IV flow rate in gtt/min? (Round to nearest whole number)',
+        type: 'input',
+        unit: 'gtt/min',
+        answer: 31,
+        tolerance: 1,
+        hint: 'Formula: <code>(Volume × Drop factor) ÷ (Time in minutes)</code>',
+        explanation: '<strong>Flow rate = (Volume × Drop factor) ÷ Time in min</strong>. (1,000 × 15) ÷ 480 = 15,000 ÷ 480 ≈ <strong>31 gtt/min</strong>.'
+    },
+    {
+        category: 'ivdrip',
+        scenario: 'A 500 mL bag of D5W is ordered to infuse at 75 mL/hr.',
+        question: 'How long will the infusion take (in hours)? Round to one decimal.',
+        type: 'input',
+        unit: 'hours',
+        answer: 6.7,
+        tolerance: 0.1,
+        explanation: 'Time = Volume ÷ Rate = 500 mL ÷ 75 mL/hr ≈ <strong>6.7 hours</strong>.'
+    },
+    {
+        category: 'ivdrip',
+        scenario: 'An IV pump is set to deliver 125 mL/hr.',
+        question: 'How many mL will the patient receive in a 12-hour shift?',
+        type: 'input',
+        unit: 'mL',
+        answer: 1500,
+        tolerance: 0,
+        explanation: '125 mL/hr × 12 hr = <strong>1,500 mL</strong>. Nurses calculate total shift intake for I&O records.'
+    },
+    {
+        category: 'ivdrip',
+        scenario: 'A provider orders 250 mL of an antibiotic to infuse over 90 minutes. The tubing has a drop factor of 10 gtt/mL.',
+        question: 'Calculate the drip rate in gtt/min. (Round to nearest whole number)',
+        type: 'input',
+        unit: 'gtt/min',
+        answer: 28,
+        tolerance: 1,
+        explanation: '(250 mL × 10 gtt/mL) ÷ 90 min = 2,500 ÷ 90 ≈ <strong>28 gtt/min</strong>.'
+    },
+
+    // ── RATIOS & PROPORTIONS ──────────────────────────
+    {
+        category: 'proportions',
+        scenario: 'A normal saline solution is labeled 0.9% NaCl. You need to prepare 500 mL.',
+        question: 'How many grams of NaCl are in 500 mL of 0.9% NS?',
+        type: 'input',
+        unit: 'g',
+        answer: 4.5,
+        tolerance: 0,
+        explanation: '0.9% means 0.9 g per 100 mL. Proportion: 0.9/100 = x/500. x = 0.9 × 5 = <strong>4.5 g</strong>.'
+    },
+    {
+        category: 'proportions',
+        scenario: 'You need to mix a 1:4 bleach-to-water solution for disinfecting surfaces in a community health clinic.',
+        question: 'If you use 250 mL of bleach, how much water do you add?',
+        type: 'input',
+        unit: 'mL',
+        answer: 1000,
+        tolerance: 0,
+        explanation: '1:4 ratio means for every 1 part bleach, use 4 parts water. 250 × 4 = <strong>1,000 mL water</strong>.'
+    },
+    {
+        category: 'proportions',
+        scenario: 'A medication is available as a 1:1000 solution (1 g per 1000 mL).',
+        question: 'How many mg of drug are in 1 mL of this solution?',
+        type: 'choice',
+        choices: ['0.1 mg', '1 mg', '10 mg', '0.01 mg'],
+        answer: 1,
+        explanation: '1:1000 = 1 g per 1000 mL = 1,000 mg per 1000 mL = <strong>1 mg per mL</strong>. This is common for epinephrine.'
+    },
+    {
+        category: 'proportions',
+        scenario: 'A recipe calls for 2 cups of solution A for every 3 cups of solution B. You have 9 cups of solution B.',
+        question: 'How many cups of solution A do you need?',
+        type: 'input',
+        unit: 'cups',
+        answer: 6,
+        tolerance: 0,
+        explanation: '2/3 = x/9. Cross multiply: 3x = 18, so x = <strong>6 cups</strong>.'
+    },
+
+    // ── PERCENTAGES ───────────────────────────────────
+    {
+        category: 'percentages',
+        scenario: 'In a Missoula County health survey, 340 out of 850 respondents reported regular physical activity.',
+        question: 'What percentage of respondents exercise regularly?',
+        type: 'choice',
+        choices: ['25%', '35%', '40%', '45%'],
+        answer: 2,
+        explanation: '(340 ÷ 850) × 100 = <strong>40%</strong>. Percentages are used constantly in public health data.'
+    },
+    {
+        category: 'percentages',
+        scenario: 'A D5W (Dextrose 5% in Water) IV bag contains 1,000 mL.',
+        question: 'How many grams of dextrose are in this bag?',
+        type: 'input',
+        unit: 'g',
+        answer: 50,
+        tolerance: 0,
+        explanation: '5% means 5 g per 100 mL. For 1,000 mL: 5 × 10 = <strong>50 g of dextrose</strong>.'
+    },
+    {
+        category: 'percentages',
+        scenario: 'A patient\'s weight dropped from 180 lbs to 171 lbs over 2 weeks.',
+        question: 'What is the percent weight loss?',
+        type: 'choice',
+        choices: ['3%', '5%', '7%', '9%'],
+        answer: 1,
+        explanation: 'Weight change = 180 − 171 = 9 lbs. % change = (9 ÷ 180) × 100 = <strong>5%</strong>. A 5% loss in 1 month is clinically significant.'
+    },
+    {
+        category: 'percentages',
+        scenario: 'A clinic saw 120 patients last Monday. This Monday they saw 150 patients.',
+        question: 'What is the percent increase in patient volume?',
+        type: 'input',
+        unit: '%',
+        answer: 25,
+        tolerance: 0,
+        explanation: 'Increase = 150 − 120 = 30. % increase = (30 ÷ 120) × 100 = <strong>25%</strong>.'
+    },
+
+    // ── BASIC STATISTICS ──────────────────────────────
+    {
+        category: 'statistics',
+        scenario: 'A nursing student records the following blood pressure systolic readings for 5 patients: 118, 132, 125, 140, 125.',
+        question: 'What is the mean (average) systolic BP?',
+        type: 'input',
+        unit: 'mmHg',
+        answer: 128,
+        tolerance: 0,
+        explanation: 'Mean = (118 + 132 + 125 + 140 + 125) ÷ 5 = 640 ÷ 5 = <strong>128 mmHg</strong>.'
+    },
+    {
+        category: 'statistics',
+        scenario: 'Patient satisfaction scores from a rural Montana clinic: 7, 8, 9, 8, 6, 10, 8.',
+        question: 'What is the mode of these satisfaction scores?',
+        type: 'choice',
+        choices: ['7', '8', '9', '10'],
+        answer: 1,
+        explanation: 'The mode is the value that appears most often. <strong>8 appears 3 times</strong>, more than any other value.'
+    },
+    {
+        category: 'statistics',
+        scenario: 'A physical therapy student records range of motion (ROM) measurements for 7 patients: 45°, 60°, 50°, 55°, 70°, 50°, 65°.',
+        question: 'What is the median ROM value?',
+        type: 'input',
+        unit: '°',
+        answer: 55,
+        tolerance: 0,
+        explanation: 'Sorted: 45, 50, 50, <strong>55</strong>, 60, 65, 70. The middle value (4th of 7) is <strong>55°</strong>.'
+    },
+    {
+        category: 'statistics',
+        scenario: 'Two groups of patients have the following LDL cholesterol values:<br>Group A: mean = 130, range = 110–150<br>Group B: mean = 130, range = 80–180',
+        question: 'Which group has greater variability in LDL cholesterol?',
+        type: 'choice',
+        choices: ['Group A', 'Group B', 'They are equal', 'Cannot determine'],
+        answer: 1,
+        explanation: 'Group B has a range of 100 (180 − 80) vs Group A\'s range of 40 (150 − 110). <strong>Greater range = greater variability.</strong>'
+    },
+
+    // ── BMI & BODY METRICS ────────────────────────────
+    {
+        category: 'bmi',
+        scenario: 'During a community health screening event near the University of Montana campus, a student weighs 70 kg and is 1.75 m tall.',
+        question: 'What is their BMI? (Round to one decimal place)',
+        type: 'input',
+        unit: 'kg/m²',
+        answer: 22.9,
+        tolerance: 0.1,
+        hint: 'Formula: <code>BMI = weight (kg) ÷ height (m)²</code>',
+        explanation: 'BMI = 70 ÷ (1.75)² = 70 ÷ 3.0625 ≈ <strong>22.9 kg/m²</strong>. This is in the normal range (18.5–24.9).'
+    },
+    {
+        category: 'bmi',
+        scenario: 'A patient has a BMI of 31.2.',
+        question: 'Which BMI classification does this patient fall into?',
+        type: 'choice',
+        choices: ['Normal weight (18.5–24.9)', 'Overweight (25.0–29.9)', 'Obese Class I (30.0–34.9)', 'Obese Class II (35.0–39.9)'],
+        answer: 2,
+        explanation: 'A BMI of 31.2 falls in <strong>Obese Class I (30.0–34.9)</strong>. BMI categories help guide health interventions.'
+    },
+    {
+        category: 'bmi',
+        scenario: 'A patient weighs 154 lbs and is 5\'6" (66 inches) tall. Use the imperial BMI formula.',
+        question: 'What is their BMI? (Round to one decimal place)',
+        type: 'input',
+        unit: 'kg/m²',
+        answer: 24.9,
+        tolerance: 0.2,
+        hint: 'Formula: <code>BMI = (weight in lbs × 703) ÷ (height in inches)²</code>',
+        explanation: 'BMI = (154 × 703) ÷ (66)² = 108,262 ÷ 4,356 ≈ <strong>24.9</strong>. Right at the border of normal/overweight.'
+    },
+    {
+        category: 'bmi',
+        scenario: 'A health education class is discussing nutrition. A student asks about healthy weight ranges for someone 5\'4" (1.63 m).',
+        question: 'Using BMI 18.5–24.9 as normal, what is the approximate maximum healthy weight in kg? (Round to nearest whole number)',
+        type: 'input',
+        unit: 'kg',
+        answer: 66,
+        tolerance: 1,
+        explanation: 'Max weight = BMI × height² = 24.9 × (1.63)² = 24.9 × 2.6569 ≈ <strong>66 kg</strong> (about 146 lbs).'
+    },
+
+    // ── CLINICAL MATH ─────────────────────────────────
+    {
+        category: 'clinical',
+        scenario: 'A patient\'s 8-hour intake/output record shows:<br>Intake: IV 450 mL, oral fluids 350 mL, ice chips 60 mL<br>Output: urine 620 mL, emesis 150 mL',
+        question: 'What is the net fluid balance for this 8-hour period?',
+        type: 'input',
+        unit: 'mL',
+        answer: 90,
+        tolerance: 0,
+        explanation: 'Total intake = 450 + 350 + 60 = 860 mL. Total output = 620 + 150 = 770 mL. Balance = 860 − 770 = <strong>+90 mL</strong> (positive = more in than out).'
+    },
+    {
+        category: 'clinical',
+        scenario: 'Normal urine output is approximately 0.5 mL/kg/hr. A patient weighs 80 kg.',
+        question: 'What is the minimum expected urine output per hour?',
+        type: 'input',
+        unit: 'mL/hr',
+        answer: 40,
+        tolerance: 0,
+        explanation: '0.5 mL/kg/hr × 80 kg = <strong>40 mL/hr</strong>. Output below this may indicate kidney issues.'
+    },
+    {
+        category: 'clinical',
+        scenario: 'A lab report shows a patient\'s hemoglobin is 10.2 g/dL. The normal range for adult females is 12.0–16.0 g/dL.',
+        question: 'How far below the lower limit of normal is this patient\'s hemoglobin?',
+        type: 'input',
+        unit: 'g/dL',
+        answer: 1.8,
+        tolerance: 0,
+        explanation: '12.0 − 10.2 = <strong>1.8 g/dL below normal</strong>. This patient is anemic and may need further workup.'
+    },
+    {
+        category: 'clinical',
+        scenario: 'A patient\'s respiration rate is taken 4 times during a shift: 16, 20, 18, 22 breaths/min.',
+        question: 'What is the average respiratory rate?',
+        type: 'choice',
+        choices: ['18 breaths/min', '19 breaths/min', '20 breaths/min', '17 breaths/min'],
+        answer: 1,
+        explanation: '(16 + 20 + 18 + 22) ÷ 4 = 76 ÷ 4 = <strong>19 breaths/min</strong>. Normal adult range is 12–20.'
+    },
+];
+
+
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+
+let currentQuiz = [];
+let currentIndex = 0;
+let score = 0;
+let streak = 0;
+let maxStreak = 0;
+let answered = false;
+let categoryScores = {};
+
+
+// ═══════════════════════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════════════════════
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+function buildCategoryGrid() {
+    const grid = document.getElementById('categoryGrid');
+    grid.innerHTML = '';
+    categories.forEach(cat => {
+        const count = questions.filter(q => q.category === cat.id).length;
+        const saved = getCategoryBest(cat.id);
+        const card = document.createElement('div');
+        card.className = 'category-card' + (saved && saved.pct === 100 ? ' completed' : '');
+        card.onclick = () => startCategoryQuiz(cat.id);
+        card.innerHTML = `
+            <div class="cat-icon">${cat.icon}</div>
+            <div class="cat-name">${cat.name}</div>
+            <div class="cat-desc">${cat.desc}</div>
+            <div class="cat-meta">
+                <span class="cat-badge questions">${count} Qs</span>
+                ${saved ? `<span class="cat-badge score">Best: ${saved.pct}%</span>` : ''}
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+function getCategoryBest(catId) {
+    try {
+        const data = JSON.parse(localStorage.getItem('healthMathScores') || '{}');
+        return data[catId] || null;
+    } catch { return null; }
+}
+
+function saveCategoryScore(catId, correct, total) {
+    try {
+        const data = JSON.parse(localStorage.getItem('healthMathScores') || '{}');
+        const pct = Math.round((correct / total) * 100);
+        if (!data[catId] || pct > data[catId].pct) {
+            data[catId] = { pct, correct, total };
+        }
+        localStorage.setItem('healthMathScores', JSON.stringify(data));
+    } catch {}
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  QUIZ LOGIC
+// ═══════════════════════════════════════════════════════
+
+function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+
+function startCategoryQuiz(catId) {
+    currentQuiz = shuffle(questions.filter(q => q.category === catId));
+    beginQuiz();
+}
+
+function startFullQuiz() {
+    currentQuiz = shuffle([...questions]);
+    beginQuiz();
+}
+
+function startRandomQuiz() {
+    currentQuiz = shuffle([...questions]).slice(0, 10);
+    beginQuiz();
+}
+
+function beginQuiz() {
+    currentIndex = 0;
+    score = 0;
+    streak = 0;
+    maxStreak = 0;
+    answered = false;
+    categoryScores = {};
+    updateStats();
+    showScreen('quizScreen');
+    renderQuestion();
+}
+
+function exitQuiz() {
+    showScreen('welcomeScreen');
+    buildCategoryGrid();
+}
+
+function renderQuestion() {
+    const q = currentQuiz[currentIndex];
+    const cat = categories.find(c => c.id === q.category);
+    const total = currentQuiz.length;
+    const pct = ((currentIndex) / total) * 100;
+
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressText').textContent = `${currentIndex + 1} / ${total}`;
+    document.getElementById('quizActions').style.display = 'none';
+    answered = false;
+
+    let html = `<div class="question-card">`;
+    html += `<div class="question-category-tag">${cat.icon} ${cat.name}</div>`;
+
+    if (q.scenario) {
+        html += `<div class="question-scenario">${q.scenario}</div>`;
+    }
+
+    if (q.hint) {
+        html += `<div class="formula-hint">${q.hint}</div>`;
+    }
+
+    html += `<div class="question-text">${q.question}</div>`;
+
+    if (q.type === 'choice') {
+        html += `<div class="choices">`;
+        const letters = ['A', 'B', 'C', 'D'];
+        q.choices.forEach((ch, i) => {
+            html += `<button class="choice-btn" data-index="${i}" onclick="selectChoice(${i})">
+                <span class="choice-letter">${letters[i]}</span>
+                <span>${ch}</span>
+            </button>`;
+        });
+        html += `</div>`;
+    } else {
+        html += `<div class="input-group">
+            <input type="number" step="any" class="answer-input" id="answerInput"
+                   placeholder="Your answer..." onkeydown="if(event.key==='Enter')submitInput()">
+            <span class="answer-unit">${q.unit || ''}</span>
+            <button class="btn btn-primary btn-sm" onclick="submitInput()">Submit</button>
+        </div>`;
+    }
+
+    html += `<div class="feedback" id="feedback"></div>`;
+    html += `</div>`;
+
+    document.getElementById('questionArea').innerHTML = html;
+
+    if (q.type === 'input') {
+        setTimeout(() => {
+            const inp = document.getElementById('answerInput');
+            if (inp) inp.focus();
+        }, 100);
+    }
+}
+
+function selectChoice(index) {
+    if (answered) return;
+    answered = true;
+
+    const q = currentQuiz[currentIndex];
+    const isCorrect = index === q.answer;
+
+    document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+        btn.classList.add('disabled');
+        if (i === q.answer) btn.classList.add('correct');
+        if (i === index && !isCorrect) btn.classList.add('wrong');
+    });
+
+    showFeedback(isCorrect, q);
+}
+
+function submitInput() {
+    if (answered) return;
+    const inp = document.getElementById('answerInput');
+    if (!inp) return;
+    const val = parseFloat(inp.value);
+    if (isNaN(val)) {
+        inp.style.borderColor = var_wrong();
+        inp.focus();
+        return;
+    }
+    answered = true;
+
+    const q = currentQuiz[currentIndex];
+    const tol = q.tolerance || 0;
+    const isCorrect = Math.abs(val - q.answer) <= tol;
+
+    inp.style.borderColor = isCorrect ? 'var(--correct)' : 'var(--wrong)';
+    inp.disabled = true;
+
+    showFeedback(isCorrect, q);
+}
+
+function var_wrong() { return 'var(--wrong)'; }
+
+function showFeedback(isCorrect, q) {
+    if (isCorrect) {
+        score++;
+        streak++;
+        if (streak > maxStreak) maxStreak = streak;
+    } else {
+        streak = 0;
+    }
+
+    // Track per-category
+    if (!categoryScores[q.category]) categoryScores[q.category] = { correct: 0, total: 0 };
+    categoryScores[q.category].total++;
+    if (isCorrect) categoryScores[q.category].correct++;
+
+    updateStats();
+
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+    fb.innerHTML = `
+        <div class="feedback-header">
+            ${isCorrect ? '✓ Correct!' : '✗ Not quite'}
+        </div>
+        <div class="feedback-body">
+            ${!isCorrect && q.type === 'input' ? `<p>The answer is <strong>${q.answer} ${q.unit || ''}</strong></p>` : ''}
+            <p>${q.explanation}</p>
+        </div>
+    `;
+
+    document.getElementById('quizActions').style.display = 'flex';
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex >= currentQuiz.length) {
+        showResults();
+    } else {
+        renderQuestion();
+    }
+}
+
+function updateStats() {
+    document.getElementById('statScore').textContent = score;
+    document.getElementById('statStreak').textContent = streak;
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════════════
+
+function showResults() {
+    const total = currentQuiz.length;
+    const pct = Math.round((score / total) * 100);
+
+    let iconClass, icon, title;
+    if (pct >= 80) {
+        iconClass = 'great'; icon = '🎉'; title = 'Excellent Work!';
+    } else if (pct >= 60) {
+        iconClass = 'ok'; icon = '👍'; title = 'Good Effort!';
+    } else {
+        iconClass = 'needs-work'; icon = '📚'; title = 'Keep Practicing!';
+    }
+
+    // Save per-category bests
+    Object.keys(categoryScores).forEach(catId => {
+        const cs = categoryScores[catId];
+        saveCategoryScore(catId, cs.correct, cs.total);
+    });
+
+    let breakdown = '';
+    Object.keys(categoryScores).forEach(catId => {
+        const cs = categoryScores[catId];
+        const cat = categories.find(c => c.id === catId);
+        const cpct = Math.round((cs.correct / cs.total) * 100);
+        let cls = cpct === 100 ? 'perfect' : cpct >= 50 ? 'partial' : 'none';
+        breakdown += `<div class="breakdown-row">
+            <span class="breakdown-cat">${cat.icon} ${cat.name}</span>
+            <span class="breakdown-score ${cls}">${cs.correct}/${cs.total} (${cpct}%)</span>
+        </div>`;
+    });
+
+    let tipHtml = '';
+    const weakest = Object.entries(categoryScores)
+        .map(([id, s]) => ({ id, pct: s.correct / s.total }))
+        .filter(s => s.pct < 0.8)
+        .sort((a, b) => a.pct - b.pct);
+
+    if (weakest.length > 0) {
+        const cat = categories.find(c => c.id === weakest[0].id);
+        tipHtml = `<div class="results-tip">
+            <strong>Tip:</strong> Try focusing on <strong>${cat.name}</strong> to strengthen that area.
+            Click the category card on the home screen to practice just that topic.
+        </div>`;
+    }
+
+    document.getElementById('resultsContent').innerHTML = `
+        <div class="results-icon ${iconClass}">${icon}</div>
+        <h2>${title}</h2>
+        <p class="score-text">You got <strong>${score} out of ${total}</strong> correct (${pct}%)
+            ${maxStreak > 1 ? `<br>Best streak: ${maxStreak} in a row` : ''}
+        </p>
+
+        <div class="results-breakdown">
+            <h3>Category Breakdown</h3>
+            ${breakdown}
+        </div>
+
+        <div class="results-actions">
+            <button class="btn btn-primary" onclick="showScreen('welcomeScreen'); buildCategoryGrid();">
+                Back to Categories
+            </button>
+            <button class="btn btn-gold" onclick="retryMissed()">
+                Retry Missed Questions
+            </button>
+        </div>
+
+        ${tipHtml}
+    `;
+
+    showScreen('resultsScreen');
+}
+
+function retryMissed() {
+    // Re-run the quiz with only the categories user was weak in
+    const weak = Object.entries(categoryScores)
+        .filter(([_, s]) => s.correct < s.total)
+        .map(([id]) => id);
+
+    if (weak.length === 0) {
+        // Perfect score, re-run everything
+        startFullQuiz();
+        return;
+    }
+
+    currentQuiz = shuffle(questions.filter(q => weak.includes(q.category)));
+    beginQuiz();
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  KEYBOARD NAV
+// ═══════════════════════════════════════════════════════
+
+document.addEventListener('keydown', (e) => {
+    if (document.getElementById('quizScreen').classList.contains('active')) {
+        const q = currentQuiz[currentIndex];
+        if (q && q.type === 'choice' && !answered) {
+            const keyMap = { 'a': 0, 'b': 1, 'c': 2, 'd': 3, '1': 0, '2': 1, '3': 2, '4': 3 };
+            const idx = keyMap[e.key.toLowerCase()];
+            if (idx !== undefined && idx < q.choices.length) {
+                selectChoice(idx);
+            }
+        }
+        if (answered && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            nextQuestion();
+        }
+    }
+});
+
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+
+buildCategoryGrid();
+</script>
+</body>
+</html>

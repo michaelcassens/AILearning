@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bark Man — Find Your Way Home!</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a1a;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;overflow:hidden;color:#fff}
+canvas{display:block;border:2px solid #1a1a3a;border-radius:4px}
+</style>
+</head>
+<body>
+<canvas id="gc"></canvas>
+<script>
+// ══════════════════════════════════════════════════════════
+// BARK MAN — A Ms. Pac-Man inspired game
+// Dog protagonist collecting bones, avoiding mailmen
+// ══════════════════════════════════════════════════════════
+
+// ── CONSTANTS ──────────────────────────────────────────────
+const COLS = 28, ROWS = 31, TS = 20;
+const MW = COLS * TS, MH = ROWS * TS;
+const HUD_TOP = 40, HUD_BOT = 40;
+const CW = MW, CH = MH + HUD_TOP + HUD_BOT;
+const UP = 0, DOWN = 1, LEFT = 2, RIGHT = 3, NONE = -1;
+const DR = [-1, 1, 0, 0], DC = [0, 0, -1, 1];
+const OPP = [1, 0, 3, 2];
+
+// Tile types
+const W = 0;  // wall
+const B = 1;  // bone (dot)
+const E = 2;  // empty
+const P = 3;  // power bone
+const GH = 4; // ghost house
+const GD = 5; // ghost door
+const TN = 6; // tunnel
+const NB = 7; // no-bone path
+
+// Game states
+const ST_MENU = 0, ST_PLAY = 1, ST_DYING = 2, ST_LVLCOMPLETE = 3;
+const ST_CUTSCENE = 4, ST_GAMEOVER = 5, ST_READY = 6, ST_PAUSED = 7;
+
+// Scoring
+const BONE_PTS = 10, POWER_PTS = 50;
+const MAILMAN_PTS = [200, 400, 800, 1600];
+const TREAT_PTS = [100, 300, 500, 700, 1000, 2000, 3000, 5000];
+const EXTRA_LIFE_AT = 10000;
+
+// Speed (pixels per frame at 60fps)
+const BASE_SPEED = TS / 8; // 2.5
+
+// Colors
+const DOG_COLOR = '#D4A04A';
+const DOG_DARK = '#B08030';
+const WALL_COLOR = '#1a3a8a';
+const WALL_LIGHT = '#2a5aaa';
+const BONE_COLOR = '#f0e0c0';
+const POWER_COLOR = '#ffe080';
+const MAILMAN_COLORS = ['#ff3333','#ffaacc','#33ccff','#ffaa33'];
+const MAILMAN_NAMES = ['Rex','Pat','Carl','Otto'];
+const FRIGHT_COLOR = '#2222dd';
+const FRIGHT_FLASH = '#ffffff';
+
+// Scatter/chase timings (frames at 60fps) per level group
+// [scatter, chase] pairs repeated
+const SCATTER_CHASE = [
+  [[420,1200],[420,1200],[300,1200],[300,99999]],  // L1
+  [[420,1200],[420,1200],[300,1200],[60,99999]],   // L2-4
+  [[300,1200],[300,1200],[300,1200],[60,99999]],   // L5+
+];
+
+// Frightened durations (frames) per level
+const FRIGHT_TIME = [360,300,240,180,120,120,60,60,30,30,0,0,0,0,0,0,0,0,0,0];
+
+// Speed multipliers [dog, mailman, fright_dog, fright_mailman, tunnel]
+const SPEED_TABLE = [
+  [0.80,0.75,0.90,0.50,0.40],  // L1
+  [0.90,0.85,0.95,0.55,0.45],  // L2
+  [0.90,0.85,0.95,0.55,0.45],  // L3
+  [0.90,0.85,0.95,0.55,0.45],  // L4
+  [1.00,0.95,1.00,0.60,0.50],  // L5+
+];
+
+// Treat types (drawn shapes)
+const TREAT_TYPES = ['steak','ball','shoe','sock','squirrel','cat','fire_hydrant','pizza'];
+
+// Canvas + context
+const canvas = document.getElementById('gc');
+canvas.width = CW;
+canvas.height = CH;
+const ctx = canvas.getContext('2d');
+
+// Offscreen canvas for maze walls cache
+const mazeCanvas = document.createElement('canvas');
+mazeCanvas.width = MW;
+mazeCanvas.height = MH;
+const mazeCtx = mazeCanvas.getContext('2d');
+
+// ── MAZE DATA ──────────────────────────────────────────────
+// Encoded as strings: 0=wall 1=bone 2=empty 3=power 4=ghosthouse 5=ghostdoor 6=tunnel 7=no-bone
+function parseMaze(strs){return strs.map(r=>[...r].map(c=>parseInt(c)))}
+const MAZES = [
+// Maze 0: Classic (Levels 1-3)
+parseMaze([
+"0000000000000000000000000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0300001000001001000001000030",
+"0100001000001001000001000010",
+"0111111011111111111101111110",
+"0107001010000000000101007010",
+"0111001010000000000101001110",
+"0000171010011001100101710000",
+"0000101017777777777101010000",
+"0111101070000550000701011110",
+"6660001070444444440771000666",
+"0000001070444444440717000000",
+"0000001070000000000701000000",
+"0111101077777777777701011110",
+"0100101000007007000001010010",
+"0100101111111001111111010010",
+"0100771000701001070001770010",
+"0300110111101001011110110030",
+"0771700100001001000010010070",
+"0111100100111111110010071110",
+"0100000100100000010010070010",
+"0101111100100000010011111010",
+"0101000000111111110000001010",
+"0101011111100000011111101010",
+"0101010000000000000000101010",
+"0101017111111001111117101010",
+"0101070100001001000010701010",
+"0171110100001001000010111710",
+"0000000111111111111110000000",
+"0000000000000000000000000000"
+]),
+// Maze 1: Park (Levels 4-6)
+parseMaze([
+"0000000000000000000000000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0300001000001001000001000030",
+"0111101011101001011101011110",
+"0000101070101001010701010000",
+"0111101117101001710111011110",
+"0100000010001001000100000010",
+"6661111010011001100101111666",
+"0000001017777777777101000000",
+"0000001070000550000701000000",
+"0111171070444444440701711110",
+"0100001070444444440701000010",
+"0100001070000000000701000010",
+"6661111077777777777701111666",
+"0000001000007007000001000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0100001000001001000001000010",
+"0311101111111111111111011130",
+"0000100000001001000000010000",
+"0111101110001001000111011110",
+"0100001010001001000101000010",
+"0100001010011111100101000010",
+"0111111010170000710101111110",
+"0100001010170000710101000010",
+"0100001010111001110101000010",
+"0111101010001001000101011110",
+"0100701010001001000171070010",
+"0111111011111001111117111110",
+"0000000000000000000000000000"
+]),
+// Maze 2: Neighborhood (Levels 7-9)
+parseMaze([
+"0000000000000000000000000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0300001000001001000001000030",
+"0101171011171001711101171010",
+"0101001010001001000101001010",
+"0101001010001001000101001010",
+"0101111010011001100101111010",
+"0100001010017000100101000010",
+"0100001017777777777101000010",
+"0111171070000550000701711110",
+"6660001070444444440771000666",
+"0000001070444444440717000000",
+"0000001070000000000701000000",
+"6661111077777777777701111666",
+"0000001000007007000001000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0100001000001001000001000010",
+"0311101011111111111117111030",
+"0000101010007007000101017070",
+"0111101010011001100101011110",
+"0100001010010000100101000010",
+"0100001010071117100101000010",
+"0111111010011001100101111110",
+"0100001010000000000101000010",
+"0100001010000000000101000010",
+"0111101011111001111101011110",
+"0100701000001001000001070010",
+"0111111111111111111111111110",
+"0000000000000000000000000000"
+]),
+// Maze 3: City (Levels 10+)
+parseMaze([
+"0000000000000000000000000000",
+"0111111111111001111111111110",
+"0100001000001001000001000010",
+"0300001000001001000001000030",
+"0100001000001001000001000010",
+"0111111011111111111101111110",
+"0100001010001001000101000010",
+"0100001010001001000101000010",
+"0111101010011001100101011110",
+"0000101017777777777101010000",
+"0000101070000550000701010000",
+"6666101070444444440701016666",
+"0000101070444444440701010000",
+"0000101070000000000701010000",
+"0000101077777777777701010000",
+"0000101000007007000001010000",
+"0111101011111001111101011110",
+"0100001010001001000101000010",
+"0100001010001001000101000010",
+"0311111010011001100101111130",
+"0000001010077007700100010000",
+"0111111010011001100101111110",
+"0100001010010000100101000010",
+"0100001010071117100101000010",
+"0111111010011001100101111110",
+"0100001010000000000101000010",
+"0111101011111001111101011110",
+"0000101000001001000001010000",
+"0111171011111001111171011110",
+"0171717710001771000177171710",
+"0000000000000000000000000000"
+])
+];
+
+// Maze metadata
+const MAZE_META = [
+  {dogStart:{r:23,c:14},ghostDoor:{r:10,c:13},ghostHome:[{r:11,c:12},{r:11,c:14},{r:12,c:12},{r:12,c:14}],tunnelRow:11,scatterTargets:[{r:0,c:25},{r:0,c:2},{r:30,c:27},{r:30,c:0}],treatPos:{r:14,c:14}},
+  {dogStart:{r:23,c:14},ghostDoor:{r:10,c:13},ghostHome:[{r:11,c:12},{r:11,c:14},{r:12,c:12},{r:12,c:14}],tunnelRow:8,scatterTargets:[{r:0,c:25},{r:0,c:2},{r:30,c:27},{r:30,c:0}],treatPos:{r:14,c:14}},
+  {dogStart:{r:23,c:14},ghostDoor:{r:10,c:13},ghostHome:[{r:11,c:12},{r:11,c:14},{r:12,c:12},{r:12,c:14}],tunnelRow:11,scatterTargets:[{r:0,c:25},{r:0,c:2},{r:30,c:27},{r:30,c:0}],treatPos:{r:14,c:14}},
+  {dogStart:{r:23,c:14},ghostDoor:{r:10,c:13},ghostHome:[{r:11,c:12},{r:11,c:14},{r:12,c:12},{r:12,c:14}],tunnelRow:11,scatterTargets:[{r:0,c:25},{r:0,c:2},{r:30,c:27},{r:30,c:0}],treatPos:{r:14,c:14}}
+];
+
+function getMazeIndex(level){
+  if(level<=3)return 0;
+  if(level<=6)return 1;
+  if(level<=9)return 2;
+  return 3;
+}
+// ── AUDIO SYSTEM ───────────────────────────────────────────
+const Audio = {
+  ctx:null, enabled:true,
+  init(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)()},
+  play(freq,dur,type='square',vol=0.08){
+    if(!this.enabled||!this.ctx)return;
+    const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+    o.type=type;o.frequency.value=freq;
+    g.gain.value=vol;g.gain.exponentialRampToValueAtTime(0.001,this.ctx.currentTime+dur);
+    o.connect(g);g.connect(this.ctx.destination);
+    o.start();o.stop(this.ctx.currentTime+dur);
+  },
+  eat(){this.play(587,0.05);},
+  powerUp(){this.play(330,0.15);setTimeout(()=>this.play(440,0.15),80);setTimeout(()=>this.play(660,0.2),160);},
+  eatMailman(){this.play(523,0.1);setTimeout(()=>this.play(659,0.1),60);setTimeout(()=>this.play(784,0.15),120);},
+  die(){[523,466,415,370,330,294,262].forEach((f,i)=>setTimeout(()=>this.play(f,0.12,'sine',0.1),i*100));},
+  levelUp(){[523,587,659,784].forEach((f,i)=>setTimeout(()=>this.play(f,0.15,'sine',0.1),i*120));},
+  extraLife(){[262,330,392,523,659,784].forEach((f,i)=>setTimeout(()=>this.play(f,0.12,'triangle',0.1),i*80));}
+};
+
+// ── GAME STATE ─────────────────────────────────────────────
+const G = {
+  state:ST_MENU, level:1, score:0, highScore:0, lives:3,
+  extraAwarded:false, maze:null, mazeIdx:0,
+  dog:null, mailmen:[], grid:null,
+  boneCount:0, totalBones:0,
+  frightTimer:0, frightChain:0,
+  scatterMode:true, scatterIdx:0, scatterTimer:0,
+  readyTimer:0, dyingTimer:0, levelTimer:0,
+  globalDotCount:0, dotCountSinceEat:0,
+  treat:null, treatTimer:0, treatVisible:false,
+  bonesEaten:0, frame:0, paused:false,
+  cutSceneFrame:0, cutSceneIdx:0
+};
+
+// Load high score
+G.highScore = parseInt(localStorage.getItem('barkManHigh'))||0;
+
+// ── DOG (PLAYER) ───────────────────────────────────────────
+class Dog {
+  constructor(r,c){
+    this.startR=r;this.startC=c;
+    this.reset();
+  }
+  reset(){
+    this.r=this.startR;this.c=this.startC;
+    this.px=this.c*TS+TS/2;this.py=this.r*TS+TS/2;
+    this.dir=LEFT;this.nextDir=LEFT;
+    this.moving=true;this.alive=true;
+    this.mouth=0;this.mouthOpen=true;
+    this.prevR=this.r;this.prevC=this.c;
+  }
+  getSpeed(){
+    const li=Math.min(G.level-1,4);
+    const st=SPEED_TABLE[li];
+    return BASE_SPEED*(G.frightTimer>0?st[2]:st[0]);
+  }
+  update(){
+    if(!this.alive||!this.moving)return;
+    const spd=this.getSpeed();
+    // Try next direction at tile center
+    const cx=this.c*TS+TS/2, cy=this.r*TS+TS/2;
+    // Check if we've arrived at (or passed) a tile center
+    const dx=this.px-cx, dy=this.py-cy;
+    const movingToCenter=(DC[this.dir]!==0&&Math.sign(DC[this.dir])!==Math.sign(dx))||(DR[this.dir]!==0&&Math.sign(DR[this.dir])!==Math.sign(dy));
+    const atCenter=(Math.abs(dx)<=spd&&Math.abs(dy)<=spd);
+    if(atCenter&&(movingToCenter||Math.abs(dx)<0.5&&Math.abs(dy)<0.5)){
+      this.px=cx;this.py=cy;
+      this.prevR=this.r;this.prevC=this.c;
+      // Try buffered direction
+      if(this.nextDir!==NONE){
+        const nr=this.r+DR[this.nextDir],nc=this.c+DC[this.nextDir];
+        if(canWalk(nr,nc)){this.dir=this.nextDir;}
+      }
+      // Check current direction
+      const fr=this.r+DR[this.dir],fc=this.c+DC[this.dir];
+      if(!canWalk(fr,fc)){this.moving=false;return;}
+    }
+    // Move
+    this.px+=DC[this.dir]*spd;
+    this.py+=DR[this.dir]*spd;
+    // Snap to tile
+    this.r=Math.round((this.py-TS/2)/TS);
+    this.c=Math.round((this.px-TS/2)/TS);
+    // Tunnel wrap
+    if(this.c<0){this.c=COLS-1;this.px=this.c*TS+TS/2;}
+    if(this.c>=COLS){this.c=0;this.px=this.c*TS+TS/2;}
+    // Mouth animation
+    this.mouth+=this.mouthOpen?0.08:-0.08;
+    if(this.mouth>=0.45)this.mouthOpen=false;
+    if(this.mouth<=0.05)this.mouthOpen=true;
+    this.moving=true;
+  }
+  setDir(d){
+    this.nextDir=d;
+    // Allow instant reverse
+    if(d===OPP[this.dir]){this.dir=d;this.moving=true;}
+    else{
+      // If at tile center and can go that way, go now
+      const cx=this.c*TS+TS/2,cy=this.r*TS+TS/2;
+      if(Math.abs(this.px-cx)<2&&Math.abs(this.py-cy)<2){
+        const nr=this.r+DR[d],nc=this.c+DC[d];
+        if(canWalk(nr,nc)){this.dir=d;this.moving=true;}
+      }
+    }
+  }
+  draw(x,y){
+    const r=TS*0.45;
+    ctx.save();
+    ctx.translate(x,y);
+    const angles=[-Math.PI/2,Math.PI/2,Math.PI,0];
+    ctx.rotate(angles[this.dir]);
+    // Body
+    ctx.fillStyle=DOG_COLOR;
+    ctx.beginPath();
+    ctx.arc(0,0,r,this.mouth*Math.PI,(2-this.mouth)*Math.PI);
+    ctx.lineTo(0,0);
+    ctx.closePath();
+    ctx.fill();
+    // Ear
+    ctx.fillStyle=DOG_DARK;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.3,-r*0.65);
+    ctx.lineTo(-r*0.1,-r*1.1);
+    ctx.lineTo(r*0.1,-r*0.6);
+    ctx.closePath();
+    ctx.fill();
+    // Eye
+    ctx.fillStyle='#222';
+    ctx.beginPath();
+    ctx.arc(-r*0.05,-r*0.3,r*0.13,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle='#fff';
+    ctx.beginPath();
+    ctx.arc(-r*0.02,-r*0.32,r*0.05,0,Math.PI*2);
+    ctx.fill();
+    // Nose
+    ctx.fillStyle='#333';
+    ctx.beginPath();
+    ctx.arc(r*0.7,0,r*0.1,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+function canWalk(r,c){
+  if(r<0||r>=ROWS)return false;
+  if(c<0||c>=COLS)return G.grid[r]!==undefined; // tunnel
+  const t=G.grid[r][c];
+  return t!==W&&t!==GH&&t!==GD;
+}
+function canWalkMailman(r,c,isEaten){
+  if(r<0||r>=ROWS)return false;
+  if(c<0||c>=COLS)return true;
+  const t=G.grid[r][c];
+  if(isEaten&&(t===GD||t===GH))return true;
+  return t!==W&&t!==GH&&t!==GD;
+}
+
+// ── MAILMAN (ENEMY) ────────────────────────────────────────
+class Mailman {
+  constructor(idx,r,c){
+    this.idx=idx;this.startR=r;this.startC=c;
+    this.color=MAILMAN_COLORS[idx];
+    this.name=MAILMAN_NAMES[idx];
+    this.reset();
+  }
+  reset(){
+    this.r=this.startR;this.c=this.startC;
+    this.px=this.c*TS+TS/2;this.py=this.r*TS+TS/2;
+    this.dir=UP;this.state='house';// house,exiting,scatter,chase,frightened,eaten
+    this.prevR=this.r;this.prevC=this.c;
+    this.frightenedFlash=false;
+    this.exitTimer=0;this.legAnim=0;
+    if(this.idx===0){this.state='scatter';this.r=this.startR-3;this.c=this.startC;this.py=this.r*TS+TS/2;}
+  }
+  getSpeed(){
+    const li=Math.min(G.level-1,4);
+    const st=SPEED_TABLE[li];
+    if(this.state==='eaten')return BASE_SPEED*1.5;
+    if(this.state==='frightened')return BASE_SPEED*st[3];
+    // Tunnel slowdown
+    const t=G.grid[this.r]&&G.grid[this.r][this.c];
+    if(t===TN)return BASE_SPEED*st[4];
+    return BASE_SPEED*st[1];
+  }
+  getTarget(){
+    const meta=MAZE_META[G.mazeIdx];
+    if(this.state==='scatter')return meta.scatterTargets[this.idx];
+    if(this.state==='eaten')return meta.ghostDoor;
+    if(this.state==='frightened')return null;// random
+    // Chase targets
+    const dog=G.dog;
+    switch(this.idx){
+      case 0:return{r:dog.r,c:dog.c};// Rex: direct chase
+      case 1:{// Pat: 4 ahead
+        let tr=dog.r+DR[dog.dir]*4,tc=dog.c+DC[dog.dir]*4;
+        if(dog.dir===UP){tc-=4;}// classic Pac-Man bug
+        return{r:tr,c:tc};
+      }
+      case 2:{// Carl: vector double from Rex
+        const rex=G.mailmen[0];
+        const ar=dog.r+DR[dog.dir]*2,ac=dog.c+DC[dog.dir]*2;
+        return{r:ar*2-rex.r,c:ac*2-rex.c};
+      }
+      case 3:{// Otto: chase if far, scatter if close
+        const dist=Math.abs(dog.r-this.r)+Math.abs(dog.c-this.c);
+        if(dist>8)return{r:dog.r,c:dog.c};
+        return meta.scatterTargets[this.idx];
+      }
+    }
+  }
+  chooseDir(){
+    const target=this.getTarget();
+    const dirs=[UP,LEFT,DOWN,RIGHT];// priority order
+    let bestDir=this.dir,bestDist=Infinity;
+    for(const d of dirs){
+      if(d===OPP[this.dir])continue;// never reverse
+      const nr=this.r+DR[d],nc=this.c+DC[d];
+      if(!canWalkMailman(nr,nc,this.state==='eaten'))continue;
+      if(target===null){
+        // Frightened: random valid direction
+        if(Math.random()<0.25||(bestDist===Infinity)){bestDir=d;bestDist=0;}
+        continue;
+      }
+      const dist=(nr-target.r)**2+(nc-target.c)**2;
+      if(dist<bestDist){bestDist=dist;bestDir=d;}
+    }
+    // Dead-end escape: if no valid non-reverse dir, allow reverse
+    if(bestDist===Infinity){
+      const rev=OPP[this.dir];
+      const rr=this.r+DR[rev],rc=this.c+DC[rev];
+      if(canWalkMailman(rr,rc,this.state==='eaten'))bestDir=rev;
+    }
+    return bestDir;
+  }
+  update(){
+    this.legAnim+=0.15;
+    // House bobbing
+    if(this.state==='house'){
+      this.exitTimer++;
+      const shouldExit=(this.idx===1&&G.globalDotCount>=0)||
+                       (this.idx===2&&G.globalDotCount>=30)||
+                       (this.idx===3&&G.globalDotCount>=60)||
+                       (G.dotCountSinceEat>240);
+      if(shouldExit)this.state='exiting';
+      return;
+    }
+    // Exiting ghost house
+    if(this.state==='exiting'){
+      const meta=MAZE_META[G.mazeIdx];
+      const doorY=(meta.ghostDoor.r-1)*TS+TS/2;
+      const doorX=meta.ghostDoor.c*TS+TS/2;
+      // Move to door column first
+      if(Math.abs(this.px-doorX)>2){
+        this.px+=(this.px<doorX?1:-1)*2;
+      }else{
+        this.px=doorX;
+        // Move up through door
+        if(this.py>doorY){this.py-=2;}
+        else{
+          this.py=doorY;
+          this.r=Math.round((this.py-TS/2)/TS);
+          this.c=Math.round((this.px-TS/2)/TS);
+          this.state=G.scatterMode?'scatter':'chase';
+          this.dir=LEFT;
+        }
+      }
+      this.r=Math.round((this.py-TS/2)/TS);
+      this.c=Math.round((this.px-TS/2)/TS);
+      return;
+    }
+    // Eaten - returning to house
+    if(this.state==='eaten'){
+      const meta=MAZE_META[G.mazeIdx];
+      const doorR=meta.ghostDoor.r,doorC=meta.ghostDoor.c;
+      if(this.r===doorR&&Math.abs(this.c-doorC)<=1){
+        // Enter house
+        this.r=doorR+1;this.c=doorC;
+        this.py=this.r*TS+TS/2;this.px=this.c*TS+TS/2;
+        this.state='exiting';
+        return;
+      }
+    }
+    const spd=this.getSpeed();
+    const cx=this.c*TS+TS/2,cy=this.r*TS+TS/2;
+    const dx2=this.px-cx,dy2=this.py-cy;
+    const atCenter2=(Math.abs(dx2)<=spd*0.55&&Math.abs(dy2)<=spd*0.55);
+    if(atCenter2){
+      this.px=cx;this.py=cy;
+      this.prevR=this.r;this.prevC=this.c;
+      this.dir=this.chooseDir();
+      // Check if chosen direction is walkable
+      const nr=this.r+DR[this.dir],nc=this.c+DC[this.dir];
+      if(!canWalkMailman(nr,nc,this.state==='eaten')){return;}
+    }
+    this.px+=DC[this.dir]*spd;
+    this.py+=DR[this.dir]*spd;
+    // Clamp to not overshoot into wall tiles
+    const newR=Math.round((this.py-TS/2)/TS);
+    const newC=Math.round((this.px-TS/2)/TS);
+    if(newR!==this.r||newC!==this.c){
+      // Crossed into a new tile - validate it
+      if(!canWalkMailman(newR,newC,this.state==='eaten')){
+        // Snap back to current tile center
+        this.px=this.c*TS+TS/2;
+        this.py=this.r*TS+TS/2;
+        return;
+      }
+    }
+    this.r=newR;
+    this.c=newC;
+    // Tunnel wrap
+    if(this.c<0){this.c=COLS-1;this.px=this.c*TS+TS/2;}
+    if(this.c>=COLS){this.c=0;this.px=this.c*TS+TS/2;}
+  }
+  enterFrightened(){
+    if(this.state==='scatter'||this.state==='chase'){
+      this.state='frightened';
+      this.dir=OPP[this.dir];// reverse
+    }
+  }
+  exitFrightened(){
+    if(this.state==='frightened'){
+      this.state=G.scatterMode?'scatter':'chase';
+    }
+  }
+  draw(x,y){
+    const r=TS*0.42;
+    ctx.save();
+    ctx.translate(x,y);
+    if(this.state==='eaten'){
+      // Eyes only
+      this.drawEyes(0,0,r);
+      ctx.restore();return;
+    }
+    if(this.state==='frightened'){
+      const flash=this.frightenedFlash&&G.frame%12<6;
+      ctx.fillStyle=flash?FRIGHT_FLASH:FRIGHT_COLOR;
+      // Body (rounded rectangle)
+      ctx.beginPath();
+      ctx.arc(0,-r*0.2,r*0.7,Math.PI,0);
+      ctx.lineTo(r*0.7,r*0.4);
+      // Wavy bottom
+      for(let i=3;i>=-3;i--){
+        ctx.lineTo(i*r*0.23,r*0.4+(i%2===0?r*0.15:0));
+      }
+      ctx.closePath();ctx.fill();
+      // Scared eyes
+      ctx.fillStyle=flash?'#f33':'#fff';
+      ctx.fillRect(-r*0.3,-r*0.35,r*0.2,r*0.15);
+      ctx.fillRect(r*0.1,-r*0.35,r*0.2,r*0.15);
+      // Worried mouth
+      ctx.strokeStyle=flash?'#f33':'#fff';
+      ctx.lineWidth=1.5;
+      ctx.beginPath();
+      for(let i=-3;i<=3;i++){
+        const mx=i*r*0.15;
+        const my=r*0.15+(i%2===0?-r*0.08:r*0.08);
+        i===-3?ctx.moveTo(mx,my):ctx.lineTo(mx,my);
+      }
+      ctx.stroke();
+      ctx.restore();return;
+    }
+    // Normal mailman
+    // Body (uniform)
+    ctx.fillStyle=this.color;
+    ctx.beginPath();
+    ctx.arc(0,-r*0.3,r*0.65,Math.PI,0);
+    ctx.lineTo(r*0.65,r*0.35);
+    ctx.lineTo(-r*0.65,r*0.35);
+    ctx.closePath();ctx.fill();
+    // Hat
+    ctx.fillStyle='#336';
+    ctx.fillRect(-r*0.5,-r*0.9,r*1.0,r*0.25);
+    ctx.fillRect(-r*0.6,-r*0.68,r*1.2,r*0.08);
+    // Mail bag
+    ctx.fillStyle='#8B6914';
+    ctx.fillRect(r*0.35,-r*0.05,r*0.35,r*0.35);
+    ctx.strokeStyle='#6B4904';ctx.lineWidth=1;
+    ctx.strokeRect(r*0.35,-r*0.05,r*0.35,r*0.35);
+    // Legs
+    const lo=Math.sin(this.legAnim)*r*0.12;
+    ctx.fillStyle=this.color;
+    ctx.fillRect(-r*0.35,r*0.35,r*0.25,r*0.2+lo);
+    ctx.fillRect(r*0.1,r*0.35,r*0.25,r*0.2-lo);
+    // Shoes
+    ctx.fillStyle='#333';
+    ctx.fillRect(-r*0.38,r*0.5+Math.max(0,lo),r*0.3,r*0.1);
+    ctx.fillRect(r*0.08,r*0.5+Math.max(0,-lo),r*0.3,r*0.1);
+    // Eyes
+    this.drawEyes(0,-r*0.35,r);
+    ctx.restore();
+  }
+  drawEyes(ox,oy,r){
+    // Eye whites
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(ox-r*0.22,oy,r*0.18,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ox+r*0.22,oy,r*0.18,0,Math.PI*2);ctx.fill();
+    // Pupils (directional)
+    const pd=0.08;
+    const pox=DC[this.dir]*r*pd,poy=DR[this.dir]*r*pd;
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(ox-r*0.22+pox,oy+poy,r*0.09,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(ox+r*0.22+pox,oy+poy,r*0.09,0,Math.PI*2);ctx.fill();
+  }
+}
+
+// ── TREAT ──────────────────────────────────────────────────
+const Treat = {
+  active:false, r:0, c:0, timer:0, type:0, pts:0,
+  spawn(r,c){
+    this.r=r;this.c=c;this.active=true;
+    this.timer=600;// 10 sec
+    this.type=Math.min(G.level-1,TREAT_TYPES.length-1);
+    this.pts=TREAT_PTS[this.type];
+  },
+  update(){if(this.active){this.timer--;if(this.timer<=0)this.active=false;}},
+  draw(x,y){
+    if(!this.active)return;
+    ctx.save();ctx.translate(x,y);
+    const bob=Math.sin(G.frame*0.1)*2;
+    ctx.translate(0,bob);
+    const s=TS*0.35;
+    switch(TREAT_TYPES[this.type]){
+      case'steak':
+        ctx.fillStyle='#c44';ctx.beginPath();ctx.ellipse(0,0,s,s*0.6,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#fcc';ctx.beginPath();ctx.ellipse(-s*0.2,0,s*0.3,s*0.2,0,0,Math.PI*2);ctx.fill();
+        break;
+      case'ball':
+        ctx.fillStyle='#f44';ctx.beginPath();ctx.arc(0,0,s*0.7,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#faa';ctx.beginPath();ctx.arc(-s*0.2,-s*0.2,s*0.2,0,Math.PI*2);ctx.fill();
+        break;
+      case'shoe':
+        ctx.fillStyle='#865';ctx.fillRect(-s*0.5,-s*0.2,s*1,s*0.5);
+        ctx.fillRect(-s*0.5,-s*0.5,s*0.4,s*0.5);
+        break;
+      case'sock':
+        ctx.fillStyle='#aaf';ctx.fillRect(-s*0.15,-s*0.6,s*0.3,s*0.8);
+        ctx.fillRect(-s*0.15,s*0.1,s*0.6,s*0.25);
+        break;
+      default:
+        ctx.fillStyle='#fa0';ctx.beginPath();ctx.arc(0,0,s*0.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#fff';ctx.font=`${TS*0.5}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText('?',0,0);
+    }
+    ctx.restore();
+  }
+};
+// ── MAZE RENDERER ──────────────────────────────────────────
+function cacheMaze(){
+  mazeCtx.clearRect(0,0,MW,MH);
+  mazeCtx.fillStyle='#000';
+  mazeCtx.fillRect(0,0,MW,MH);
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      if(G.grid[r][c]===W){
+        drawWallTile(mazeCtx,c*TS,r*TS,r,c);
+      }
+      if(G.grid[r][c]===GD){
+        mazeCtx.fillStyle='#e97aaa';
+        mazeCtx.fillRect(c*TS,r*TS+TS/2-2,TS,4);
+      }
+    }
+  }
+}
+function drawWallTile(x2d,x,y,r,c){
+  // Check neighbors for connected walls
+  const u=r>0&&G.grid[r-1][c]===W;
+  const d=r<ROWS-1&&G.grid[r+1][c]===W;
+  const l=c>0&&G.grid[r][c-1]===W;
+  const ri=c<COLS-1&&G.grid[r][c+1]===W;
+  x2d.fillStyle=WALL_COLOR;
+  x2d.fillRect(x+1,y+1,TS-2,TS-2);
+  x2d.strokeStyle=WALL_LIGHT;
+  x2d.lineWidth=1.5;
+  // Draw borders where adjacent to non-wall
+  if(!u){x2d.beginPath();x2d.moveTo(x+2,y+1);x2d.lineTo(x+TS-2,y+1);x2d.stroke();}
+  if(!d){x2d.beginPath();x2d.moveTo(x+2,y+TS-1);x2d.lineTo(x+TS-2,y+TS-1);x2d.stroke();}
+  if(!l){x2d.beginPath();x2d.moveTo(x+1,y+2);x2d.lineTo(x+1,y+TS-2);x2d.stroke();}
+  if(!ri){x2d.beginPath();x2d.moveTo(x+TS-1,y+2);x2d.lineTo(x+TS-1,y+TS-2);x2d.stroke();}
+}
+function drawBones(){
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const x=c*TS+TS/2,y=r*TS+TS/2+HUD_TOP;
+      if(G.grid[r][c]===B){
+        // Small bone
+        ctx.fillStyle=BONE_COLOR;
+        ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fill();
+      }
+      if(G.grid[r][c]===P){
+        // Power bone - pulsing glow
+        const pulse=0.6+0.4*Math.sin(G.frame*0.08);
+        ctx.save();
+        ctx.shadowColor=POWER_COLOR;
+        ctx.shadowBlur=12*pulse;
+        ctx.fillStyle=POWER_COLOR;
+        ctx.globalAlpha=0.5+0.5*pulse;
+        ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();
+        // Bone shape
+        ctx.globalAlpha=1;
+        ctx.shadowBlur=0;
+        ctx.fillStyle='#fff';
+        ctx.beginPath();ctx.arc(x-3,y-2,2.5,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(x+3,y+2,2.5,0,Math.PI*2);ctx.fill();
+        ctx.fillRect(x-2,y-1,4,2);
+        ctx.beginPath();ctx.arc(x-3,y+2,2.5,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.arc(x+3,y-2,2.5,0,Math.PI*2);ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+}
+
+// ── SCORE POPUPS ───────────────────────────────────────────
+const popups=[];
+function addPopup(x,y,text,color='#fff'){popups.push({x,y,text,color,life:60});}
+function updatePopups(){popups.forEach(p=>{p.y-=0.5;p.life--;});while(popups.length&&popups[0].life<=0)popups.shift();}
+function drawPopups(){
+  popups.forEach(p=>{
+    ctx.save();ctx.globalAlpha=p.life/60;
+    ctx.fillStyle=p.color;ctx.font='bold 12px Courier New';
+    ctx.textAlign='center';ctx.fillText(p.text,p.x,p.y+HUD_TOP);
+    ctx.restore();
+  });
+}
+
+// ── LEVEL MANAGEMENT ───────────────────────────────────────
+function loadLevel(){
+  G.mazeIdx=getMazeIndex(G.level);
+  G.grid=MAZES[G.mazeIdx].map(r=>[...r]);// deep copy
+  const meta=MAZE_META[G.mazeIdx];
+  // Count bones
+  G.boneCount=0;G.totalBones=0;
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(G.grid[r][c]===B||G.grid[r][c]===P){G.boneCount++;G.totalBones++;}
+  }
+  G.bonesEaten=0;G.globalDotCount=0;G.dotCountSinceEat=0;
+  // Create dog
+  G.dog=new Dog(meta.dogStart.r,meta.dogStart.c);
+  // Create mailmen
+  G.mailmen=meta.ghostHome.map((pos,i)=>new Mailman(i,pos.r,pos.c));
+  // Reset timers
+  G.frightTimer=0;G.frightChain=0;
+  G.scatterMode=true;G.scatterIdx=0;G.scatterTimer=getScatterTime();
+  Treat.active=false;G.treatTimer=0;
+  // Cache maze
+  cacheMaze();
+}
+function getScatterTime(){
+  const li=G.level<=1?0:G.level<=4?1:2;
+  const pair=SCATTER_CHASE[li][Math.min(G.scatterIdx,3)];
+  return G.scatterMode?pair[0]:pair[1];
+}
+function addScore(pts){
+  G.score+=pts;
+  if(G.score>G.highScore){G.highScore=G.score;localStorage.setItem('barkManHigh',G.highScore);}
+  if(!G.extraAwarded&&G.score>=EXTRA_LIFE_AT){G.extraAwarded=true;G.lives++;Audio.extraLife();}
+}
+
+// ── GAME LOGIC ─────────────────────────────────────────────
+function resetPositions(){
+  const meta=MAZE_META[G.mazeIdx];
+  G.dog.reset();
+  G.mailmen.forEach((m,i)=>{m.r=meta.ghostHome[i].r;m.c=meta.ghostHome[i].c;m.px=m.c*TS+TS/2;m.py=m.r*TS+TS/2;m.reset();m.startR=meta.ghostHome[i].r;m.startC=meta.ghostHome[i].c;});
+  G.frightTimer=0;G.frightChain=0;
+}
+function checkCollisions(){
+  G.mailmen.forEach(m=>{
+    if(m.state==='house'||m.state==='exiting')return;
+    const sameTile=m.r===G.dog.r&&m.c===G.dog.c;
+    const crossed=(m.r===G.dog.prevR&&m.c===G.dog.prevC&&G.dog.r===m.prevR&&G.dog.c===m.prevC);
+    if(!sameTile&&!crossed)return;
+    if(m.state==='frightened'){
+      // Eat mailman
+      const pts=MAILMAN_PTS[Math.min(G.frightChain,3)];
+      addScore(pts);
+      addPopup(m.px,m.py,pts.toString(),'#0ff');
+      G.frightChain++;
+      m.state='eaten';
+      Audio.eatMailman();
+    }else if(m.state==='eaten'){
+      return;// pass through
+    }else{
+      // Dog dies
+      G.dog.alive=false;
+      G.state=ST_DYING;G.dyingTimer=120;
+      Audio.die();
+    }
+  });
+}
+function checkBone(){
+  const r=G.dog.r,c=G.dog.c;
+  if(r<0||r>=ROWS||c<0||c>=COLS)return;
+  const t=G.grid[r][c];
+  if(t===B){
+    G.grid[r][c]=E;G.boneCount--;G.bonesEaten++;
+    G.globalDotCount++;G.dotCountSinceEat=0;
+    addScore(BONE_PTS);
+    Audio.eat();
+  }else if(t===P){
+    G.grid[r][c]=E;G.boneCount--;G.bonesEaten++;
+    G.globalDotCount++;G.dotCountSinceEat=0;
+    addScore(POWER_PTS);
+    const dur=FRIGHT_TIME[Math.min(G.level-1,FRIGHT_TIME.length-1)];
+    if(dur>0){
+      G.frightTimer=dur;G.frightChain=0;
+      G.mailmen.forEach(m=>m.enterFrightened());
+    }
+    Audio.powerUp();
+  }
+  // Treat spawn check
+  if(G.bonesEaten===70||G.bonesEaten===170){
+    const meta=MAZE_META[G.mazeIdx];
+    Treat.spawn(meta.treatPos.r,meta.treatPos.c);
+  }
+  // Treat pickup
+  if(Treat.active&&G.dog.r===Treat.r&&G.dog.c===Treat.c){
+    addScore(Treat.pts);
+    addPopup(Treat.c*TS+TS/2,Treat.r*TS+TS/2,Treat.pts.toString(),'#ff0');
+    Treat.active=false;
+  }
+  // Level complete
+  if(G.boneCount<=0){
+    G.state=ST_LVLCOMPLETE;G.levelTimer=120;
+    Audio.levelUp();
+  }
+}
+// ── CUT SCENES ─────────────────────────────────────────────
+const CUT_SCENES = [
+  {trigger:3,title:"Chapter 1: The Great Escape",
+   lines:["One sunny afternoon, the gate was left open...","Our brave pup saw his chance and bolted!","The mailmen gave chase, but he was too fast!","Now begins the journey home..."],
+   bgColor:'#0a1a0a',dogDir:1},
+  {trigger:6,title:"Chapter 2: Across the Park",
+   lines:["The park was full of distractions...","Squirrels! Birds! Other dogs!","But our hero stayed focused on the path home.","Through the park and past the playground..."],
+   bgColor:'#0a0a1a',dogDir:1},
+  {trigger:9,title:"Chapter 3: The Neighborhood",
+   lines:["The streets were familiar now...","Every fire hydrant, every fence post.","The mailmen were still on the trail!","But home was getting closer..."],
+   bgColor:'#1a0a0a',dogDir:1},
+  {trigger:12,title:"Chapter 4: Almost Home!",
+   lines:["There it was! The old red door!","The warm glow of the porch light...","One last sprint past the mailmen...","HOME AT LAST! ...but the adventure continues!"],
+   bgColor:'#0a0a0a',dogDir:1}
+];
+function getCutScene(level){return CUT_SCENES.find(s=>s.trigger===level)||null;}
+
+const CS={scene:null,lineIdx:0,charIdx:0,timer:0,dogX:0,phase:0,mailmenX:[]};
+function startCutScene(scene){
+  CS.scene=scene;CS.lineIdx=0;CS.charIdx=0;CS.timer=0;
+  CS.dogX=-30;CS.phase=0;CS.mailmenX=[-80,-110,-140,-170];
+  G.state=ST_CUTSCENE;
+}
+function updateCutScene(){
+  CS.timer++;
+  // Animate dog running across
+  CS.dogX+=1.5;
+  CS.mailmenX=CS.mailmenX.map(x=>x+1.2);
+  // Typewriter text
+  if(CS.lineIdx<CS.scene.lines.length){
+    if(CS.timer%3===0)CS.charIdx++;
+    const line=CS.scene.lines[CS.lineIdx];
+    if(CS.charIdx>=line.length){
+      if(CS.timer>CS.charIdx*3+90){CS.lineIdx++;CS.charIdx=0;CS.timer=0;}
+    }
+  }else{
+    // All lines shown, wait then advance
+    if(CS.timer>120){
+      G.level++;loadLevel();
+      G.state=ST_READY;G.readyTimer=120;
+    }
+  }
+}
+function drawCutScene(){
+  ctx.fillStyle=CS.scene.bgColor;
+  ctx.fillRect(0,0,CW,CH);
+  // Title
+  ctx.fillStyle='#FFD700';ctx.font='bold 20px Courier New';ctx.textAlign='center';
+  ctx.fillText(CS.scene.title,CW/2,60);
+  // Ground line
+  const gy=CH*0.55;
+  ctx.strokeStyle='#333';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,gy+20);ctx.lineTo(CW,gy+20);ctx.stroke();
+  // Draw dog running
+  const dogMouth=0.15+0.3*Math.abs(Math.sin(G.frame*0.15));
+  ctx.save();ctx.translate(CS.dogX,gy);
+  ctx.fillStyle=DOG_COLOR;
+  ctx.beginPath();ctx.arc(0,0,14,dogMouth*Math.PI,(2-dogMouth)*Math.PI);
+  ctx.lineTo(0,0);ctx.closePath();ctx.fill();
+  // Ear
+  ctx.fillStyle=DOG_DARK;
+  ctx.beginPath();ctx.moveTo(-4,-9);ctx.lineTo(-1,-16);ctx.lineTo(2,-8);ctx.closePath();ctx.fill();
+  // Eye
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(0,-4,2,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // Draw mailmen chasing
+  CS.mailmenX.forEach((mx,i)=>{
+    ctx.save();ctx.translate(mx,gy);
+    ctx.fillStyle=MAILMAN_COLORS[i];
+    ctx.beginPath();ctx.arc(0,-3,10,Math.PI,0);
+    ctx.lineTo(10,8);ctx.lineTo(-10,8);ctx.closePath();ctx.fill();
+    // Hat
+    ctx.fillStyle='#336';ctx.fillRect(-7,-12,14,4);
+    // Eyes
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(-3,-4,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(3,-4,3,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#111';
+    ctx.beginPath();ctx.arc(-2,-4,1.5,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(4,-4,1.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+  // Text
+  if(CS.lineIdx<CS.scene.lines.length){
+    const line=CS.scene.lines[CS.lineIdx];
+    const shown=line.substring(0,CS.charIdx);
+    ctx.fillStyle='#fff';ctx.font='16px Courier New';ctx.textAlign='center';
+    ctx.fillText(shown,CW/2,CH*0.75);
+  }
+  // Previous lines (faded)
+  for(let i=0;i<CS.lineIdx;i++){
+    ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='13px Courier New';ctx.textAlign='center';
+    ctx.fillText(CS.scene.lines[i],CW/2,CH*0.75-20*(CS.lineIdx-i));
+  }
+  // Skip hint
+  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='12px Courier New';
+  ctx.fillText('Press ENTER to skip',CW/2,CH-30);
+}
+
+// ── HUD ────────────────────────────────────────────────────
+function drawHUD(){
+  // Top HUD: Score + High Score + Level
+  ctx.fillStyle='#000';ctx.fillRect(0,0,CW,HUD_TOP);
+  ctx.fillStyle='#fff';ctx.font='bold 14px Courier New';ctx.textAlign='left';
+  ctx.fillText('SCORE: '+G.score,10,25);
+  ctx.textAlign='center';
+  ctx.fillText('LEVEL '+G.level,CW/2,25);
+  ctx.textAlign='right';
+  ctx.fillText('HIGH: '+G.highScore,CW-10,25);
+  // Bottom HUD: Lives + Treat bonus
+  ctx.fillStyle='#000';ctx.fillRect(0,CH-HUD_BOT,CW,HUD_BOT);
+  // Draw life icons (small dogs)
+  for(let i=0;i<G.lives-1;i++){
+    const lx=20+i*25,ly=CH-22;
+    ctx.fillStyle=DOG_COLOR;
+    ctx.beginPath();ctx.arc(lx,ly,8,0.2*Math.PI,1.8*Math.PI);
+    ctx.lineTo(lx,ly);ctx.closePath();ctx.fill();
+  }
+  // Treat bonus display
+  if(Treat.active){
+    ctx.fillStyle='#ff0';ctx.font='12px Courier New';ctx.textAlign='right';
+    ctx.fillText('TREAT: '+Treat.pts+'pts',CW-10,CH-18);
+  }
+}
+
+// ── DEATH ANIMATION ────────────────────────────────────────
+function drawDying(){
+  ctx.drawImage(mazeCanvas,0,HUD_TOP);
+  drawBones();
+  // Draw mailmen frozen
+  G.mailmen.forEach(m=>{if(m.state!=='house')m.draw(m.px,m.py+HUD_TOP);});
+  // Draw dying dog animation
+  const progress=1-(G.dyingTimer/120);
+  const x=G.dog.px,y=G.dog.py+HUD_TOP;
+  const r=TS*0.45;
+  ctx.save();ctx.translate(x,y);
+  ctx.fillStyle=DOG_COLOR;
+  if(progress<0.7){
+    // Mouth opens wider
+    const mouth=progress/0.7*Math.PI;
+    ctx.beginPath();ctx.arc(0,0,r,mouth,(2*Math.PI-mouth));ctx.lineTo(0,0);ctx.closePath();ctx.fill();
+  }else{
+    // Shrink away
+    const shrink=1-((progress-0.7)/0.3);
+    ctx.beginPath();ctx.arc(0,0,r*shrink,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+  drawHUD();
+}
+
+// ── MENU SCREEN ────────────────────────────────────────────
+let menuFrame=0;
+function drawMenu(){
+  menuFrame++;
+  ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,CW,CH);
+  // Title
+  ctx.fillStyle='#FFD700';ctx.font='bold 32px Courier New';ctx.textAlign='center';
+  ctx.fillText('BARK MAN',CW/2,120);
+  // Subtitle
+  ctx.fillStyle='#aaa';ctx.font='16px Courier New';
+  ctx.fillText('Find Your Way Home!',CW/2,155);
+  // Animated dog
+  const dx=CW/2-60+Math.sin(menuFrame*0.03)*40;
+  const dm=0.15+0.3*Math.abs(Math.sin(menuFrame*0.12));
+  ctx.save();ctx.translate(dx,240);
+  ctx.fillStyle=DOG_COLOR;
+  ctx.beginPath();ctx.arc(0,0,18,dm*Math.PI,(2-dm)*Math.PI);ctx.lineTo(0,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle=DOG_DARK;ctx.beginPath();ctx.moveTo(-5,-12);ctx.lineTo(-2,-20);ctx.lineTo(2,-10);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#222';ctx.beginPath();ctx.arc(0,-5,2.5,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+  // Animated mailmen
+  MAILMAN_COLORS.forEach((col,i)=>{
+    const mx=CW/2+20+i*30+Math.sin(menuFrame*0.03+i)*40;
+    ctx.save();ctx.translate(mx,240);
+    ctx.fillStyle=col;
+    ctx.beginPath();ctx.arc(0,-3,12,Math.PI,0);ctx.lineTo(12,8);ctx.lineTo(-12,8);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#336';ctx.fillRect(-8,-14,16,4);
+    ctx.fillStyle='#fff';
+    ctx.beginPath();ctx.arc(-3,-4,3,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(4,-4,3,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+  // Instructions
+  ctx.fillStyle='#888';ctx.font='13px Courier New';
+  ctx.fillText('Arrow Keys or WASD to move',CW/2,320);
+  ctx.fillText('Collect bones, avoid mailmen!',CW/2,345);
+  ctx.fillText('Eat glowing power bones to chase them!',CW/2,370);
+  // Start prompt
+  const blink=Math.sin(menuFrame*0.06)>0;
+  if(blink){ctx.fillStyle='#0f0';ctx.font='bold 18px Courier New';ctx.fillText('PRESS ENTER TO START',CW/2,440);}
+  // High score
+  if(G.highScore>0){
+    ctx.fillStyle='#ff0';ctx.font='14px Courier New';
+    ctx.fillText('HIGH SCORE: '+G.highScore,CW/2,490);
+  }
+  // Story teaser
+  ctx.fillStyle='#666';ctx.font='11px Courier New';
+  ctx.fillText('A lost dog must navigate mazes of bones',CW/2,540);
+  ctx.fillText('to find the way back home...',CW/2,558);
+}
+
+// ── GAME OVER SCREEN ───────────────────────────────────────
+function drawGameOver(){
+  menuFrame++;
+  ctx.fillStyle='#0a0a1a';ctx.fillRect(0,0,CW,CH);
+  ctx.fillStyle='#f44';ctx.font='bold 28px Courier New';ctx.textAlign='center';
+  ctx.fillText('GAME OVER',CW/2,180);
+  ctx.fillStyle='#fff';ctx.font='18px Courier New';
+  ctx.fillText('Score: '+G.score,CW/2,240);
+  ctx.fillText('Level: '+G.level,CW/2,270);
+  if(G.score>=G.highScore){
+    ctx.fillStyle='#ff0';ctx.font='bold 16px Courier New';
+    ctx.fillText('NEW HIGH SCORE!',CW/2,310);
+  }else{
+    ctx.fillStyle='#888';ctx.font='14px Courier New';
+    ctx.fillText('High Score: '+G.highScore,CW/2,310);
+  }
+  const blink=Math.sin(menuFrame*0.06)>0;
+  if(blink){ctx.fillStyle='#0f0';ctx.font='bold 16px Courier New';ctx.fillText('PRESS ENTER TO PLAY AGAIN',CW/2,400);}
+}
+
+// ── INPUT HANDLING ─────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  Audio.init();
+  const key=e.key;
+  if(G.state===ST_MENU){
+    if(key==='Enter'){startGame();e.preventDefault();}
+    return;
+  }
+  if(G.state===ST_GAMEOVER){
+    if(key==='Enter'){startGame();e.preventDefault();}
+    return;
+  }
+  if(G.state===ST_CUTSCENE){
+    if(key==='Enter'){
+      G.level++;loadLevel();G.state=ST_READY;G.readyTimer=120;
+      e.preventDefault();
+    }
+    return;
+  }
+  if(G.state===ST_PLAY||G.state===ST_READY){
+    if(key==='Escape'){G.paused=!G.paused;return;}
+    let dir=NONE;
+    if(key==='ArrowUp'||key==='w'||key==='W')dir=UP;
+    if(key==='ArrowDown'||key==='s'||key==='S')dir=DOWN;
+    if(key==='ArrowLeft'||key==='a'||key==='A')dir=LEFT;
+    if(key==='ArrowRight'||key==='d'||key==='D')dir=RIGHT;
+    if(dir!==NONE&&G.dog){G.dog.setDir(dir);e.preventDefault();}
+  }
+});
+
+// ── MAIN UPDATE ────────────────────────────────────────────
+function update(){
+  G.frame++;
+  if(G.state===ST_READY){
+    G.readyTimer--;
+    if(G.readyTimer<=0)G.state=ST_PLAY;
+    return;
+  }
+  if(G.state===ST_PLAY){
+    if(G.paused)return;
+    // Scatter/chase timer
+    G.scatterTimer--;
+    if(G.scatterTimer<=0){
+      G.scatterMode=!G.scatterMode;
+      if(!G.scatterMode)G.scatterIdx++;
+      G.scatterTimer=getScatterTime();
+      G.mailmen.forEach(m=>{
+        if(m.state==='scatter')m.state='chase';
+        else if(m.state==='chase')m.state='scatter';
+      });
+    }
+    // Frightened timer
+    if(G.frightTimer>0){
+      G.frightTimer--;
+      G.mailmen.forEach(m=>{m.frightenedFlash=G.frightTimer<120;});
+      if(G.frightTimer<=0){G.mailmen.forEach(m=>m.exitFrightened());}
+    }
+    // Dot starvation counter
+    G.dotCountSinceEat++;
+    // Update entities
+    G.dog.update();
+    checkBone();
+    G.mailmen.forEach(m=>m.update());
+    Treat.update();
+    checkCollisions();
+    updatePopups();
+  }
+  if(G.state===ST_DYING){
+    G.dyingTimer--;
+    if(G.dyingTimer<=0){
+      G.lives--;
+      if(G.lives<=0){G.state=ST_GAMEOVER;}
+      else{resetPositions();G.state=ST_READY;G.readyTimer=120;}
+    }
+  }
+  if(G.state===ST_LVLCOMPLETE){
+    G.levelTimer--;
+    if(G.levelTimer<=0){
+      const scene=getCutScene(G.level);
+      if(scene){startCutScene(scene);}
+      else{G.level++;loadLevel();G.state=ST_READY;G.readyTimer=120;}
+    }
+  }
+  if(G.state===ST_CUTSCENE){updateCutScene();}
+}
+
+// ── MAIN RENDER ────────────────────────────────────────────
+function render(){
+  if(G.state===ST_MENU){drawMenu();return;}
+  if(G.state===ST_GAMEOVER){drawGameOver();return;}
+  if(G.state===ST_CUTSCENE){drawCutScene();return;}
+  if(G.state===ST_DYING){drawDying();return;}
+  // Normal play / ready / level complete
+  ctx.fillStyle='#000';ctx.fillRect(0,0,CW,CH);
+  ctx.drawImage(mazeCanvas,0,HUD_TOP);
+  drawBones();
+  // Treat
+  if(Treat.active){Treat.draw(Treat.c*TS+TS/2,Treat.r*TS+TS/2+HUD_TOP);}
+  // Mailmen
+  G.mailmen.forEach(m=>m.draw(m.px,m.py+HUD_TOP));
+  // Dog
+  if(G.dog&&G.dog.alive){G.dog.draw(G.dog.px,G.dog.py+HUD_TOP);}
+  // Popups
+  drawPopups();
+  // HUD
+  drawHUD();
+  // Ready text
+  if(G.state===ST_READY){
+    ctx.fillStyle='#ff0';ctx.font='bold 20px Courier New';ctx.textAlign='center';
+    ctx.fillText('READY!',CW/2,CH/2+10);
+  }
+  // Level complete flash
+  if(G.state===ST_LVLCOMPLETE&&G.frame%10<5){
+    ctx.fillStyle='rgba(255,255,255,0.1)';ctx.fillRect(0,0,CW,CH);
+  }
+  // Pause overlay
+  if(G.paused){
+    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(0,0,CW,CH);
+    ctx.fillStyle='#fff';ctx.font='bold 24px Courier New';ctx.textAlign='center';
+    ctx.fillText('PAUSED',CW/2,CH/2);
+    ctx.font='14px Courier New';ctx.fillText('Press ESC to resume',CW/2,CH/2+30);
+  }
+}
+
+// ── GAME START ─────────────────────────────────────────────
+function startGame(){
+  G.state=ST_READY;G.level=1;G.score=0;G.lives=3;G.extraAwarded=false;
+  G.frame=0;G.paused=false;menuFrame=0;
+  loadLevel();G.readyTimer=120;
+}
+
+// Debug access for testing
+window.G=G;window.Dog=Dog;window.Mailman=Mailman;
+
+// ── MAIN LOOP ──────────────────────────────────────────────
+let lastTime=0;
+function gameLoop(ts){
+  const dt=ts-lastTime;
+  if(dt>=16){// ~60fps cap
+    lastTime=ts;
+    update();
+    render();
+  }
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
