@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosystem Cascade Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0e1a;
+            --surface: #111827;
+            --surface2: #1a2236;
+            --border: #2a3550;
+            --text: #e2e8f0;
+            --text-dim: #8899b4;
+            --accent: #22d3a0;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        header h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #22d3a0, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .tab-group { display: flex; gap: 4px; background: var(--bg); border-radius: 8px; padding: 3px; }
+        .tab-btn {
+            padding: 6px 16px; border: none; border-radius: 6px; background: transparent;
+            color: var(--text-dim); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+        }
+        .tab-btn.active { background: var(--accent); color: #0a0e1a; font-weight: 600; }
+        .tab-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+        .health-bar { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .health-bar .label { color: var(--text-dim); }
+        .health-track { width: 120px; height: 8px; background: var(--surface); border-radius: 4px; overflow: hidden; }
+        .health-fill { height: 100%; border-radius: 4px; transition: width 0.5s, background 0.5s; }
+        .health-text { font-weight: 600; min-width: 80px; }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 370px;
+            height: calc(100vh - 52px);
+        }
+        .eco-canvas-wrap {
+            position: relative;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            overflow: hidden;
+        }
+        #ecoCanvas { width: 100%; height: 100%; display: block; }
+        .year-display {
+            position: absolute; top: 12px; left: 16px;
+            font-size: 0.8rem; color: rgba(255,255,255,0.5); pointer-events: none;
+        }
+        .side-panel {
+            display: flex; flex-direction: column; background: var(--bg); overflow-y: auto;
+        }
+        .panel-section {
+            border-bottom: 1px solid var(--border); padding: 12px 16px;
+        }
+        .panel-section h3 {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-dim); margin-bottom: 10px;
+        }
+        #foodWebCanvas { width: 100%; height: 200px; display: block; }
+        #chartCanvas { width: 100%; height: 180px; display: block; }
+
+        .species-cards { display: flex; flex-wrap: wrap; gap: 6px; }
+        .sp-card {
+            display: flex; align-items: center; gap: 6px; padding: 4px 10px;
+            background: var(--surface2); border-radius: 6px; border-left: 3px solid;
+            font-size: 0.8rem; transition: opacity 0.3s; cursor: default;
+        }
+        .sp-card.extinct { opacity: 0.35; text-decoration: line-through; }
+        .sp-card .pop { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+        .scenario-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .scenario-btn {
+            padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--surface2); color: var(--text); cursor: pointer;
+            font-size: 0.78rem; text-align: left; transition: all 0.2s;
+        }
+        .scenario-btn:hover { border-color: var(--accent); background: #1a2e3e; }
+        .scenario-btn.invasive { border-color: rgba(239,68,68,0.3); }
+        .scenario-btn.invasive:hover { border-color: var(--danger); background: #2a1520; }
+        .scenario-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .scenario-btn .sc-title { font-weight: 600; display: block; }
+        .scenario-btn .sc-desc { color: var(--text-dim); font-size: 0.72rem; margin-top: 2px; display: block; }
+
+        .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .ctrl-btn {
+            padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
+            background: var(--surface2); color: var(--text); cursor: pointer;
+            font-size: 0.8rem; transition: all 0.2s;
+        }
+        .ctrl-btn:hover { border-color: var(--accent); }
+        .ctrl-btn.primary { background: var(--accent); color: #0a0e1a; border-color: var(--accent); font-weight: 600; }
+        .speed-control { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-dim); }
+        .speed-control input[type=range] { width: 80px; accent-color: var(--accent); }
+
+        .event-log { flex: 1; min-height: 100px; overflow-y: auto; padding: 4px 0; }
+        .log-entry {
+            padding: 5px 8px; font-size: 0.75rem; border-left: 3px solid transparent;
+            margin-bottom: 2px; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .log-entry.critical { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+        .log-entry.warning { border-color: var(--warning); background: rgba(245,158,11,0.06); }
+        .log-entry.info { border-color: var(--info); background: rgba(59,130,246,0.06); }
+        .log-entry.positive { border-color: var(--accent); background: rgba(34,211,160,0.06); }
+        .log-time { color: var(--text-dim); margin-right: 6px; }
+
+        .intro-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(4px);
+        }
+        .intro-box {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+            padding: 32px; max-width: 540px; text-align: center;
+        }
+        .intro-box h2 {
+            font-size: 1.4rem; margin-bottom: 12px;
+            background: linear-gradient(135deg, #22d3a0, #3b82f6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .intro-box p { color: var(--text-dim); font-size: 0.9rem; line-height: 1.6; margin-bottom: 10px; }
+        .intro-box .start-btn {
+            margin-top: 16px; padding: 10px 32px; background: var(--accent); color: #0a0e1a;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .intro-box .start-btn:hover { filter: brightness(1.1); }
+
+        @media (max-width: 900px) {
+            main { grid-template-columns: 1fr; height: auto; }
+            .eco-canvas-wrap { height: 350px; border-right: none; border-bottom: 1px solid var(--border); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="intro-overlay" id="intro">
+    <div class="intro-box">
+        <h2>Ecosystem Cascade Simulator</h2>
+        <p>Every species in an ecosystem is connected through a food web. Remove a top predator, and prey populations explode. Introduce an invasive species, and native populations can collapse.</p>
+        <p>This simulator lets you witness <strong>trophic cascades</strong> in real time. Try different scenarios and watch how one change ripples through the entire ecosystem.</p>
+        <button class="start-btn" onclick="document.getElementById('intro').style.display='none'">Start Exploring</button>
+    </div>
+</div>
+
+<header>
+    <h1>Ecosystem Cascade Simulator</h1>
+    <div class="tab-group">
+        <button class="tab-btn active" data-eco="river">River</button>
+        <button class="tab-btn" data-eco="land">Yellowstone</button>
+    </div>
+    <div class="health-bar">
+        <span class="label">Ecosystem Health</span>
+        <div class="health-track"><div class="health-fill" id="healthFill"></div></div>
+        <span class="health-text" id="healthText">Thriving</span>
+    </div>
+</header>
+
+<main>
+    <div class="eco-canvas-wrap">
+        <canvas id="ecoCanvas"></canvas>
+        <div class="year-display" id="yearDisplay">Year 0</div>
+    </div>
+    <div class="side-panel">
+        <div class="panel-section"><h3>Food Web</h3><canvas id="foodWebCanvas"></canvas></div>
+        <div class="panel-section"><h3>Population Over Time</h3><canvas id="chartCanvas"></canvas></div>
+        <div class="panel-section"><h3>Species</h3><div class="species-cards" id="speciesCards"></div></div>
+        <div class="panel-section"><h3>Scenarios</h3><div class="scenario-grid" id="scenarioGrid"></div></div>
+        <div class="panel-section">
+            <h3>Controls</h3>
+            <div class="controls-row">
+                <button class="ctrl-btn" id="playPauseBtn" onclick="togglePause()">Pause</button>
+                <button class="ctrl-btn primary" id="resetBtn" onclick="resetSim()">Reset</button>
+                <div class="speed-control">
+                    <span>Speed</span>
+                    <input type="range" id="speedSlider" min="1" max="10" value="5">
+                    <span id="speedLabel">5x</span>
+                </div>
+            </div>
+        </div>
+        <div class="panel-section" style="flex:1;display:flex;flex-direction:column;">
+            <h3>Cascade Log</h3>
+            <div class="event-log" id="eventLog"></div>
+        </div>
+    </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ECOSYSTEM DATA  (ratio-dependent model)
+//
+// Each consumer has foodSources: [{id, foodWeight, predWeight}]
+//   foodWeight  → how much of this consumer's diet comes from this prey
+//   predWeight  → how much predation pressure this consumer exerts on this prey at basePop
+//
+// At equilibrium every prey's total predWeight from its consumers sums to ~1.0,
+// and every consumer's foodWeights sum to 1.0.
+//
+// Simulation:
+//   food_ratio    = Σ(prey.pop/prey.basePop * foodWeight) / Σ(foodWeight)
+//   pred_load     = Σ(pred.pop/pred.basePop * predWeight)   [over all species eating me]
+//   effective_K   = baseCap * food_ratio / max(0.3, pred_load)
+//   dp/dt         = growth * pop * (1 - pop / max(1,eff_K)) - death * pop
+//
+// baseCap is calibrated so that pop = baseCap*(1-death/growth) = basePop
+// ═══════════════════════════════════════════════════════
+
+const ECO = {
+river: {
+    name: "River Ecosystem",
+    bgColors: ["#070d1a","#0a1a2e","#0d2040"],
+    species: [
+        { id:'algae', name:'Algae', emoji:'\u{1F33F}', color:'#4CAF50', level:0, shape:'blob',
+          basePop:900, baseCap:923, growth:0.20, death:0.005, foodSources:[], isProducer:true,
+          desc:'Photosynthetic base of the river food web.' },
+        { id:'insects', name:'Aquatic Insects', emoji:'\u{1F99F}', color:'#FFD54F', level:1, shape:'dot',
+          basePop:450, baseCap:482, growth:0.15, death:0.01,
+          foodSources:[{id:'algae', fw:1, pw:0.6}],
+          desc:'Mayflies and caddisflies. Critical food source for fish.' },
+        { id:'crayfish', name:'Crayfish', emoji:'\u{1F99E}', color:'#FF7043', level:1.4, shape:'circle',
+          basePop:180, baseCap:200, growth:0.10, death:0.01,
+          foodSources:[{id:'algae', fw:0.4, pw:0.4},{id:'insects', fw:0.6, pw:0.3}],
+          desc:'Omnivorous scavengers eating algae and insects.' },
+        { id:'trout', name:'Trout', emoji:'\u{1F41F}', color:'#42A5F5', level:2.5, shape:'fish',
+          basePop:120, baseCap:137, growth:0.08, death:0.01,
+          foodSources:[{id:'insects', fw:0.5, pw:0.7},{id:'crayfish', fw:0.5, pw:1.0}],
+          desc:'Mid-level predator keeping insect and crayfish numbers in check.' },
+        { id:'osprey', name:'Osprey', emoji:'\u{1F985}', color:'#B0BEC5', level:4, shape:'bird',
+          basePop:30, baseCap:36, growth:0.05, death:0.008,
+          foodSources:[{id:'trout', fw:1, pw:1.0}],
+          desc:'Apex fish-eating raptor. Controls trout populations.' }
+    ],
+    scenarios: [
+        { id:'add_carp', title:'Introduce Asian Carp', desc:'Voracious algae eaters with no natural predators',
+          invasive:true, species:{
+              id:'asian_carp', name:'Asian Carp', emoji:'\u{1F421}', color:'#EF4444', level:1.2, shape:'fish',
+              basePop:200, baseCap:800, growth:0.18, death:0.008,
+              foodSources:[{id:'algae', fw:1, pw:0.5}], isInvasive:true,
+              desc:'Invasive filter feeder consuming algae 2-3x faster than natives.'
+          }},
+        { id:'add_snakehead', title:'Introduce Snakehead', desc:'Aggressive predator eating native fish',
+          invasive:true, species:{
+              id:'snakehead', name:'Snakehead', emoji:'\u{1F40D}', color:'#A855F7', level:3, shape:'fish',
+              basePop:100, baseCap:280, growth:0.07, death:0.012,
+              foodSources:[{id:'trout', fw:0.6, pw:0.8},{id:'crayfish', fw:0.4, pw:0.5}], isInvasive:true,
+              desc:'Invasive apex predator with no natural enemies here.'
+          }},
+        { id:'remove_osprey', title:'Remove Top Predator', desc:'What happens without the osprey?' },
+        { id:'pollution', title:'Chemical Pollution', desc:'Algae productivity drops by 60%' }
+    ]
+},
+land: {
+    name: "Yellowstone Ecosystem",
+    bgColors: ["#0a1208","#15200e","#1e2d14"],
+    species: [
+        { id:'vegetation', name:'Vegetation', emoji:'\u{1F33E}', color:'#66BB6A', level:0, shape:'blob',
+          basePop:1000, baseCap:1034, growth:0.15, death:0.005, foodSources:[], isProducer:true,
+          desc:'Willows, aspens, and grasses. Foundation of the Yellowstone grassland.' },
+        { id:'rabbits', name:'Rabbits', emoji:'\u{1F430}', color:'#A1887F', level:1, shape:'circle',
+          basePop:350, baseCap:389, growth:0.14, death:0.01,
+          foodSources:[{id:'vegetation', fw:1, pw:0.45}],
+          desc:'Fast-breeding herbivores grazing on grasses and shrubs.' },
+        { id:'elk', name:'Elk', emoji:'\u{1F98C}', color:'#8D6E63', level:1.2, shape:'circle',
+          basePop:250, baseCap:292, growth:0.07, death:0.01,
+          foodSources:[{id:'vegetation', fw:1, pw:0.55}],
+          desc:'Large herbivore. Can devastate vegetation without predator control.' },
+        { id:'coyotes', name:'Coyotes', emoji:'\u{1F43A}', color:'#90A4AE', level:2.5, shape:'circle',
+          basePop:80, baseCap:107, growth:0.06, death:0.015,
+          foodSources:[{id:'rabbits', fw:1, pw:0.6}],
+          desc:'Mesopredator controlling rabbit numbers.' },
+        { id:'wolves', name:'Gray Wolves', emoji:'\u{1F43A}', color:'#455A64', level:4, shape:'circle',
+          basePop:25, baseCap:31, growth:0.04, death:0.008,
+          foodSources:[{id:'elk', fw:0.6, pw:1.0},{id:'coyotes', fw:0.2, pw:1.0},{id:'rabbits', fw:0.2, pw:0.4}],
+          desc:'Apex predator and keystone species. Controls elk and coyote populations.' }
+    ],
+    scenarios: [
+        { id:'remove_wolves', title:'Remove Wolves', desc:'Like Yellowstone in 1926 \u2014 watch the cascade' },
+        { id:'add_hogs', title:'Introduce Feral Hogs', desc:'Destructive rooters that tear up vegetation',
+          invasive:true, species:{
+              id:'feral_hogs', name:'Feral Hogs', emoji:'\u{1F417}', color:'#EF4444', level:1.3, shape:'circle',
+              basePop:150, baseCap:550, growth:0.14, death:0.01,
+              foodSources:[{id:'vegetation', fw:1, pw:0.5}], isInvasive:true,
+              desc:'Invasive omnivore destroying native vegetation rapidly.'
+          }},
+        { id:'add_cats', title:'Introduce Feral Cats', desc:'Efficient rabbit hunters',
+          invasive:true, species:{
+              id:'feral_cats', name:'Feral Cats', emoji:'\u{1F408}', color:'#F97316', level:2, shape:'circle',
+              basePop:100, baseCap:260, growth:0.09, death:0.012,
+              foodSources:[{id:'rabbits', fw:1, pw:0.5}], isInvasive:true,
+              desc:'Invasive predator competing with coyotes for rabbits.'
+          }},
+        { id:'drought', title:'Severe Drought', desc:'Vegetation productivity drops 60%' }
+    ]
+}
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let currentEco = 'river';
+let species = [];
+let entities = [];
+let popHistory = [];
+let simTime = 0;
+let paused = false;
+let speed = 5;
+let ecoHealth = 1;
+let triggered = {};
+let scenState = {};
+
+function cloneSpecies(src) {
+    return src.map(s => ({
+        ...s,
+        foodSources: s.foodSources.map(f => ({...f})),
+        pop: s.basePop,
+        alive: true
+    }));
+}
+
+function resetSim() {
+    species = cloneSpecies(ECO[currentEco].species);
+    entities = [];
+    popHistory = [];
+    simTime = 0;
+    triggered = {};
+    scenState = {};
+    ecoHealth = 1;
+    document.getElementById('eventLog').innerHTML = '';
+    logEvent('info', 'Ecosystem initialized. All species are in natural balance.');
+    buildUI();
+    spawnEntities();
+}
+
+// ═══════════════════════════════════════════════════════
+// SIMULATION  (ratio-dependent carrying capacity model)
+// ═══════════════════════════════════════════════════════
+
+function simStep(dt) {
+    const newPops = [];
+    for (let i = 0; i < species.length; i++) {
+        const sp = species[i];
+        if (!sp.alive) { newPops.push(0); continue; }
+
+        // 1) Food ratio (consumers only; producers = 1.0)
+        let foodRatio = 1;
+        if (!sp.isProducer && sp.foodSources.length > 0) {
+            let sumF = 0, sumW = 0;
+            for (const f of sp.foodSources) {
+                const prey = species.find(s => s.id === f.id);
+                if (prey) { sumF += (prey.pop / prey.basePop) * f.fw; sumW += f.fw; }
+            }
+            foodRatio = sumW > 0 ? Math.max(0, Math.min(3, sumF / sumW)) : 0;
+        }
+
+        // 2) Predation load (all species that eat me)
+        let predLoad = 0;
+        let hasPredatorLinks = false; // does ANY species list me as food?
+        for (const other of species) {
+            for (const f of other.foodSources) {
+                if (f.id === sp.id) {
+                    hasPredatorLinks = true;
+                    if (other.alive) predLoad += (other.pop / other.basePop) * f.pw;
+                }
+            }
+        }
+        // Only default to 1 for true top predators (no predator relationships at all)
+        if (predLoad === 0 && !hasPredatorLinks) predLoad = 1;
+
+        // 3) Effective carrying capacity
+        const effK = sp.baseCap * foodRatio / Math.max(0.3, predLoad);
+        const cappedK = Math.max(1, Math.min(effK, sp.baseCap * 4));
+
+        // 4) Population dynamics
+        let dp = sp.growth * sp.pop * (1 - sp.pop / cappedK) - sp.death * sp.pop;
+
+        // Small noise for natural oscillation
+        dp += (Math.random() - 0.5) * 0.02 * sp.pop * dt;
+
+        newPops.push(Math.max(0, sp.pop + dp * dt));
+    }
+
+    for (let i = 0; i < species.length; i++) {
+        species[i].pop = newPops[i];
+        if (species[i].alive && species[i].pop < 0.5) {
+            species[i].pop = 0;
+            species[i].alive = false;
+            onExtinction(species[i]);
+        }
+    }
+
+    simTime += dt;
+
+    // History
+    if (popHistory.length === 0 || simTime - popHistory[popHistory.length-1].t >= 0.4) {
+        const snap = { t: simTime, p: {} };
+        for (const s of species) snap.p[s.id] = s.pop;
+        popHistory.push(snap);
+        if (popHistory.length > 250) popHistory.shift();
+    }
+
+    checkEvents();
+    updateHealth();
+}
+
+// ═══════════════════════════════════════════════════════
+// CASCADE EVENTS
+// ═══════════════════════════════════════════════════════
+
+function checkEvents() {
+    for (const sp of species) {
+        if (!sp.basePop) continue;
+        const r = sp.pop / sp.basePop;
+        const k = sp.id;
+        // Track peak population for smarter event detection
+        if (!sp._peak) sp._peak = sp.pop;
+        sp._peak = Math.max(sp._peak, sp.pop);
+        // For invasive species, only warn about decline from their peak, not from basePop
+        const declining = sp.isInvasive ? (sp._peak > sp.basePop*0.3 && sp.pop < sp._peak*0.3) : r < 0.15;
+        const stressed  = sp.isInvasive ? (sp._peak > sp.basePop*0.3 && sp.pop < sp._peak*0.5) : r < 0.45;
+        if (declining && sp.alive && !triggered[k+'_crit']) {
+            triggered[k+'_crit'] = true;
+            logEvent('critical', `${sp.emoji} ${sp.name} critically endangered! Down to ${Math.round(sp.pop)}. ${declineReason(sp)}`);
+        } else if (stressed && sp.alive && !triggered[k+'_low']) {
+            triggered[k+'_low'] = true;
+            logEvent('warning', `${sp.emoji} ${sp.name} declining \u2014 population ${Math.round(sp.pop)} (${Math.round(r*100)}% of normal). ${declineReason(sp)}`);
+        }
+        if (r > 2.0 && !triggered[k+'_boom']) {
+            triggered[k+'_boom'] = true;
+            logEvent('warning', `${sp.emoji} ${sp.name} overpopulation! Surged to ${Math.round(sp.pop)} (${Math.round(r*100)}% of normal). ${boomReason(sp)}`);
+        }
+        if (r > 3.5 && !triggered[k+'_crisis']) {
+            triggered[k+'_crisis'] = true;
+            logEvent('critical', `${sp.emoji} ${sp.name} population crisis at ${Math.round(sp.pop)}. Resources are being consumed faster than they regenerate.`);
+        }
+    }
+}
+
+function onExtinction(sp) {
+    triggered[sp.id+'_ext'] = true;
+    logEvent('critical', `\u2620\uFE0F ${sp.name} has gone EXTINCT! ${extinctMsg(sp)}`);
+    if (species.filter(s => s.alive && !s.isInvasive).length <= 1)
+        logEvent('critical', '\u{1F6A8} ECOSYSTEM COLLAPSE: The food web has been destroyed.');
+}
+
+function declineReason(sp) {
+    const preds = species.filter(s => s.alive && s.foodSources.some(f => f.id===sp.id));
+    const boom = preds.find(p => p.pop > p.basePop * 1.5);
+    if (boom) return `Increased predation by ${boom.name}.`;
+    if (!sp.isProducer) {
+        const prey = sp.foodSources.map(f => species.find(s=>s.id===f.id)).filter(Boolean);
+        const low = prey.find(p => p.pop < p.basePop * 0.5);
+        if (low) return `Their food source (${low.name}) is vanishing.`;
+    }
+    const inv = species.find(s => s.isInvasive && s.alive);
+    if (inv) return `Competition from invasive ${inv.name}.`;
+    return 'Cascading effects are disrupting the food web.';
+}
+
+function boomReason(sp) {
+    const preds = species.filter(s => s.alive && s.foodSources.some(f => f.id===sp.id));
+    if (preds.length===0 || preds.every(p => !p.alive || p.pop < p.basePop*0.3))
+        return 'With predators gone, nothing controls their numbers.';
+    return 'Ecosystem imbalance is fueling unchecked growth.';
+}
+
+function extinctMsg(sp) {
+    if (sp.isProducer) return 'Without producers the entire food chain collapses.';
+    const food = sp.foodSources.map(f => species.find(s=>s.id===f.id)).filter(Boolean);
+    if (food.length && food.every(f => !f.alive || f.pop < 1))
+        return 'All food sources were depleted. Starvation drove them to extinction.';
+    return 'The cascading disruption of the food web proved fatal.';
+}
+
+function updateHealth() {
+    const nat = species.filter(s => !s.isInvasive && s.basePop > 0);
+    if (!nat.length) { ecoHealth = 0; return; }
+    let sum = 0;
+    for (const s of nat) { const r = s.pop/s.basePop; sum += r<=1 ? r : 1/r; }
+    ecoHealth = Math.max(0, Math.min(1, sum / nat.length));
+}
+
+// ═══════════════════════════════════════════════════════
+// ENTITY SYSTEM (animated creatures on canvas)
+// ═══════════════════════════════════════════════════════
+
+function entCount(pop) { return pop<=0 ? 0 : Math.min(40, Math.max(1, Math.floor(Math.sqrt(pop)*1.1))); }
+
+function spawnEntities() {
+    entities = [];
+    const c = document.getElementById('ecoCanvas');
+    for (const sp of species) {
+        const n = entCount(sp.pop);
+        for (let i=0; i<n; i++) entities.push(makeEnt(sp, c.width, c.height));
+    }
+}
+
+function makeEnt(sp, w, h) {
+    const yLo = sp.level>=3.5 ? 0.05 : sp.level>=2 ? 0.15 : sp.level>=1 ? 0.3 : 0.55;
+    const yHi = sp.isProducer ? 0.95 : sp.level>=3 ? 0.5 : 0.85;
+    const spd = sp.isProducer ? 0.2 : sp.level>=3 ? 2.2 : 1.2;
+    return {
+        sid: sp.id, x: Math.random()*w, y: (yLo+Math.random()*(yHi-yLo))*h,
+        vx: (Math.random()-0.5)*spd, vy: (Math.random()-0.5)*spd*0.7,
+        size: sp.isProducer ? 7 : 5+sp.level*2.5, phase: Math.random()*6.28, alpha: 1
+    };
+}
+
+function updateEnts(w, h, dt) {
+    for (const sp of species) {
+        const want = sp.alive ? entCount(sp.pop) : 0;
+        const have = entities.filter(e => e.sid===sp.id && e.alpha>0.1).length;
+        if (have < want) {
+            for (let i=0; i<Math.min(3,want-have); i++) entities.push(makeEnt(sp,w,h));
+        } else if (have > want) {
+            let rem=0;
+            for (const e of entities) {
+                if (e.sid===sp.id && e.alpha>0.1 && rem < Math.min(3,have-want)) { e.alpha=0.05; rem++; }
+            }
+        }
+    }
+    for (const e of entities) {
+        const sp = species.find(s=>s.id===e.sid);
+        if (!sp) continue;
+        e.phase += dt*2;
+        e.x += e.vx*dt*25; e.y += e.vy*dt*25;
+        e.vx += (Math.random()-0.5)*dt*1.5; e.vy += (Math.random()-0.5)*dt*1.2;
+        const max = sp.isProducer ? 0.3 : sp.level>=3 ? 2.5 : 1.4;
+        const s = Math.sqrt(e.vx*e.vx+e.vy*e.vy);
+        if (s>max) { e.vx*=max/s; e.vy*=max/s; }
+        if (e.x<5){e.x=5;e.vx=Math.abs(e.vx);} if(e.x>w-5){e.x=w-5;e.vx=-Math.abs(e.vx);}
+        if (e.y<5){e.y=5;e.vy=Math.abs(e.vy);} if(e.y>h-5){e.y=h-5;e.vy=-Math.abs(e.vy);}
+        if (e.alpha<0.1) e.alpha-=dt*0.5;
+    }
+    entities = entities.filter(e => e.alpha > -0.5);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDERERS
+// ═══════════════════════════════════════════════════════
+
+function renderEco(canvas, ctx) {
+    const w=canvas.width, h=canvas.height;
+    const eco = ECO[currentEco];
+
+    // Background
+    const bg = ctx.createLinearGradient(0,0,0,h);
+    eco.bgColors.forEach((c,i) => bg.addColorStop(i/(eco.bgColors.length-1), c));
+    ctx.fillStyle = bg; ctx.fillRect(0,0,w,h);
+
+    if (currentEco==='river') {
+        // Water surface shimmer
+        ctx.strokeStyle='rgba(100,180,255,0.12)'; ctx.lineWidth=1.5;
+        for (let i=0;i<3;i++) {
+            ctx.beginPath();
+            for (let x=0;x<w;x+=4) {
+                const y = h*0.06 + i*6 + Math.sin(x*0.015+simTime*1.8+i)*3;
+                x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+            }
+            ctx.stroke();
+        }
+        // Riverbed
+        ctx.fillStyle='rgba(60,40,20,0.25)'; ctx.beginPath(); ctx.moveTo(0,h);
+        for (let x=0;x<=w;x+=15) ctx.lineTo(x, h-12+Math.sin(x*0.04)*6);
+        ctx.lineTo(w,h); ctx.fill();
+        // Particles
+        ctx.fillStyle='rgba(150,200,255,0.05)';
+        for (let i=0;i<25;i++) {
+            const px=((i*97+simTime*12)%(w+40))-20, py=((i*53+simTime*4)%h);
+            ctx.beginPath(); ctx.arc(px,py,1.2,0,6.28); ctx.fill();
+        }
+    } else {
+        // Sky
+        const sky = ctx.createLinearGradient(0,0,0,h*0.25);
+        sky.addColorStop(0,'rgba(30,50,80,0.35)'); sky.addColorStop(1,'transparent');
+        ctx.fillStyle=sky; ctx.fillRect(0,0,w,h*0.25);
+        // Ground
+        ctx.fillStyle='rgba(40,60,20,0.25)'; ctx.fillRect(0,h*0.82,w,h*0.18);
+        ctx.strokeStyle='rgba(80,120,40,0.2)'; ctx.lineWidth=1;
+        for (let x=0;x<w;x+=10) {
+            ctx.beginPath(); ctx.moveTo(x,h*0.82); ctx.lineTo(x+1,h*0.82-4-Math.sin(x*0.3)*2); ctx.stroke();
+        }
+    }
+
+    // Entities
+    for (const e of entities) {
+        const sp = species.find(s=>s.id===e.sid);
+        if (!sp||e.alpha<=0) continue;
+        ctx.globalAlpha = Math.max(0,Math.min(1,e.alpha));
+
+        // Glow
+        const g = ctx.createRadialGradient(e.x,e.y,0,e.x,e.y,e.size*1.8);
+        g.addColorStop(0, sp.color+'25'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(e.x,e.y,e.size*1.8,0,6.28); ctx.fill();
+
+        if (sp.shape==='bird') {
+            const wing = Math.sin(e.phase*3)*3;
+            ctx.strokeStyle=sp.color; ctx.lineWidth=2; ctx.beginPath();
+            ctx.moveTo(e.x-e.size,e.y+wing);
+            ctx.quadraticCurveTo(e.x-e.size*0.3,e.y-e.size*0.5+wing,e.x,e.y);
+            ctx.quadraticCurveTo(e.x+e.size*0.3,e.y-e.size*0.5+wing,e.x+e.size,e.y+wing);
+            ctx.stroke();
+            ctx.fillStyle=sp.color; ctx.beginPath(); ctx.arc(e.x,e.y,2.5,0,6.28); ctx.fill();
+        } else if (sp.shape==='fish') {
+            const dir=e.vx>=0?1:-1;
+            ctx.save(); ctx.translate(e.x,e.y); ctx.scale(dir,1);
+            ctx.fillStyle=sp.color;
+            ctx.beginPath(); ctx.ellipse(0,0,e.size,e.size*0.45,0,0,6.28); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-e.size,0);
+            ctx.lineTo(-e.size*1.35,-e.size*0.35); ctx.lineTo(-e.size*1.35,e.size*0.35); ctx.closePath(); ctx.fill();
+            ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(e.size*0.35,-e.size*0.08,e.size*0.13,0,6.28); ctx.fill();
+            ctx.restore();
+        } else if (sp.shape==='blob') {
+            const w2 = Math.sin(e.phase)*1.5;
+            ctx.fillStyle=sp.color+'aa'; ctx.beginPath(); ctx.arc(e.x+w2,e.y,e.size*0.65,0,6.28); ctx.fill();
+            ctx.fillStyle=sp.color+'55'; ctx.beginPath(); ctx.arc(e.x-2+w2,e.y+2,e.size*0.45,0,6.28); ctx.fill();
+        } else if (sp.shape==='dot') {
+            ctx.fillStyle=sp.color; ctx.beginPath(); ctx.arc(e.x,e.y,e.size*0.35,0,6.28); ctx.fill();
+        } else {
+            // circle (mammals, crayfish, etc.)
+            ctx.fillStyle=sp.color; ctx.beginPath(); ctx.arc(e.x,e.y,e.size*0.5,0,6.28); ctx.fill();
+            // tiny ear/leg hint
+            ctx.strokeStyle=sp.color; ctx.lineWidth=1;
+            ctx.beginPath();
+            ctx.moveTo(e.x-e.size*0.3,e.y+e.size*0.4);
+            ctx.lineTo(e.x,e.y);
+            ctx.lineTo(e.x+e.size*0.3,e.y+e.size*0.4);
+            ctx.stroke();
+        }
+
+        if (sp.isInvasive) {
+            ctx.strokeStyle='#EF444466'; ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.arc(e.x,e.y,e.size+2,0,6.28); ctx.stroke();
+        }
+        ctx.globalAlpha=1;
+    }
+}
+
+function renderFoodWeb(canvas, ctx) {
+    const w=canvas.width, h=canvas.height;
+    ctx.fillStyle='#111827'; ctx.fillRect(0,0,w,h);
+    if (!species.length) return;
+
+    const maxLv = Math.max(...species.map(s=>Math.round(s.level)));
+    const levels = {};
+    for (const sp of species) { const lv=Math.round(sp.level); if(!levels[lv])levels[lv]=[]; levels[lv].push(sp); }
+    const nodes = {};
+    for (const sp of species) {
+        const lv=Math.round(sp.level), arr=levels[lv], idx=arr.indexOf(sp);
+        nodes[sp.id] = {
+            x: w/(arr.length+1)*(idx+1),
+            y: h-28 - (sp.level/Math.max(maxLv,1))*(h-56),
+            sp
+        };
+    }
+
+    // Edges
+    for (const sp of species) {
+        for (const f of sp.foodSources) {
+            const from=nodes[f.id], to=nodes[sp.id];
+            if (!from||!to) continue;
+            const alive = sp.alive && from.sp.alive;
+            ctx.strokeStyle = alive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.03)';
+            ctx.lineWidth = alive ? 1.5 : 0.5;
+            ctx.beginPath(); ctx.moveTo(from.x,from.y); ctx.lineTo(to.x,to.y); ctx.stroke();
+            if (alive) {
+                const a=Math.atan2(to.y-from.y,to.x-from.x);
+                const mx=(from.x+to.x)/2, my=(from.y+to.y)/2;
+                ctx.fillStyle='rgba(255,255,255,0.18)'; ctx.beginPath();
+                ctx.moveTo(mx+Math.cos(a)*5,my+Math.sin(a)*5);
+                ctx.lineTo(mx+Math.cos(a+2.5)*5,my+Math.sin(a+2.5)*5);
+                ctx.lineTo(mx+Math.cos(a-2.5)*5,my+Math.sin(a-2.5)*5);
+                ctx.closePath(); ctx.fill();
+            }
+        }
+    }
+
+    // Nodes
+    for (const sp of species) {
+        const n=nodes[sp.id]; if(!n) continue;
+        const ratio = sp.basePop>0 ? sp.pop/sp.basePop : 0;
+        const r = 9 + Math.min(ratio,2)*5;
+        ctx.globalAlpha = sp.alive ? 1 : 0.2;
+        ctx.fillStyle=sp.color+'33'; ctx.strokeStyle=sp.color;
+        ctx.lineWidth=sp.isInvasive?2:1.5;
+        ctx.beginPath(); ctx.arc(n.x,n.y,r,0,6.28); ctx.fill(); ctx.stroke();
+        ctx.font=`${Math.round(r*0.85)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillStyle='#fff'; ctx.fillText(sp.emoji,n.x,n.y);
+        ctx.font='9px sans-serif'; ctx.fillStyle=sp.alive?'#bbb':'#555';
+        ctx.fillText(sp.alive?`${sp.name} (${Math.round(sp.pop)})`:`${sp.name} \u2620`,n.x,n.y+r+10);
+        ctx.globalAlpha=1;
+    }
+}
+
+function renderChart(canvas, ctx) {
+    const w=canvas.width, h=canvas.height;
+    ctx.fillStyle='#0f1520'; ctx.fillRect(0,0,w,h);
+    if (popHistory.length<2) return;
+
+    const pad={t:12,r:10,b:20,l:42};
+    const cw=w-pad.l-pad.r, ch=h-pad.t-pad.b;
+    let maxP=80;
+    for (const sn of popHistory) for (const v of Object.values(sn.p)) if(v>maxP) maxP=v;
+    maxP*=1.1;
+    const t0=popHistory[0].t, t1=popHistory[popHistory.length-1].t, tr=Math.max(t1-t0,1);
+
+    // Grid
+    ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=0.5;
+    for (let i=0;i<=4;i++) {
+        const y=pad.t+ch-i/4*ch;
+        ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(pad.l+cw,y); ctx.stroke();
+        ctx.fillStyle='#556'; ctx.font='9px sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+        ctx.fillText(Math.round(maxP*i/4), pad.l-4, y);
+    }
+    ctx.textAlign='center';
+    ctx.fillText(`Yr ${Math.round(t0)}`,pad.l,h-3);
+    ctx.fillText(`Yr ${Math.round(t1)}`,pad.l+cw,h-3);
+
+    // Lines
+    for (const sp of species) {
+        if (!sp.basePop) continue;
+        ctx.strokeStyle=sp.color; ctx.lineWidth=sp.isInvasive?2.5:1.8;
+        ctx.globalAlpha = (sp.alive || popHistory.some(s=>s.p[sp.id]>0)) ? 0.9 : 0.15;
+        ctx.beginPath(); let first=true;
+        for (const sn of popHistory) {
+            const v=sn.p[sp.id]||0;
+            const x=pad.l+((sn.t-t0)/tr)*cw, y=pad.t+ch-(v/maxP)*ch;
+            first?(ctx.moveTo(x,y),first=false):ctx.lineTo(x,y);
+        }
+        ctx.stroke(); ctx.globalAlpha=1;
+    }
+
+    // Legend
+    ctx.font='9px sans-serif'; let lx=pad.l+4;
+    for (const sp of species) {
+        if (!sp.basePop) continue;
+        ctx.fillStyle=sp.color; ctx.fillRect(lx,pad.t,7,7);
+        ctx.fillStyle=sp.alive?'#aaa':'#555'; ctx.textAlign='left';
+        ctx.fillText(sp.name,lx+10,pad.t+7);
+        lx += ctx.measureText(sp.name).width+18;
+        if (lx>w-50) break;
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// UI
+// ═══════════════════════════════════════════════════════
+
+function buildUI() {
+    const cards = document.getElementById('speciesCards');
+    cards.innerHTML = '';
+    for (const sp of species) {
+        const d = document.createElement('div');
+        d.className='sp-card'+(sp.alive?'':' extinct');
+        d.style.borderColor=sp.color;
+        d.title=sp.desc;
+        d.id='card-'+sp.id;
+        d.innerHTML=`<span>${sp.emoji}</span><span>${sp.name}</span><span class="pop" style="color:${sp.color}">${Math.round(sp.pop)}</span>`;
+        cards.appendChild(d);
+    }
+    const grid = document.getElementById('scenarioGrid');
+    grid.innerHTML='';
+    for (const sc of ECO[currentEco].scenarios) {
+        const b = document.createElement('button');
+        b.className='scenario-btn'+(sc.invasive?' invasive':'');
+        b.id='sc-'+sc.id;
+        b.innerHTML=`<span class="sc-title">${sc.title}</span><span class="sc-desc">${sc.desc}</span>`;
+        b.onclick=()=>doScenario(sc);
+        if (scenState[sc.id]) b.disabled=true;
+        grid.appendChild(b);
+    }
+    // Add reintroduce button if wolves were removed
+    if (scenState['remove_wolves'] && currentEco==='land') {
+        const rw = document.createElement('button');
+        rw.className='scenario-btn';
+        rw.id='sc-reintroduce_wolves';
+        rw.innerHTML=`<span class="sc-title">Reintroduce Wolves</span><span class="sc-desc">Like Yellowstone 1995 \u2014 restore the apex predator</span>`;
+        rw.onclick=()=>reintroduceWolves();
+        if (scenState['reintroduce_wolves']) rw.disabled=true;
+        grid.appendChild(rw);
+    }
+}
+
+function updateUI() {
+    for (const sp of species) {
+        const c=document.getElementById('card-'+sp.id);
+        if (!c) continue;
+        c.className='sp-card'+(sp.alive?'':' extinct');
+        const p=c.querySelector('.pop');
+        if (p) p.textContent=sp.alive?Math.round(sp.pop):'\u2620';
+    }
+    const fill=document.getElementById('healthFill'), txt=document.getElementById('healthText');
+    fill.style.width=(ecoHealth*100)+'%';
+    if (ecoHealth>0.75){fill.style.background='#22d3a0';txt.textContent='Thriving';txt.style.color='#22d3a0';}
+    else if(ecoHealth>0.5){fill.style.background='#f59e0b';txt.textContent='Stressed';txt.style.color='#f59e0b';}
+    else if(ecoHealth>0.25){fill.style.background='#f97316';txt.textContent='Declining';txt.style.color='#f97316';}
+    else{fill.style.background='#ef4444';txt.textContent='Collapsing';txt.style.color='#ef4444';}
+    document.getElementById('yearDisplay').textContent=`Year ${Math.round(simTime)}`;
+    document.getElementById('speedLabel').textContent=speed+'x';
+}
+
+function doScenario(sc) {
+    if (scenState[sc.id]) return;
+    scenState[sc.id]=true;
+    const btn=document.getElementById('sc-'+sc.id); if(btn)btn.disabled=true;
+
+    if (sc.species) {
+        const inv={...sc.species, foodSources:sc.species.foodSources.map(f=>({...f})), pop:sc.species.basePop*0.2, alive:true};
+        species.push(inv);
+        logEvent('critical',`\u26A0\uFE0F INVASIVE: ${inv.emoji} ${inv.name} introduced! ${inv.desc}`);
+        buildUI();
+        return;
+    }
+
+    switch(sc.id) {
+        case 'remove_osprey': {
+            const o=species.find(s=>s.id==='osprey');
+            if(o){o.pop=0;o.alive=false;
+                logEvent('warning',`${o.emoji} Osprey removed. Without a top predator, trout are free to multiply \u2014 watch how this cascades down the food web.`);
+            } break;
+        }
+        case 'remove_wolves': {
+            const w=species.find(s=>s.id==='wolves');
+            if(w){w.pop=0;w.alive=false;
+                logEvent('warning',`${w.emoji} Gray Wolves removed \u2014 mirroring Yellowstone 1926. Without wolves, elk and coyote populations will surge, devastating vegetation and smaller prey.`);
+                buildUI(); // show reintroduce button
+            } break;
+        }
+        case 'pollution': {
+            const a=species.find(s=>s.id==='algae');
+            if(a){a.baseCap*=0.4; a.growth*=0.5;
+                logEvent('critical',`\u{1F3ED} Chemical pollution! Algae productivity slashed. This will cascade through every level of the food web.`);
+            } break;
+        }
+        case 'drought': {
+            const v=species.find(s=>s.id==='vegetation');
+            if(v){v.baseCap*=0.4; v.growth*=0.5;
+                logEvent('critical',`\u{1F525} Severe drought! Vegetation is withering. Herbivores face starvation, and the effects will ripple upward.`);
+            } break;
+        }
+    }
+}
+
+function reintroduceWolves() {
+    if (scenState['reintroduce_wolves']) return;
+    scenState['reintroduce_wolves']=true;
+    const btn=document.getElementById('sc-reintroduce_wolves'); if(btn)btn.disabled=true;
+    const w=species.find(s=>s.id==='wolves');
+    if(w){w.pop=12; w.alive=true;
+        logEvent('positive',`\u{1F43A} Wolves reintroduced with 12 individuals \u2014 mirroring Yellowstone 1995. Watch how the apex predator restores balance to the ecosystem.`);
+    }
+}
+
+function logEvent(sev, msg) {
+    const log=document.getElementById('eventLog');
+    const d=document.createElement('div');
+    d.className='log-entry '+sev;
+    d.innerHTML=`<span class="log-time">Year ${Math.round(simTime)}</span>${msg}`;
+    log.insertBefore(d, log.firstChild);
+    while(log.children.length>50) log.removeChild(log.lastChild);
+}
+
+function togglePause() {
+    paused=!paused;
+    document.getElementById('playPauseBtn').textContent=paused?'Play':'Pause';
+}
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+        document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        currentEco=b.dataset.eco;
+        resetSim();
+    });
+});
+
+// ═══════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════
+
+const ecoC=document.getElementById('ecoCanvas'), ecoX=ecoC.getContext('2d');
+const fwC=document.getElementById('foodWebCanvas'), fwX=fwC.getContext('2d');
+const chC=document.getElementById('chartCanvas'), chX=chC.getContext('2d');
+
+function sizeCanvases() {
+    const dpr=window.devicePixelRatio||1;
+    const ew=ecoC.parentElement; ecoC.width=ew.clientWidth*dpr; ecoC.height=ew.clientHeight*dpr;
+    ecoC.style.width=ew.clientWidth+'px'; ecoC.style.height=ew.clientHeight+'px'; ecoX.setTransform(dpr,0,0,dpr,0,0);
+    const fw=fwC.parentElement; fwC.width=fw.clientWidth*dpr; fwC.height=200*dpr;
+    fwC.style.width=fw.clientWidth+'px'; fwX.setTransform(dpr,0,0,dpr,0,0);
+    const cc=chC.parentElement; chC.width=cc.clientWidth*dpr; chC.height=180*dpr;
+    chC.style.width=cc.clientWidth+'px'; chX.setTransform(dpr,0,0,dpr,0,0);
+}
+
+let lastT=0, uiT=0;
+
+function loop(ts) {
+    requestAnimationFrame(loop);
+    const raw=lastT?(ts-lastT)/1000:0.016; lastT=ts;
+    const dt=Math.min(raw,0.05);
+    speed=parseInt(document.getElementById('speedSlider').value);
+
+    if (!paused) {
+        const simDt=dt*speed*2;
+        const steps=Math.ceil(simDt/0.12);
+        const sDt=simDt/steps;
+        for (let i=0;i<steps;i++) simStep(sDt);
+        updateEnts(ecoC.parentElement.clientWidth, ecoC.parentElement.clientHeight, dt);
+    }
+
+    renderEco(ecoC, ecoX);
+    renderFoodWeb(fwC, fwX);
+    renderChart(chC, chX);
+
+    uiT+=dt;
+    if (uiT>0.2) { uiT=0; updateUI(); }
+}
+
+window.addEventListener('resize', sizeCanvases);
+sizeCanvases();
+resetSim();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
