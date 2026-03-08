@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C# in Unity — 16-Week Course</title>
+  <style>
+    :root {
+      --blue:        #00c8a8;
+      --yellow:      #ae81ff;
+      --dark:        #1a1a2e;
+      --dark2:       #16213e;
+      --sidebar-w:   270px;
+      --bg:          #f0f4f8;
+      --border:      #e1e8ed;
+      --text:        #1a2332;
+      --muted:       #5a6a7a;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-setup:     #7b1fa2;
+      --c-activity:  #1565c0;
+      --c-assign:    #2e7d32;
+      --c-assess:    #e65100;
+      --bg-setup:    #f3e5f5;
+      --bg-activity: #e3f2fd;
+      --bg-assign:   #e8f5e9;
+      --bg-assess:   #fff3e0;
+      --code-bg:     #1e1e2e;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #1a1a2e, #16213e);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--blue); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 13px; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #7a9bbb; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #445566;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #97aabb; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(0,200,168,.12); border-left-color: var(--blue); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #778899;
+    }
+    .nav-item.active .nav-num { background: var(--blue); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0;
+    }
+    .pill-quiz    { background: #bf360c; color: #fff; }
+    .pill-midterm { background: #6a0d91; color: #fff; }
+    .pill-final   { background: #b71c1c; color: #fff; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e, #0e4d40);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '\1F3AE'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .12; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── CARD GRIDS ── */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '\2713'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .grade-table { width: 100%; border-collapse: collapse; }
+    .grade-table tr { border-bottom: 1px solid var(--border); }
+    .grade-table tr:last-child { border-bottom: none; }
+    .grade-table td { padding: 8px 0; font-size: 13px; }
+    .grade-table td:last-child { text-align: right; font-weight: 700; color: var(--blue); }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 4px 12px rgba(0,200,168,.15);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* ── WEEK HEADER ── */
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--blue);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--blue); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .banner {
+      border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .banner-quiz    { background: #fff3e0; border: 1px solid #f57c00; color: #e65100; }
+    .banner-midterm { background: #f3e5f5; border: 1px solid #7b1fa2; color: #6a0d91; }
+    .banner-final   { background: #ffebee; border: 1px solid #c62828; color: #b71c1c; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '\1F3AF'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '\00B7'; color: var(--blue); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* ── SECTION CARDS ── */
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.setup    { background: var(--bg-setup);    border-color: var(--c-setup); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.assign   { background: var(--bg-assign);   border-color: var(--c-assign); }
+    .sec.assess   { background: var(--bg-assess);   border-color: var(--c-assess); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .setup    .sec-icon { background: rgba(123,31,162,.13); }
+    .activity .sec-icon { background: rgba(55,118,171,.13); }
+    .assign   .sec-icon { background: rgba(46,125,50,.13); }
+    .assess   .sec-icon { background: rgba(245,124,0,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .setup    .sec-hdr h3 { color: #6a0d91; }
+    .activity .sec-hdr h3 { color: #1a4a7a; }
+    .assign   .sec-hdr h3 { color: #1b5e20; }
+    .assess   .sec-hdr h3 { color: #bf360c; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .assign .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .assess .due-tag { background: rgba(245,124,0,.15); color: #bf360c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .setup  ul li::before { content: '\2610'; color: var(--c-setup); font-size: 15px; line-height: 1.1; flex-shrink: 0; }
+    .assign ul li::before { content: '\2192'; color: var(--c-assign); font-weight: 700; flex-shrink: 0; }
+    .assess ul li::before { content: '\2022'; color: var(--c-assess); font-weight: 700; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .sample-qs h5 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: #bf360c; margin: 12px 0 6px;
+    }
+    .sample-qs ul li::before { content: '?'; color: var(--c-assess); font-weight: 900; flex-shrink: 0; }
+    .rubric-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .rubric-table tr { border-bottom: 1px solid rgba(0,0,0,.08); }
+    .rubric-table tr:last-child { border-bottom: none; }
+    .rubric-table td { padding: 7px 2px; font-size: 13px; }
+    .rubric-table td:last-child { text-align: right; font-weight: 700; }
+    .assess .rubric-table td:last-child { color: var(--c-assess); }
+    .exam-list { list-style: none; margin-bottom: 14px; }
+    .exam-list li {
+      padding: 4px 0; font-size: 13.5px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .exam-list li::before { content: '\1F4CC'; font-size: 12px; flex-shrink: 0; }
+    .sec-label {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; margin: 14px 0 6px; color: #bf360c;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--code-bg); border-radius: 9px;
+      padding: 16px; margin-top: 14px; overflow-x: auto;
+    }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 12.5px; line-height: 1.65; color: #cdd9e5; white-space: pre;
+    }
+
+    /* ── SCHEDULE TABLE ── */
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--blue); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #f5f8fc; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--blue); white-space: nowrap; }
+    .tbl-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tbl-quiz    { background: #fff3e0; color: #e65100; }
+    .tbl-midterm { background: #f3e5f5; color: #6a0d91; }
+    .tbl-final   { background: #ffebee; color: #b71c1c; }
+
+    /* ── WEEK NAV BUTTONS ── */
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── MOBILE ── */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">C#</div>
+      <div>
+        <h1>C# in Unity</h1>
+        <div class="sub">16-Week Game Dev Course</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">&#9776;</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">&#128203;</div>
+      <span class="nav-label">Course Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">&#128197;</div>
+      <span class="nav-label">Full Schedule</span>
+    </div>
+    <div class="nav-group-label">Weeks</div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Course Overview</h2>
+    <span class="chip" id="topChip">16 Weeks &middot; Beginner &middot; No Experience Required</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   COURSE DATA
+═══════════════════════════ */
+const data = {
+  goals: [
+    "Set up Unity and a C# development environment",
+    "Understand the Unity Editor, GameObjects, and Components",
+    "Write C# scripts: variables, conditionals, loops, functions, and classes",
+    "Build interactive gameplay with physics, input, and UI systems",
+    "Work with prefabs, ScriptableObjects, audio, and particles",
+    "Design and build a complete game from concept to presentation"
+  ],
+  grading: [
+    { c: "Weekly Assignments (14)", w: "35%" },
+    { c: "In-Class Activities",     w: "10%" },
+    { c: "Quizzes (4)",             w: "20%" },
+    { c: "Midterm Project",         w: "15%" },
+    { c: "Final Project",           w: "20%" }
+  ],
+  resources: [
+    { icon: "\uD83D\uDCD6", title: "Unity Documentation",  desc: "docs.unity3d.com",               url: "https://docs.unity3d.com/" },
+    { icon: "\uD83C\uDF93", title: "Unity Learn",           desc: "learn.unity.com",                url: "https://learn.unity.com/" },
+    { icon: "\uD83D\uDCBB", title: "Microsoft C# Docs",    desc: "learn.microsoft.com/dotnet/csharp", url: "https://learn.microsoft.com/en-us/dotnet/csharp/" },
+    { icon: "\uD83D\uDEE0\uFE0F", title: "Visual Studio",  desc: "visualstudio.microsoft.com",     url: "https://visualstudio.microsoft.com/" },
+    { icon: "\u2699\uFE0F", title: "Unity Hub",             desc: "unity.com/download",             url: "https://unity.com/download" },
+    { icon: "\uD83C\uDFAE", title: "Unity Asset Store",     desc: "assetstore.unity.com",           url: "https://assetstore.unity.com/" }
+  ],
+  weeks: [
+    {
+      n: 1, title: "Setup & Your First Unity Project", badge: null,
+      objectives: [
+        "Install Unity Hub, Unity Editor, and Visual Studio",
+        "Navigate the Unity Editor interface",
+        "Create and run a new Unity project"
+      ],
+      topics: [
+        "What is Unity? What is C#?",
+        "Installing Unity Hub and choosing an Editor version",
+        "Installing Visual Studio with Unity workload",
+        "Unity Editor layout: Scene, Game, Hierarchy, Inspector, Project",
+        "Creating a new 2D or 3D project",
+        "Adding a cube to the scene and pressing Play"
+      ],
+      setup: [
+        "Download Unity Hub from unity.com/download",
+        "Install the latest Unity LTS version via the Hub",
+        "Install Visual Studio (Community) with the 'Game development with Unity' workload",
+        "Create a new 3D project called 'HelloUnity'",
+        "Confirm setup: add a Cube to the scene (GameObject > 3D Object > Cube) and press Play"
+      ],
+      activity: {
+        title: '"Hello, Unity!" Playground',
+        desc: 'Students add primitive 3D objects (Cube, Sphere, Cylinder) to a scene, change their colors using Materials, and reposition them using the Transform component. Share screens and compare scenes.',
+        code: '// No C# code yet!\n// Today is about exploring the Unity Editor.\n// Try these steps:\n// 1. GameObject > 3D Object > Sphere\n// 2. In Inspector, click Transform > Position > set Y to 3\n// 3. Right-click in Project > Create > Material\n// 4. Change the material color, drag it onto the Sphere\n// 5. Press Play and watch!'
+      },
+      assign: {
+        n: 1, title: "Build a Scene", due: 2,
+        desc: "Create a Unity scene with at least 6 objects arranged into a simple environment.",
+        reqs: [
+          "Use at least 3 different primitive types (Cube, Sphere, Cylinder, Plane, etc.)",
+          "Create and apply at least 3 different colored Materials",
+          "Arrange objects to form a recognizable scene (room, park, robot, etc.)",
+          "Rename each GameObject to something descriptive in the Hierarchy"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 2, title: "GameObjects, Components & Transforms", badge: null,
+      objectives: [
+        "Understand the GameObject-Component architecture",
+        "Manipulate Transform properties: position, rotation, scale",
+        "Create your first C# script and attach it to a GameObject"
+      ],
+      topics: [
+        "Everything is a GameObject with Components",
+        "Transform component: Position, Rotation, Scale",
+        "Inspector: viewing and editing component values",
+        "Creating a C# script in the Project window",
+        "Attaching a script to a GameObject",
+        "The MonoBehaviour class: Start() and Update()"
+      ],
+      setup: null,
+      activity: {
+        title: '"Spinning Cube"',
+        desc: 'Create a script that rotates a cube continuously. Experiment with different axes and speeds. Discuss: what is Update()? Why does the cube keep spinning?',
+        code: 'using UnityEngine;\n\npublic class SpinCube : MonoBehaviour\n{\n    public float speed = 50f;\n\n    void Update()\n    {\n        transform.Rotate(0, speed * Time.deltaTime, 0);\n    }\n}'
+      },
+      assign: {
+        n: 2, title: "Moving Objects", due: 3,
+        desc: "Write scripts that move and rotate GameObjects in different ways.",
+        reqs: [
+          "Create a script that moves an object forward continuously using transform.Translate",
+          "Create a script that rotates an object on two axes simultaneously",
+          "Use a public float variable for speed so you can adjust it in the Inspector",
+          "Add both scripts to different objects in the same scene"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 3, title: "C# Basics: Variables & Data Types", badge: "Quiz 1",
+      objectives: [
+        "Declare variables using int, float, string, and bool",
+        "Use Debug.Log() to print values to the Console",
+        "Understand public vs. private and the Inspector"
+      ],
+      topics: [
+        "C# variable types: int, float, string, bool",
+        "Declaring and initializing variables",
+        "public vs. private access modifiers",
+        "Exposing variables in the Unity Inspector",
+        "Debug.Log() for console output",
+        "Arithmetic operators: +, -, *, /, %"
+      ],
+      setup: null,
+      activity: {
+        title: '"Variable Inspector Lab"',
+        desc: 'Create a script with public variables of every type. Attach it to a GameObject and change the values in the Inspector while the game is running. Observe how changes work at runtime vs. edit time.',
+        code: 'using UnityEngine;\n\npublic class VariableLab : MonoBehaviour\n{\n    public int health = 100;\n    public float speed = 5.5f;\n    public string playerName = "Hero";\n    public bool isAlive = true;\n\n    void Start()\n    {\n        Debug.Log("Name: " + playerName);\n        Debug.Log("Health: " + health);\n        Debug.Log("Speed: " + speed);\n        Debug.Log("Alive: " + isAlive);\n    }\n}'
+      },
+      assign: {
+        n: 3, title: "Character Stats Display", due: 4,
+        desc: "Create a script that defines character stats and logs a formatted summary.",
+        reqs: [
+          "Declare variables for: playerName (string), health (int), armor (float), mana (int), isShielded (bool)",
+          "In Start(), print a formatted multi-line character sheet to the Console using Debug.Log",
+          "Calculate and display an effective health value: health + (health * armor / 100)",
+          "Make all stats public so they can be tweaked in the Inspector"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 1",
+        topics: "Weeks 1-3: Unity setup, GameObjects, components, C# variables",
+        format: "15 multiple-choice + 2 short answer questions (20 min)",
+        samples: [
+          "What component does every GameObject always have?",
+          "What is the difference between Start() and Update()?",
+          "Write a line of C# that declares a public float called moveSpeed with a value of 3.5."
+        ]
+      }
+    },
+    {
+      n: 4, title: "Conditionals & Player Input", badge: null,
+      objectives: [
+        "Write if, else if, and else statements in C#",
+        "Read keyboard input using Input.GetKey and Input.GetKeyDown",
+        "Control GameObjects based on player actions"
+      ],
+      topics: [
+        "if / else if / else syntax in C#",
+        "Comparison operators: ==, !=, <, >, <=, >=",
+        "Logical operators: &&, ||, !",
+        "Input.GetKey(), Input.GetKeyDown(), Input.GetKeyUp()",
+        "Input.GetAxis() for smooth movement",
+        "Controlling movement with WASD / arrow keys"
+      ],
+      setup: null,
+      activity: {
+        title: '"WASD Player Controller"',
+        desc: 'Build a simple top-down player controller. The player moves a cube with WASD keys. Discuss: why multiply by Time.deltaTime? What happens without it?',
+        code: 'using UnityEngine;\n\npublic class PlayerMove : MonoBehaviour\n{\n    public float speed = 5f;\n\n    void Update()\n    {\n        float h = Input.GetAxis("Horizontal");\n        float v = Input.GetAxis("Vertical");\n        Vector3 move = new Vector3(h, 0, v);\n        transform.Translate(move * speed * Time.deltaTime);\n    }\n}'
+      },
+      assign: {
+        n: 4, title: "Interactive Player", due: 5,
+        desc: "Build a player controller with conditional logic for different actions.",
+        reqs: [
+          "Move the player with WASD or arrow keys using Input.GetAxis",
+          "Press Space to 'jump' (move the object up briefly using a bool flag)",
+          "Press Left Shift to sprint (double the speed while held)",
+          "Display the current state in the Console: 'Walking', 'Sprinting', or 'Jumping'"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 5, title: "Loops & Arrays", badge: null,
+      objectives: [
+        "Use for and while loops in C#",
+        "Declare and iterate over arrays",
+        "Spawn multiple objects using loops"
+      ],
+      topics: [
+        "for loop syntax in C#",
+        "while and do-while loops",
+        "break and continue",
+        "Declaring arrays: int[], string[], GameObject[]",
+        "Accessing elements by index",
+        "Iterating arrays with for and foreach"
+      ],
+      setup: null,
+      activity: {
+        title: '"Object Spawner"',
+        desc: 'Write a script that spawns a row of cubes using a for loop. Then modify it to spawn a grid. Experiment with spacing and random colors.',
+        code: 'using UnityEngine;\n\npublic class CubeSpawner : MonoBehaviour\n{\n    public GameObject cubePrefab;\n    public int count = 10;\n    public float spacing = 1.5f;\n\n    void Start()\n    {\n        for (int i = 0; i < count; i++)\n        {\n            Vector3 pos = new Vector3(i * spacing, 0, 0);\n            Instantiate(cubePrefab, pos, Quaternion.identity);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 5, title: "Grid Spawner", due: 6,
+        desc: "Create a script that spawns a customizable grid of objects.",
+        reqs: [
+          "Use nested for loops to spawn a grid of objects (rows x columns)",
+          "Expose rows, columns, and spacing as public variables",
+          "Assign a random color to each spawned object using GetComponent<Renderer>()",
+          "Store all spawned objects in an array and log the total count"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 6, title: "Methods & Code Organization", badge: "Quiz 2",
+      objectives: [
+        "Define custom methods with parameters and return types",
+        "Understand void vs. return methods",
+        "Organize scripts with clean method structure"
+      ],
+      topics: [
+        "Defining methods: access modifier, return type, name, parameters",
+        "void methods vs. methods that return values",
+        "Calling methods from Start() and Update()",
+        "Method overloading",
+        "Organizing code: one responsibility per method",
+        "Static methods (introduction)"
+      ],
+      setup: null,
+      activity: {
+        title: '"Damage Calculator"',
+        desc: 'Build a damage calculation system with methods for base damage, critical hits, and armor reduction. Chain the methods together to compute final damage.',
+        code: 'using UnityEngine;\n\npublic class DamageCalc : MonoBehaviour\n{\n    public int baseDamage = 25;\n    public float critMultiplier = 2.0f;\n    public int armor = 10;\n\n    int CalculateDamage(int base_dmg, bool isCrit)\n    {\n        float dmg = base_dmg;\n        if (isCrit)\n            dmg *= critMultiplier;\n        dmg -= armor;\n        return Mathf.Max(0, (int)dmg);\n    }\n\n    void Start()\n    {\n        int normal = CalculateDamage(baseDamage, false);\n        int crit = CalculateDamage(baseDamage, true);\n        Debug.Log("Normal hit: " + normal);\n        Debug.Log("Critical hit: " + crit);\n    }\n}'
+      },
+      assign: {
+        n: 6, title: "Game Utility Methods", due: 7,
+        desc: "Create a utility script with reusable game methods.",
+        reqs: [
+          "Write a method int Clamp(int value, int min, int max) that limits a value to a range",
+          "Write a method float CalculateDistance(Vector3 a, Vector3 b) using Vector3.Distance",
+          "Write a method string GetHealthStatus(int health) that returns 'Healthy', 'Wounded', or 'Critical'",
+          "Demonstrate all methods in Start() with Debug.Log output"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 2",
+        topics: "Weeks 4-6: conditionals, input, loops, arrays, methods",
+        format: "10 multiple-choice + 3 code-writing questions (25 min)",
+        samples: [
+          "Write a for loop that prints the numbers 0 through 9 to the Console.",
+          "What is the difference between Input.GetKey and Input.GetKeyDown?",
+          "Write a method bool IsGameOver(int health) that returns true if health is 0 or less."
+        ]
+      }
+    },
+    {
+      n: 7, title: "Physics & Rigidbodies", badge: null,
+      objectives: [
+        "Add Rigidbody components for physics-based movement",
+        "Understand the difference between Transform and Rigidbody movement",
+        "Apply forces and adjust physics properties"
+      ],
+      topics: [
+        "Rigidbody component: mass, drag, gravity",
+        "AddForce(), velocity, MovePosition()",
+        "ForceMode: Force, Impulse, Acceleration",
+        "Physics-based vs. transform-based movement",
+        "FixedUpdate() vs. Update() for physics",
+        "Freezing rotation and position constraints"
+      ],
+      setup: null,
+      activity: {
+        title: '"Physics Playground"',
+        desc: 'Create a ramp scene with a ball at the top. Add a Rigidbody and watch gravity pull it down. Then add a script that launches the ball with AddForce on key press.',
+        code: 'using UnityEngine;\n\npublic class BallLauncher : MonoBehaviour\n{\n    public float launchForce = 500f;\n    private Rigidbody rb;\n\n    void Start()\n    {\n        rb = GetComponent<Rigidbody>();\n    }\n\n    void Update()\n    {\n        if (Input.GetKeyDown(KeyCode.Space))\n        {\n            rb.AddForce(Vector3.up * launchForce);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 7, title: "Physics Player Controller", due: 8,
+        desc: "Build a physics-based player controller using Rigidbody.",
+        reqs: [
+          "Move the player using rb.AddForce() or rb.velocity in FixedUpdate()",
+          "Implement a jump that only works when the player is grounded (use a bool)",
+          "Add a ground check using a Raycast or trigger collider",
+          "Expose speed and jumpForce as public variables"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 8, title: "Collisions & Triggers", badge: "Midterm",
+      objectives: [
+        "Use Colliders for solid surfaces and trigger zones",
+        "Write OnCollisionEnter and OnTriggerEnter callbacks",
+        "Build a collectible / hazard system"
+      ],
+      topics: [
+        "Box, Sphere, Capsule, and Mesh Colliders",
+        "Is Trigger checkbox: solid vs. pass-through",
+        "OnCollisionEnter(), OnCollisionStay(), OnCollisionExit()",
+        "OnTriggerEnter(), OnTriggerStay(), OnTriggerExit()",
+        "Collision vs. Trigger: when to use each",
+        "Tags and CompareTag() for identification",
+        "Destroy() to remove GameObjects"
+      ],
+      setup: null,
+      activity: {
+        title: '"Coin Collector"',
+        desc: 'Create a simple collection game. The player rolls a ball into spinning coins (trigger colliders). When the ball touches a coin, it disappears and a score counter increments.',
+        code: 'using UnityEngine;\n\npublic class Collectible : MonoBehaviour\n{\n    void OnTriggerEnter(Collider other)\n    {\n        if (other.CompareTag("Player"))\n        {\n            Debug.Log("Collected!");\n            Destroy(gameObject);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 8, title: "Obstacle Course", due: 9,
+        desc: "Build a small obstacle course level with collectibles and hazards.",
+        reqs: [
+          "A player object that moves with physics (Rigidbody)",
+          "At least 5 collectible items using OnTriggerEnter that get destroyed on pickup",
+          "At least 2 hazards that reset the player position on contact using OnCollisionEnter",
+          "A score counter tracked in a script variable and logged to Console"
+        ]
+      },
+      assess: {
+        type: "midterm", label: "Midterm Project",
+        desc: "Build a playable mini-game in Unity using all concepts covered so far: GameObjects, C# scripting, input, physics, collisions, and basic game logic.",
+        reqs: [
+          "A player character the user controls with keyboard input",
+          "At least one type of enemy or hazard",
+          "A collectible or scoring system using triggers",
+          "A win condition and a lose condition",
+          "At least 4 custom C# scripts with clear method organization",
+          "Clean Hierarchy with descriptive GameObject names"
+        ],
+        rubric: [
+          { c: "Gameplay (runs, is playable, has win/lose)", p: 25 },
+          { c: "C# scripting quality",                      p: 20 },
+          { c: "Use of physics and collisions",              p: 20 },
+          { c: "Game design and creativity",                 p: 20 },
+          { c: "Code readability and organization",          p: 15 }
+        ]
+      }
+    },
+    {
+      n: 9, title: "UI Systems: Canvas & Text", badge: null,
+      objectives: [
+        "Create a Canvas with Text, Image, and Button UI elements",
+        "Update UI elements from C# scripts at runtime",
+        "Build a HUD with score, health bar, and game-over screen"
+      ],
+      topics: [
+        "Canvas component and render modes (Screen Space - Overlay)",
+        "UI Text (TextMeshPro) and UI Image",
+        "UI Button and onClick events",
+        "Anchoring and positioning UI elements",
+        "Accessing UI elements from scripts with using TMPro",
+        "Updating text and images at runtime"
+      ],
+      setup: null,
+      activity: {
+        title: '"Live Score Display"',
+        desc: 'Add a Canvas with a TextMeshPro text element. Write a script that updates the score text every time the player collects a coin. Connect it to the coin collector from Week 8.',
+        code: 'using UnityEngine;\nusing TMPro;\n\npublic class ScoreManager : MonoBehaviour\n{\n    public TextMeshProUGUI scoreText;\n    private int score = 0;\n\n    public void AddScore(int amount)\n    {\n        score += amount;\n        scoreText.text = "Score: " + score;\n    }\n}'
+      },
+      assign: {
+        n: 9, title: "Game HUD", due: 10,
+        desc: "Build a complete heads-up display for a game.",
+        reqs: [
+          "A score display that updates when collecting items",
+          "A health bar using a UI Image with Image.fillAmount",
+          "A game-over panel that appears when health reaches zero",
+          "A restart button on the game-over panel that reloads the scene"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 10, title: "Prefabs & Instantiation", badge: "Quiz 3",
+      objectives: [
+        "Create and use Prefabs for reusable GameObjects",
+        "Instantiate and Destroy objects at runtime",
+        "Build a spawning system for enemies or projectiles"
+      ],
+      topics: [
+        "What is a Prefab? Creating prefabs by dragging to Project",
+        "Prefab variants and overrides",
+        "Instantiate() to create objects at runtime",
+        "Destroy() and Destroy(obj, delay)",
+        "Spawning at specific positions and rotations",
+        "Referencing prefabs via public fields in the Inspector"
+      ],
+      setup: null,
+      activity: {
+        title: '"Projectile Shooter"',
+        desc: 'Create a bullet prefab and a script that fires it forward when the player presses Space. Each bullet destroys itself after 3 seconds. Add a cooldown timer between shots.',
+        code: 'using UnityEngine;\n\npublic class Shooter : MonoBehaviour\n{\n    public GameObject bulletPrefab;\n    public Transform firePoint;\n    public float bulletSpeed = 20f;\n    public float cooldown = 0.3f;\n    private float nextFire = 0f;\n\n    void Update()\n    {\n        if (Input.GetKeyDown(KeyCode.Space) && Time.time >= nextFire)\n        {\n            nextFire = Time.time + cooldown;\n            GameObject bullet = Instantiate(bulletPrefab,\n                firePoint.position, firePoint.rotation);\n            bullet.GetComponent<Rigidbody>()\n                .velocity = firePoint.forward * bulletSpeed;\n            Destroy(bullet, 3f);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 10, title: "Enemy Spawner", due: 11,
+        desc: "Build an enemy spawning system that creates waves of enemies.",
+        reqs: [
+          "Create an enemy prefab with a simple movement script (moves toward player)",
+          "Write a spawner script that Instantiates enemies at random positions",
+          "Spawn a new enemy every 2 seconds using a timer in Update()",
+          "Destroy enemies when they collide with a projectile or leave the play area"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 3",
+        topics: "Weeks 7-10: physics, collisions, UI, prefabs, instantiation",
+        format: "10 multiple-choice + 4 code-writing questions (30 min)",
+        samples: [
+          "What is the difference between OnCollisionEnter and OnTriggerEnter?",
+          "Write a line of C# that instantiates a prefab at position (0, 5, 0).",
+          "Why should physics movement happen in FixedUpdate instead of Update?"
+        ]
+      }
+    },
+    {
+      n: 11, title: "Classes & Object-Oriented Programming", badge: null,
+      objectives: [
+        "Create custom C# classes that do not inherit from MonoBehaviour",
+        "Understand constructors, properties, and encapsulation",
+        "Use classes to manage game data cleanly"
+      ],
+      topics: [
+        "Classes vs. MonoBehaviour scripts",
+        "Constructors and the new keyword",
+        "Properties with get/set",
+        "Encapsulation: private fields, public methods",
+        "Lists (List<T>) vs. arrays",
+        "Using custom classes to represent game data (items, stats, etc.)"
+      ],
+      setup: null,
+      activity: {
+        title: '"Inventory Item Class"',
+        desc: 'Create a plain C# class (no MonoBehaviour) to represent an inventory item with name, description, and value. Then create a List of items and print the inventory.',
+        code: 'using System.Collections.Generic;\nusing UnityEngine;\n\n[System.Serializable]\npublic class Item\n{\n    public string name;\n    public string description;\n    public int value;\n\n    public Item(string name, string desc, int value)\n    {\n        this.name = name;\n        this.description = desc;\n        this.value = value;\n    }\n}\n\npublic class Inventory : MonoBehaviour\n{\n    public List<Item> items = new List<Item>();\n\n    void Start()\n    {\n        items.Add(new Item("Sword", "A sharp blade", 150));\n        items.Add(new Item("Shield", "Blocks attacks", 100));\n        items.Add(new Item("Potion", "Restores 50 HP", 25));\n\n        foreach (Item item in items)\n        {\n            Debug.Log(item.name + " - $" + item.value);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 11, title: "RPG Character System", due: 12,
+        desc: "Design a character data system using custom classes.",
+        reqs: [
+          "Create a Character class with name, health, attack, and defense properties",
+          "Add methods: TakeDamage(int dmg), Heal(int amount), and IsAlive()",
+          "Create an Enemy subclass or variant with its own attack behavior",
+          "In a MonoBehaviour, create 2 characters and simulate a simple turn-based fight logged to Console"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 12, title: "Coroutines & Timing", badge: null,
+      objectives: [
+        "Use Coroutines to sequence actions over time",
+        "Understand yield return and WaitForSeconds",
+        "Build timed gameplay events like countdowns and wave delays"
+      ],
+      topics: [
+        "What is a Coroutine? IEnumerator and StartCoroutine()",
+        "yield return new WaitForSeconds()",
+        "yield return null (wait one frame)",
+        "Stopping coroutines: StopCoroutine(), StopAllCoroutines()",
+        "Practical uses: spawn delays, fade effects, countdowns",
+        "InvokeRepeating() and CancelInvoke() as alternatives"
+      ],
+      setup: null,
+      activity: {
+        title: '"Wave Spawner"',
+        desc: 'Convert the enemy spawner to use coroutines. Spawn 5 enemies, wait 3 seconds between each wave, then display "Wave Complete!" in the console.',
+        code: 'using System.Collections;\nusing UnityEngine;\n\npublic class WaveSpawner : MonoBehaviour\n{\n    public GameObject enemyPrefab;\n    public int enemiesPerWave = 5;\n    public float timeBetweenWaves = 3f;\n\n    void Start()\n    {\n        StartCoroutine(SpawnWaves());\n    }\n\n    IEnumerator SpawnWaves()\n    {\n        for (int wave = 1; wave <= 3; wave++)\n        {\n            Debug.Log("Wave " + wave + " starting!");\n            for (int i = 0; i < enemiesPerWave; i++)\n            {\n                Vector3 pos = new Vector3(\n                    Random.Range(-5f, 5f), 0, 10f);\n                Instantiate(enemyPrefab, pos,\n                    Quaternion.identity);\n                yield return new WaitForSeconds(0.5f);\n            }\n            Debug.Log("Wave " + wave + " complete!");\n            yield return new WaitForSeconds(timeBetweenWaves);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 12, title: "Timed Events System", due: 13,
+        desc: "Build a game with multiple timed coroutine-driven events.",
+        reqs: [
+          "A countdown timer that displays 3... 2... 1... GO! before the game starts",
+          "A power-up that doubles player speed for 5 seconds, then reverts (use a coroutine)",
+          "An enemy that patrols between two points with a 1-second pause at each end",
+          "All timing must use Coroutines, not Update() timers"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 13, title: "ScriptableObjects & Game Data", badge: null,
+      objectives: [
+        "Create ScriptableObjects to store game data as assets",
+        "Understand when to use ScriptableObjects vs. MonoBehaviours",
+        "Build a data-driven item or weapon system"
+      ],
+      topics: [
+        "What is a ScriptableObject? [CreateAssetMenu] attribute",
+        "ScriptableObjects as data containers vs. scene objects",
+        "Creating SO instances in the Project window",
+        "Referencing SOs from MonoBehaviours",
+        "Benefits: reusable data, no scene dependency, easy tuning",
+        "Common patterns: item databases, character stats, wave configs"
+      ],
+      setup: null,
+      activity: {
+        title: '"Weapon Data System"',
+        desc: 'Create a WeaponData ScriptableObject with name, damage, fireRate, and icon. Make 3 different weapon assets. Write a script that switches weapons and logs their stats.',
+        code: 'using UnityEngine;\n\n[CreateAssetMenu(fileName = "NewWeapon",\n    menuName = "Game/Weapon Data")]\npublic class WeaponData : ScriptableObject\n{\n    public string weaponName;\n    public int damage;\n    public float fireRate;\n    public Sprite icon;\n}\n\n// In a MonoBehaviour:\npublic class WeaponUser : MonoBehaviour\n{\n    public WeaponData currentWeapon;\n\n    void Start()\n    {\n        Debug.Log("Equipped: " + currentWeapon.weaponName);\n        Debug.Log("Damage: " + currentWeapon.damage);\n    }\n}'
+      },
+      assign: {
+        n: 13, title: "Data-Driven Inventory", due: 14,
+        desc: "Build an inventory system powered by ScriptableObjects.",
+        reqs: [
+          "Create an ItemData ScriptableObject with name, description, value, icon, and itemType (enum)",
+          "Create at least 5 different item assets (weapons, potions, armor)",
+          "Write an InventoryManager that stores a List<ItemData> and can add/remove items",
+          "Display the inventory contents in the Console with a formatted list"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 14, title: "Audio, Particles & Scene Management", badge: "Quiz 4",
+      objectives: [
+        "Play sound effects and music using AudioSource",
+        "Add particle effects for visual feedback",
+        "Load and switch between scenes using SceneManager"
+      ],
+      topics: [
+        "AudioSource and AudioClip components",
+        "PlayOneShot() for sound effects, Play() for music",
+        "AudioSource volume, pitch, and loop settings",
+        "Particle System basics: emission, shape, lifetime",
+        "Playing particles on events (explosions, pickups)",
+        "SceneManager.LoadScene() for scene transitions",
+        "Build Settings: adding scenes to the build index",
+        "DontDestroyOnLoad() for persistent objects"
+      ],
+      setup: null,
+      activity: {
+        title: '"Juice It Up!"',
+        desc: 'Take an existing game scene and add audio and particles. Add a coin pickup sound, an explosion particle when enemies die, and background music. Discuss how audio/visual feedback improves game feel.',
+        code: 'using UnityEngine;\n\npublic class CoinPickup : MonoBehaviour\n{\n    public AudioClip pickupSound;\n    public ParticleSystem pickupEffect;\n\n    void OnTriggerEnter(Collider other)\n    {\n        if (other.CompareTag("Player"))\n        {\n            AudioSource.PlayClipAtPoint(\n                pickupSound, transform.position);\n            Instantiate(pickupEffect,\n                transform.position, Quaternion.identity);\n            Destroy(gameObject);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 14, title: "Polished Game Scene", due: 15,
+        desc: "Add audio, particles, and scene management to a game.",
+        reqs: [
+          "Add at least 3 different sound effects (pickup, hit, button click) using AudioSource",
+          "Add background music that loops using a separate AudioSource",
+          "Add at least 2 particle effects (explosion, sparkle, trail, etc.)",
+          "Implement a main menu scene with a Play button that loads the game scene using SceneManager"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 4",
+        topics: "Weeks 11-14: OOP, coroutines, ScriptableObjects, audio, scenes",
+        format: "10 multiple-choice + 3 code-writing questions (30 min)",
+        samples: [
+          "What is the difference between a class and a ScriptableObject?",
+          "Write a coroutine that waits 2 seconds, then logs 'Done!' to the Console.",
+          "How do you load a scene called 'MainMenu' using SceneManager?"
+        ]
+      }
+    },
+    {
+      n: 15, title: "Final Project Workshop & Polish", badge: null,
+      objectives: [
+        "Apply the full course curriculum to a complete game",
+        "Debug and optimize gameplay independently",
+        "Give and receive structured peer feedback"
+      ],
+      topics: [
+        "Guided final project work time",
+        "Debugging strategies: Console errors, breakpoints in Visual Studio",
+        "Common Unity pitfalls: null references, missing components",
+        "Performance basics: avoid Instantiate/Destroy in Update, use object pooling",
+        "Peer playtesting and feedback session"
+      ],
+      setup: null,
+      activity: {
+        title: '"Peer Playtest Session"',
+        desc: 'Students build their games and share them with a partner for playtesting. Each tester fills out a feedback form: Is the game fun? Did you encounter bugs? What would you add? What confused you?',
+        code: null
+      },
+      assign: {
+        n: 15, title: "Final Project Checkpoint", due: 16,
+        desc: "Submit your final project in its current state for progress review.",
+        reqs: [
+          "Submit your current Unity project (zipped)",
+          "Write a short description of your game and its core mechanic",
+          "List features that are complete and features still in progress",
+          "Include any questions or blockers you need help with"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 16, title: "Final Presentations & Final Exam", badge: "Final",
+      objectives: [
+        "Present a complete Unity game to the class",
+        "Demonstrate mastery of C# and Unity concepts",
+        "Reflect on your game development journey"
+      ],
+      topics: [
+        "Final project presentations (5 min each)",
+        "Live gameplay demos",
+        "Final exam -- 60 minutes",
+        "Course wrap-up and next steps in game development"
+      ],
+      setup: null,
+      activity: {
+        title: "Final Game Presentations",
+        desc: "Each student gets 5 minutes to demo their game and explain: what the game is about, one technical challenge they overcame, and one feature they would add with more time.",
+        code: null
+      },
+      assign: {
+        n: 16, title: "Final Project", due: 16,
+        desc: "Build a complete, playable game in Unity and present it to the class.",
+        reqs: [
+          "A playable game with a clear goal, player controls, and at least one game mechanic",
+          "Must use: custom C# classes, physics or collisions, UI elements, and prefabs",
+          "At least 6 custom C# scripts with well-organized methods",
+          "Audio (sound effects + music) and at least one particle effect",
+          "A main menu and game-over screen with scene transitions",
+          "A README.txt describing the game and how to play it"
+        ]
+      },
+      assess: {
+        type: "final", label: "Final Exam + Final Project",
+        desc: "A 60-minute written exam covering all 16 weeks, plus a graded final game project and 5-minute live presentation.",
+        examSections: [
+          "Multiple Choice -- 20 questions (1 pt each) covering all topics",
+          "Code Reading (10 pts) -- analyze a C# script and answer questions about its behavior",
+          "Bug Fix (10 pts) -- identify and fix 3-5 errors in a buggy Unity script",
+          "Code Writing (20 pts) -- write two short C# scripts from scratch for given scenarios"
+        ],
+        rubric: [
+          { c: "Gameplay (playable, fun, has win/lose)", p: 30 },
+          { c: "Code quality (readable, organized, documented)", p: 20 },
+          { c: "Use of course concepts (physics, UI, prefabs, OOP)", p: 25 },
+          { c: "Polish (audio, particles, menus)",      p: 10 },
+          { c: "Presentation",                          p: 15 }
+        ]
+      }
+    }
+  ]
+};
+
+/* ═══════════════════════════
+   HELPERS
+═══════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function codeBlock(code) {
+  if (!code) return '';
+  return `<div class="code-block">
+    <div class="code-dots">
+      <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+    </div>
+    <pre>${esc(code)}</pre>
+  </div>`;
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+/* ═══════════════════════════
+   RENDER: OVERVIEW
+═══════════════════════════ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Course Overview';
+  document.getElementById('topChip').textContent  = '16 Weeks \u00B7 Beginner \u00B7 No Experience Required';
+
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const grading = data.grading.map(g => `<tr><td>${esc(g.c)}</td><td>${esc(g.w)}</td></tr>`).join('');
+  const res     = data.resources.map(r =>
+    `<div class="resource-card" onclick="window.open('${r.url}','_blank')">
+      <div class="r-icon">${r.icon}</div>
+      <div class="r-title">${esc(r.title)}</div>
+      <div class="r-desc">${esc(r.desc)}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>C# in Unity</h1>
+      <div class="tagline">Game Development with C# &mdash; A Complete 16-Week Beginner Course</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">16</div><div class="lbl">Weeks</div></div>
+        <div class="stat-box"><div class="val">14</div><div class="lbl">Assignments</div></div>
+        <div class="stat-box"><div class="val">4</div><div class="lbl">Quizzes</div></div>
+        <div class="stat-box"><div class="val">2</div><div class="lbl">Projects</div></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e0f7f4">\uD83C\uDFAF</span> Course Goals</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">\uD83D\uDCCA</span> Grading Breakdown</div>
+        <table class="grade-table"><tbody>${grading}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">\uD83D\uDCE6</span> What You'll Need</div>
+        <ul class="check-list">
+          <li>Unity Hub + Unity Editor (LTS) &mdash; free at unity.com</li>
+          <li>Visual Studio Community &mdash; free with Unity workload</li>
+          <li>A computer with a dedicated GPU recommended</li>
+          <li>No prior programming or game dev experience required!</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#f3e5f5">\uD83D\uDD17</span> Recommended Resources</div>
+      <div class="row3" style="margin-bottom:0; margin-top:4px">${res}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: SCHEDULE
+═══════════════════════════ */
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = 'Full Course Schedule';
+  document.getElementById('topChip').textContent  = 'All 16 Weeks';
+
+  const rows = data.weeks.map(w => {
+    let assess = '<span style="color:#bbb">\u2014</span>';
+    if (w.assess) {
+      const cls = w.assess.type === 'quiz' ? 'tbl-quiz' : w.assess.type === 'midterm' ? 'tbl-midterm' : 'tbl-final';
+      assess = `<span class="tbl-pill ${cls}">${esc(w.assess.label)}</span>`;
+    }
+    const asgn = w.assign ? `A${w.assign.n}: ${esc(w.assign.title)}` : '<span style="color:#bbb">\u2014</span>';
+    return `<tr onclick="go('week-${w.n}')">
+      <td class="wk-col">Week ${w.n}</td>
+      <td>${esc(w.title)}</td>
+      <td>${asgn}</td>
+      <td>${assess}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Assignment</th><th>Assessment</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that week.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: WEEK
+═══════════════════════════ */
+function renderWeek(num) {
+  const w = data.weeks.find(x => x.n === num);
+  if (!w) return;
+
+  document.getElementById('topTitle').textContent = `Week ${w.n}: ${w.title}`;
+  document.getElementById('topChip').textContent  = `Week ${w.n} of 16`;
+
+  let html = '<div class="fade-in">';
+
+  // Assessment banner
+  let banner = '';
+  if (w.assess) {
+    const cls = { quiz:'banner-quiz', midterm:'banner-midterm', final:'banner-final' }[w.assess.type];
+    const ico = { quiz:'\uD83D\uDCDD', midterm:'\uD83C\uDFC6', final:'\uD83C\uDF93' }[w.assess.type];
+    banner = `<div class="banner ${cls}">${ico} Assessment this week: <strong>${esc(w.assess.label)}</strong></div>`;
+  }
+
+  // Objectives & Topics
+  const objs   = w.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = w.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Week ${w.n}</div>
+    <h2>${esc(w.title)}</h2>
+    ${banner}
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Learning Objectives</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Topics Covered</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  // Setup
+  if (w.setup) {
+    const items = w.setup.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec setup">
+      <div class="sec-hdr">
+        <div class="sec-icon">\u2699\uFE0F</div>
+        <h3>Setup Checklist</h3>
+        <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--c-setup);background:rgba(123,31,162,.1);padding:3px 10px;border-radius:20px">Complete Before Class</span>
+      </div>
+      <p>Complete all steps below to set up your Unity development environment.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  // Activity
+  if (w.activity) {
+    html += `<div class="sec activity">
+      <div class="sec-hdr">
+        <div class="sec-icon">\uD83C\uDFAE</div>
+        <h3>In-Class Activity: ${esc(w.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(w.activity.desc)}</p>
+      ${codeBlock(w.activity.code)}
+    </div>`;
+  }
+
+  // Assignment
+  if (w.assign) {
+    const reqs = w.assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec assign">
+      <div class="sec-hdr">
+        <div class="sec-icon">\uD83D\uDCDD</div>
+        <h3>Assignment ${w.assign.n}: ${esc(w.assign.title)}</h3>
+        <span class="due-tag">Due Week ${w.assign.due}</span>
+      </div>
+      <p class="desc">${esc(w.assign.desc)}</p>
+      <ul>${reqs}</ul>
+    </div>`;
+  }
+
+  // Assessment
+  if (w.assess) {
+    if (w.assess.type === 'quiz') {
+      const samples = w.assess.samples.map(s => `<li>${esc(s)}</li>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">\uD83D\uDCCB</div>
+          <h3>${esc(w.assess.label)}</h3>
+          <span class="due-tag">End of Week ${w.n}</span>
+        </div>
+        <p><strong>Topics:</strong> ${esc(w.assess.topics)}</p>
+        <p><strong>Format:</strong> ${esc(w.assess.format)}</p>
+        <div class="sample-qs">
+          <h5>Sample Questions</h5>
+          <ul>${samples}</ul>
+        </div>
+      </div>`;
+
+    } else if (w.assess.type === 'midterm') {
+      const reqs   = w.assess.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      const rubric = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">\uD83C\uDFC6</div>
+          <h3>Midterm Project: Playable Mini-Game</h3>
+          <span class="due-tag">Due End of Week 8</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Requirements</div>
+        <ul>${reqs}</ul>
+        <div class="sec-label">Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    } else if (w.assess.type === 'final') {
+      const sections = w.assess.examSections.map(s => `<li>${esc(s)}</li>`).join('');
+      const rubric   = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">\uD83C\uDF93</div>
+          <h3>Final Exam + Final Project</h3>
+          <span class="due-tag">Week 16</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul class="exam-list">${sections}</ul>
+        <div class="sec-label">Project Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  // Prev / Next navigation
+  const prev = num > 1  ? num - 1 : null;
+  const next = num < 16 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('week-${prev}')">
+      &#8592; Week ${prev ?? ''}
+    </button>
+    <span style="font-size:12px;color:var(--muted)">Week ${num} of 16</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('week-${next}')">
+      Week ${next ?? ''} &#8594;
+    </button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ═══════════════════════════
+   NAVIGATION
+═══════════════════════════ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')             renderOverview();
+  else if (view === 'schedule')        renderSchedule();
+  else if (view.startsWith('week-'))   renderWeek(+view.replace('week-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+/* ═══════════════════════════
+   INIT — build sidebar
+═══════════════════════════ */
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.weeks.forEach(w => {
+    let pillHtml = '';
+    if (w.badge) {
+      const cls = w.badge.includes('Quiz') ? 'quiz' : w.badge === 'Midterm' ? 'midterm' : 'final';
+      pillHtml = `<span class="pill pill-${cls}">${esc(w.badge)}</span>`;
+    }
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-week-${w.n}`;
+    item.onclick = () => go(`week-${w.n}`);
+    item.innerHTML = `<div class="nav-num">${w.n}</div><span class="nav-label">${esc(w.title)}</span>${pillHtml}`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
