@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML &amp; CSS Error Checker</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0d1a;--surface:#12122a;--surface2:#181834;--border:#252550;
+  --accent:#00c8a8;--accent2:#7c4dff;--text:#e8e8f4;--dim:#6a6a9a;
+  --c-syntax:#ff4757;--c-access:#ff7043;--c-bestprac:#ffd32a;--c-perf:#ae81ff;
+  --c-ok:#2ed573;--c-info:#74b9ff;
+}
+body{font-family:'Segoe UI','Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+/* ── Header ── */
+.header{background:var(--surface);border-bottom:2px solid var(--accent);padding:9px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap}
+.header-left{display:flex;flex-direction:column;gap:2px}
+.header-title{font-size:1.05rem;font-weight:700;color:var(--accent)}
+.header-title span{color:var(--c-perf)}
+.header-sub{font-size:.7rem;color:var(--dim)}
+.header-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+select.example-picker{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem;max-width:220px}
+.btn{border:none;border-radius:6px;padding:6px 14px;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .18s,transform .1s}
+.btn:hover{opacity:.85}.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:#000}
+.btn-secondary{background:var(--accent2);color:#fff}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--dim)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ── Main ── */
+.main{flex:1;display:flex;overflow:hidden}
+.editor-panel{flex:1;min-width:0;display:flex;flex-direction:column;border-right:2px solid var(--border)}
+.panel-label{background:var(--surface);padding:5px 12px;font-size:.68rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);border-bottom:1px solid var(--border);flex-shrink:0}
+
+/* ── CodeMirror ── */
+.CodeMirror{height:100%!important;font-size:13.5px;line-height:1.7;background:var(--bg)!important;color:var(--text)!important;font-family:'Consolas','Fira Code',monospace}
+.CodeMirror-scroll{height:100%}
+.CodeMirror-gutters{background:var(--surface)!important;border-right:1px solid var(--border)!important}
+.CodeMirror-linenumber{color:var(--dim)!important;font-size:12px}
+.CodeMirror-activeline-background{background:rgba(0,200,168,.06)!important}
+.CodeMirror-matchingbracket{color:var(--accent)!important;font-weight:bold}
+.CodeMirror-cursor{border-left:2px solid var(--accent)!important}
+.hl-syntax{background:rgba(255,71,87,.2)!important}
+.hl-accessibility{background:rgba(255,112,67,.2)!important}
+.hl-best-practice{background:rgba(255,211,42,.15)!important}
+.hl-performance{background:rgba(174,129,255,.2)!important}
+
+/* ── Results Panel ── */
+.results-panel{width:440px;min-width:360px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.filter-row{background:var(--surface);display:flex;gap:4px;padding:7px 10px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.ftab{padding:3px 9px;border-radius:12px;font-size:.7rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--dim);display:flex;align-items:center;gap:5px}
+.ftab:hover{color:var(--text)}
+.ftab.active{border-color:transparent;color:#fff}
+[data-filter="all"].active{background:#444464}
+[data-filter="syntax"].active{background:var(--c-syntax)}
+[data-filter="accessibility"].active{background:var(--c-access)}
+[data-filter="best-practice"].active{background:#b8960a;color:#fff}
+[data-filter="performance"].active{background:var(--accent2)}
+.badge{background:rgba(255,255,255,.15);border-radius:8px;padding:0 5px;font-size:.65rem;font-weight:700;min-width:16px;text-align:center}
+.results-content{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+.results-content::-webkit-scrollbar{width:6px}.results-content::-webkit-scrollbar-track{background:var(--bg)}.results-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── Empty / OK ── */
+.empty-state{color:var(--dim);font-size:.85rem;line-height:1.7;padding:20px;margin:auto;text-align:center}
+.empty-state strong{color:var(--accent)}
+.ok-state{margin:auto;text-align:center;color:var(--c-ok);font-size:.9rem;line-height:1.7;padding:20px}
+.ok-icon{font-size:2.5rem;margin-bottom:8px}
+
+/* ── Error Cards ── */
+.error-card{border-radius:8px;border-left:4px solid #555;background:var(--surface);overflow:hidden;transition:transform .12s}
+.error-card:hover{transform:translateX(2px)}
+.error-card[data-type="syntax"]{border-left-color:var(--c-syntax)}
+.error-card[data-type="accessibility"]{border-left-color:var(--c-access)}
+.error-card[data-type="best-practice"]{border-left-color:var(--c-bestprac)}
+.error-card[data-type="performance"]{border-left-color:var(--c-perf)}
+.card-header{padding:8px 10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer}
+.card-header:hover{background:rgba(255,255,255,.03)}
+.sev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sev-error{background:var(--c-syntax)}.sev-warning{background:var(--c-bestprac)}.sev-info{background:var(--c-info)}
+.card-type-badge{font-size:.62rem;font-weight:700;border-radius:4px;padding:2px 6px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.badge-syntax{background:rgba(255,71,87,.25);color:var(--c-syntax)}
+.badge-accessibility{background:rgba(255,112,67,.25);color:var(--c-access)}
+.badge-best-practice{background:rgba(255,211,42,.2);color:var(--c-bestprac)}
+.badge-performance{background:rgba(174,129,255,.2);color:var(--c-perf)}
+.card-line-chip{font-size:.67rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;color:var(--accent);font-weight:700;white-space:nowrap;flex-shrink:0;font-family:monospace}
+.card-title{font-size:.82rem;font-weight:600;color:var(--text);flex:1;line-height:1.4}
+.card-chevron{margin-left:auto;color:var(--dim);font-size:.8rem;flex-shrink:0;transition:transform .2s}
+.error-card.open .card-chevron{transform:rotate(90deg)}
+.card-body{padding:0 10px;max-height:0;overflow:hidden;transition:max-height .25s ease,padding .25s}
+.error-card.open .card-body{max-height:400px;padding:0 10px 10px}
+.card-section{margin-top:8px}
+.card-section-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:4px}
+.card-explanation{font-size:.8rem;color:var(--text);line-height:1.6}
+.card-fix{font-size:.78rem;color:var(--c-ok);background:rgba(46,213,115,.07);border-radius:6px;padding:7px 10px;border-left:3px solid var(--c-ok);line-height:1.6}
+.card-code{font-family:'Consolas',monospace;font-size:.76rem;background:var(--bg);border-radius:5px;padding:7px 9px;color:#c8ccd4;border:1px solid var(--border);overflow-x:auto;white-space:pre;margin-top:5px}
+.jump-btn{margin-top:8px;font-size:.72rem;background:var(--surface2);border:1px solid var(--border);color:var(--accent);border-radius:5px;padding:4px 10px;cursor:pointer}
+.jump-btn:hover{border-color:var(--accent)}
+
+/* ── Status Bar ── */
+.status-bar{background:var(--surface);border-top:1px solid var(--border);padding:4px 14px;font-size:.68rem;color:var(--dim);display:flex;gap:16px;flex-shrink:0}
+.status-bar span{display:flex;align-items:center;gap:4px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--dim)}
+.status-dot.ok{background:var(--c-ok)}.status-dot.err{background:var(--c-syntax)}
+
+/* ── Context Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent2);border-radius:12px;width:500px;max-width:95vw;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:slideIn .2s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(-16px) scale(.98)}to{opacity:1;transform:none}}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:1rem;font-weight:700;color:var(--accent2)}
+.modal-subtitle{font-size:.75rem;color:var(--dim);margin-top:3px}
+.modal-body{padding:16px 20px;display:flex;flex-direction:column;gap:16px}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.ctx-question{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.ctx-q-text{font-size:.83rem;color:var(--text);line-height:1.5;margin-bottom:8px}
+.ctx-q-context{font-size:.73rem;color:var(--dim);margin-bottom:10px;font-style:italic}
+.ctx-options{display:flex;gap:8px;flex-wrap:wrap}
+.ctx-opt{padding:5px 12px;border-radius:20px;font-size:.78rem;border:1px solid var(--border);background:var(--bg);color:var(--dim);cursor:pointer}
+.ctx-opt:hover{border-color:var(--accent2);color:var(--text)}
+.ctx-opt.selected{background:var(--accent2);border-color:var(--accent2);color:#fff}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <div class="header-title">HTML &amp; <span>CSS</span> Error Checker</div>
+    <div class="header-sub">Educational tool &mdash; Syntax &middot; Accessibility &middot; Best Practice &middot; Performance</div>
+  </div>
+  <div class="header-controls">
+    <select class="example-picker" id="examplePicker">
+      <option value="">-- Load Example --</option>
+      <optgroup label="Syntax Errors">
+        <option value="unclosedTag">Unclosed HTML Tag</option>
+        <option value="mismatchedTags">Mismatched Tags</option>
+        <option value="duplicateIds">Duplicate IDs</option>
+        <option value="missingQuotes">Missing Attribute Quotes</option>
+        <option value="cssMissingSemicolon">CSS Missing Semicolons</option>
+        <option value="cssBadBraces">CSS Unclosed Braces</option>
+      </optgroup>
+      <optgroup label="Accessibility">
+        <option value="missingAlt">Missing Image Alt</option>
+        <option value="missingLang">Missing Lang Attribute</option>
+        <option value="emptyLinks">Empty Links &amp; Buttons</option>
+        <option value="missingLabels">Missing Form Labels</option>
+        <option value="headingOrder">Heading Hierarchy Skipped</option>
+      </optgroup>
+      <optgroup label="Best Practice">
+        <option value="deprecatedTags">Deprecated HTML Tags</option>
+        <option value="inlineStyles">Inline Styles Overuse</option>
+        <option value="missingDoctype">Missing DOCTYPE / Meta</option>
+        <option value="importantOveruse">!important Overuse</option>
+      </optgroup>
+      <optgroup label="Performance">
+        <option value="cssImports">Too Many @import</option>
+        <option value="universalSelector">Universal Selector Abuse</option>
+        <option value="largeDom">Deeply Nested DOM</option>
+      </optgroup>
+    </select>
+    <button class="btn btn-ghost" id="clearBtn">Clear</button>
+    <button class="btn btn-primary" id="checkBtn">&#9654; Check Code</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="editor-panel">
+    <div class="panel-label">HTML / CSS Source Code &mdash; paste or type below</div>
+    <textarea id="codeEditor"></textarea>
+  </div>
+  <div class="results-panel">
+    <div class="filter-row" id="filterRow">
+      <button class="ftab active" data-filter="all">All <span class="badge" id="badge-all">0</span></button>
+      <button class="ftab" data-filter="syntax">Syntax <span class="badge" id="badge-syntax">0</span></button>
+      <button class="ftab" data-filter="accessibility">A11y <span class="badge" id="badge-accessibility">0</span></button>
+      <button class="ftab" data-filter="best-practice">Best Practice <span class="badge" id="badge-best-practice">0</span></button>
+      <button class="ftab" data-filter="performance">Performance <span class="badge" id="badge-performance">0</span></button>
+    </div>
+    <div class="results-content" id="resultsContent">
+      <div class="empty-state">
+        <strong>HTML &amp; CSS Error Checker</strong><br><br>
+        Paste your HTML/CSS code in the editor and click <strong>Check Code</strong> to find issues.<br><br>
+        Checks for <strong>syntax errors</strong>, <strong>accessibility</strong> problems,<br>
+        <strong>best practice</strong> violations, and <strong>performance</strong> concerns.<br><br>
+        <span style="font-size:.75rem">Tip: use <strong>Ctrl+Enter</strong> to run a quick check</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <span><span class="status-dot" id="statusDot"></span><span id="statusText">Ready</span></span>
+  <span id="lineCount"></span>
+</div>
+
+<div class="modal-overlay" id="contextModal" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">&#x2753; Additional Context Needed</div>
+      <div class="modal-subtitle">Some patterns may be intentional. Help us give better feedback.</div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modalSkip">Skip &mdash; Analyze As-Is</button>
+      <button class="btn btn-secondary" id="modalConfirm">Analyze with My Answers</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchtags.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.js"></script>
+<script>
+'use strict';
+
+/* ═══════════════════════════════════════════════════
+   EXAMPLES
+   ═══════════════════════════════════════════════════ */
+const EXAMPLES = {
+  unclosedTag: {
+    label: 'Unclosed HTML Tag',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Page</title>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome</h1>
+    <p>This paragraph is never closed.
+    <div class="card">
+      <h2>Card Title</h2>
+      <p>Card content here.</p>
+    </div>
+  </div>
+</body>
+</html>`
+  },
+  mismatchedTags: {
+    label: 'Mismatched Tags',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Test</title></head>
+<body>
+  <div class="wrapper">
+    <h1>Title</h1>
+    <p>Some text here.</div>
+    <span>More text</p>
+  </div>
+</body>
+</html>`
+  },
+  duplicateIds: {
+    label: 'Duplicate IDs',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Test</title></head>
+<body>
+  <div id="main">
+    <h1 id="title">Hello</h1>
+    <p id="title">World</p>
+    <button id="submit">Send</button>
+    <button id="submit">Cancel</button>
+  </div>
+</body>
+</html>`
+  },
+  missingQuotes: {
+    label: 'Missing Attribute Quotes',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Test</title></head>
+<body>
+  <div class=container>
+    <img src=photo.jpg alt=My Photo>
+    <a href=https://example.com>Link</a>
+    <input type=text name=username>
+  </div>
+</body>
+</html>`
+  },
+  cssMissingSemicolon: {
+    label: 'CSS Missing Semicolons',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Test</title>
+<style>
+  .header {
+    background: #333
+    color: white;
+    padding: 20px
+    font-size: 18px;
+  }
+  .footer {
+    margin-top: 40px
+    text-align: center
+  }
+</style>
+</head>
+<body>
+  <div class="header">Hello</div>
+  <div class="footer">Bye</div>
+</body>
+</html>`
+  },
+  cssBadBraces: {
+    label: 'CSS Unclosed Braces',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Test</title>
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+
+  .card {
+    padding: 20px;
+    border: 1px solid #ccc;
+  }
+
+  .footer {
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">Card</div>
+  </div>
+  <div class="footer">Footer</div>
+</body>
+</html>`
+  },
+  missingAlt: {
+    label: 'Missing Image Alt',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Gallery</title></head>
+<body>
+  <h1>Photo Gallery</h1>
+  <img src="photo1.jpg">
+  <img src="photo2.jpg" alt="">
+  <img src="photo3.jpg" alt="A sunset over the ocean">
+  <img src="banner.png">
+</body>
+</html>`
+  },
+  missingLang: {
+    label: 'Missing Lang Attribute',
+    code: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>My Site</title>
+</head>
+<body>
+  <h1>Welcome to My Site</h1>
+  <p>Content goes here.</p>
+</body>
+</html>`
+  },
+  emptyLinks: {
+    label: 'Empty Links & Buttons',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Nav</title></head>
+<body>
+  <nav>
+    <a href="/home"></a>
+    <a href="/about"><img src="icon.png"></a>
+    <button></button>
+    <button type="submit">  </button>
+    <a href="/contact">Contact Us</a>
+  </nav>
+</body>
+</html>`
+  },
+  missingLabels: {
+    label: 'Missing Form Labels',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Form</title></head>
+<body>
+  <form>
+    <input type="text" name="username" placeholder="Username">
+    <input type="email" name="email">
+    <select name="role">
+      <option>Admin</option>
+      <option>User</option>
+    </select>
+    <label for="age">Age</label>
+    <input type="number" id="age" name="age">
+    <textarea name="bio"></textarea>
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>`
+  },
+  headingOrder: {
+    label: 'Heading Hierarchy Skipped',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Article</title></head>
+<body>
+  <h1>Main Title</h1>
+  <p>Introduction text.</p>
+  <h3>Subsection</h3>
+  <p>This skipped h2!</p>
+  <h5>Detail</h5>
+  <p>This skipped h4!</p>
+  <h2>Section Two</h2>
+  <h4>Another skip</h4>
+</body>
+</html>`
+  },
+  deprecatedTags: {
+    label: 'Deprecated HTML Tags',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Old Page</title></head>
+<body>
+  <center>
+    <font size="5" color="red">Welcome!</font>
+  </center>
+  <marquee>Breaking news ticker</marquee>
+  <p><b>Bold text</b> and <i>italic text</i></p>
+  <table>
+    <tr>
+      <td bgcolor="#ff0000">Red cell</td>
+    </tr>
+  </table>
+  <hr noshade>
+  <br clear="all">
+</body>
+</html>`
+  },
+  inlineStyles: {
+    label: 'Inline Styles Overuse',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Styled</title></head>
+<body>
+  <div style="background: #333; color: white; padding: 20px; margin: 10px;">
+    <h1 style="font-size: 24px; font-weight: bold; color: #00c8a8;">Title</h1>
+    <p style="line-height: 1.6; color: #ccc; margin-bottom: 10px;">Paragraph one.</p>
+    <p style="line-height: 1.6; color: #ccc; margin-bottom: 10px;">Paragraph two.</p>
+    <button style="background: blue; color: white; padding: 10px 20px; border: none; cursor: pointer;">Click</button>
+  </div>
+</body>
+</html>`
+  },
+  missingDoctype: {
+    label: 'Missing DOCTYPE / Meta',
+    code: `<html>
+<head>
+  <title>My Page</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>This page has no DOCTYPE, no charset, and no viewport meta tag.</p>
+</body>
+</html>`
+  },
+  importantOveruse: {
+    label: '!important Overuse',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Styles</title>
+<style>
+  .header {
+    background: #333 !important;
+    color: white !important;
+    padding: 20px !important;
+    font-size: 18px !important;
+  }
+  .nav {
+    display: flex !important;
+    gap: 10px !important;
+  }
+  .btn {
+    background: blue !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px !important;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <nav class="nav">
+      <button class="btn">Home</button>
+      <button class="btn">About</button>
+    </nav>
+  </div>
+</body>
+</html>`
+  },
+  cssImports: {
+    label: 'Too Many @import',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Imports</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto');
+  @import url('https://fonts.googleapis.com/css2?family=Open+Sans');
+  @import url('reset.css');
+  @import url('layout.css');
+  @import url('components.css');
+  @import url('utilities.css');
+
+  body {
+    font-family: 'Roboto', sans-serif;
+  }
+</style>
+</head>
+<body>
+  <h1>Hello</h1>
+</body>
+</html>`
+  },
+  universalSelector: {
+    label: 'Universal Selector Abuse',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Selectors</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  .container * {
+    color: red;
+    font-size: 14px;
+  }
+  #main > * {
+    border: 1px solid #ccc;
+  }
+  body * * {
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+  <div class="container" id="main">
+    <p>Text</p>
+  </div>
+</body>
+</html>`
+  },
+  largeDom: {
+    label: 'Deeply Nested DOM',
+    code: `<!DOCTYPE html>
+<html lang="en">
+<head><title>Nested</title></head>
+<body>
+  <div class="l1">
+    <div class="l2">
+      <div class="l3">
+        <div class="l4">
+          <div class="l5">
+            <div class="l6">
+              <div class="l7">
+                <div class="l8">
+                  <div class="l9">
+                    <div class="l10">
+                      <div class="l11">
+                        <p>Deeply nested content</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+  }
+};
+
+/* ═══════════════════════════════════════════════════
+   UTILITIES
+   ═══════════════════════════════════════════════════ */
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function mdToHtml(s){
+  return escHtml(s)
+    .replace(/`([^`]+)`/g,'<code style="background:var(--surface2);padding:1px 4px;border-radius:3px;font-family:Consolas,monospace;font-size:.78rem;color:var(--accent)">$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
+}
+
+/* ═══════════════════════════════════════════════════
+   ANALYZER
+   ═══════════════════════════════════════════════════ */
+class HtmlCssAnalyzer {
+  constructor(code, userContext = {}) {
+    this.rawCode = code;
+    this.lines = code.split('\n');
+    this.userContext = userContext;
+    this.errors = [];
+    this.ambiguous = [];
+  }
+
+  _err(line0, type, sev, title, explanation, fix, codeExample) {
+    this.errors.push({ line: line0 + 1, lineIdx: line0, type, sev, title, explanation, fix, codeExample: codeExample || null });
+  }
+
+  analyze() {
+    if (this.lines.length === 0 || this.rawCode.trim() === '') return { errors: [], ambiguous: [], needsContext: false };
+
+    // Extract CSS blocks for CSS-specific checks
+    this._extractCssBlocks();
+
+    // Phase 1: Context collection
+    this._checkInlineStyleContext();
+    if (this.ambiguous.length > 0 && !this.userContext._skip && Object.keys(this.userContext).length === 0) {
+      return { errors: [], ambiguous: this.ambiguous, needsContext: true };
+    }
+
+    // Phase 2: HTML Syntax
+    this._checkUnclosedTags();
+    this._checkDuplicateIds();
+    this._checkMissingAttrQuotes();
+
+    // Phase 3: CSS Syntax
+    this._checkCssBraces();
+    this._checkCssSemicolons();
+
+    // Phase 4: Accessibility
+    this._checkMissingAlt();
+    this._checkMissingLang();
+    this._checkEmptyInteractive();
+    this._checkFormLabels();
+    this._checkHeadingOrder();
+
+    // Phase 5: Best Practice
+    this._checkMissingDoctype();
+    this._checkMissingMeta();
+    this._checkDeprecatedTags();
+    this._checkInlineStyles();
+    this._checkImportantOveruse();
+
+    // Phase 6: Performance
+    this._checkCssImports();
+    this._checkUniversalSelector();
+    this._checkDomNesting();
+
+    // Deduplicate
+    const seen = new Set();
+    this.errors = this.errors.filter(e => {
+      const key = `${e.line}:${e.type}:${e.title.substring(0, 30)}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Sort by line
+    this.errors.sort((a, b) => a.line - b.line);
+    return { errors: this.errors, ambiguous: [], needsContext: false };
+  }
+
+  /* ── CSS Block Extraction ── */
+  _extractCssBlocks() {
+    this.cssBlocks = [];
+    const code = this.rawCode;
+    const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+    let m;
+    while ((m = styleRegex.exec(code)) !== null) {
+      const contentStart = m.index + m[0].indexOf(m[1]);
+      const preText = code.substring(0, contentStart);
+      const startLine = preText.split('\n').length - 1;
+      this.cssBlocks.push({ css: m[1], startLine, endLine: startLine + m[1].split('\n').length - 1 });
+    }
+  }
+
+  _isInsideCssBlock(lineIdx) {
+    return this.cssBlocks.some(b => lineIdx >= b.startLine && lineIdx <= b.endLine);
+  }
+
+  /* ── Context: Inline Styles ── */
+  _checkInlineStyleContext() {
+    let count = 0;
+    for (const line of this.lines) {
+      const matches = line.match(/style\s*=/gi);
+      if (matches) count += matches.length;
+    }
+    if (count >= 3 && !this.userContext.inlineStyleIntentional) {
+      this.ambiguous.push({
+        key: 'inlineStyleIntentional',
+        question: 'Your code has multiple inline styles. Are these intentional (e.g., for dynamic values or email HTML)?',
+        context: `Found ${count} inline style attributes.`,
+        options: ['Yes \u2014 they are intentional', 'No \u2014 flag them for review']
+      });
+    }
+  }
+
+  /* ═════ HTML SYNTAX ═════ */
+
+  _checkUnclosedTags() {
+    const voidTags = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+    const stack = [];
+    const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/?>/g;
+
+    for (let i = 0; i < this.lines.length; i++) {
+      const line = this.lines[i];
+      let m;
+      tagRegex.lastIndex = 0;
+      while ((m = tagRegex.exec(line)) !== null) {
+        const full = m[0];
+        const tagName = m[1].toLowerCase();
+
+        // Skip comments, doctype, script/style internals
+        if (full.startsWith('<!') || full.startsWith('<?')) continue;
+        if (voidTags.has(tagName)) continue;
+        if (full.endsWith('/>')) continue;
+
+        if (full.startsWith('</')) {
+          // Closing tag
+          if (stack.length === 0) {
+            this._err(i, 'syntax', 'error',
+              `Unexpected closing tag \`</${tagName}>\``,
+              `Found a closing \`</${tagName}>\` tag but there is no matching opening tag above it. This usually means you either have an extra closing tag or the opening tag has a typo.`,
+              `Remove the extra \`</${tagName}>\` or add the matching opening \`<${tagName}>\` tag.`);
+          } else {
+            const top = stack[stack.length - 1];
+            if (top.tag === tagName) {
+              stack.pop();
+            } else {
+              // Mismatched: look for the tag deeper in the stack
+              const idx = stack.map(s => s.tag).lastIndexOf(tagName);
+              if (idx >= 0) {
+                // The tags between idx+1 and top were never closed
+                for (let j = stack.length - 1; j > idx; j--) {
+                  const unclosed = stack[j];
+                  this._err(unclosed.line, 'syntax', 'error',
+                    `Unclosed \`<${unclosed.tag}>\` tag`,
+                    `The \`<${unclosed.tag}>\` tag opened on line ${unclosed.line + 1} was never properly closed before \`</${tagName}>\` on line ${i + 1}.`,
+                    `Add a closing \`</${unclosed.tag}>\` tag before line ${i + 1}.`,
+                    `<${unclosed.tag}>...\n</${unclosed.tag}> <!-- add this -->`);
+                }
+                stack.length = idx;
+                stack.pop();
+              } else {
+                this._err(i, 'syntax', 'error',
+                  `Tag mismatch: \`</${tagName}>\` closes \`<${top.tag}>\``,
+                  `Expected \`</${top.tag}>\` to close the tag opened on line ${top.line + 1}, but found \`</${tagName}>\` instead.`,
+                  `Either change this to \`</${top.tag}>\` or fix the opening tag.`);
+              }
+            }
+          }
+        } else {
+          // Opening tag (skip script/style content for tag matching)
+          stack.push({ tag: tagName, line: i });
+        }
+      }
+    }
+
+    // Remaining unclosed tags
+    for (const item of stack) {
+      if (['html', 'head', 'body'].includes(item.tag)) continue; // Don't flag structural tags still open at end
+      this._err(item.line, 'syntax', 'error',
+        `Unclosed \`<${item.tag}>\` tag`,
+        `The \`<${item.tag}>\` tag opened on line ${item.line + 1} was never closed.`,
+        `Add \`</${item.tag}>\` at the appropriate location.`,
+        `<${item.tag}>...\n</${item.tag}>`);
+    }
+  }
+
+  _checkDuplicateIds() {
+    const idMap = {};
+    const idRegex = /\bid\s*=\s*["']([^"']+)["']/gi;
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this._isInsideCssBlock(i)) continue;
+      let m;
+      idRegex.lastIndex = 0;
+      while ((m = idRegex.exec(this.lines[i])) !== null) {
+        const id = m[1];
+        if (!idMap[id]) idMap[id] = [];
+        idMap[id].push(i);
+      }
+    }
+    for (const [id, lines] of Object.entries(idMap)) {
+      if (lines.length > 1) {
+        for (let k = 1; k < lines.length; k++) {
+          this._err(lines[k], 'syntax', 'error',
+            `Duplicate \`id="${id}"\``,
+            `The id \`${id}\` is already used on line ${lines[0] + 1}. HTML IDs must be unique within a document. Duplicate IDs can break JavaScript, CSS selectors, and accessibility tools.`,
+            `Use a unique ID for each element, or switch to a \`class\` attribute if multiple elements share the same styling.`,
+            `<div id="${id}-1">First</div>\n<div id="${id}-2">Second</div>`);
+        }
+      }
+    }
+  }
+
+  _checkMissingAttrQuotes() {
+    // Look for attribute=value without quotes (not inside style/script blocks)
+    const attrRegex = /\b([a-zA-Z-]+)\s*=\s*([^\s"'>][^\s>]*)/g;
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this._isInsideCssBlock(i)) continue;
+      const line = this.lines[i];
+      // Only process lines with HTML tags
+      if (!/<[a-zA-Z]/.test(line)) continue;
+
+      let m;
+      attrRegex.lastIndex = 0;
+      while ((m = attrRegex.exec(line)) !== null) {
+        const attr = m[1].toLowerCase();
+        const val = m[2];
+        // Skip if it looks like CSS property or a closing tag
+        if (attr === 'doctype' || attr === 'DOCTYPE') continue;
+        // Verify we're inside a tag
+        const before = line.substring(0, m.index);
+        const lastOpen = before.lastIndexOf('<');
+        const lastClose = before.lastIndexOf('>');
+        if (lastOpen <= lastClose) continue; // Not inside a tag
+
+        this._err(i, 'syntax', 'warning',
+          `Unquoted attribute value: \`${attr}=${val}\``,
+          `The attribute \`${attr}\` has an unquoted value. While browsers may accept this, unquoted attributes can cause unexpected behavior, especially with spaces, special characters, or URLs.`,
+          `Wrap the value in double quotes: \`${attr}="${val}"\``,
+          `<tag ${attr}="${val}">`);
+      }
+    }
+  }
+
+  /* ═════ CSS SYNTAX ═════ */
+
+  _checkCssBraces() {
+    for (const block of this.cssBlocks) {
+      const cssLines = block.css.split('\n');
+      let depth = 0;
+      let openLine = -1;
+      for (let i = 0; i < cssLines.length; i++) {
+        const line = cssLines[i];
+        // Strip strings and comments
+        const clean = line.replace(/"[^"]*"|'[^']*'/g, '').replace(/\/\*.*?\*\//g, '');
+        for (const ch of clean) {
+          if (ch === '{') { if (depth === 0) openLine = i; depth++; }
+          if (ch === '}') { depth--; }
+        }
+      }
+      if (depth > 0) {
+        const absLine = block.startLine + (openLine >= 0 ? openLine : 0);
+        this._err(absLine, 'syntax', 'error',
+          `Unclosed CSS \`{\` brace`,
+          `A CSS rule block was opened but never closed. This will cause all subsequent CSS to be parsed incorrectly, potentially breaking your entire stylesheet.`,
+          `Add the missing \`}\` to close the rule block.`,
+          `.selector {\n  property: value;\n} /* <-- make sure this exists */`);
+      } else if (depth < 0) {
+        this._err(block.startLine, 'syntax', 'error',
+          `Extra closing \`}\` in CSS`,
+          `Found more closing braces than opening braces in your CSS. This can cause rules to be ignored.`,
+          `Remove the extra \`}\` or add the missing opening \`{\`.`);
+      }
+    }
+  }
+
+  _checkCssSemicolons() {
+    for (const block of this.cssBlocks) {
+      const cssLines = block.css.split('\n');
+      let insideRule = false;
+      for (let i = 0; i < cssLines.length; i++) {
+        const raw = cssLines[i];
+        const trimmed = raw.trim();
+        if (!trimmed || trimmed.startsWith('/*') || trimmed.startsWith('//') || trimmed.startsWith('*')) continue;
+
+        if (trimmed.includes('{')) { insideRule = true; continue; }
+        if (trimmed.includes('}')) { insideRule = false; continue; }
+
+        if (insideRule && trimmed.includes(':') && !trimmed.endsWith(';') && !trimmed.endsWith('{') && !trimmed.endsWith(',')) {
+          // Check if next non-empty line starts with a property (indicating this line missed a semicolon)
+          const nextIdx = i + 1;
+          let nextLine = '';
+          if (nextIdx < cssLines.length) nextLine = cssLines[nextIdx].trim();
+
+          if (nextLine && (nextLine.includes(':') || nextLine === '}')) {
+            const absLine = block.startLine + i;
+            // Extract property name
+            const prop = trimmed.split(':')[0].trim();
+            this._err(absLine, 'syntax', 'error',
+              `Missing semicolon after \`${prop}\``,
+              `The CSS property \`${prop}\` on this line is missing a semicolon at the end. Without it, the browser will try to merge this line with the next, causing the next property to be ignored or misinterpreted.`,
+              `Add a \`;\` at the end of the line.`,
+              `${trimmed};`);
+          }
+        }
+      }
+    }
+  }
+
+  /* ═════ ACCESSIBILITY ═════ */
+
+  _checkMissingAlt() {
+    const imgRegex = /<img\b([^>]*)>/gi;
+    for (let i = 0; i < this.lines.length; i++) {
+      let m;
+      imgRegex.lastIndex = 0;
+      while ((m = imgRegex.exec(this.lines[i])) !== null) {
+        const attrs = m[1];
+        if (!/\balt\s*=/i.test(attrs)) {
+          this._err(i, 'accessibility', 'error',
+            `Image missing \`alt\` attribute`,
+            `Screen readers rely on the \`alt\` attribute to describe images to visually impaired users. Without it, the image is invisible to assistive technology. This also violates WCAG 2.1 Level A (1.1.1 Non-text Content).`,
+            `Add a descriptive \`alt\` attribute. If the image is decorative, use \`alt=""\`.`,
+            `<img src="photo.jpg" alt="Description of the image">`);
+        } else if (/\balt\s*=\s*["']\s*["']/i.test(attrs)) {
+          // alt="" — check if it looks like a content image (not decorative)
+          const src = (attrs.match(/\bsrc\s*=\s*["']([^"']*)["']/i) || [])[1] || '';
+          if (src && !/icon|logo|decoration|spacer|bg|background/i.test(src)) {
+            this._err(i, 'accessibility', 'warning',
+              `Image has empty \`alt=""\` \u2014 is it decorative?`,
+              `An empty \`alt\` attribute tells screen readers to skip this image. This is correct for decorative images, but if the image conveys meaning (the filename suggests \`${src}\`), it needs a description.`,
+              `If the image is informative, provide a descriptive alt text. If decorative, \`alt=""\` is correct.`);
+          }
+        }
+      }
+    }
+  }
+
+  _checkMissingLang() {
+    const htmlTagRegex = /<html\b([^>]*)>/i;
+    const m = this.rawCode.match(htmlTagRegex);
+    if (m && !/\blang\s*=/i.test(m[1])) {
+      const lineIdx = this.rawCode.substring(0, m.index).split('\n').length - 1;
+      this._err(lineIdx, 'accessibility', 'error',
+        `Missing \`lang\` attribute on \`<html>\``,
+        `The \`lang\` attribute on the \`<html>\` tag tells browsers and screen readers what language the page is in. Without it, assistive technology may mispronounce text. This violates WCAG 2.1 Level A (3.1.1 Language of Page).`,
+        `Add a \`lang\` attribute: \`<html lang="en">\` (use the appropriate language code).`,
+        `<html lang="en">`);
+    }
+  }
+
+  _checkEmptyInteractive() {
+    // Empty links
+    const linkRegex = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
+    let m;
+    while ((m = linkRegex.exec(this.rawCode)) !== null) {
+      const content = m[2].replace(/<[^>]*>/g, '').trim();
+      const attrs = m[1];
+      const hasAriaLabel = /aria-label\s*=/i.test(attrs);
+      const hasTitle = /\btitle\s*=/i.test(attrs);
+      if (!content && !hasAriaLabel && !hasTitle) {
+        const lineIdx = this.rawCode.substring(0, m.index).split('\n').length - 1;
+        this._err(lineIdx, 'accessibility', 'error',
+          `Empty \`<a>\` link has no accessible text`,
+          `This link has no visible text content, \`aria-label\`, or \`title\` attribute. Screen reader users won't know where it leads. If it wraps an image, ensure the image has an \`alt\` attribute.`,
+          `Add text content, an \`aria-label\`, or ensure child images have \`alt\` text.`,
+          `<a href="/page" aria-label="Go to page">...</a>`);
+      }
+    }
+
+    // Empty buttons
+    const btnRegex = /<button\b([^>]*)>([\s\S]*?)<\/button>/gi;
+    while ((m = btnRegex.exec(this.rawCode)) !== null) {
+      const content = m[2].replace(/<[^>]*>/g, '').trim();
+      const attrs = m[1];
+      const hasAriaLabel = /aria-label\s*=/i.test(attrs);
+      if (!content && !hasAriaLabel) {
+        const lineIdx = this.rawCode.substring(0, m.index).split('\n').length - 1;
+        this._err(lineIdx, 'accessibility', 'warning',
+          `Empty \`<button>\` has no accessible text`,
+          `This button has no visible text or \`aria-label\`. Screen reader users won't know what it does.`,
+          `Add text content or an \`aria-label\` attribute.`,
+          `<button aria-label="Close menu">X</button>`);
+      }
+    }
+  }
+
+  _checkFormLabels() {
+    const inputTypes = ['text', 'email', 'password', 'number', 'tel', 'url', 'search', 'date', 'time', 'datetime-local', 'month', 'week', 'color', 'range', 'file'];
+    // Collect all label[for] values
+    const labelFors = new Set();
+    const labelForRegex = /<label\b[^>]*\bfor\s*=\s*["']([^"']+)["']/gi;
+    let m;
+    while ((m = labelForRegex.exec(this.rawCode)) !== null) {
+      labelFors.add(m[1]);
+    }
+    // Also check for implicit labels (input wrapped in label)
+    const wrappedInputs = new Set();
+    const wrapRegex = /<label\b[^>]*>[\s\S]*?<(input|select|textarea)\b[^>]*>[\s\S]*?<\/label>/gi;
+    while ((m = wrapRegex.exec(this.rawCode)) !== null) {
+      const idMatch = m[0].match(/\bid\s*=\s*["']([^"']+)["']/i);
+      if (idMatch) wrappedInputs.add(idMatch[1]);
+    }
+
+    // Check inputs
+    const inputRegex = /<(input|select|textarea)\b([^>]*)>/gi;
+    while ((m = inputRegex.exec(this.rawCode)) !== null) {
+      const tag = m[1].toLowerCase();
+      const attrs = m[2];
+      const typeMatch = attrs.match(/\btype\s*=\s*["']([^"']+)["']/i);
+      const type = typeMatch ? typeMatch[1].toLowerCase() : 'text';
+
+      if (tag === 'input' && !inputTypes.includes(type)) continue; // skip hidden, submit, button, etc.
+
+      const idMatch = attrs.match(/\bid\s*=\s*["']([^"']+)["']/i);
+      const id = idMatch ? idMatch[1] : null;
+      const hasAriaLabel = /aria-label\s*=/i.test(attrs) || /aria-labelledby\s*=/i.test(attrs);
+
+      if (hasAriaLabel) continue;
+      if (id && (labelFors.has(id) || wrappedInputs.has(id))) continue;
+      if (!id) {
+        // No id means label[for] can't target it
+        const lineIdx = this.rawCode.substring(0, m.index).split('\n').length - 1;
+        this._err(lineIdx, 'accessibility', 'warning',
+          `\`<${tag}>\` has no associated label`,
+          `This ${tag} element has no \`id\` for a \`<label for="...">\` to reference, no wrapping \`<label>\`, and no \`aria-label\`. Screen reader users won't know what this field is for. This violates WCAG 2.1 Level A (1.3.1).`,
+          `Add an \`id\` and a corresponding \`<label for="...">\`, or wrap it in a \`<label>\`, or add \`aria-label\`.`,
+          `<label for="email">Email</label>\n<input type="email" id="email">`);
+      } else if (!labelFors.has(id)) {
+        const lineIdx = this.rawCode.substring(0, m.index).split('\n').length - 1;
+        this._err(lineIdx, 'accessibility', 'warning',
+          `\`<${tag} id="${id}">\` has no matching \`<label>\``,
+          `This ${tag} has an \`id\` but no \`<label for="${id}">\` was found. The \`placeholder\` attribute is not a substitute for a label.`,
+          `Add \`<label for="${id}">Label text</label>\` before this element.`,
+          `<label for="${id}">Your label</label>\n<${tag} id="${id}">`);
+      }
+    }
+  }
+
+  _checkHeadingOrder() {
+    const headingRegex = /<h([1-6])\b/gi;
+    let lastLevel = 0;
+    let m;
+    for (let i = 0; i < this.lines.length; i++) {
+      headingRegex.lastIndex = 0;
+      while ((m = headingRegex.exec(this.lines[i])) !== null) {
+        const level = parseInt(m[1]);
+        if (lastLevel > 0 && level > lastLevel + 1) {
+          this._err(i, 'accessibility', 'warning',
+            `Heading level skipped: \`<h${lastLevel}>\` to \`<h${level}>\``,
+            `Heading levels should not skip (e.g., \`<h1>\` to \`<h3>\` without an \`<h2>\`). Screen readers use headings to build a document outline, and gaps confuse users navigating by headings. This violates WCAG 2.1 Level A (1.3.1).`,
+            `Use \`<h${lastLevel + 1}>\` instead, or add the missing intermediate heading.`,
+            `<h${lastLevel}>Parent Section</h${lastLevel}>\n<h${lastLevel + 1}>Subsection</h${lastLevel + 1}>`);
+        }
+        lastLevel = level;
+      }
+    }
+  }
+
+  /* ═════ BEST PRACTICE ═════ */
+
+  _checkMissingDoctype() {
+    const trimmed = this.rawCode.trimStart();
+    if (trimmed.length > 0 && !/^<!DOCTYPE\s/i.test(trimmed)) {
+      this._err(0, 'best-practice', 'warning',
+        `Missing \`<!DOCTYPE html>\` declaration`,
+        `Without a DOCTYPE, browsers render in "quirks mode" which emulates bugs from older browsers. This can cause inconsistent styling and layout across browsers.`,
+        `Add \`<!DOCTYPE html>\` as the very first line of your document.`,
+        `<!DOCTYPE html>\n<html lang="en">\n  ...`);
+    }
+  }
+
+  _checkMissingMeta() {
+    if (!/<meta\b[^>]*charset\s*=/i.test(this.rawCode)) {
+      // Find the <head> line
+      const headIdx = this.lines.findIndex(l => /<head/i.test(l));
+      const line = headIdx >= 0 ? headIdx : 0;
+      this._err(line, 'best-practice', 'warning',
+        `Missing \`charset\` meta tag`,
+        `Without a character encoding declaration, browsers may guess the wrong encoding, causing garbled text or security vulnerabilities (UTF-7 injection).`,
+        `Add \`<meta charset="UTF-8">\` as the first child of \`<head>\`.`,
+        `<head>\n  <meta charset="UTF-8">\n  ...`);
+    }
+
+    if (!/<meta\b[^>]*name\s*=\s*["']viewport["']/i.test(this.rawCode)) {
+      const headIdx = this.lines.findIndex(l => /<head/i.test(l));
+      const line = headIdx >= 0 ? headIdx : 0;
+      this._err(line, 'best-practice', 'info',
+        `Missing \`viewport\` meta tag`,
+        `Without a viewport meta tag, mobile browsers will render the page at a desktop width and then scale it down, making text tiny and unusable on phones.`,
+        `Add a viewport meta tag in \`<head>\`.`,
+        `<meta name="viewport" content="width=device-width, initial-scale=1.0">`);
+    }
+  }
+
+  _checkDeprecatedTags() {
+    const deprecated = {
+      'center':  { replacement: 'CSS `text-align: center` or flexbox', sev: 'warning' },
+      'font':    { replacement: 'CSS `font-family`, `font-size`, `color`', sev: 'warning' },
+      'marquee': { replacement: 'CSS animations or a JS-based scroller', sev: 'warning' },
+      'blink':   { replacement: 'CSS `animation` if you truly need it', sev: 'warning' },
+      'strike':  { replacement: '`<del>` for deleted text or `<s>` for no-longer-accurate text', sev: 'info' },
+      'big':     { replacement: 'CSS `font-size`', sev: 'info' },
+      'tt':      { replacement: '`<code>` or `<samp>`', sev: 'info' },
+    };
+
+    const deprecatedAttrs = {
+      'bgcolor':  'CSS `background-color`',
+      'noshade':  'CSS `border` styling',
+      'align':    'CSS `text-align` or flexbox/grid',
+      'valign':   'CSS `vertical-align`',
+      'border':   'CSS `border` property',
+    };
+
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this._isInsideCssBlock(i)) continue;
+      const line = this.lines[i];
+
+      // Check deprecated tags
+      for (const [tag, info] of Object.entries(deprecated)) {
+        const regex = new RegExp(`<${tag}\\b`, 'i');
+        if (regex.test(line)) {
+          this._err(i, 'best-practice', info.sev,
+            `Deprecated \`<${tag}>\` tag`,
+            `The \`<${tag}>\` element has been deprecated in HTML5. While browsers may still render it, it's not recommended for modern web development and may be removed in the future.`,
+            `Replace with ${info.replacement}.`);
+        }
+      }
+
+      // Check deprecated attributes
+      for (const [attr, replacement] of Object.entries(deprecatedAttrs)) {
+        const regex = new RegExp(`\\b${attr}\\s*=`, 'i');
+        if (regex.test(line)) {
+          // Make sure we're in a tag context
+          const before = line.substring(0, line.search(regex));
+          const lastOpen = before.lastIndexOf('<');
+          const lastClose = before.lastIndexOf('>');
+          if (lastOpen > lastClose) {
+            this._err(i, 'best-practice', 'info',
+              `Deprecated \`${attr}\` attribute`,
+              `The \`${attr}\` attribute is deprecated in HTML5. Mixing presentation with markup makes code harder to maintain and override.`,
+              `Use ${replacement} instead.`);
+          }
+        }
+      }
+    }
+  }
+
+  _checkInlineStyles() {
+    if (this.userContext.inlineStyleIntentional === 'yes') return;
+
+    let count = 0;
+    const styleLines = [];
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this._isInsideCssBlock(i)) continue;
+      const matches = this.lines[i].match(/\bstyle\s*=\s*["']/gi);
+      if (matches) {
+        count += matches.length;
+        if (styleLines.length < 5) styleLines.push(i);
+      }
+    }
+
+    if (count >= 3) {
+      for (const lineIdx of styleLines) {
+        this._err(lineIdx, 'best-practice', 'warning',
+          `Inline \`style\` attribute`,
+          `Inline styles are harder to maintain, can't be cached separately, can't use pseudo-classes or media queries, and increase specificity making them hard to override. Found ${count} inline styles total.`,
+          `Move these styles to a \`<style>\` block or an external CSS file using classes.`,
+          `/* In <style> or .css file */\n.my-class {\n  /* move styles here */\n}`);
+      }
+    }
+  }
+
+  _checkImportantOveruse() {
+    let count = 0;
+    const importantLines = [];
+    for (const block of this.cssBlocks) {
+      const cssLines = block.css.split('\n');
+      for (let i = 0; i < cssLines.length; i++) {
+        const matches = cssLines[i].match(/!important/gi);
+        if (matches) {
+          count += matches.length;
+          if (importantLines.length < 3) importantLines.push(block.startLine + i);
+        }
+      }
+    }
+
+    if (count >= 3) {
+      for (const lineIdx of importantLines) {
+        this._err(lineIdx, 'best-practice', 'warning',
+          `Excessive \`!important\` usage (${count} total)`,
+          `Using \`!important\` frequently indicates specificity problems. It makes CSS harder to debug and maintain because the only way to override an \`!important\` is with another \`!important\` and higher specificity, creating an escalation war.`,
+          `Refactor your selectors to use proper specificity instead of \`!important\`. Use more specific selectors, or reduce the specificity of the rules you're trying to override.`,
+          `/* Instead of */\n.btn { color: red !important; }\n\n/* Use a more specific selector */\n.header .btn { color: red; }`);
+      }
+    }
+  }
+
+  /* ═════ PERFORMANCE ═════ */
+
+  _checkCssImports() {
+    let count = 0;
+    let firstLine = -1;
+    for (const block of this.cssBlocks) {
+      const cssLines = block.css.split('\n');
+      for (let i = 0; i < cssLines.length; i++) {
+        if (/@import\b/.test(cssLines[i])) {
+          count++;
+          if (firstLine < 0) firstLine = block.startLine + i;
+        }
+      }
+    }
+    if (count >= 3) {
+      this._err(firstLine, 'performance', 'warning',
+        `${count} CSS \`@import\` statements found`,
+        `Each \`@import\` creates a new HTTP request and blocks rendering in a waterfall pattern (each file must download before the next starts). With ${count} imports, this can significantly delay your page's first paint.`,
+        `Replace \`@import\` with \`<link>\` tags in the HTML \`<head>\` (which download in parallel), or combine your CSS files into one.`,
+        `<!-- Replace @import with <link> -->\n<link rel="stylesheet" href="reset.css">\n<link rel="stylesheet" href="layout.css">`);
+    }
+  }
+
+  _checkUniversalSelector() {
+    const globalReset = /^\s*\*\s*\{/;  // * { ... } at top level is common reset
+    for (const block of this.cssBlocks) {
+      const cssLines = block.css.split('\n');
+      for (let i = 0; i < cssLines.length; i++) {
+        const line = cssLines[i];
+        // Match selectors like `.container *` or `div > *` (not the common * { box-sizing } reset)
+        if (/[.#a-zA-Z]\s+\*\s*[\{,]/.test(line) || />\s*\*\s*[\{,]/.test(line)) {
+          const absLine = block.startLine + i;
+          this._err(absLine, 'performance', 'info',
+            `Scoped universal selector \`*\` in CSS`,
+            `Using \`*\` scoped to a parent (e.g., \`.container *\`) forces the browser to evaluate every descendant element. In large DOMs this can hurt rendering performance.`,
+            `Use more specific selectors that target only the elements you need.`,
+            `/* Instead of .container * */\n.container > p,\n.container > div { ... }`);
+        }
+      }
+    }
+  }
+
+  _checkDomNesting() {
+    let maxDepth = 0;
+    let depth = 0;
+    let deepestLine = 0;
+    const voidTags = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+
+    for (let i = 0; i < this.lines.length; i++) {
+      if (this._isInsideCssBlock(i)) continue;
+      const line = this.lines[i];
+      const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/?>/g;
+      let m;
+      while ((m = tagRegex.exec(line)) !== null) {
+        const full = m[0];
+        const tag = m[1].toLowerCase();
+        if (full.startsWith('<!') || full.startsWith('<?')) continue;
+        if (voidTags.has(tag) || full.endsWith('/>')) continue;
+        if (full.startsWith('</')) {
+          depth--;
+        } else {
+          depth++;
+          if (depth > maxDepth) { maxDepth = depth; deepestLine = i; }
+        }
+      }
+    }
+
+    if (maxDepth > 10) {
+      this._err(deepestLine, 'performance', 'warning',
+        `Deeply nested DOM (${maxDepth} levels)`,
+        `Nesting HTML elements more than 10 levels deep increases browser layout/reflow cost, makes CSS selectors slower, and typically indicates over-wrapping with unnecessary \`<div>\` elements ("div soup").`,
+        `Flatten the DOM by removing unnecessary wrapper elements. Use CSS Grid or Flexbox for layout instead of nesting.`,
+        `<!-- Before: deeply nested -->\n<div><div><div>...</div></div></div>\n\n<!-- After: flat with CSS layout -->\n<div class="grid">...</div>`);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   EDITOR + UI
+   ═══════════════════════════════════════════════════ */
+let editor, activeFilter = 'all', lastErrors = [], highlights = [], pendingContext = {};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const ta = document.getElementById('codeEditor');
+  editor = CodeMirror.fromTextArea(ta, {
+    mode: 'htmlmixed',
+    theme: 'dracula',
+    lineNumbers: true,
+    styleActiveLine: true,
+    matchBrackets: true,
+    matchTags: { bothTags: true },
+    indentUnit: 2,
+    tabSize: 2,
+    indentWithTabs: false,
+    lineWrapping: false,
+    autofocus: true,
+    extraKeys: { 'Tab': cm => cm.replaceSelection('  ') }
+  });
+
+  editor.on('change', () => {
+    const lines = editor.lineCount();
+    document.getElementById('lineCount').textContent = `${lines} line${lines !== 1 ? 's' : ''}`;
+  });
+
+  document.getElementById('checkBtn').addEventListener('click', () => runCheck());
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
+  document.getElementById('examplePicker').addEventListener('change', loadExample);
+  document.getElementById('filterRow').addEventListener('click', handleFilter);
+  document.getElementById('modalConfirm').addEventListener('click', runCheckWithContext);
+  document.getElementById('modalSkip').addEventListener('click', runCheckSkipContext);
+  document.getElementById('contextModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) runCheckSkipContext();
+  });
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runCheck(); }
+  });
+
+  editor.setValue('');
+  document.getElementById('lineCount').textContent = '1 line';
+});
+
+function clearAll() {
+  editor.setValue('');
+  clearHighlights();
+  lastErrors = [];
+  activeFilter = 'all';
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  document.querySelector('[data-filter="all"]').classList.add('active');
+  updateBadges([]);
+  document.getElementById('resultsContent').innerHTML = `<div class="empty-state"><strong>HTML &amp; CSS Error Checker</strong><br><br>Paste your code and click <strong>Check Code</strong>.</div>`;
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = 'Ready';
+}
+
+function loadExample(e) {
+  const key = e.target.value;
+  if (!key || !EXAMPLES[key]) return;
+  clearHighlights();
+  editor.setValue(EXAMPLES[key].code);
+  e.target.value = '';
+  document.getElementById('resultsContent').innerHTML = `<div class="empty-state">Example loaded! Click <strong>Check Code</strong> to analyze.</div>`;
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = 'Example loaded';
+}
+
+function clearHighlights() {
+  highlights.forEach(h => {
+    editor.removeLineClass(h.line, 'background', h.cls);
+  });
+  highlights = [];
+}
+
+function highlightLine(lineIdx, type) {
+  const cls = 'hl-' + type;
+  editor.addLineClass(lineIdx, 'background', cls);
+  highlights.push({ line: lineIdx, cls });
+}
+
+function jumpToLine(lineIdx) {
+  editor.setCursor({ line: lineIdx, ch: 0 });
+  editor.scrollIntoView({ line: lineIdx, ch: 0 }, 100);
+  editor.focus();
+}
+
+/* ── Run Analysis ── */
+function runCheck(context) {
+  const code = editor.getValue();
+  if (!code.trim()) {
+    clearAll();
+    return;
+  }
+  clearHighlights();
+  const analyzer = new HtmlCssAnalyzer(code, context || {});
+  const result = analyzer.analyze();
+
+  if (result.needsContext && result.ambiguous.length > 0) {
+    showContextModal(result.ambiguous);
+    return;
+  }
+
+  lastErrors = result.errors;
+  // Highlight lines
+  result.errors.forEach(err => highlightLine(err.lineIdx, err.type));
+  renderResults(result.errors);
+}
+
+function runCheckWithContext() {
+  document.getElementById('contextModal').style.display = 'none';
+  runCheck(pendingContext);
+}
+
+function runCheckSkipContext() {
+  document.getElementById('contextModal').style.display = 'none';
+  runCheck({ _skip: true });
+}
+
+/* ── Context Modal ── */
+function showContextModal(ambiguous) {
+  pendingContext = {};
+  const body = document.getElementById('modalBody');
+  body.innerHTML = '';
+  for (const q of ambiguous) {
+    const div = document.createElement('div');
+    div.className = 'ctx-question';
+    div.innerHTML = `
+      <div class="ctx-q-text">${escHtml(q.question)}</div>
+      <div class="ctx-q-context">${escHtml(q.context)}</div>
+      <div class="ctx-options">
+        ${q.options.map((o, i) => `<button class="ctx-opt" data-key="${escHtml(q.key)}" data-val="${i === 0 ? 'yes' : 'no'}">${escHtml(o)}</button>`).join('')}
+      </div>`;
+    div.querySelectorAll('.ctx-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        div.querySelectorAll('.ctx-opt').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        pendingContext[btn.dataset.key] = btn.dataset.val;
+      });
+    });
+    body.appendChild(div);
+  }
+  document.getElementById('contextModal').style.display = '';
+}
+
+/* ── Render Results ── */
+function renderResults(errors) {
+  const container = document.getElementById('resultsContent');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+
+  updateBadges(errors);
+
+  const visible = activeFilter === 'all' ? errors : errors.filter(e => e.type === activeFilter);
+
+  if (errors.length === 0) {
+    container.innerHTML = `<div class="ok-state"><div class="ok-icon">&#10003;</div><strong>No issues found!</strong><br>Your HTML/CSS looks good.</div>`;
+    statusDot.className = 'status-dot ok';
+    statusText.textContent = 'No issues found';
+    return;
+  }
+
+  if (visible.length === 0) {
+    container.innerHTML = `<div class="empty-state">No <strong>${activeFilter}</strong> issues found.<br>Try a different filter.</div>`;
+  } else {
+    container.innerHTML = '';
+    visible.forEach((err, idx) => container.appendChild(buildCard(err, idx)));
+  }
+
+  statusDot.className = 'status-dot err';
+  statusText.textContent = `${errors.length} issue${errors.length !== 1 ? 's' : ''} found`;
+}
+
+function updateBadges(errors) {
+  const counts = { syntax: 0, accessibility: 0, 'best-practice': 0, performance: 0 };
+  errors.forEach(e => { if (counts[e.type] !== undefined) counts[e.type]++; });
+  document.getElementById('badge-all').textContent = errors.length;
+  document.getElementById('badge-syntax').textContent = counts.syntax;
+  document.getElementById('badge-accessibility').textContent = counts.accessibility;
+  document.getElementById('badge-best-practice').textContent = counts['best-practice'];
+  document.getElementById('badge-performance').textContent = counts.performance;
+}
+
+function buildCard(err, idx) {
+  const card = document.createElement('div');
+  card.className = 'error-card';
+  card.dataset.type = err.type;
+  if (idx < 3) card.classList.add('open');
+
+  const sevClass = err.sev === 'error' ? 'sev-error' : err.sev === 'warning' ? 'sev-warning' : 'sev-info';
+  const badgeClass = 'badge-' + err.type;
+  const typeLabel = err.type === 'best-practice' ? 'Best Prac.' : err.type === 'accessibility' ? 'A11y' : err.type.charAt(0).toUpperCase() + err.type.slice(1);
+
+  let bodyHtml = `<div class="card-section"><div class="card-section-label">What went wrong</div><div class="card-explanation">${mdToHtml(err.explanation)}</div></div>`;
+  bodyHtml += `<div class="card-section"><div class="card-section-label">How to fix it</div><div class="card-fix">${mdToHtml(err.fix)}</div></div>`;
+  if (err.codeExample) {
+    bodyHtml += `<div class="card-section"><div class="card-section-label">Example Fix</div><div class="card-code">${escHtml(err.codeExample)}</div></div>`;
+  }
+  bodyHtml += `<button class="jump-btn" data-line="${err.lineIdx}">Jump to Line ${err.line}</button>`;
+
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="sev-dot ${sevClass}"></div>
+      <span class="card-type-badge ${badgeClass}">${typeLabel}</span>
+      <span class="card-line-chip">Line ${err.line}</span>
+      <span class="card-title">${mdToHtml(err.title)}</span>
+      <span class="card-chevron">&#9654;</span>
+    </div>
+    <div class="card-body">${bodyHtml}</div>`;
+
+  card.querySelector('.card-header').addEventListener('click', () => card.classList.toggle('open'));
+  card.querySelector('.jump-btn').addEventListener('click', e => {
+    e.stopPropagation();
+    jumpToLine(parseInt(e.target.dataset.line));
+  });
+
+  return card;
+}
+
+function handleFilter(e) {
+  const tab = e.target.closest('.ftab');
+  if (!tab) return;
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  activeFilter = tab.dataset.filter;
+  renderResults(lastErrors);
+}
+</script>
+</body>
+</html>

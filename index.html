@@ -1,276 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Learning Hub</title>
-  <style>
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3250;
-      --accent-game: #f87171;
-      --accent-learn: #60a5fa;
-      --accent-debug: #34d399;
-      --text: #e2e8f0;
-      --text-muted: #8892b0;
-      --card-hover: #272b40;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Learning Hub</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: #0d0d1a;
+        color: #e8e8f4;
+        min-height: 100vh;
+        padding: 0 0 40px;
+      }
+      .header {
+        background: linear-gradient(135deg, #12122a 0%, #1a1a3e 50%, #12122a 100%);
+        border-bottom: 2px solid #00c8a8;
+        text-align: center;
+        padding: 36px 20px 28px;
+        margin-bottom: 32px;
+      }
+      .header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #00c8a8, #7c4dff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+      }
+      .header p {
+        color: #6a6a9a;
+        font-size: 0.9rem;
+      }
+      .container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      .section {
+        margin-bottom: 36px;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #252550;
+      }
+      .section-icon {
+        font-size: 1.3rem;
+      }
+      .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+      .section-title.games { color: #ff4757; }
+      .section-title.learn { color: #74b9ff; }
+      .section-title.debug { color: #00c8a8; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 14px;
+      }
+      .card {
+        display: block;
+        background: #12122a;
+        border: 1px solid #252550;
+        border-radius: 10px;
+        padding: 18px 20px;
+        text-decoration: none;
+        color: #e8e8f4;
+        transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        border-color: #444464;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      }
+      .card-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .card-desc {
+        font-size: 0.75rem;
+        color: #6a6a9a;
+        line-height: 1.5;
+      }
+      .card.games:hover { border-color: #ff4757; }
+      .card.learn:hover { border-color: #74b9ff; }
+      .card.debug:hover { border-color: #00c8a8; }
+      .card-tag {
+        display: inline-block;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+      .tag-game { background: rgba(255,71,87,0.2); color: #ff4757; }
+      .tag-learn { background: rgba(116,185,255,0.2); color: #74b9ff; }
+      .tag-debug { background: rgba(0,200,168,0.2); color: #00c8a8; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>AI Learning Hub</h1>
+      <p>Games, courses, and developer tools</p>
+    </div>
+    <div class="container">
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 2rem 1rem 4rem;
-    }
-
-    header {
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    header h1 {
-      font-size: 2.4rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-    }
-
-    header p {
-      color: var(--text-muted);
-      font-size: 1rem;
-    }
-
-    .hub {
-      max-width: 1000px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2.5rem;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .section-icon {
-      font-size: 1.5rem;
-    }
-
-    .section-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .section-title.games   { color: var(--accent-game); }
-    .section-title.learn   { color: var(--accent-learn); }
-    .section-title.debug   { color: var(--accent-debug); }
-
-    .section-line {
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem;
-    }
-
-    a.card {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem 1.4rem;
-      text-decoration: none;
-      color: var(--text);
-      transition: background 0.18s, border-color 0.18s, transform 0.15s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    a.card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0;
-      width: 4px;
-      height: 100%;
-      border-radius: 12px 0 0 12px;
-    }
-
-    .section-games   a.card::before { background: var(--accent-game); }
-    .section-learn   a.card::before { background: var(--accent-learn); }
-    .section-debug   a.card::before { background: var(--accent-debug); }
-
-    a.card:hover {
-      background: var(--card-hover);
-      transform: translateY(-2px);
-    }
-
-    .section-games   a.card:hover { border-color: var(--accent-game); }
-    .section-learn   a.card:hover { border-color: var(--accent-learn); }
-    .section-debug   a.card:hover { border-color: var(--accent-debug); }
-
-    .card-name {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .card-desc {
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    .card-arrow {
-      margin-top: auto;
-      font-size: 0.8rem;
-      opacity: 0.45;
-      align-self: flex-end;
-    }
-
-    footer {
-      text-align: center;
-      margin-top: 4rem;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <h1>AI Learning Hub</h1>
-    <p>Your collection of games, courses, and developer tools</p>
-  </header>
-
-  <main class="hub">
-
-    <!-- ── GAMES ── -->
-    <section class="section-games">
-      <div class="section-header">
-        <span class="section-icon">🎮</span>
-        <span class="section-title games">Games</span>
-        <div class="section-line"></div>
+      <!-- Games -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-icon">&#127918;</span>
+          <span class="section-title games">Games</span>
+        </div>
+        <div class="grid">
+          <a class="card games" href="dog_defense.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Dog Tower Defense</div>
+            <div class="card-desc">Defend your territory with a tower defense strategy game.</div>
+          </a>
+          <a class="card games" href="dog_pacman.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Dog Pac-Man</div>
+            <div class="card-desc">Classic Pac-Man gameplay with a canine twist.</div>
+          </a>
+          <a class="card games" href="journey_game.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Journey Game</div>
+            <div class="card-desc">Embark on an adventure through interactive storytelling.</div>
+          </a>
+          <a class="card games" href="icwa_game.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">ICWA Game</div>
+            <div class="card-desc">Educational game about the Indian Child Welfare Act.</div>
+          </a>
+          <a class="card games" href="health_math_game.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Health Math Game</div>
+            <div class="card-desc">Practice math skills with a health and wellness theme.</div>
+          </a>
+          <a class="card games" href="endangered_clicker.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Endangered Clicker</div>
+            <div class="card-desc">Clicker game raising awareness about endangered species.</div>
+          </a>
+          <a class="card games" href="ecosystem_cascade.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Ecosystem Cascade</div>
+            <div class="card-desc">Explore ecological chain reactions and ecosystem dynamics.</div>
+          </a>
+          <a class="card games" href="writers_quest.html">
+            <span class="card-tag tag-game">Game</span>
+            <div class="card-name">Writer's Quest</div>
+            <div class="card-desc">Improve writing skills through an interactive quest.</div>
+          </a>
+        </div>
       </div>
-      <div class="cards">
-        <a class="card" href="dog_defense.html">
-          <span class="card-name">Dog Tower Defense</span>
-          <span class="card-desc">A browser-based tower defense game where dogs protect against incoming waves of enemies.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="dog_pacman.html">
-          <span class="card-name">Bark Man</span>
-          <span class="card-desc">A Pac-Man inspired arcade game where a dog collects bones and avoids mailmen.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="writers_quest.html">
-          <span class="card-name">Writer's Quest</span>
-          <span class="card-desc">An interactive adventure game where you master the art of writing through quests and challenges.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="health_math_game.html">
-          <span class="card-name">Health Math Foundations</span>
-          <span class="card-desc">A math game focused on health science fundamentals and problem solving.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="endangered_clicker.html">
-          <span class="card-name">Wildlife Rescue Tycoon</span>
-          <span class="card-desc">An idle clicker game where you rescue and protect endangered wildlife species.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="ecosystem_cascade.html">
-          <span class="card-name">Ecosystem Cascade Simulator</span>
-          <span class="card-desc">Simulate and explore how changes in one species cascade through an entire ecosystem.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-      </div>
-    </section>
 
-    <!-- ── LEARNING MODULES ── -->
-    <section class="section-learn">
-      <div class="section-header">
-        <span class="section-icon">📚</span>
-        <span class="section-title learn">Learning Modules</span>
-        <div class="section-line"></div>
+      <!-- Learning Modules -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-icon">&#128218;</span>
+          <span class="section-title learn">Learning Modules</span>
+        </div>
+        <div class="grid">
+          <a class="card learn" href="Beginning_Python_Course.html">
+            <span class="card-tag tag-learn">Course</span>
+            <div class="card-name">Beginning Python</div>
+            <div class="card-desc">Learn Python fundamentals from scratch.</div>
+          </a>
+          <a class="card learn" href="Intermediate_Python_Course.html">
+            <span class="card-tag tag-learn">Course</span>
+            <div class="card-name">Intermediate Python</div>
+            <div class="card-desc">Level up with OOP, file I/O, and more.</div>
+          </a>
+          <a class="card learn" href="DSA_Python_Course.html">
+            <span class="card-tag tag-learn">Course</span>
+            <div class="card-name">Data Structures &amp; Algorithms</div>
+            <div class="card-desc">Master DSA concepts with Python implementations.</div>
+          </a>
+        </div>
       </div>
-      <div class="cards">
-        <a class="card" href="AI_learning.html">
-          <span class="card-name">Generative AI</span>
-          <span class="card-desc">A college-level learning module covering the fundamentals of Generative AI.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="Beginning_Python_Course.html">
-          <span class="card-name">Beginning Python</span>
-          <span class="card-desc">16-week introductory Python course covering core programming concepts from the ground up.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="Intermediate_Python_Course.html">
-          <span class="card-name">Intermediate Python</span>
-          <span class="card-desc">16-week course that deepens Python skills with OOP, file I/O, and more advanced topics.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="DSA_Python_Course.html">
-          <span class="card-name">Data Structures &amp; Algorithms</span>
-          <span class="card-desc">16-week Python-based DSA course covering arrays, trees, graphs, sorting, and complexity.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="godot-course.html">
-          <span class="card-name">Godot Game Development</span>
-          <span class="card-desc">16-week college course teaching game development from scratch using the Godot engine.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
+
+      <!-- Debugging Tools -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-icon">&#128736;</span>
+          <span class="section-title debug">Debugging Tools</span>
+        </div>
+        <div class="grid">
+          <a class="card debug" href="js_error_checker.html">
+            <span class="card-tag tag-debug">Tool</span>
+            <div class="card-name">JS &amp; jQuery Error Checker</div>
+            <div class="card-desc">Find syntax, runtime, and logical errors in JavaScript code.</div>
+          </a>
+          <a class="card debug" href="csharp_checker.html">
+            <span class="card-tag tag-debug">Tool</span>
+            <div class="card-name">C# Game Dev Error Checker</div>
+            <div class="card-desc">Unity-focused C# checker for syntax, runtime, and game dev issues.</div>
+          </a>
+          <a class="card debug" href="p5_checker.html">
+            <span class="card-tag tag-debug">Tool</span>
+            <div class="card-name">p5.js Error Checker</div>
+            <div class="card-desc">Catch common p5.js mistakes and creative coding pitfalls.</div>
+          </a>
+          <a class="card debug" href="html_css_checker.html">
+            <span class="card-tag tag-debug">Tool</span>
+            <div class="card-name">HTML &amp; CSS Error Checker</div>
+            <div class="card-desc">Check syntax, accessibility, best practices, and performance.</div>
+          </a>
+        </div>
       </div>
-    </section>
 
-    <!-- ── DEBUGGING TOOLS ── -->
-    <section class="section-debug">
-      <div class="section-header">
-        <span class="section-icon">🛠️</span>
-        <span class="section-title debug">Debugging Tools</span>
-        <div class="section-line"></div>
-      </div>
-      <div class="cards">
-        <a class="card" href="js_error_checker.html">
-          <span class="card-name">JS &amp; jQuery Error Checker</span>
-          <span class="card-desc">Paste JavaScript or jQuery code to detect common errors and get guided fixes.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="csharp_checker.html">
-          <span class="card-name">C# Game Dev Error Checker</span>
-          <span class="card-desc">Analyzes C# code for game development errors with educational explanations.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-        <a class="card" href="p5_checker.html">
-          <span class="card-name">P5.js Error Checker</span>
-          <span class="card-desc">Identifies and explains errors in P5.js sketches to help students debug creative code.</span>
-          <span class="card-arrow">Open →</span>
-        </a>
-      </div>
-    </section>
-
-  </main>
-
-  <footer>
-    <p>AI Learning Hub &mdash; All tools open locally in your browser</p>
-  </footer>
-
-</body>
+    </div>
+  </body>
 </html>
