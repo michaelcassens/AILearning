@@ -94,6 +94,19 @@
   }
   .back-link:hover { color: var(--text); border-color: var(--text-muted); }
 
+  .btn-reset {
+    color: var(--danger);
+    font-size: 0.85rem;
+    border: 1px solid var(--danger);
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .btn-reset:hover { background: var(--danger); color: #fff; }
+
   /* ── MAIN LAYOUT ── */
   .game-layout {
     display: flex;
@@ -552,7 +565,10 @@
       <span class="stat-label">/ <span id="totalSpecies">8</span> Species Rescued</span>
     </div>
   </div>
-  <a class="back-link" href="index.html">&larr; Hub</a>
+  <div style="display:flex;gap:0.5rem;align-items:center;">
+    <button class="btn-reset" id="resetBtn">Reset Game</button>
+    <a class="back-link" href="index.html">&larr; Hub</a>
+  </div>
 </div>
 
 <div class="game-layout">
@@ -1112,6 +1128,60 @@
     if (e.key === 'Escape') {
       document.getElementById('modalOverlay').classList.remove('active');
     }
+  });
+
+  // ── RESET GAME ──
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    if (!confirm('Are you sure you want to reset all progress? This cannot be undone.')) return;
+
+    localStorage.removeItem(SAVE_KEY);
+
+    // Reset state
+    state.points = 0;
+    state.totalEarned = 0;
+    rescuedSet.clear();
+
+    ANIMALS.forEach(a => {
+      state.animals[a.id] = { level: 0, progress: 0, popProgress: 0 };
+      state.managers[a.id] = false;
+      generateUpgrades(a).forEach(u => { state.upgrades[u.id] = false; });
+    });
+
+    // Re-unlock panda at level 1
+    state.animals['panda'].level = 1;
+
+    selectedAnimal = null;
+
+    // Re-render everything
+    renderAnimals();
+    updateTopBar();
+
+    // Reset side panel to welcome
+    document.getElementById('sidePanel').innerHTML = `
+      <div class="info-header">
+        <div class="info-icon">🌍</div>
+        <div class="info-title">Welcome, Conservationist!</div>
+      </div>
+      <div class="info-section">
+        <h3>How to Play</h3>
+        <p>Click on an animal's icon to generate Conservation Points. Use those points to level up animal programs, hire managers for automation, and buy upgrades to boost production.</p>
+      </div>
+      <div class="info-section">
+        <h3>Your Goal</h3>
+        <p>Restore each species' population to safe levels and remove them from the Endangered Species List. Click any animal's icon to learn more about it!</p>
+      </div>
+      <div class="info-section">
+        <h3>Tips</h3>
+        <ul>
+          <li>Higher-level programs produce more points per cycle</li>
+          <li>Managers automate production so you earn while idle</li>
+          <li>Upgrades multiply your output significantly</li>
+          <li>Reach population milestones to rescue species!</li>
+        </ul>
+      </div>
+    `;
+
+    showToast('Game has been reset. Good luck, Conservationist!');
   });
 })();
 </script>
