@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>p5.js Code Quest — Learn to Code</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0d1a;--surface:#12122a;--surface2:#181834;--border:#252550;
+  --accent:#00c8a8;--accent2:#7c4dff;--text:#e8e8f4;--dim:#6a6a9a;
+  --hp-green:#2ed573;--hp-red:#ff4757;--xp-gold:#ffd32a;--mana-blue:#74b9ff;
+  --pixel-font:'Press Start 2P',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--pixel-font);overflow:hidden}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges}
+
+/* ── SCREENS ── */
+.screen{display:none;width:100vw;height:100vh;position:absolute;top:0;left:0}
+.screen.active{display:flex}
+
+/* ── TITLE SCREEN ── */
+#screen-title{flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  background:linear-gradient(180deg,#0d0d1a 0%,#1a0a2e 50%,#0d0d1a 100%)}
+#screen-title h1{font-size:28px;text-align:center;line-height:1.6;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+#screen-title .subtitle{font-size:10px;color:var(--dim);margin-top:-10px}
+.title-wizard{width:120px;height:120px;margin:10px 0}
+.menu-btn{font-family:var(--pixel-font);font-size:12px;padding:14px 36px;border:2px solid var(--accent);
+  background:transparent;color:var(--accent);cursor:pointer;transition:all .2s;margin:4px}
+.menu-btn:hover{background:var(--accent);color:var(--bg);transform:scale(1.05)}
+.menu-btn.secondary{border-color:var(--accent2);color:var(--accent2)}
+.menu-btn.secondary:hover{background:var(--accent2);color:var(--bg)}
+.title-stars{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle 2s infinite alternate}
+@keyframes twinkle{0%{opacity:.2}100%{opacity:1}}
+
+/* ── MAP SCREEN ── */
+#screen-map{flex-direction:column;align-items:center;background:var(--bg)}
+.map-header{width:100%;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--border)}
+.map-header h2{font-size:14px;color:var(--accent)}
+.map-stats{font-size:9px;color:var(--dim)}
+.map-grid{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;position:relative;width:100%}
+.map-path{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;max-width:900px}
+.map-node{width:140px;height:100px;border:2px solid var(--border);background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  cursor:pointer;transition:all .2s;position:relative}
+.map-node:hover:not(.locked){border-color:var(--accent);transform:translateY(-3px);box-shadow:0 4px 20px rgba(0,200,168,.2)}
+.map-node.completed{border-color:var(--hp-green)}
+.map-node.completed::after{content:"✓";position:absolute;top:4px;right:8px;color:var(--hp-green);font-size:14px}
+.map-node.current{border-color:var(--accent);animation:pulse-border 1.5s infinite}
+.map-node.locked{opacity:.4;cursor:not-allowed}
+.map-node .level-num{font-size:18px;color:var(--accent2)}
+.map-node .level-name{font-size:7px;color:var(--dim);text-align:center;padding:0 6px}
+@keyframes pulse-border{0%,100%{box-shadow:0 0 0 0 rgba(0,200,168,.4)}50%{box-shadow:0 0 0 8px rgba(0,200,168,0)}}
+.map-back{font-family:var(--pixel-font);font-size:9px;padding:10px 20px;border:1px solid var(--border);
+  background:var(--surface);color:var(--dim);cursor:pointer;margin:16px}
+.map-back:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── CHALLENGE SCREEN ── */
+#screen-challenge{flex-direction:column}
+.challenge-hud{display:flex;align-items:center;padding:8px 16px;gap:16px;border-bottom:2px solid var(--border);
+  background:var(--surface);min-height:44px}
+.hud-hp{display:flex;align-items:center;gap:6px;font-size:8px}
+.hp-bar,.xp-bar{width:120px;height:12px;background:var(--bg);border:1px solid var(--border);position:relative;overflow:hidden}
+.hp-fill{height:100%;background:var(--hp-green);transition:width .4s}
+.xp-fill{height:100%;background:var(--xp-gold);transition:width .4s}
+.hud-level{font-size:9px;color:var(--accent);flex:1;text-align:center}
+.hud-xp{display:flex;align-items:center;gap:6px;font-size:8px}
+.hud-back{font-family:var(--pixel-font);font-size:8px;padding:4px 10px;border:1px solid var(--border);
+  background:transparent;color:var(--dim);cursor:pointer}
+.hud-back:hover{border-color:var(--accent);color:var(--accent)}
+
+.challenge-main{flex:1;display:flex;overflow:hidden}
+.challenge-canvas{width:420px;min-width:420px;border-right:2px solid var(--border);
+  display:flex;flex-direction:column;background:#0a0a14}
+.canvas-holder{flex:1;display:flex;align-items:center;justify-content:center;padding:10px}
+.canvas-holder canvas{border:1px solid var(--border)}
+
+.challenge-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.challenge-info{padding:16px;border-bottom:1px solid var(--border)}
+.challenge-num{font-size:8px;color:var(--accent2);margin-bottom:8px}
+.challenge-title{font-size:10px;margin-bottom:10px;line-height:1.6}
+.challenge-desc{font-size:8px;color:var(--dim);line-height:1.8}
+.concept-tag{display:inline-block;font-size:7px;padding:2px 6px;background:var(--accent2);
+  color:#fff;margin:2px;border-radius:2px}
+
+.code-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* Block mode */
+.block-template{padding:12px 16px;background:var(--bg);font-family:'Consolas',monospace;font-size:13px;
+  line-height:1.8;color:var(--text);white-space:pre-wrap;border-bottom:1px solid var(--border);overflow-y:auto}
+.slot{display:inline-block;min-width:80px;height:22px;border:1px dashed var(--accent);
+  vertical-align:middle;margin:0 2px;padding:0 6px;line-height:22px;font-size:11px;
+  color:var(--accent);cursor:pointer;transition:all .2s;text-align:center}
+.slot.filled{border-style:solid;background:rgba(0,200,168,.15);color:var(--accent)}
+.slot.correct{border-color:var(--hp-green);background:rgba(46,213,115,.15);color:var(--hp-green)}
+.slot.wrong{border-color:var(--hp-red);background:rgba(255,71,87,.15);color:var(--hp-red);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+.block-palette{padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid var(--border)}
+.code-block{font-family:'Consolas',monospace;font-size:11px;padding:6px 12px;
+  background:var(--surface2);border:1px solid var(--border);color:var(--xp-gold);
+  cursor:pointer;transition:all .2s;white-space:nowrap}
+.code-block:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 2px 8px rgba(0,200,168,.2)}
+.code-block.used{opacity:.3;pointer-events:none}
+
+/* Editor mode */
+.editor-wrap{flex:1;overflow:hidden}
+.editor-wrap .CodeMirror{height:100%;font-size:13px;font-family:'Consolas','Monaco',monospace}
+.editor-error{padding:8px 16px;font-size:8px;color:var(--hp-red);background:rgba(255,71,87,.1);
+  border-top:1px solid rgba(255,71,87,.3);display:none}
+.editor-error.visible{display:block}
+
+.code-actions{padding:10px 16px;display:flex;gap:8px;border-top:1px solid var(--border);background:var(--surface)}
+.btn-run{font-family:var(--pixel-font);font-size:9px;padding:8px 20px;border:2px solid var(--accent);
+  background:transparent;color:var(--accent);cursor:pointer;transition:all .2s}
+.btn-run:hover{background:var(--accent);color:var(--bg)}
+.btn-reset{font-family:var(--pixel-font);font-size:9px;padding:8px 16px;border:1px solid var(--border);
+  background:transparent;color:var(--dim);cursor:pointer}
+.btn-reset:hover{border-color:var(--dim);color:var(--text)}
+.btn-hint{font-family:var(--pixel-font);font-size:9px;padding:8px 16px;border:1px solid var(--xp-gold);
+  background:transparent;color:var(--xp-gold);cursor:pointer}
+.btn-hint:hover{background:var(--xp-gold);color:var(--bg)}
+
+/* Message bar */
+.message-bar{padding:10px 16px;font-size:8px;color:var(--dim);border-top:2px solid var(--border);
+  background:var(--surface);min-height:38px;display:flex;align-items:center;gap:8px}
+.message-bar .msg-icon{font-size:14px}
+.message-bar.success{color:var(--hp-green);border-color:var(--hp-green)}
+.message-bar.error{color:var(--hp-red);border-color:var(--hp-red)}
+.message-bar.info{color:var(--mana-blue);border-color:var(--mana-blue)}
+.btn-next{font-family:var(--pixel-font);font-size:8px;padding:6px 14px;border:1px solid var(--accent);
+  background:transparent;color:var(--accent);cursor:pointer;margin-left:auto}
+.btn-next:hover{background:var(--accent);color:var(--bg)}
+
+/* ── BOSS SCREEN ── */
+#screen-boss{flex-direction:column}
+.boss-hud{display:flex;align-items:center;padding:8px 16px;gap:16px;border-bottom:2px solid var(--border);
+  background:var(--surface);min-height:44px}
+.boss-name-display{font-size:10px;color:var(--hp-red);flex:1;text-align:center}
+.boss-hp-bar{width:200px;height:14px;background:var(--bg);border:1px solid var(--hp-red);position:relative}
+.boss-hp-fill{height:100%;background:var(--hp-red);transition:width .4s}
+.boss-main{flex:1;display:flex;overflow:hidden}
+.boss-arena{width:420px;min-width:420px;border-right:2px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a14;position:relative}
+.boss-sprite-area{position:relative;width:400px;height:400px}
+.boss-panel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.boss-task{padding:16px;border-bottom:1px solid var(--border)}
+.boss-task-label{font-size:8px;color:var(--hp-red);margin-bottom:8px}
+.boss-task-text{font-size:9px;line-height:1.8}
+.boss-timer{font-size:10px;color:var(--xp-gold);text-align:right;padding:0 16px;margin-top:4px}
+
+/* ── LEVEL COMPLETE ── */
+#screen-level-complete{flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:rgba(13,13,26,.95)}
+#screen-level-complete h2{font-size:18px;color:var(--hp-green)}
+.lc-stats{display:flex;gap:30px;font-size:9px}
+.lc-stat{text-align:center}
+.lc-stat .val{font-size:16px;color:var(--xp-gold);display:block;margin-bottom:6px}
+.lc-stat .label{color:var(--dim)}
+
+/* ── VICTORY SCREEN ── */
+#screen-victory{flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:linear-gradient(180deg,#0d0d1a,#1a0a2e,#0d0d1a)}
+#screen-victory h1{font-size:22px;color:var(--xp-gold);text-align:center;line-height:1.6}
+#screen-victory p{font-size:9px;color:var(--dim);text-align:center;max-width:500px;line-height:2}
+
+/* ── EFFECTS ── */
+.screen-flash{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;
+  opacity:0;transition:opacity .1s}
+.damage-numbers{position:absolute;pointer-events:none;font-size:14px;color:var(--hp-red);
+  animation:float-up .8s forwards}
+@keyframes float-up{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-40px)}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+</style>
+</head>
+<body>
+
+<div id="screen-flash" class="screen-flash"></div>
+
+<!-- TITLE SCREEN -->
+<div id="screen-title" class="screen active">
+  <div class="title-stars" id="title-stars"></div>
+  <canvas class="title-wizard" id="title-wizard-canvas" width="120" height="120"></canvas>
+  <h1>p5.js<br>CODE QUEST</h1>
+  <div class="subtitle">Learn to code through adventure</div>
+  <div>
+    <button class="menu-btn" onclick="startGame(false)">NEW GAME</button>
+    <button class="menu-btn secondary" onclick="startGame(true)" id="btn-continue" style="display:none">CONTINUE</button>
+  </div>
+  <div style="font-size:7px;color:var(--dim);margin-top:20px">10 Levels &bull; 30 Challenges &bull; 10 Boss Fights</div>
+</div>
+
+<!-- MAP SCREEN -->
+<div id="screen-map" class="screen">
+  <div class="map-header">
+    <button class="hud-back" onclick="showScreen('title')">< MENU</button>
+    <h2>WORLD MAP</h2>
+    <div class="map-stats">Score: <span id="map-score">0</span></div>
+  </div>
+  <div class="map-grid">
+    <div class="map-path" id="map-nodes"></div>
+  </div>
+  <button class="map-back" onclick="showScreen('title')">BACK TO TITLE</button>
+</div>
+
+<!-- CHALLENGE SCREEN -->
+<div id="screen-challenge" class="screen">
+  <div class="challenge-hud">
+    <button class="hud-back" onclick="exitToMap()">< MAP</button>
+    <div class="hud-hp">HP <div class="hp-bar"><div class="hp-fill" id="hud-hp-fill" style="width:100%"></div></div></div>
+    <div class="hud-level" id="hud-level-name">Level 1</div>
+    <div class="hud-xp">XP <div class="xp-bar"><div class="xp-fill" id="hud-xp-fill" style="width:0%"></div></div></div>
+  </div>
+  <div class="challenge-main">
+    <div class="challenge-canvas">
+      <div class="canvas-holder" id="canvas-holder"></div>
+    </div>
+    <div class="challenge-panel">
+      <div class="challenge-info">
+        <div class="challenge-num" id="challenge-num">Challenge 1/3</div>
+        <div class="challenge-title" id="challenge-title"></div>
+        <div class="challenge-desc" id="challenge-desc"></div>
+      </div>
+      <div class="code-area">
+        <div id="block-mode" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="block-template" id="block-template"></div>
+          <div class="block-palette" id="block-palette"></div>
+        </div>
+        <div id="editor-mode" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="editor-wrap"><textarea id="code-editor"></textarea></div>
+          <div class="editor-error" id="editor-error"></div>
+        </div>
+      </div>
+      <div class="code-actions">
+        <button class="btn-run" onclick="runChallenge()">RUN CODE</button>
+        <button class="btn-reset" onclick="resetChallenge()">RESET</button>
+        <button class="btn-hint" onclick="showHint()">HINT</button>
+      </div>
+    </div>
+  </div>
+  <div class="message-bar" id="message-bar">
+    <span class="msg-icon">></span>
+    <span id="message-text">Ready to code!</span>
+  </div>
+</div>
+
+<!-- BOSS SCREEN -->
+<div id="screen-boss" class="screen">
+  <div class="boss-hud">
+    <button class="hud-back" onclick="exitToMap()">< FLEE</button>
+    <div class="hud-hp">HP <div class="hp-bar"><div class="hp-fill" id="boss-player-hp" style="width:100%"></div></div></div>
+    <div class="boss-name-display" id="boss-name-display">BOSS</div>
+    <div>BOSS <div class="boss-hp-bar"><div class="boss-hp-fill" id="boss-hp-fill" style="width:100%"></div></div></div>
+  </div>
+  <div class="boss-main">
+    <div class="boss-arena">
+      <div class="boss-sprite-area">
+        <canvas id="boss-canvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+    <div class="boss-panel">
+      <div class="boss-task">
+        <div class="boss-task-label" id="boss-task-label">BOSS CHALLENGE</div>
+        <div class="boss-task-text" id="boss-task-text"></div>
+        <div class="boss-timer" id="boss-timer"></div>
+      </div>
+      <div class="code-area">
+        <div id="boss-block-mode" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="block-template" id="boss-block-template"></div>
+          <div class="block-palette" id="boss-block-palette"></div>
+        </div>
+        <div id="boss-editor-mode" style="display:none;flex:1;display:flex;flex-direction:column;overflow:hidden">
+          <div class="editor-wrap"><textarea id="boss-code-editor"></textarea></div>
+          <div class="editor-error" id="boss-editor-error"></div>
+        </div>
+      </div>
+      <div class="code-actions">
+        <button class="btn-run" onclick="submitBossCode()" style="border-color:var(--hp-red);color:var(--hp-red)">ATTACK!</button>
+        <button class="btn-reset" onclick="resetBossCode()">RESET</button>
+      </div>
+    </div>
+  </div>
+  <div class="message-bar" id="boss-message-bar">
+    <span class="msg-icon">></span>
+    <span id="boss-message-text">Defeat the boss!</span>
+  </div>
+</div>
+
+<!-- LEVEL COMPLETE -->
+<div id="screen-level-complete" class="screen">
+  <h2>LEVEL COMPLETE!</h2>
+  <div class="lc-stats">
+    <div class="lc-stat"><span class="val" id="lc-xp">+50</span><span class="label">XP Earned</span></div>
+    <div class="lc-stat"><span class="val" id="lc-score">+300</span><span class="label">Score</span></div>
+    <div class="lc-stat"><span class="val" id="lc-hp">100%</span><span class="label">HP Left</span></div>
+  </div>
+  <button class="menu-btn" onclick="nextLevel()">NEXT LEVEL</button>
+  <button class="menu-btn secondary" onclick="showScreen('map');buildMap()">WORLD MAP</button>
+</div>
+
+<!-- VICTORY -->
+<div id="screen-victory" class="screen">
+  <h1>YOU DID IT!</h1>
+  <p>You've mastered the art of p5.js coding! From basic shapes to particle systems, you've conquered every challenge and defeated every boss. The Code Quest is complete!</p>
+  <div style="font-size:10px;color:var(--accent);margin:10px 0">Final Score: <span id="victory-score">0</span></div>
+  <button class="menu-btn" onclick="showScreen('map');buildMap()">VIEW MAP</button>
+  <button class="menu-btn secondary" onclick="location.href='index.html'">HOME</button>
+</div>
+
+<script src="libs/p5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════
+   p5.js CODE QUEST — Game Engine
+   ═══════════════════════════════════════════════════════ */
+
+// ── STATE ──
+const GS = {
+  screen: 'title',
+  currentLevel: 0,
+  currentChallenge: 0,
+  playerHP: 100,
+  playerMaxHP: 100,
+  playerXP: 0,
+  xpToNext: 100,
+  bossHP: 0,
+  bossMaxHP: 0,
+  bossPhase: 0,
+  bossTaskIndex: 0,
+  bossTimer: 0,
+  bossTimerMax: 30,
+  completedLevels: [],
+  unlockedLevels: [0],
+  score: 0,
+  selectedSlot: 0,
+  filledSlots: [],
+  hintUsed: false,
+  challengeSolved: false
+};
+
+let cmEditor = null;
+let cmBossEditor = null;
+let currentSketch = null;
+let bossAnimFrame = 0;
+let bossCtx = null;
+let bossInterval = null;
+
+// ── SAVE / LOAD ──
+function saveGame() {
+  localStorage.setItem('p5_code_quest', JSON.stringify({
+    completedLevels: GS.completedLevels,
+    unlockedLevels: GS.unlockedLevels,
+    score: GS.score,
+    playerXP: GS.playerXP
+  }));
+}
+function loadGame() {
+  const d = localStorage.getItem('p5_code_quest');
+  if (!d) return false;
+  try {
+    const s = JSON.parse(d);
+    GS.completedLevels = s.completedLevels || [];
+    GS.unlockedLevels = s.unlockedLevels || [0];
+    GS.score = s.score || 0;
+    GS.playerXP = s.playerXP || 0;
+    return GS.completedLevels.length > 0;
+  } catch(e) { return false; }
+}
+
+// ── SCREEN MANAGEMENT ──
+function showScreen(name) {
+  GS.screen = name;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+}
+
+// ── TITLE SCREEN ──
+function initTitle() {
+  const stars = document.getElementById('title-stars');
+  stars.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    const sz = Math.random() * 3 + 1;
+    s.style.width = sz + 'px';
+    s.style.height = sz + 'px';
+    s.style.animationDelay = Math.random() * 2 + 's';
+    stars.appendChild(s);
+  }
+  drawTitleWizard();
+  if (loadGame()) {
+    document.getElementById('btn-continue').style.display = 'inline-block';
+  }
+}
+
+function drawTitleWizard() {
+  const c = document.getElementById('title-wizard-canvas');
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  const px = 4;
+  const wizard = [
+    '    1111    ',
+    '   177771   ',
+    '  17777771  ',
+    '  11177111  ',
+    '    2332    ',
+    '   233332   ',
+    '   244442   ',
+    '  22444422  ',
+    '  25444452  ',
+    '  22444422  ',
+    '   244442   ',
+    '   224422   ',
+    '    2222    ',
+    '   26  62   ',
+    '   26  62   ',
+    '   66  66   '
+  ];
+  const pal = { '1': '#7c4dff', '2': '#00c8a8', '3': '#ffe0bd', '4': '#12122a', '5': '#ffd32a', '6': '#252550', '7': '#9b6dff' };
+  const offX = (120 - wizard[0].length * px) / 2;
+  const offY = (120 - wizard.length * px) / 2;
+  ctx.clearRect(0, 0, 120, 120);
+  wizard.forEach((row, ry) => {
+    for (let rx = 0; rx < row.length; rx++) {
+      if (pal[row[rx]]) {
+        ctx.fillStyle = pal[row[rx]];
+        ctx.fillRect(offX + rx * px, offY + ry * px, px, px);
+      }
+    }
+  });
+}
+
+function startGame(cont) {
+  if (cont) loadGame();
+  else {
+    GS.completedLevels = [];
+    GS.unlockedLevels = [0];
+    GS.score = 0;
+    GS.playerXP = 0;
+    saveGame();
+  }
+  GS.playerHP = GS.playerMaxHP;
+  showScreen('map');
+  buildMap();
+}
+
+// ── MAP ──
+function buildMap() {
+  const container = document.getElementById('map-nodes');
+  container.innerHTML = '';
+  document.getElementById('map-score').textContent = GS.score;
+  LEVELS.forEach((lvl, i) => {
+    const node = document.createElement('div');
+    node.className = 'map-node';
+    if (GS.completedLevels.includes(i)) node.classList.add('completed');
+    else if (GS.unlockedLevels.includes(i)) node.classList.add('current');
+    else node.classList.add('locked');
+    node.innerHTML = `<div class="level-num">${i + 1}</div><div class="level-name">${lvl.name}</div>`;
+    if (GS.unlockedLevels.includes(i) || GS.completedLevels.includes(i)) {
+      node.onclick = () => enterLevel(i);
+    }
+    container.appendChild(node);
+  });
+}
+
+// ── ENTER LEVEL ──
+function enterLevel(idx) {
+  GS.currentLevel = idx;
+  GS.currentChallenge = 0;
+  GS.playerHP = GS.playerMaxHP;
+  GS.challengeSolved = false;
+  GS.hintUsed = false;
+  showScreen('challenge');
+  loadChallenge();
+}
+
+function exitToMap() {
+  if (currentSketch) { currentSketch.remove(); currentSketch = null; }
+  if (bossInterval) { clearInterval(bossInterval); bossInterval = null; }
+  showScreen('map');
+  buildMap();
+}
+
+// ── LOAD CHALLENGE ──
+function loadChallenge() {
+  const lvl = LEVELS[GS.currentLevel];
+  const ch = lvl.challenges[GS.currentChallenge];
+  GS.challengeSolved = false;
+  GS.hintUsed = false;
+  GS.filledSlots = new Array(ch.slots || 1).fill(null);
+  GS.selectedSlot = 0;
+
+  document.getElementById('hud-level-name').textContent = `Level ${GS.currentLevel + 1}: ${lvl.name}`;
+  updateHUD();
+  document.getElementById('challenge-num').textContent = `Challenge ${GS.currentChallenge + 1}/${lvl.challenges.length}`;
+  document.getElementById('challenge-title').textContent = ch.title;
+  document.getElementById('challenge-desc').textContent = ch.instruction;
+  setMessage('Ready to code!', '');
+
+  if (currentSketch) { currentSketch.remove(); currentSketch = null; }
+
+  if (lvl.inputMode === 'blocks') {
+    document.getElementById('block-mode').style.display = 'flex';
+    document.getElementById('editor-mode').style.display = 'none';
+    buildBlockUI(ch);
+  } else {
+    document.getElementById('block-mode').style.display = 'none';
+    document.getElementById('editor-mode').style.display = 'flex';
+    buildEditorUI(ch);
+  }
+}
+
+// ── BLOCK UI ──
+function buildBlockUI(ch) {
+  const tmpl = document.getElementById('block-template');
+  const pal = document.getElementById('block-palette');
+
+  let html = ch.template;
+  for (let i = 0; i < (ch.slots || 1); i++) {
+    html = html.replace('___', `<span class="slot" data-slot="${i}" onclick="selectSlot(${i})">[___]</span>`);
+  }
+  tmpl.innerHTML = html;
+
+  pal.innerHTML = '';
+  ch.blocks.forEach((b, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'code-block';
+    btn.textContent = b;
+    btn.onclick = () => fillSlot(i, b);
+    btn.id = 'block-' + i;
+    pal.appendChild(btn);
+  });
+}
+
+function selectSlot(idx) {
+  GS.selectedSlot = idx;
+  document.querySelectorAll('#block-template .slot').forEach((s, i) => {
+    s.style.borderWidth = i === idx ? '2px' : '1px';
+  });
+}
+
+function fillSlot(blockIdx, blockText) {
+  const slotIdx = GS.filledSlots.indexOf(null);
+  if (slotIdx === -1) return;
+  GS.filledSlots[slotIdx] = { blockIdx, text: blockText };
+  const slotEl = document.querySelector(`#block-template .slot[data-slot="${slotIdx}"]`);
+  if (slotEl) {
+    slotEl.textContent = blockText;
+    slotEl.classList.add('filled');
+    slotEl.onclick = () => clearSlot(slotIdx);
+  }
+  const btn = document.getElementById('block-' + blockIdx);
+  if (btn) btn.classList.add('used');
+}
+
+function clearSlot(idx) {
+  const data = GS.filledSlots[idx];
+  if (!data) return;
+  const btn = document.getElementById('block-' + data.blockIdx);
+  if (btn) btn.classList.remove('used');
+  GS.filledSlots[idx] = null;
+  const slotEl = document.querySelector(`#block-template .slot[data-slot="${idx}"]`);
+  if (slotEl) {
+    slotEl.textContent = '[___]';
+    slotEl.classList.remove('filled', 'correct', 'wrong');
+    slotEl.onclick = () => selectSlot(idx);
+  }
+}
+
+// ── EDITOR UI ──
+function buildEditorUI(ch) {
+  const ta = document.getElementById('code-editor');
+  ta.value = ch.starterCode || '';
+  if (cmEditor) cmEditor.toTextArea();
+  cmEditor = CodeMirror.fromTextArea(ta, {
+    mode: 'javascript',
+    theme: 'dracula',
+    lineNumbers: true,
+    tabSize: 2,
+    indentWithTabs: false,
+    lineWrapping: true
+  });
+  cmEditor.setValue(ch.starterCode || '');
+  document.getElementById('editor-error').classList.remove('visible');
+}
+
+// ── RUN CHALLENGE ──
+function runChallenge() {
+  if (GS.challengeSolved) return;
+  const lvl = LEVELS[GS.currentLevel];
+  const ch = lvl.challenges[GS.currentChallenge];
+
+  let code;
+  if (lvl.inputMode === 'blocks') {
+    if (GS.filledSlots.some(s => s === null)) {
+      setMessage('Fill all the slots first!', 'error');
+      return;
+    }
+    code = ch.template;
+    GS.filledSlots.forEach(s => { code = code.replace('___', s.text); });
+  } else {
+    code = cmEditor.getValue();
+  }
+
+  if (currentSketch) { currentSketch.remove(); currentSketch = null; }
+
+  try {
+    const result = ch.validator(code);
+    if (result === true) {
+      onChallengeSuccess(ch);
+    } else {
+      onChallengeFail(result || 'Not quite right. Try again!');
+    }
+  } catch(e) {
+    onChallengeFail('Error: ' + e.message);
+  }
+}
+
+function onChallengeSuccess(ch) {
+  GS.challengeSolved = true;
+  const xp = GS.hintUsed ? 10 : 20;
+  GS.playerXP += xp;
+  GS.score += GS.hintUsed ? 50 : 100;
+
+  if (LEVELS[GS.currentLevel].inputMode === 'blocks') {
+    document.querySelectorAll('#block-template .slot').forEach(s => s.classList.add('correct'));
+  }
+
+  runPreview(ch);
+  updateHUD();
+  flash('#2ed573');
+
+  const lvl = LEVELS[GS.currentLevel];
+  if (GS.currentChallenge < lvl.challenges.length - 1) {
+    setMessage(`Correct! +${xp} XP`, 'success', true);
+  } else {
+    setMessage('All challenges done! Time to face the BOSS!', 'success', true, true);
+  }
+}
+
+function onChallengeFail(msg) {
+  GS.playerHP = Math.max(0, GS.playerHP - 5);
+  updateHUD();
+  flash('#ff4757');
+  if (LEVELS[GS.currentLevel].inputMode === 'blocks') {
+    document.querySelectorAll('#block-template .slot.filled').forEach(s => {
+      s.classList.add('wrong');
+      setTimeout(() => s.classList.remove('wrong'), 400);
+    });
+  } else {
+    const errEl = document.getElementById('editor-error');
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+  setMessage(typeof msg === 'string' ? msg : 'Not quite right. Try again!', 'error');
+}
+
+function runPreview(ch) {
+  if (currentSketch) { currentSketch.remove(); currentSketch = null; }
+  const holder = document.getElementById('canvas-holder');
+  if (ch.preview) {
+    try {
+      currentSketch = new p5(ch.preview, holder);
+    } catch(e) { /* silent */ }
+  }
+}
+
+// ── NEXT / BOSS ──
+function advanceChallenge(toBoss) {
+  if (toBoss) {
+    startBoss();
+  } else {
+    GS.currentChallenge++;
+    loadChallenge();
+  }
+}
+
+function setMessage(text, type, showNext, toBoss) {
+  const bar = document.getElementById('message-bar');
+  const msgEl = document.getElementById('message-text');
+  bar.className = 'message-bar' + (type ? ' ' + type : '');
+  msgEl.textContent = text;
+  bar.querySelectorAll('.btn-next').forEach(b => b.remove());
+  if (showNext) {
+    const btn = document.createElement('button');
+    btn.className = 'btn-next';
+    btn.textContent = toBoss ? 'FIGHT BOSS >' : 'NEXT >';
+    btn.onclick = () => advanceChallenge(toBoss);
+    bar.appendChild(btn);
+  }
+}
+
+function resetChallenge() {
+  const lvl = LEVELS[GS.currentLevel];
+  const ch = lvl.challenges[GS.currentChallenge];
+  GS.challengeSolved = false;
+  if (lvl.inputMode === 'blocks') {
+    GS.filledSlots.forEach((_, i) => clearSlot(i));
+  } else {
+    cmEditor.setValue(ch.starterCode || '');
+    document.getElementById('editor-error').classList.remove('visible');
+  }
+  if (currentSketch) { currentSketch.remove(); currentSketch = null; }
+  setMessage('Reset! Try again.', 'info');
+}
+
+function showHint() {
+  const ch = LEVELS[GS.currentLevel].challenges[GS.currentChallenge];
+  GS.hintUsed = true;
+  setMessage('Hint: ' + (ch.hint || 'Read the challenge description carefully!'), 'info');
+}
+
+// ── HUD ──
+function updateHUD() {
+  const hpPct = (GS.playerHP / GS.playerMaxHP) * 100;
+  document.getElementById('hud-hp-fill').style.width = hpPct + '%';
+  document.getElementById('hud-hp-fill').style.background = hpPct > 30 ? 'var(--hp-green)' : 'var(--hp-red)';
+  const xpPct = Math.min((GS.playerXP % 100) / 100 * 100, 100);
+  document.getElementById('hud-xp-fill').style.width = xpPct + '%';
+}
+
+function flash(color) {
+  const el = document.getElementById('screen-flash');
+  el.style.background = color;
+  el.style.opacity = '0.2';
+  setTimeout(() => el.style.opacity = '0', 150);
+}
+
+// ── BOSS FIGHT ──
+function startBoss() {
+  const lvl = LEVELS[GS.currentLevel];
+  const boss = lvl.boss;
+  GS.bossHP = boss.hp;
+  GS.bossMaxHP = boss.hp;
+  GS.bossTaskIndex = 0;
+  GS.bossPhase = 0;
+  GS.bossTimer = boss.timePerTask || 30;
+  GS.bossTimerMax = boss.timePerTask || 30;
+
+  showScreen('boss');
+  document.getElementById('boss-name-display').textContent = boss.name;
+  updateBossHUD();
+
+  bossCtx = document.getElementById('boss-canvas').getContext('2d');
+  bossCtx.imageSmoothingEnabled = false;
+  bossAnimFrame = 0;
+  if (bossInterval) clearInterval(bossInterval);
+  bossInterval = setInterval(bossRenderLoop, 100);
+
+  loadBossTask();
+  startBossTimer();
+}
+
+function loadBossTask() {
+  const boss = LEVELS[GS.currentLevel].boss;
+  const task = boss.tasks[GS.bossTaskIndex % boss.tasks.length];
+  GS.challengeSolved = false;
+  GS.filledSlots = new Array(task.slots || 1).fill(null);
+
+  document.getElementById('boss-task-label').textContent = `TASK ${GS.bossTaskIndex + 1}`;
+  document.getElementById('boss-task-text').textContent = task.instruction;
+  setBossMessage(task.instruction, '');
+
+  const lvl = LEVELS[GS.currentLevel];
+  if (lvl.inputMode === 'blocks' || task.mode === 'blocks') {
+    document.getElementById('boss-block-mode').style.display = 'flex';
+    document.getElementById('boss-editor-mode').style.display = 'none';
+    buildBossBlockUI(task);
+  } else {
+    document.getElementById('boss-block-mode').style.display = 'none';
+    document.getElementById('boss-editor-mode').style.display = 'flex';
+    buildBossEditorUI(task);
+  }
+  GS.bossTimer = GS.bossTimerMax;
+}
+
+function buildBossBlockUI(task) {
+  const tmpl = document.getElementById('boss-block-template');
+  const pal = document.getElementById('boss-block-palette');
+  let html = task.template;
+  for (let i = 0; i < (task.slots || 1); i++) {
+    html = html.replace('___', `<span class="slot" data-slot="${i}" onclick="bossSelectSlot(${i})">[___]</span>`);
+  }
+  tmpl.innerHTML = html;
+  pal.innerHTML = '';
+  task.blocks.forEach((b, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'code-block';
+    btn.textContent = b;
+    btn.onclick = () => bossFillSlot(i, b);
+    btn.id = 'boss-block-' + i;
+    pal.appendChild(btn);
+  });
+}
+
+function bossSelectSlot(idx) { GS.selectedSlot = idx; }
+function bossFillSlot(blockIdx, blockText) {
+  const slotIdx = GS.filledSlots.indexOf(null);
+  if (slotIdx === -1) return;
+  GS.filledSlots[slotIdx] = { blockIdx, text: blockText };
+  const slotEl = document.querySelector(`#boss-block-template .slot[data-slot="${slotIdx}"]`);
+  if (slotEl) { slotEl.textContent = blockText; slotEl.classList.add('filled'); slotEl.onclick = () => bossClearSlot(slotIdx); }
+  const btn = document.getElementById('boss-block-' + blockIdx);
+  if (btn) btn.classList.add('used');
+}
+function bossClearSlot(idx) {
+  const data = GS.filledSlots[idx];
+  if (!data) return;
+  const btn = document.getElementById('boss-block-' + data.blockIdx);
+  if (btn) btn.classList.remove('used');
+  GS.filledSlots[idx] = null;
+  const slotEl = document.querySelector(`#boss-block-template .slot[data-slot="${idx}"]`);
+  if (slotEl) { slotEl.textContent = '[___]'; slotEl.classList.remove('filled','correct','wrong'); slotEl.onclick = () => bossSelectSlot(idx); }
+}
+
+function buildBossEditorUI(task) {
+  const ta = document.getElementById('boss-code-editor');
+  ta.value = task.starterCode || '';
+  if (cmBossEditor) cmBossEditor.toTextArea();
+  cmBossEditor = CodeMirror.fromTextArea(ta, {
+    mode: 'javascript', theme: 'dracula', lineNumbers: true, tabSize: 2
+  });
+  cmBossEditor.setValue(task.starterCode || '');
+}
+
+function submitBossCode() {
+  const boss = LEVELS[GS.currentLevel].boss;
+  const task = boss.tasks[GS.bossTaskIndex % boss.tasks.length];
+  const lvl = LEVELS[GS.currentLevel];
+
+  let code;
+  if (lvl.inputMode === 'blocks' || task.mode === 'blocks') {
+    if (GS.filledSlots.some(s => s === null)) { setBossMessage('Fill all slots!', 'error'); return; }
+    code = task.template;
+    GS.filledSlots.forEach(s => { code = code.replace('___', s.text); });
+  } else {
+    code = cmBossEditor.getValue();
+  }
+
+  try {
+    const result = task.validator(code);
+    if (result === true) {
+      const dmg = 25;
+      GS.bossHP = Math.max(0, GS.bossHP - dmg);
+      GS.score += 50;
+      GS.playerXP += 15;
+      flash('#2ed573');
+      updateBossHUD();
+      bossHitAnim();
+      setBossMessage(`Direct hit! -${dmg} Boss HP`, 'success');
+
+      if (GS.bossHP <= 0) {
+        setTimeout(bossDefeated, 600);
+      } else {
+        GS.bossTaskIndex++;
+        setTimeout(loadBossTask, 800);
+      }
+    } else {
+      GS.playerHP = Math.max(0, GS.playerHP - 15);
+      flash('#ff4757');
+      updateBossHUD();
+      setBossMessage(typeof result === 'string' ? result : 'Wrong! The boss attacks! -15 HP', 'error');
+      if (GS.playerHP <= 0) {
+        setTimeout(() => {
+          setBossMessage('You were defeated! Returning to map...', 'error');
+          setTimeout(() => { exitToMap(); }, 1500);
+        }, 500);
+      }
+    }
+  } catch(e) {
+    GS.playerHP = Math.max(0, GS.playerHP - 10);
+    flash('#ff4757');
+    updateBossHUD();
+    setBossMessage('Code error! ' + e.message, 'error');
+  }
+}
+
+function resetBossCode() {
+  const boss = LEVELS[GS.currentLevel].boss;
+  const task = boss.tasks[GS.bossTaskIndex % boss.tasks.length];
+  const lvl = LEVELS[GS.currentLevel];
+  if (lvl.inputMode === 'blocks' || task.mode === 'blocks') {
+    GS.filledSlots.forEach((_, i) => bossClearSlot(i));
+  } else {
+    cmBossEditor.setValue(task.starterCode || '');
+  }
+}
+
+function startBossTimer() {
+  const timerEl = document.getElementById('boss-timer');
+  const tick = () => {
+    if (GS.screen !== 'boss') return;
+    GS.bossTimer = Math.max(0, GS.bossTimer - 1);
+    timerEl.textContent = `TIME: ${GS.bossTimer}s`;
+    if (GS.bossTimer <= 0) {
+      GS.playerHP = Math.max(0, GS.playerHP - 10);
+      flash('#ff4757');
+      updateBossHUD();
+      setBossMessage('Time\'s up! Boss attacks! -10 HP', 'error');
+      GS.bossTimer = GS.bossTimerMax;
+      if (GS.playerHP <= 0) {
+        setBossMessage('Defeated! Returning to map...', 'error');
+        setTimeout(exitToMap, 1500);
+        return;
+      }
+      GS.bossTaskIndex++;
+      setTimeout(loadBossTask, 800);
+    }
+    setTimeout(tick, 1000);
+  };
+  setTimeout(tick, 1000);
+}
+
+function updateBossHUD() {
+  const hpPct = (GS.playerHP / GS.playerMaxHP) * 100;
+  document.getElementById('boss-player-hp').style.width = hpPct + '%';
+  document.getElementById('boss-player-hp').style.background = hpPct > 30 ? 'var(--hp-green)' : 'var(--hp-red)';
+  const bossPct = (GS.bossHP / GS.bossMaxHP) * 100;
+  document.getElementById('boss-hp-fill').style.width = bossPct + '%';
+}
+
+function setBossMessage(text, type) {
+  const bar = document.getElementById('boss-message-bar');
+  bar.className = 'message-bar' + (type ? ' ' + type : '');
+  document.getElementById('boss-message-text').textContent = text;
+}
+
+function bossDefeated() {
+  if (bossInterval) { clearInterval(bossInterval); bossInterval = null; }
+  if (!GS.completedLevels.includes(GS.currentLevel)) {
+    GS.completedLevels.push(GS.currentLevel);
+  }
+  const next = GS.currentLevel + 1;
+  if (next < LEVELS.length && !GS.unlockedLevels.includes(next)) {
+    GS.unlockedLevels.push(next);
+  }
+  GS.score += 200;
+  GS.playerXP += 50;
+  saveGame();
+
+  if (GS.currentLevel === LEVELS.length - 1) {
+    showScreen('victory');
+    document.getElementById('victory-score').textContent = GS.score;
+  } else {
+    showScreen('level-complete');
+    document.getElementById('lc-xp').textContent = '+' + 50;
+    document.getElementById('lc-score').textContent = '+' + 200;
+    document.getElementById('lc-hp').textContent = Math.round((GS.playerHP / GS.playerMaxHP) * 100) + '%';
+  }
+}
+
+function nextLevel() {
+  if (GS.currentLevel + 1 < LEVELS.length) {
+    enterLevel(GS.currentLevel + 1);
+  } else {
+    showScreen('map');
+    buildMap();
+  }
+}
+
+// ── BOSS RENDER ──
+function bossRenderLoop() {
+  if (!bossCtx || GS.screen !== 'boss') return;
+  bossAnimFrame++;
+  const ctx = bossCtx;
+  const boss = LEVELS[GS.currentLevel].boss;
+  ctx.clearRect(0, 0, 400, 400);
+
+  // Background
+  ctx.fillStyle = '#0a0a14';
+  ctx.fillRect(0, 0, 400, 400);
+
+  // Grid floor
+  ctx.strokeStyle = '#1a1a3a';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 400; i += 20) {
+    ctx.beginPath(); ctx.moveTo(i, 200); ctx.lineTo(i, 400); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, 200 + i/2); ctx.lineTo(400, 200 + i/2); ctx.stroke();
+  }
+
+  // Draw boss sprite
+  if (boss.sprite) drawPixelSprite(ctx, boss.sprite, boss.spriteColors, 140, 40, 5);
+
+  // Boss name
+  ctx.fillStyle = '#ff4757';
+  ctx.font = '12px "Press Start 2P"';
+  ctx.textAlign = 'center';
+  ctx.fillText(boss.name, 200, 380);
+
+  // Idle animation (float)
+  const float = Math.sin(bossAnimFrame * 0.3) * 3;
+  ctx.save();
+  ctx.translate(0, float);
+  if (boss.sprite) drawPixelSprite(ctx, boss.sprite, boss.spriteColors, 140, 60, 5);
+  ctx.restore();
+}
+
+let bossHitFlash = 0;
+function bossHitAnim() {
+  bossHitFlash = 6;
+  const origRender = bossRenderLoop;
+  const flashInterval = setInterval(() => {
+    bossHitFlash--;
+    if (bossHitFlash <= 0) clearInterval(flashInterval);
+  }, 80);
+}
+
+function drawPixelSprite(ctx, rows, colors, x, y, scale) {
+  for (let ry = 0; ry < rows.length; ry++) {
+    for (let rx = 0; rx < rows[ry].length; rx++) {
+      const ch = rows[ry][rx];
+      if (ch !== ' ' && ch !== '0' && colors[ch]) {
+        ctx.fillStyle = (bossHitFlash > 0 && bossHitFlash % 2 === 0) ? '#fff' : colors[ch];
+        ctx.fillRect(x + rx * scale, y + ry * scale, scale, scale);
+      }
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   LEVEL DATA — 10 Levels
+   ═══════════════════════════════════════════════════════ */
+
+const LEVELS = [
+
+// ═══ LEVEL 1: Hello Canvas ═══
+{
+  id: 0, name: "Hello Canvas", desc: "Setup & Basic Shapes", inputMode: "blocks",
+  challenges: [
+    {
+      title: "Create Your Canvas",
+      instruction: "Every p5.js sketch starts with createCanvas(). Set up a 400x400 canvas!",
+      hint: "createCanvas takes width and height as arguments.",
+      template: "function setup() {\n  ___\n}",
+      blocks: ["createCanvas(400, 400)", "createCanvas(400)", "background(220)", "draw()"],
+      correctAnswer: "createCanvas(400, 400)",
+      slots: 1,
+      validator: function(code) { return code.includes("createCanvas(400, 400)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400, 400); p.background(30); p.fill(0,200,168); p.textSize(20); p.textAlign(p.CENTER); p.text("Canvas Created!", 200, 200); }; }
+    },
+    {
+      title: "Draw a Rectangle",
+      instruction: "Use rect(x, y, width, height) to draw a rectangle at position (50, 50) with size 100x80.",
+      hint: "rect() takes 4 numbers: x, y, width, height.",
+      template: "function setup() {\n  createCanvas(400, 400);\n}\nfunction draw() {\n  background(30);\n  fill(0, 200, 168);\n  ___\n}",
+      blocks: ["rect(50, 50, 100, 80)", "rect(50, 50)", "ellipse(50, 50, 100, 80)", "rect(100, 80)"],
+      correctAnswer: "rect(50, 50, 100, 80)",
+      slots: 1,
+      validator: function(code) { return code.includes("rect(50, 50, 100, 80)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); p.rect(50,50,100,80); }; }
+    },
+    {
+      title: "Draw a Smiley Face",
+      instruction: "Use ellipse() for the head and eyes! Place the head at (200, 200) with size 150x150, and add two eyes.",
+      hint: "ellipse(x, y, w, h) draws an oval. The face is a big ellipse, eyes are small ones.",
+      template: "function draw() {\n  background(30);\n  fill(255, 220, 100);\n  ___\n  fill(30);\n  ellipse(175, 180, 20, 25);\n  ellipse(225, 180, 20, 25);\n}",
+      blocks: ["ellipse(200, 200, 150, 150)", "ellipse(200, 200, 50)", "rect(200, 200, 150, 150)", "circle(200, 200)"],
+      correctAnswer: "ellipse(200, 200, 150, 150)",
+      slots: 1,
+      validator: function(code) { return code.includes("ellipse(200, 200, 150, 150)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(255,220,100); p.ellipse(200,200,150,150); p.fill(30); p.ellipse(175,180,20,25); p.ellipse(225,180,20,25); p.noFill(); p.stroke(30); p.strokeWeight(3); p.arc(200,210,60,40,0,p.PI); p.noStroke(); }; }
+    }
+  ],
+  boss: {
+    name: "THE BLANK CANVAS",
+    hp: 75,
+    timePerTask: 25,
+    sprite: [
+      "   1111111   ",
+      "  111111111  ",
+      " 11111111111 ",
+      " 11222222211 ",
+      " 12233333221 ",
+      " 12233333221 ",
+      " 12233333221 ",
+      " 12233333221 ",
+      " 11222222211 ",
+      " 11111111111 ",
+      "  111111111  ",
+      "   1111111   "
+    ],
+    spriteColors: { '1': '#3a3a5c', '2': '#252540', '3': '#1a1a2e' },
+    tasks: [
+      {
+        instruction: "Draw a rectangle to crack the void! Use rect(100, 100, 200, 200)",
+        mode: "blocks",
+        template: "fill(0, 200, 168);\n___",
+        blocks: ["rect(100, 100, 200, 200)", "ellipse(100, 100)", "line(0, 0, 400, 400)", "rect()"],
+        slots: 1,
+        validator: function(code) { return code.includes("rect(100, 100, 200, 200)"); }
+      },
+      {
+        instruction: "Now an ellipse to shatter it! Use ellipse(200, 200, 150, 150)",
+        mode: "blocks",
+        template: "fill(124, 77, 255);\n___",
+        blocks: ["ellipse(200, 200, 150, 150)", "rect(200, 200, 150)", "ellipse(200, 200)", "circle(150)"],
+        slots: 1,
+        validator: function(code) { return code.includes("ellipse(200, 200, 150, 150)"); }
+      },
+      {
+        instruction: "Final blow! Draw a line across: line(0, 0, 400, 400)",
+        mode: "blocks",
+        template: "stroke(255, 215, 0);\nstrokeWeight(4);\n___",
+        blocks: ["line(0, 0, 400, 400)", "line(0, 0)", "rect(0, 0, 400, 400)", "line(200, 200, 400)"],
+        slots: 1,
+        validator: function(code) { return code.includes("line(0, 0, 400, 400)"); }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 2: Paint the World ═══
+{
+  id: 1, name: "Paint the World", desc: "Colors & Styling", inputMode: "blocks",
+  challenges: [
+    {
+      title: "Color It Red",
+      instruction: "Use fill() with RGB values to color a shape red. fill(255, 0, 0) means full red, no green, no blue.",
+      hint: "fill(red, green, blue) — for pure red, max out red and zero the rest.",
+      template: "function draw() {\n  background(30);\n  ___\n  rect(100, 100, 200, 200);\n}",
+      blocks: ["fill(255, 0, 0)", "fill(0, 255, 0)", "fill(0, 0, 255)", "stroke(255, 0, 0)"],
+      correctAnswer: "fill(255, 0, 0)",
+      slots: 1,
+      validator: function(code) { return code.includes("fill(255, 0, 0)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(255,0,0); p.rect(100,100,200,200); }; }
+    },
+    {
+      title: "Thick Borders",
+      instruction: "Use stroke() to set the outline color and strokeWeight() to make it thick!",
+      hint: "stroke() sets color, strokeWeight() sets thickness in pixels.",
+      template: "function draw() {\n  background(30);\n  ___\n  ___\n  fill(0, 200, 168);\n  rect(100, 100, 200, 200);\n}",
+      blocks: ["stroke(255, 215, 0)", "strokeWeight(6)", "noStroke()", "fill(255)"],
+      correctAnswer: "stroke(255, 215, 0),strokeWeight(6)",
+      slots: 2,
+      validator: function(code) { return code.includes("stroke(255, 215, 0)") && code.includes("strokeWeight(6)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.stroke(255,215,0); p.strokeWeight(6); p.fill(0,200,168); p.rect(100,100,200,200); }; }
+    },
+    {
+      title: "Sunset Scene",
+      instruction: "Create a sunset! Use fill() with warm orange color (255, 140, 0) for the sun.",
+      hint: "Orange is a mix of red and some green: fill(255, 140, 0).",
+      template: "function draw() {\n  background(25, 25, 80);\n  noStroke();\n  ___\n  ellipse(200, 300, 120, 120);\n}",
+      blocks: ["fill(255, 140, 0)", "fill(0, 140, 255)", "fill(140, 255, 0)", "fill(255, 255, 255)"],
+      correctAnswer: "fill(255, 140, 0)",
+      slots: 1,
+      validator: function(code) { return code.includes("fill(255, 140, 0)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(25,25,80); p.noStroke(); for(let i=6;i>0;i--){p.fill(255,100+i*20,0,60);p.ellipse(200,300,120+i*40);} p.fill(255,140,0);p.ellipse(200,300,120); }; }
+    }
+  ],
+  boss: {
+    name: "GRAYSCALE GHOST",
+    hp: 75,
+    timePerTask: 25,
+    sprite: [
+      "    1111    ",
+      "  11222211  ",
+      " 1222222221 ",
+      " 1223223221 ",
+      " 1223223221 ",
+      " 1222222221 ",
+      " 1222222221 ",
+      " 1222332221 ",
+      " 1222222221 ",
+      "  12222221  ",
+      "  1 1221 1  ",
+      "    1  1    "
+    ],
+    spriteColors: { '1': '#555', '2': '#888', '3': '#333' },
+    tasks: [
+      {
+        instruction: "Blast it with RED! Use fill(255, 0, 0)",
+        mode: "blocks",
+        template: "___\nrect(0, 0, 400, 400);",
+        blocks: ["fill(255, 0, 0)", "fill(128, 128, 128)", "fill(0, 0, 0)", "fill(255)"],
+        slots: 1,
+        validator: function(code) { return code.includes("fill(255, 0, 0)"); }
+      },
+      {
+        instruction: "Now GREEN energy! Use fill(0, 255, 0)",
+        mode: "blocks",
+        template: "___\nellipse(200, 200, 300, 300);",
+        blocks: ["fill(0, 255, 0)", "fill(0, 0, 255)", "fill(128, 128, 0)", "stroke(0, 255, 0)"],
+        slots: 1,
+        validator: function(code) { return code.includes("fill(0, 255, 0)"); }
+      },
+      {
+        instruction: "Finish with BLUE! Use fill(0, 0, 255)",
+        mode: "blocks",
+        template: "___\ntriangle(200, 50, 50, 350, 350, 350);",
+        blocks: ["fill(0, 0, 255)", "fill(255, 0, 255)", "fill(0, 255, 255)", "fill(100, 100, 100)"],
+        slots: 1,
+        validator: function(code) { return code.includes("fill(0, 0, 255)"); }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 3: Things That Move ═══
+{
+  id: 2, name: "Things That Move", desc: "Variables & Animation", inputMode: "blocks",
+  challenges: [
+    {
+      title: "Create a Variable",
+      instruction: "Declare a variable 'x' with value 200. In p5.js, we use 'let' to create variables.",
+      hint: "let variableName = value;",
+      template: "___\n\nfunction draw() {\n  background(30);\n  fill(0, 200, 168);\n  ellipse(x, 200, 50, 50);\n}",
+      blocks: ["let x = 200;", "var x;", "x == 200;", "const x = 200;"],
+      correctAnswer: "let x = 200;",
+      slots: 1,
+      validator: function(code) { return code.includes("let x = 200;"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); p.ellipse(200,200,50,50); }; }
+    },
+    {
+      title: "Animate Movement",
+      instruction: "Make x increase by 1 each frame! Put x += 1 (or x++) inside the draw function to animate.",
+      hint: "x += 1 adds 1 to x every frame, making it move right.",
+      template: "let x = 0;\n\nfunction draw() {\n  background(30);\n  ___\n  fill(255, 215, 0);\n  ellipse(x, 200, 40, 40);\n}",
+      blocks: ["x += 2;", "x = 0;", "x -= 1;", "y += 1;"],
+      correctAnswer: "x += 2;",
+      slots: 1,
+      validator: function(code) { return code.includes("x += 2;"); },
+      preview: function(p) { let x=0; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); x+=2; if(x>420)x=-20; p.fill(255,215,0); p.ellipse(x,200,40,40); }; }
+    },
+    {
+      title: "Bouncing Ball",
+      instruction: "Make the ball reverse direction when it hits the edge! Use: if (x > 400) speed = -speed;",
+      hint: "When x goes past the canvas width, flip the speed to negative.",
+      template: "let x = 200, speed = 3;\n\nfunction draw() {\n  background(30);\n  x += speed;\n  ___\n  if (x < 0) speed = -speed;\n  fill(124, 77, 255);\n  ellipse(x, 200, 50, 50);\n}",
+      blocks: ["if (x > 400) speed = -speed;", "if (x > 400) x = 0;", "if (x == 400) stop();", "speed = 0;"],
+      correctAnswer: "if (x > 400) speed = -speed;",
+      slots: 1,
+      validator: function(code) { return code.includes("if (x > 400) speed = -speed;"); },
+      preview: function(p) { let x=200,sp=3; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); x+=sp; if(x>400||x<0)sp=-sp; p.fill(124,77,255); p.ellipse(x,200,50,50); }; }
+    }
+  ],
+  boss: {
+    name: "THE FROZEN FRAME",
+    hp: 100,
+    timePerTask: 25,
+    sprite: [
+      "  11    11  ",
+      " 1221  1221 ",
+      "  1233321   ",
+      "   123321   ",
+      "  12333321  ",
+      " 1233333321 ",
+      " 1233333321 ",
+      "  12333321  ",
+      "   123321   ",
+      "  1233321   ",
+      " 1221  1221 ",
+      "  11    11  "
+    ],
+    spriteColors: { '1': '#74b9ff', '2': '#a8d8ff', '3': '#dfe6e9' },
+    tasks: [
+      {
+        instruction: "Unfreeze! Declare a variable: let x = 0;",
+        mode: "blocks",
+        template: "___\nfunction draw() { x += 1; }",
+        blocks: ["let x = 0;", "var x;", "x = 0", "const x;"],
+        slots: 1,
+        validator: function(code) { return code.includes("let x = 0;"); }
+      },
+      {
+        instruction: "Add motion! Use: x += 3;",
+        mode: "blocks",
+        template: "let x = 0;\nfunction draw() {\n  ___\n}",
+        blocks: ["x += 3;", "x = 3;", "x -= 3;", "3 += x;"],
+        slots: 1,
+        validator: function(code) { return code.includes("x += 3;"); }
+      },
+      {
+        instruction: "Add bounce logic: if (x > 400) speed = -speed;",
+        mode: "blocks",
+        template: "let x=0, speed=5;\nfunction draw() {\n  x += speed;\n  ___\n}",
+        blocks: ["if (x > 400) speed = -speed;", "if (x < 0) speed = 0;", "x = 400;", "speed += 1;"],
+        slots: 1,
+        validator: function(code) { return code.includes("if (x > 400) speed = -speed;"); }
+      },
+      {
+        instruction: "Full animation! Set speed to bounce both ways.",
+        mode: "blocks",
+        template: "let x=0, speed=5;\nfunction draw() {\n  x += speed;\n  if (x > 400) speed = -speed;\n  ___\n}",
+        blocks: ["if (x < 0) speed = -speed;", "if (x < 0) x = 400;", "speed = 5;", "x = 0;"],
+        slots: 1,
+        validator: function(code) { return code.includes("if (x < 0) speed = -speed;"); }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 4: Listen to Me ═══
+{
+  id: 3, name: "Listen to Me", desc: "Mouse & Keyboard Input", inputMode: "blocks",
+  challenges: [
+    {
+      title: "Follow the Mouse",
+      instruction: "p5.js gives you mouseX and mouseY for free! Use them to make a circle follow your cursor.",
+      hint: "mouseX and mouseY update every frame with the cursor position.",
+      template: "function draw() {\n  background(30);\n  fill(0, 200, 168);\n  ellipse(___, ___, 50, 50);\n}",
+      blocks: ["mouseX", "mouseY", "200", "width"],
+      correctAnswer: "mouseX,mouseY",
+      slots: 2,
+      validator: function(code) { return code.includes("ellipse(mouseX, mouseY,"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); p.ellipse(p.mouseX,p.mouseY,50,50); }; }
+    },
+    {
+      title: "Click to Change",
+      instruction: "Use mouseIsPressed to change color when clicking! It's true when the mouse button is held down.",
+      hint: "mouseIsPressed is a boolean — true when clicking, false otherwise.",
+      template: "function draw() {\n  background(30);\n  if (___) {\n    fill(255, 0, 0);\n  } else {\n    fill(0, 0, 255);\n  }\n  ellipse(200, 200, 100, 100);\n}",
+      blocks: ["mouseIsPressed", "keyIsPressed", "mouseX > 200", "true"],
+      correctAnswer: "mouseIsPressed",
+      slots: 1,
+      validator: function(code) { return code.includes("if (mouseIsPressed)"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); if(p.mouseIsPressed)p.fill(255,0,0);else p.fill(0,0,255); p.ellipse(200,200,100,100); }; }
+    },
+    {
+      title: "Keyboard Control",
+      instruction: "Use keyIsDown(LEFT_ARROW) and keyIsDown(RIGHT_ARROW) to move a character left and right!",
+      hint: "keyIsDown() checks if a specific key is currently held. Use LEFT_ARROW and RIGHT_ARROW.",
+      template: "let x = 200;\nfunction draw() {\n  background(30);\n  if (keyIsDown(LEFT_ARROW)) ___\n  if (keyIsDown(RIGHT_ARROW)) ___\n  fill(255, 215, 0);\n  rect(x, 300, 40, 40);\n}",
+      blocks: ["x -= 3;", "x += 3;", "x = 0;", "y -= 3;"],
+      correctAnswer: "x -= 3;,x += 3;",
+      slots: 2,
+      validator: function(code) { return code.includes("LEFT_ARROW)) x -= 3;") && code.includes("RIGHT_ARROW)) x += 3;"); },
+      preview: function(p) { let x=200; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); if(p.keyIsDown(p.LEFT_ARROW))x-=3; if(p.keyIsDown(p.RIGHT_ARROW))x+=3; p.fill(255,215,0); p.rect(x,300,40,40); p.fill(150); p.textSize(10); p.textAlign(p.CENTER); p.text("Use arrow keys!",200,200); }; }
+    }
+  ],
+  boss: {
+    name: "INPUT EATER",
+    hp: 100,
+    timePerTask: 25,
+    sprite: [
+      "   111111   ",
+      "  12222221  ",
+      " 1223223221 ",
+      " 1233233321 ",
+      " 1222222221 ",
+      " 1234444321 ",
+      " 1234444321 ",
+      " 1222222221 ",
+      "  12222221  ",
+      "  1 1111 1  ",
+      " 11  11  11 ",
+      " 1   11   1 "
+    ],
+    spriteColors: { '1': '#e17055', '2': '#fab1a0', '3': '#2d3436', '4': '#d63031' },
+    tasks: [
+      {
+        instruction: "Reclaim the mouse! Use: mouseX",
+        mode: "blocks",
+        template: "ellipse(___, 200, 50, 50);",
+        blocks: ["mouseX", "200", "keyX", "posX"],
+        slots: 1,
+        validator: function(code) { return code.includes("mouseX"); }
+      },
+      {
+        instruction: "Get mouseY back! Track vertical position!",
+        mode: "blocks",
+        template: "ellipse(mouseX, ___, 50, 50);",
+        blocks: ["mouseY", "mouseX", "200", "height"],
+        slots: 1,
+        validator: function(code) { return code.includes("mouseY"); }
+      },
+      {
+        instruction: "Detect clicking! Use: mouseIsPressed",
+        mode: "blocks",
+        template: "if (___) {\n  // fire projectile!\n}",
+        blocks: ["mouseIsPressed", "mouseClicked", "isPressed", "clicked()"],
+        slots: 1,
+        validator: function(code) { return code.includes("mouseIsPressed"); }
+      },
+      {
+        instruction: "Reclaim the keyboard! Use keyIsDown(UP_ARROW)",
+        mode: "blocks",
+        template: "if (___) {\n  y -= 5; // dodge up!\n}",
+        blocks: ["keyIsDown(UP_ARROW)", "keyPressed('up')", "key == 'UP'", "keyboard.up"],
+        slots: 1,
+        validator: function(code) { return code.includes("keyIsDown(UP_ARROW)"); }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 5: Choose Your Path ═══
+{
+  id: 4, name: "Choose Your Path", desc: "Conditionals", inputMode: "blocks",
+  challenges: [
+    {
+      title: "Left or Right?",
+      instruction: "Change the background based on mouse position! If mouseX < 200, use dark blue; otherwise use dark red.",
+      hint: "Use mouseX < 200 to check if the mouse is on the left half.",
+      template: "function draw() {\n  if (___) {\n    background(20, 20, 80);\n  } else {\n    background(80, 20, 20);\n  }\n  fill(255);\n  ellipse(mouseX, mouseY, 20, 20);\n}",
+      blocks: ["mouseX < 200", "mouseX > 400", "mouseY < 200", "mouseX == 200"],
+      correctAnswer: "mouseX < 200",
+      slots: 1,
+      validator: function(code) { return code.includes("mouseX < 200"); },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { if(p.mouseX<200)p.background(20,20,80);else p.background(80,20,20); p.fill(255); p.ellipse(p.mouseX,p.mouseY,20,20); }; }
+    },
+    {
+      title: "Size Controller",
+      instruction: "Make a circle grow when UP is pressed and shrink when DOWN is pressed!",
+      hint: "keyIsDown(UP_ARROW) returns true when up arrow is held.",
+      template: "let size = 50;\nfunction draw() {\n  background(30);\n  if (keyIsDown(UP_ARROW)) ___\n  if (keyIsDown(DOWN_ARROW)) ___\n  size = constrain(size, 10, 300);\n  fill(124, 77, 255);\n  ellipse(200, 200, size, size);\n}",
+      blocks: ["size += 2;", "size -= 2;", "size = 50;", "size *= 2;"],
+      correctAnswer: "size += 2;,size -= 2;",
+      slots: 2,
+      validator: function(code) { return code.includes("UP_ARROW)) size += 2;") && code.includes("DOWN_ARROW)) size -= 2;"); },
+      preview: function(p) { let sz=50; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); if(p.keyIsDown(p.UP_ARROW))sz+=2; if(p.keyIsDown(p.DOWN_ARROW))sz-=2; sz=p.constrain(sz,10,300); p.fill(124,77,255); p.ellipse(200,200,sz,sz); p.fill(150); p.textSize(10); p.textAlign(p.CENTER); p.text("Arrow keys to resize!",200,380); }; }
+    },
+    {
+      title: "Traffic Light",
+      instruction: "Build a traffic light! When state is 0 show red, when 1 show yellow, when 2 show green. Use else if!",
+      hint: "if (state === 0) ... else if (state === 1) ... else ...",
+      template: "let state = 0;\nfunction draw() {\n  background(30);\n  if (state === 0) {\n    fill(255, 0, 0);\n  } ___ {\n    fill(255, 255, 0);\n  } else {\n    fill(0, 255, 0);\n  }\n  ellipse(200, 200, 80, 80);\n}",
+      blocks: ["else if (state === 1)", "else if (state > 1)", "if (state === 1)", "else"],
+      correctAnswer: "else if (state === 1)",
+      slots: 1,
+      validator: function(code) { return code.includes("else if (state === 1)"); },
+      preview: function(p) { let st=0,t=0; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); t++; if(t%60===0)st=(st+1)%3; p.fill(80);p.rect(170,80,60,250,10); if(st===0)p.fill(255,0,0);else p.fill(80);p.ellipse(200,130,50);if(st===1)p.fill(255,255,0);else p.fill(80);p.ellipse(200,200,50);if(st===2)p.fill(0,255,0);else p.fill(80);p.ellipse(200,270,50); }; }
+    }
+  ],
+  boss: {
+    name: "THE LOGIC GOLEM",
+    hp: 100,
+    timePerTask: 30,
+    sprite: [
+      "    1111    ",
+      "   122221   ",
+      "  12233221  ",
+      "  12233221  ",
+      "  12222221  ",
+      " 112222211  ",
+      " 122222221  ",
+      " 122222221  ",
+      "  12222221  ",
+      "  11222211  ",
+      "   11  11   ",
+      "   11  11   "
+    ],
+    spriteColors: { '1': '#636e72', '2': '#b2bec3', '3': '#d63031' },
+    tasks: [
+      {
+        instruction: "Shield UP! Block when attack comes from left: if (attackDir === 'left')",
+        mode: "blocks",
+        template: "if (___) {\n  shieldLeft();\n}",
+        blocks: ["attackDir === 'left'", "attackDir === 'right'", "attackDir > 0", "true"],
+        slots: 1,
+        validator: function(code) { return code.includes("attackDir === 'left'"); }
+      },
+      {
+        instruction: "Counter-attack when boss HP is below 50! Use: bossHP < 50",
+        mode: "blocks",
+        template: "if (___) {\n  counterAttack();\n} else {\n  defend();\n}",
+        blocks: ["bossHP < 50", "bossHP > 50", "bossHP === 50", "playerHP < 50"],
+        slots: 1,
+        validator: function(code) { return code.includes("bossHP < 50"); }
+      },
+      {
+        instruction: "Final logic chain! Use else if to handle the middle range!",
+        mode: "blocks",
+        template: "if (power > 100) {\n  superAttack();\n} ___ {\n  normalAttack();\n} else {\n  chargeUp();\n}",
+        blocks: ["else if (power > 50)", "else if (power < 0)", "if (power > 50)", "else"],
+        slots: 1,
+        validator: function(code) { return code.includes("else if (power > 50)"); }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 6: Loop the Loop ═══
+{
+  id: 5, name: "Loop the Loop", desc: "For Loops & Patterns", inputMode: "editor",
+  challenges: [
+    {
+      title: "Row of Circles",
+      instruction: "Use a for loop to draw 10 circles in a row! Each circle should be 35 pixels apart, starting at x=20. Use: for (let i = 0; i < 10; i++)",
+      hint: "Inside the loop, draw ellipse(20 + i * 35, 200, 25, 25) to space them out.",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(0, 200, 168);\n  // Write your for loop here:\n  \n}",
+      validator: function(code) {
+        if (!code.includes('for') || !code.includes('ellipse') || !code.includes('i')) return "Use a for loop with ellipse() and variable i.";
+        if (!code.match(/for\s*\(\s*let\s+i/)) return "Start your loop with: for (let i = 0; ...";
+        if (!code.includes('i * 3') && !code.includes('i*3') && !code.includes('i * 35') && !code.includes('i*35') && !code.includes('i *')) {
+          // Be more lenient — just check they use i in ellipse
+          if (!code.match(/ellipse\s*\([^)]*i[^)]*\)/)) return "Use i in your ellipse() to space the circles.";
+        }
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); for(let i=0;i<10;i++)p.ellipse(20+i*38,200,25,25); }; }
+    },
+    {
+      title: "Grid of Squares",
+      instruction: "Use nested for loops to create a 5x5 grid of squares! Use two loops with i and j.",
+      hint: "Outer loop for rows (j), inner loop for columns (i). rect(i*60 + 50, j*60 + 50, 40, 40)",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(124, 77, 255);\n  // Nested loops here:\n  \n}",
+      validator: function(code) {
+        const forCount = (code.match(/for\s*\(/g) || []).length;
+        if (forCount < 2) return "You need TWO for loops (nested) to make a grid.";
+        if (!code.includes('rect')) return "Use rect() to draw each square.";
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); for(let j=0;j<5;j++)for(let i=0;i<5;i++){p.fill(124-j*15,77+i*20,255);p.rect(i*60+50,j*60+50,45,45);} }; }
+    },
+    {
+      title: "Rainbow Rings",
+      instruction: "Draw concentric circles using a loop! Make each circle slightly smaller and a different color using the loop variable.",
+      hint: "Loop from big to small. Use fill(i*25, 100, 255-i*25) for rainbow colors.",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n  noStroke();\n}\n\nfunction draw() {\n  background(30);\n  // Draw rings from largest to smallest:\n  \n}",
+      validator: function(code) {
+        if (!code.includes('for')) return "Use a for loop!";
+        if (!code.includes('ellipse')) return "Use ellipse() to draw circles.";
+        if (!code.includes('fill')) return "Use fill() with the loop variable for colors.";
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); p.noStroke(); }; p.draw = function() { p.background(30); for(let i=10;i>0;i--){p.fill(i*25,100,255-i*25);p.ellipse(200,200,i*35,i*35);} }; }
+    }
+  ],
+  boss: {
+    name: "THE SWARM LORD",
+    hp: 100,
+    timePerTask: 35,
+    sprite: [
+      "  1  111  1 ",
+      " 111122211  ",
+      " 123222321  ",
+      "  12222221  ",
+      " 1122222211 ",
+      " 1222442221 ",
+      " 1222442221 ",
+      " 1122222211 ",
+      "  12222221  ",
+      " 1 122221 1 ",
+      " 1  1111  1 ",
+      "    1  1    "
+    ],
+    spriteColors: { '1': '#00b894', '2': '#55efc4', '3': '#fff', '4': '#d63031' },
+    tasks: [
+      {
+        instruction: "Write a for loop to draw 5 shield circles! for (let i = 0; i < 5; i++) { ellipse(i*80+40, 300, 30, 30); }",
+        starterCode: "fill(0, 200, 168);\n// Write your for loop:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('for')) return "Use a for loop!";
+          if (!code.includes('ellipse')) return "Draw ellipses in the loop!";
+          return true;
+        }
+      },
+      {
+        instruction: "Create a wall of rects! for loop drawing 8 rectangles across the screen.",
+        starterCode: "fill(124, 77, 255);\n// Draw 8 rects in a row:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('for')) return "Need a for loop!";
+          if (!code.includes('rect')) return "Use rect() in the loop!";
+          return true;
+        }
+      },
+      {
+        instruction: "Nested loops for a grid attack! Create a 4x4 grid of projectiles.",
+        starterCode: "fill(255, 215, 0);\n// Nested for loops:\n",
+        mode: "editor",
+        validator: function(code) {
+          const fors = (code.match(/for\s*\(/g) || []).length;
+          if (fors < 2) return "Need TWO nested for loops!";
+          return true;
+        }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 7: Function Junction ═══
+{
+  id: 6, name: "Function Junction", desc: "Custom Functions", inputMode: "editor",
+  challenges: [
+    {
+      title: "Your First Function",
+      instruction: "Create a function called drawStar that draws a star shape! It should take x and y parameters. Inside, draw a simple star using triangles or a polygon.",
+      hint: "function drawStar(x, y) { ... } — then call it with drawStar(200, 200)",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  // Define and call drawStar(x, y):\n  \n}\n\n// Define your function here:\n",
+      validator: function(code) {
+        if (!code.match(/function\s+drawStar\s*\(/)) return "Define a function named drawStar with parameters!";
+        if (!code.match(/drawStar\s*\(\s*\d/)) return "Call your drawStar function with coordinates!";
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(255,215,0); p.push();p.translate(200,200);p.beginShape();for(let i=0;i<10;i++){let r=i%2===0?40:20;let a=p.TWO_PI/10*i-p.HALF_PI;p.vertex(r*p.cos(a),r*p.sin(a));}p.endShape(p.CLOSE);p.pop(); }; }
+    },
+    {
+      title: "Reusable Trees",
+      instruction: "Write a drawTree(x, y) function that draws a simple tree (rectangle trunk + triangle/ellipse top). Then call it 3 times at different positions!",
+      hint: "Draw a brown rect for trunk and green triangle/ellipse for leaves. Call drawTree 3 times.",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30, 30, 50);\n  // Call drawTree 3 times:\n  \n}\n\nfunction drawTree(x, y) {\n  // Draw trunk and leaves:\n  \n}",
+      validator: function(code) {
+        if (!code.match(/function\s+drawTree\s*\(\s*x\s*,\s*y\s*\)/)) return "Define drawTree(x, y) function!";
+        const calls = (code.match(/drawTree\s*\(\s*\d/g) || []).length;
+        if (calls < 3) return `Call drawTree at least 3 times! (found ${calls})`;
+        if (!code.includes('rect') && !code.includes('line')) return "Draw a trunk with rect() or line().";
+        return true;
+      },
+      preview: function(p) {
+        function dt(p,x,y){p.fill(100,60,20);p.rect(x-5,y,10,30);p.fill(34,139,34);p.triangle(x-20,y,x+20,y,x,y-35);}
+        p.setup = function() { p.createCanvas(400,400); };
+        p.draw = function() { p.background(30,30,50); p.noStroke(); dt(p,100,300);dt(p,200,280);dt(p,320,310); p.fill(50);p.rect(0,340,400,60); };
+      }
+    },
+    {
+      title: "Function with Return",
+      instruction: "Write a function called 'doubleIt' that takes a number and returns it doubled. Use it to set the size of a circle!",
+      hint: "function doubleIt(n) { return n * 2; }",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  let baseSize = 40;\n  let bigSize = doubleIt(baseSize);\n  fill(0, 200, 168);\n  ellipse(200, 200, bigSize, bigSize);\n}\n\n// Define doubleIt here:\n",
+      validator: function(code) {
+        if (!code.match(/function\s+doubleIt\s*\(/)) return "Define a function named doubleIt!";
+        if (!code.includes('return')) return "Your function needs to return a value!";
+        if (!code.match(/return\s+.*\*\s*2/) && !code.match(/return\s+2\s*\*/)) return "Return the number multiplied by 2!";
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); p.ellipse(200,200,80,80); p.fill(150); p.textSize(10); p.textAlign(p.CENTER); p.text("doubleIt(40) = 80",200,260); }; }
+    }
+  ],
+  boss: {
+    name: "CHAOS COMPILER",
+    hp: 100,
+    timePerTask: 40,
+    sprite: [
+      "  11111111  ",
+      " 1222222221 ",
+      " 1233333321 ",
+      " 1234343321 ",
+      " 1233333321 ",
+      " 1222222221 ",
+      " 1222222221 ",
+      "  12244221  ",
+      "  12244221  ",
+      "   122221   ",
+      "   11  11   ",
+      "   11  11   "
+    ],
+    spriteColors: { '1': '#6c5ce7', '2': '#a29bfe', '3': '#fd79a8', '4': '#fff' },
+    tasks: [
+      {
+        instruction: "Refactor! Write a function drawCircle(x, y, s) that draws a filled circle.",
+        starterCode: "// Define drawCircle:\nfunction drawCircle(x, y, s) {\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.match(/function\s+drawCircle\s*\(/)) return "Define drawCircle function!";
+          if (!code.includes('ellipse')) return "Use ellipse() inside the function!";
+          return true;
+        }
+      },
+      {
+        instruction: "Write a function getDistance(x1, y1, x2, y2) that returns the distance using dist().",
+        starterCode: "function getDistance(x1, y1, x2, y2) {\n  // return the distance:\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('return')) return "Need a return statement!";
+          if (!code.includes('dist')) return "Use dist() to calculate distance!";
+          return true;
+        }
+      },
+      {
+        instruction: "Create a function drawRow(y, count) that draws 'count' circles at height y using a for loop!",
+        starterCode: "function drawRow(y, count) {\n  // for loop drawing 'count' circles:\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.match(/function\s+drawRow/)) return "Define drawRow function!";
+          if (!code.includes('for')) return "Use a for loop inside!";
+          if (!code.includes('ellipse') && !code.includes('rect')) return "Draw shapes in the loop!";
+          return true;
+        }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 8: Array of Hope ═══
+{
+  id: 7, name: "Array of Hope", desc: "Arrays & Collections", inputMode: "editor",
+  challenges: [
+    {
+      title: "Store Positions",
+      instruction: "Create an array of x-positions and draw a circle at each! Use a for loop to iterate through the array.",
+      hint: "let positions = [50, 120, 200, 280, 350]; then loop through with for.",
+      starterCode: "let positions = [50, 120, 200, 280, 350];\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(0, 200, 168);\n  // Loop through positions and draw circles:\n  \n}",
+      validator: function(code) {
+        if (!code.includes('for')) return "Use a for loop to iterate!";
+        if (!code.includes('positions') || !code.includes('ellipse')) return "Access positions array and use ellipse().";
+        if (!code.includes('positions[') && !code.includes('of positions')) return "Use positions[i] or for...of to access elements.";
+        return true;
+      },
+      preview: function(p) { let pos=[50,120,200,280,350]; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); for(let i=0;i<pos.length;i++)p.ellipse(pos[i],200,30,30); }; }
+    },
+    {
+      title: "Click to Add",
+      instruction: "Push new objects into an array when the mouse is clicked! Each object stores {x, y}. Draw all objects each frame.",
+      hint: "Use mousePressed() to push({x: mouseX, y: mouseY}) to the array.",
+      starterCode: "let dots = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  fill(124, 77, 255);\n  // Draw all dots:\n  for (let i = 0; i < dots.length; i++) {\n    ellipse(dots[i].x, dots[i].y, 20, 20);\n  }\n}\n\nfunction mousePressed() {\n  // Add new dot:\n  \n}",
+      validator: function(code) {
+        if (!code.includes('push')) return "Use dots.push() to add new dots!";
+        if (!code.includes('mouseX') && !code.includes('mouseY')) return "Store mouseX and mouseY in the new dot.";
+        return true;
+      },
+      preview: function(p) { let d=[]; p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(124,77,255); for(let i=0;i<d.length;i++)p.ellipse(d[i].x,d[i].y,20,20); p.fill(100);p.textSize(10);p.textAlign(p.CENTER);if(!d.length)p.text("Click to add dots!",200,200); }; p.mousePressed=function(){d.push({x:p.mouseX,y:p.mouseY});}; }
+    },
+    {
+      title: "Trail Effect",
+      instruction: "Create a mouse trail! Push mouseX/mouseY each frame, and remove old entries with shift() when the array gets too long (> 20).",
+      hint: "In draw(): trail.push({x:mouseX, y:mouseY}); if (trail.length > 20) trail.shift();",
+      starterCode: "let trail = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n  noStroke();\n}\n\nfunction draw() {\n  background(30);\n  // Add to trail and limit size:\n  \n  // Draw trail:\n  for (let i = 0; i < trail.length; i++) {\n    let alpha = map(i, 0, trail.length, 50, 255);\n    fill(0, 200, 168, alpha);\n    let size = map(i, 0, trail.length, 5, 25);\n    ellipse(trail[i].x, trail[i].y, size, size);\n  }\n}",
+      validator: function(code) {
+        if (!code.includes('push')) return "Use trail.push() to add positions!";
+        if (!code.includes('shift')) return "Use trail.shift() to remove old positions!";
+        if (!code.includes('mouseX')) return "Push mouseX and mouseY!";
+        return true;
+      },
+      preview: function(p) { let t=[]; p.setup = function() { p.createCanvas(400,400); p.noStroke(); }; p.draw = function() { p.background(30); t.push({x:p.mouseX,y:p.mouseY}); if(t.length>20)t.shift(); for(let i=0;i<t.length;i++){let a=p.map(i,0,t.length,50,255);p.fill(0,200,168,a);let s=p.map(i,0,t.length,5,25);p.ellipse(t[i].x,t[i].y,s,s);} }; }
+    }
+  ],
+  boss: {
+    name: "THE DATA DRAGON",
+    hp: 125,
+    timePerTask: 35,
+    sprite: [
+      " 11      11 ",
+      " 121    121 ",
+      "  1211 1121 ",
+      "  12222221  ",
+      " 12233322 1 ",
+      " 12234322 1 ",
+      "  1223322   ",
+      "  12222221  ",
+      " 122222221  ",
+      " 12  12  1  ",
+      " 1   1   1  ",
+      " 1   1   1  "
+    ],
+    spriteColors: { '1': '#e17055', '2': '#fab1a0', '3': '#fdcb6e', '4': '#fff' },
+    tasks: [
+      {
+        instruction: "Collect the data stream! Write: projectiles.push({x: 200, y: 0});",
+        starterCode: "let projectiles = [];\n// Add a projectile:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('push')) return "Use push() to add to array!";
+          return true;
+        }
+      },
+      {
+        instruction: "Remove old data! Write: if (arr.length > 10) arr.shift();",
+        starterCode: "let arr = [1,2,3,4,5,6,7,8,9,10,11,12];\n// Remove old elements:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('shift')) return "Use shift() to remove from front!";
+          if (!code.includes('length')) return "Check .length to know when to remove!";
+          return true;
+        }
+      },
+      {
+        instruction: "Loop and draw! Iterate through an array of {x,y} objects and draw circles at each position.",
+        starterCode: "let targets = [{x:50,y:100},{x:150,y:200},{x:250,y:150},{x:350,y:300}];\n// Draw each target:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('for')) return "Use a for loop!";
+          if (!code.includes('ellipse') && !code.includes('rect')) return "Draw shapes at each position!";
+          return true;
+        }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 9: Class Act ═══
+{
+  id: 8, name: "Class Act", desc: "Classes & Objects", inputMode: "editor",
+  challenges: [
+    {
+      title: "Create a Ball Class",
+      instruction: "Define a Ball class with a constructor(x, y) and a display() method that draws a circle at (this.x, this.y).",
+      hint: "class Ball { constructor(x, y) { this.x = x; this.y = y; } display() { ellipse(this.x, this.y, 30); } }",
+      starterCode: "let ball;\n\nfunction setup() {\n  createCanvas(400, 400);\n  ball = new Ball(200, 200);\n}\n\nfunction draw() {\n  background(30);\n  ball.display();\n}\n\n// Define Ball class:\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Ball/)) return "Define a class named Ball!";
+        if (!code.includes('constructor')) return "Add a constructor(x, y)!";
+        if (!code.includes('this.x') || !code.includes('this.y')) return "Store x and y using this.x and this.y!";
+        if (!code.includes('display')) return "Add a display() method!";
+        if (!code.includes('ellipse')) return "Use ellipse() in display()!";
+        return true;
+      },
+      preview: function(p) { p.setup = function() { p.createCanvas(400,400); }; p.draw = function() { p.background(30); p.fill(0,200,168); p.ellipse(200,200,30,30); p.fill(150);p.textSize(10);p.textAlign(p.CENTER);p.text("Ball at (200, 200)",200,240); }; }
+    },
+    {
+      title: "Moving Objects",
+      instruction: "Add a move() method to Ball that updates this.x and this.y with velocity. Create 3 ball instances!",
+      hint: "Add this.vx and this.vy in constructor. move() adds velocity to position.",
+      starterCode: "let balls = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n  for (let i = 0; i < 3; i++) {\n    balls.push(new Ball(random(400), random(400)));\n  }\n}\n\nfunction draw() {\n  background(30);\n  for (let b of balls) {\n    b.move();\n    b.display();\n  }\n}\n\n// Define Ball class with move() and display():\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Ball/)) return "Define a Ball class!";
+        if (!code.includes('move')) return "Add a move() method!";
+        if (!code.includes('display')) return "Add a display() method!";
+        if (!code.includes('this.x') || !code.includes('this.y')) return "Use this.x and this.y!";
+        if (!code.match(/this\.(vx|vy|speedX|speedY|dx|dy|velX|velY|xSpeed|ySpeed)/)) return "Add velocity properties (this.vx, this.vy)!";
+        return true;
+      },
+      preview: function(p) {
+        let bs=[];
+        class B{constructor(x,y){this.x=x;this.y=y;this.vx=p.random(-2,2);this.vy=p.random(-2,2);}move(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>400)this.vx*=-1;if(this.y<0||this.y>400)this.vy*=-1;}display(){p.fill(0,200,168);p.ellipse(this.x,this.y,25);}}
+        p.setup = function() { p.createCanvas(400,400);for(let i=0;i<3;i++)bs.push(new B(p.random(400),p.random(400))); };
+        p.draw = function() { p.background(30);for(let b of bs){b.move();b.display();} };
+      }
+    },
+    {
+      title: "Collision Detection",
+      instruction: "Add an 'overlaps(other)' method to check if two balls overlap! Use dist(this.x, this.y, other.x, other.y) < radius.",
+      hint: "overlaps(other) { return dist(this.x, this.y, other.x, other.y) < this.r + other.r; }",
+      starterCode: "let balls = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n  for (let i = 0; i < 5; i++) {\n    balls.push(new Ball(random(50,350), random(50,350)));\n  }\n}\n\nfunction draw() {\n  background(30);\n  for (let i = 0; i < balls.length; i++) {\n    balls[i].move();\n    let hit = false;\n    for (let j = 0; j < balls.length; j++) {\n      if (i !== j && balls[i].overlaps(balls[j])) hit = true;\n    }\n    balls[i].display(hit);\n  }\n}\n\n// Ball class with overlaps(other):\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Ball/)) return "Define a Ball class!";
+        if (!code.includes('overlaps')) return "Add an overlaps(other) method!";
+        if (!code.includes('dist')) return "Use dist() to check distance!";
+        if (!code.includes('return')) return "overlaps() must return true or false!";
+        return true;
+      },
+      preview: function(p) {
+        let bs=[];
+        class B{constructor(x,y){this.x=x;this.y=y;this.r=15;this.vx=p.random(-1.5,1.5);this.vy=p.random(-1.5,1.5);}
+        move(){this.x+=this.vx;this.y+=this.vy;if(this.x<0||this.x>400)this.vx*=-1;if(this.y<0||this.y>400)this.vy*=-1;}
+        overlaps(o){return p.dist(this.x,this.y,o.x,o.y)<this.r+o.r;}
+        display(h){p.fill(h?[255,71,87]:[0,200,168]);p.ellipse(this.x,this.y,this.r*2);}}
+        p.setup = function() { p.createCanvas(400,400);for(let i=0;i<5;i++)bs.push(new B(p.random(50,350),p.random(50,350))); };
+        p.draw = function() { p.background(30);for(let i=0;i<bs.length;i++){bs[i].move();let h=false;for(let j=0;j<bs.length;j++){if(i!==j&&bs[i].overlaps(bs[j]))h=true;}bs[i].display(h);} };
+      }
+    }
+  ],
+  boss: {
+    name: "SINGLETON SPECTER",
+    hp: 125,
+    timePerTask: 40,
+    sprite: [
+      "    1111    ",
+      "   122221   ",
+      "  12233221  ",
+      "  12233221  ",
+      "  12222221  ",
+      "   122221   ",
+      "  1 1221 1  ",
+      " 11 1221 11 ",
+      "  1 1111 1  ",
+      "    1221    ",
+      "   11  11   ",
+      "   1    1   "
+    ],
+    spriteColors: { '1': '#a29bfe', '2': '#6c5ce7', '3': '#fd79a8' },
+    tasks: [
+      {
+        instruction: "Define a Minion class with constructor(x, y) and display() method!",
+        starterCode: "// Define Minion class:\nclass Minion {\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.match(/class\s+Minion/)) return "Define class Minion!";
+          if (!code.includes('constructor')) return "Add a constructor!";
+          if (!code.includes('display')) return "Add display() method!";
+          return true;
+        }
+      },
+      {
+        instruction: "Add an attack() method that returns damage: return this.power * 2;",
+        starterCode: "class Minion {\n  constructor(x, y) {\n    this.x = x;\n    this.y = y;\n    this.power = 10;\n  }\n  // Add attack method:\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('attack')) return "Add an attack() method!";
+          if (!code.includes('return')) return "Return the damage value!";
+          if (!code.includes('this.power')) return "Use this.power in the calculation!";
+          return true;
+        }
+      },
+      {
+        instruction: "Create an array and spawn 5 minions using a for loop with new Minion()!",
+        starterCode: "let army = [];\n// Spawn 5 minions:\n",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('for')) return "Use a for loop!";
+          if (!code.includes('new Minion')) return "Create new Minion instances!";
+          if (!code.includes('push')) return "Push them into the army array!";
+          return true;
+        }
+      }
+    ]
+  }
+},
+
+// ═══ LEVEL 10: The Final Render ═══
+{
+  id: 9, name: "The Final Render", desc: "Particle Systems & Mastery", inputMode: "editor",
+  challenges: [
+    {
+      title: "Particle Class",
+      instruction: "Create a Particle class with x, y, vx, vy, and lifespan. The constructor should set random velocity and lifespan of 255. Add update() and display() methods.",
+      hint: "update() adds velocity to position and decreases lifespan. display() draws with alpha = lifespan.",
+      starterCode: "let particles = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30);\n  // Add particle at mouse\n  if (mouseIsPressed) {\n    particles.push(new Particle(mouseX, mouseY));\n  }\n  // Update and display\n  for (let i = particles.length - 1; i >= 0; i--) {\n    particles[i].update();\n    particles[i].display();\n    if (particles[i].isDead()) particles.splice(i, 1);\n  }\n}\n\n// Define Particle class:\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Particle/)) return "Define a Particle class!";
+        if (!code.includes('constructor')) return "Add a constructor!";
+        if (!code.includes('this.vx') && !code.includes('this.vy') && !code.includes('this.vel')) return "Add velocity properties!";
+        if (!code.includes('update')) return "Add update() method!";
+        if (!code.includes('display')) return "Add display() method!";
+        if (!code.includes('isDead') && !code.includes('lifespan')) return "Add lifespan tracking!";
+        return true;
+      },
+      preview: function(p) {
+        let ps=[];
+        class Pt{constructor(x,y){this.x=x;this.y=y;this.vx=p.random(-2,2);this.vy=p.random(-3,0);this.life=255;}update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.05;this.life-=4;}display(){p.fill(0,200,168,this.life);p.noStroke();p.ellipse(this.x,this.y,8);}isDead(){return this.life<=0;}}
+        p.setup=function(){p.createCanvas(400,400);};
+        p.draw=function(){p.background(30);if(p.mouseIsPressed)for(let i=0;i<3;i++)ps.push(new Pt(p.mouseX,p.mouseY));for(let i=ps.length-1;i>=0;i--){ps[i].update();ps[i].display();if(ps[i].isDead())ps.splice(i,1);}p.fill(100);p.textSize(10);p.textAlign(p.CENTER);if(!ps.length)p.text("Click and drag to create particles!",200,200);};
+      }
+    },
+    {
+      title: "Particle Emitter",
+      instruction: "Create an Emitter class that spawns particles! It should have an emit(count) method that creates 'count' new particles and stores them in this.particles array.",
+      hint: "class Emitter { constructor(x,y) { this.particles = []; } emit(n) { for(...) this.particles.push(new Particle(...)); } }",
+      starterCode: "function setup() {\n  createCanvas(400, 400);\n}\n\nlet emitter;\nfunction draw() {\n  background(30);\n  if (!emitter) emitter = new Emitter(200, 200);\n  emitter.emit(2);\n  emitter.update();\n  emitter.display();\n}\n\nclass Particle {\n  constructor(x, y) {\n    this.x = x; this.y = y;\n    this.vx = random(-2, 2);\n    this.vy = random(-3, 0);\n    this.life = 255;\n  }\n  update() { this.x += this.vx; this.y += this.vy; this.vy += 0.05; this.life -= 3; }\n  display() { fill(255, 215, 0, this.life); noStroke(); ellipse(this.x, this.y, 8); }\n  isDead() { return this.life <= 0; }\n}\n\n// Define Emitter class:\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Emitter/)) return "Define an Emitter class!";
+        if (!code.includes('emit')) return "Add an emit() method!";
+        if (!code.includes('new Particle')) return "Create new Particle instances in emit()!";
+        if (!code.includes('this.particles')) return "Store particles in this.particles!";
+        return true;
+      },
+      preview: function(p) {
+        let ps=[];
+        class Pt{constructor(x,y){this.x=x;this.y=y;this.vx=p.random(-2,2);this.vy=p.random(-3,0);this.life=255;}update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.05;this.life-=3;}display(){p.fill(255,215,0,this.life);p.noStroke();p.ellipse(this.x,this.y,8);}isDead(){return this.life<=0;}}
+        p.setup=function(){p.createCanvas(400,400);};
+        p.draw=function(){p.background(30);for(let i=0;i<2;i++)ps.push(new Pt(200,200));for(let i=ps.length-1;i>=0;i--){ps[i].update();ps[i].display();if(ps[i].isDead())ps.splice(i,1);}};
+      }
+    },
+    {
+      title: "Colorful Particles",
+      instruction: "Enhance your Particle class! Add random colors (this.r, this.g, this.b), random sizes, and use them in display(). Make it beautiful!",
+      hint: "In constructor: this.r = random(100,255); this.size = random(4,12); In display: fill(this.r, this.g, this.b, this.life);",
+      starterCode: "let particles = [];\n\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(30, 20);\n  if (mouseIsPressed) {\n    for (let i = 0; i < 5; i++) {\n      particles.push(new Particle(mouseX, mouseY));\n    }\n  }\n  for (let i = particles.length - 1; i >= 0; i--) {\n    particles[i].update();\n    particles[i].display();\n    if (particles[i].isDead()) particles.splice(i, 1);\n  }\n}\n\n// Enhanced Particle class with color and size:\n",
+      validator: function(code) {
+        if (!code.match(/class\s+Particle/)) return "Define a Particle class!";
+        if (!code.includes('this.r') && !code.includes('this.color') && !code.includes('this.col')) return "Add color properties (this.r, this.g, this.b)!";
+        if (!code.includes('this.size') && !code.includes('this.s') && !code.includes('this.radius')) return "Add a size property!";
+        if (!code.includes('random')) return "Use random() for variety!";
+        return true;
+      },
+      preview: function(p) {
+        let ps=[];
+        class Pt{constructor(x,y){this.x=x;this.y=y;this.vx=p.random(-3,3);this.vy=p.random(-4,0);this.life=255;this.r=p.random(100,255);this.g=p.random(50,200);this.b=p.random(100,255);this.sz=p.random(4,14);}update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.06;this.life-=3;this.sz*=0.99;}display(){p.fill(this.r,this.g,this.b,this.life);p.noStroke();p.ellipse(this.x,this.y,this.sz);}isDead(){return this.life<=0;}}
+        p.setup=function(){p.createCanvas(400,400);};
+        p.draw=function(){p.background(30,20);if(p.mouseIsPressed)for(let i=0;i<5;i++)ps.push(new Pt(p.mouseX,p.mouseY));for(let i=ps.length-1;i>=0;i--){ps[i].update();ps[i].display();if(ps[i].isDead())ps.splice(i,1);}if(!ps.length){p.fill(100);p.textSize(10);p.textAlign(p.CENTER);p.text("Click & drag for magic!",200,200);}};
+      }
+    }
+  ],
+  boss: {
+    name: "THE NULL VOID",
+    hp: 150,
+    timePerTask: 45,
+    sprite: [
+      " 1111111111 ",
+      " 1222222221 ",
+      " 1233333321 ",
+      " 1234444321 ",
+      " 1234554321 ",
+      " 1234554321 ",
+      " 1234444321 ",
+      " 1233333321 ",
+      " 1222222221 ",
+      " 1111111111 ",
+      "  11    11  ",
+      "  11    11  "
+    ],
+    spriteColors: { '1': '#2d3436', '2': '#636e72', '3': '#b2bec3', '4': '#dfe6e9', '5': '#fff' },
+    tasks: [
+      {
+        instruction: "Phase 1: Fix the bug! The Particle class is missing 'this.' before x and y in the constructor.",
+        starterCode: "class Particle {\n  constructor(x, y) {\n    x = x; // BUG!\n    y = y; // BUG!\n    this.life = 255;\n  }\n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('this.x = x') || !code.includes('this.y = y')) return "Fix both bugs: use this.x = x and this.y = y!";
+          return true;
+        }
+      },
+      {
+        instruction: "Phase 2: Write a complete Particle class with constructor, update(), display(), and isDead()!",
+        starterCode: "// Full Particle class — your ultimate weapon:\nclass Particle {\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.includes('constructor')) return "Need a constructor!";
+          if (!code.includes('update')) return "Need update() method!";
+          if (!code.includes('display')) return "Need display() method!";
+          if (!code.includes('isDead')) return "Need isDead() method!";
+          if (!code.includes('this.x') || !code.includes('this.y')) return "Track position with this.x/this.y!";
+          if (!code.includes('this.life') && !code.includes('this.lifespan')) return "Track lifespan!";
+          return true;
+        }
+      },
+      {
+        instruction: "Phase 3: FINAL BLOW! Combine everything — create an Emitter class that uses your Particle class, spawns particles in a loop, and stores them in an array!",
+        starterCode: "// The ultimate combination!\n// Emitter class that manages Particles:\nclass Emitter {\n  \n}",
+        mode: "editor",
+        validator: function(code) {
+          if (!code.match(/class\s+Emitter/)) return "Define class Emitter!";
+          if (!code.includes('this.particles')) return "Store particles in this.particles array!";
+          if (!code.includes('new Particle')) return "Create Particle instances!";
+          if (!code.includes('for')) return "Use a loop to manage particles!";
+          if (!code.includes('push')) return "Push new particles into the array!";
+          return true;
+        }
+      }
+    ]
+  }
+}
+
+]; // end LEVELS
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded', initTitle);
+</script>
+</body>
+</html>
