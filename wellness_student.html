@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wellness Journey — Student Edition</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f5efe6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+    h1 {
+      color: #5a3e28;
+      font-size: 18px;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    canvas {
+      display: block;
+      border: 2px solid #c4a882;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(90, 62, 40, 0.15);
+    }
+    #textInput {
+      position: absolute;
+      left: -9999px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wellness Journey</h1>
+  <input type="text" id="textInput" autocomplete="off" />
+  <script src="libs/p5.min.js"></script>
+  <script src="js/wellness_core.js"></script>
+  <script src="js/wellness_student_data.js"></script>
+</body>
+</html>
