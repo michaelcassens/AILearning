@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wellness Journey — Student Edition</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f5efe6;
+      font-family: 'Georgia', serif;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+    }
+    #textInput {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 38%;
+      width: 80%;
+      max-width: 400px;
+      font-size: 16px;
+      padding: 12px 14px;
+      border: 2px solid #e07b3c;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.97);
+      font-family: 'Georgia', serif;
+      color: #3d2c1e;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.2s;
+    }
+    #textInput.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #textInput::placeholder {
+      color: #82694f;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="textInput" autocomplete="off" placeholder="I'm grateful for..." />
+  <script src="libs/p5.min.js"></script>
+  <script src="js/wellness_core_mobile.js"></script>
+  <script src="js/wellness_student_data.js"></script>
+</body>
+</html>
