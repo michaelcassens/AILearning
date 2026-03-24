@@ -697,6 +697,66 @@ function resetProgress(){
     showToast('Progress reset','info');
   }
 }
+function resetWeek(wn){
+  const w=weeks.find(x=>x.n===wn);if(!w)return;
+  const label=`Week ${wn}: ${w.title}`;
+  if(!confirm(`Reset all progress for ${label}? Your XP from this week will be removed.`))return;
+  let xpLost=0;
+  // Remove quest tasks
+  if(w.quest){const xpPer=Math.round(w.quest.xp/w.quest.reqs.length);w.quest.reqs.forEach((_,i)=>{const k=`w${wn}-q-${i}`;if(state.completed[k]){delete state.completed[k];xpLost+=xpPer;}});}
+  // Remove boss tasks
+  if(w.boss){const xpPer=Math.round(w.boss.xp/w.boss.reqs.length);w.boss.reqs.forEach((_,i)=>{const k=`w${wn}-b-${i}`;if(state.completed[k]){delete state.completed[k];xpLost+=xpPer;}});}
+  // Remove quiz score if exists
+  if(state.quizScores[`quiz-${wn}`]){
+    const q=quizData[wn];if(q){const score=state.quizScores[`quiz-${wn}`];const assess=w.assess;if(assess)xpLost+=Math.round(assess.xp*(score/100));}
+    delete state.quizScores[`quiz-${wn}`];
+  }
+  state.xp=Math.max(0,state.xp-xpLost);
+  // Re-check achievements (remove ones no longer earned)
+  recheckAchievements();
+  saveState();updateXP();renderAchievements();buildNav();
+  const c=document.getElementById('content');renderWeek(c,wn);
+  showToast(`Week ${wn} reset — ${xpLost} XP removed`,'info');
+}
+function resetTrack(trackId){
+  const t=tracks.find(x=>x.id===trackId);if(!t)return;
+  if(!confirm(`Reset all progress for ${t.icon} ${t.name} (Weeks ${t.weeks.join(', ')})? Your XP from these weeks will be removed.`))return;
+  let xpLost=0;
+  t.weeks.forEach(wn=>{
+    const w=weeks.find(x=>x.n===wn);if(!w)return;
+    if(w.quest){const xpPer=Math.round(w.quest.xp/w.quest.reqs.length);w.quest.reqs.forEach((_,i)=>{const k=`w${wn}-q-${i}`;if(state.completed[k]){delete state.completed[k];xpLost+=xpPer;}});}
+    if(w.boss){const xpPer=Math.round(w.boss.xp/w.boss.reqs.length);w.boss.reqs.forEach((_,i)=>{const k=`w${wn}-b-${i}`;if(state.completed[k]){delete state.completed[k];xpLost+=xpPer;}});}
+    if(state.quizScores[`quiz-${wn}`]){const q=quizData[wn];if(q){const score=state.quizScores[`quiz-${wn}`];const assess=w.assess;if(assess)xpLost+=Math.round(assess.xp*(score/100));}delete state.quizScores[`quiz-${wn}`];}
+  });
+  state.xp=Math.max(0,state.xp-xpLost);
+  recheckAchievements();saveState();updateXP();renderAchievements();buildNav();go(state.currentView);
+  showToast(`${t.name} reset — ${xpLost} XP removed`,'info');
+}
+function resetQuiz(wn){
+  if(!state.quizScores[`quiz-${wn}`]&&state.quizScores[`quiz-${wn}`]!==0)return;
+  const w=weeks.find(x=>x.n===wn);if(!w||!w.assess)return;
+  if(!confirm(`Reset the quiz for Week ${wn}? You can retake it for XP.`))return;
+  const score=state.quizScores[`quiz-${wn}`];
+  const xpLost=Math.round(w.assess.xp*(score/100));
+  delete state.quizScores[`quiz-${wn}`];
+  state.xp=Math.max(0,state.xp-xpLost);
+  recheckAchievements();saveState();updateXP();renderAchievements();buildNav();
+  const c=document.getElementById('content');renderWeek(c,wn);
+  showToast(`Quiz reset — ${xpLost} XP removed`,'info');
+}
+function recheckAchievements(){
+  // Re-validate all achievements, remove any that are no longer earned
+  const totalTasks=Object.keys(state.completed).filter(k=>state.completed[k]).length;
+  const totalXP=getTotalXP();
+  state.unlockedAch=state.unlockedAch.filter(achId=>{
+    const a=achievements.find(x=>x.id===achId);if(!a)return false;
+    if(a.trigger==='taskCount')return totalTasks>=a.threshold;
+    if(a.trigger==='xpPercent')return totalXP>0&&(state.xp/totalXP*100)>=a.threshold;
+    if(a.trigger==='quizPerfect'){for(const k in state.quizScores){if(state.quizScores[k]===100)return true;}return false;}
+    if(a.trigger==='weekComplete'){return a.threshold.every(wn=>{const w=weeks.find(x=>x.n===wn);if(!w||!w.quest)return false;return w.quest.reqs.every((_,i)=>state.completed[`w${wn}-q-${i}`]);});}
+    return false;
+  });
+}
 
 /* ═══════════════════════════════════════════════════════════════
    XP & LEVELS
@@ -847,7 +907,7 @@ function renderQuiz(weekN){
   const existing=state.quizScores[`quiz-${weekN}`];
   if(existing!==undefined){
     const w=weeks.find(x=>x.n===weekN);
-    return `<div class="quiz-score"><h4>Quiz Complete! Score: ${existing}%</h4><p>You earned ${Math.round(w.assess.xp*(existing/100))} XP from this quiz</p></div>`;
+    return `<div class="quiz-score"><h4>Quiz Complete! Score: ${existing}%</h4><p>You earned ${Math.round(w.assess.xp*(existing/100))} XP from this quiz</p><button onclick="resetQuiz(${weekN})" style="margin-top:12px;padding:8px 20px;border-radius:8px;border:2px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;font-family:var(--font)" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='transparent'">🔄 Retake Quiz</button></div>`;
   }
   let h='<div class="quiz-container" id="quiz-'+weekN+'">';
   qs.forEach((q,qi)=>{
@@ -967,12 +1027,15 @@ function renderOverview(c){
       ${tracks.map(t=>{
         const pct=getTrackCompletion(t);
         const cls=pct===100?'completed':pct>0?'active':'';
-        return `<div class="track ${cls}" onclick="go('week-${t.weeks[0]}')">
-          <div class="track-icon">${t.icon}</div>
-          <h4>${t.name}</h4>
-          <div style="font-size:11px;color:var(--muted)">Weeks ${t.weeks.join(', ')}</div>
-          <div class="track-prog"><div class="track-prog-fill" style="width:${pct}%"></div></div>
-          <div class="track-pct">${pct}%</div>
+        return `<div class="track ${cls}">
+          <div onclick="go('week-${t.weeks[0]}')" style="cursor:pointer">
+            <div class="track-icon">${t.icon}</div>
+            <h4>${t.name}</h4>
+            <div style="font-size:11px;color:var(--muted)">Weeks ${t.weeks.join(', ')}</div>
+            <div class="track-prog"><div class="track-prog-fill" style="width:${pct}%"></div></div>
+            <div class="track-pct">${pct}%</div>
+          </div>
+          ${pct>0?`<button class="reset-btn" style="margin-top:8px;width:100%;font-size:10px;padding:4px 8px" onclick="event.stopPropagation();resetTrack('${t.id}')">🔄 Reset Track</button>`:''}
         </div>`;
       }).join('')}
     </div>
@@ -1006,14 +1069,27 @@ function renderOverview(c){
     </div>
   </div>
 
-  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
-    <div><h3 style="margin:0">🔄 Reset Progress</h3><p style="font-size:12px;color:var(--muted);margin-top:4px">Start fresh — this cannot be undone</p></div>
-    <button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+  <div class="card">
+    <h3>🔄 Reset Progress</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">Reset specific areas or start completely fresh. XP earned in reset areas will be removed.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px">
+      ${weeks.filter(w=>getWeekCompletion(w.n)>0).map(w=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:8px">
+        <span style="font-size:11px;font-weight:600;color:#c62828">W${w.n}: ${w.title.length>14?w.title.slice(0,14)+'…':w.title}</span>
+        <button class="reset-btn" style="font-size:10px;padding:2px 8px" onclick="resetWeek(${w.n})">Reset</button>
+      </div>`).join('')}
+    </div>
+    ${weeks.filter(w=>getWeekCompletion(w.n)>0).length===0?'<p style="font-size:12px;color:var(--muted);text-align:center;padding:12px;background:#f5f5f5;border-radius:8px">No weeks started yet — nothing to reset!</p>':''}
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border:2px solid #e53935;border-radius:10px;margin-top:8px;background:#fff5f5">
+      <div><strong style="font-size:13px;color:#c62828">☢️ Reset Everything</strong><br><span style="font-size:11px;color:#e57373">Remove all progress, XP, achievements, and quiz scores</span></div>
+      <button class="reset-btn" style="border-width:2px;font-size:12px;padding:6px 16px" onclick="resetProgress()">Reset All</button>
+    </div>
   </div>`;
 }
 
 function renderSchedule(c){
-  let h='<div class="card"><h3>📅 Quest Schedule — Click any week to begin</h3><table><tr><th>Week</th><th>Quest</th><th>Track</th><th>XP</th><th>Progress</th><th>Special</th></tr>';
+  let h='<div class="card"><h3>📅 Quest Schedule — Click any week to begin</h3><table><tr><th>Week</th><th>Quest</th><th>Track</th><th>XP</th><th>Progress</th><th>Special</th><th></th></tr>';
   weeks.forEach(w=>{
     const track=tracks.find(t=>t.weeks.includes(w.n));
     let totalWeekXP=(w.quest?w.quest.xp:0)+(w.boss?w.boss.xp:0)+(w.assess?w.assess.xp:0);
@@ -1022,7 +1098,7 @@ function renderSchedule(c){
     if(w.boss) specials.push('<span class="pill boss">Boss</span>');
     if(w.assess) specials.push(`<span class="pill ${w.assess.type}">${w.assess.type}</span>`);
     if(w.ai) specials.push('<span class="pill skill">AI</span>');
-    h+=`<tr onclick="go('week-${w.n}')" style="cursor:pointer"><td><strong>W${w.n}</strong></td><td>${w.title}</td><td>${track?track.icon+' '+track.name:'🏠 Foundation'}</td><td>${totalWeekXP}</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct===100?'var(--acc)':'var(--pri)'};border-radius:3px"></div></div><span style="font-size:11px;font-weight:600;color:${pct===100?'var(--acc-d)':'var(--muted)'}">${pct}%</span></div></td><td>${specials.join(' ')||'—'}</td></tr>`;
+    h+=`<tr style="cursor:pointer"><td onclick="go('week-${w.n}')"><strong>W${w.n}</strong></td><td onclick="go('week-${w.n}')">${w.title}</td><td onclick="go('week-${w.n}')">${track?track.icon+' '+track.name:'🏠 Foundation'}</td><td onclick="go('week-${w.n}')">${totalWeekXP}</td><td onclick="go('week-${w.n}')"><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct===100?'var(--acc)':'var(--pri)'};border-radius:3px"></div></div><span style="font-size:11px;font-weight:600;color:${pct===100?'var(--acc-d)':'var(--muted)'}">${pct}%</span></div></td><td onclick="go('week-${w.n}')">${specials.join(' ')||'—'}</td><td>${pct>0?`<button class="reset-btn" style="font-size:10px;padding:2px 8px;white-space:nowrap" onclick="event.stopPropagation();resetWeek(${w.n})">Reset</button>`:''}</td></tr>`;
   });
   h+='</table></div>';
   c.innerHTML=h;
@@ -1175,6 +1251,15 @@ function renderWeek(c,n){
 
   if(w.tips){
     h+=`<div class="sec tips"><h4>💎 Pro Tips</h4><ul>${w.tips.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+  }
+
+  // Reset week section
+  const weekPct=getWeekCompletion(n);
+  if(weekPct>0){
+    h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#fff5f5;border:1px solid #ffcdd2;border-radius:10px;margin-top:12px">
+      <div><span style="font-size:13px;font-weight:600;color:#c62828">🔄 Reset This Week</span><br><span style="font-size:11px;color:#e57373">Remove all progress and XP earned in Week ${n}</span></div>
+      <button class="reset-btn" onclick="resetWeek(${n})">Reset Week ${n}</button>
+    </div>`;
   }
 
   h+=`<div class="nav-btns">
