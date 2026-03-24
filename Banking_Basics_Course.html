@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Banking Basics — 16-Week Course</title>
+  <style>
+    :root {
+      --primary:     #0d5c2f;
+      --accent:      #c9a84c;
+      --dark:        #0f1f17;
+      --dark2:       #1e3a2a;
+      --sidebar-w:   270px;
+      --bg:          #f2f5f0;
+      --border:      #dbe4d8;
+      --text:        #1a2e1a;
+      --muted:       #5a6e5a;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-setup:     #7b1fa2;
+      --c-activity:  #1565c0;
+      --c-assign:    #2e7d32;
+      --c-assess:    #e65100;
+      --bg-setup:    #f3e5f5;
+      --bg-activity: #e3f2fd;
+      --bg-assign:   #e8f5e9;
+      --bg-assess:   #fff3e0;
+      --code-bg:     #1a2e1a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #0f1f17, #1e3a2a);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--accent); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 14px; color: var(--dark); flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #7aaa8b; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #446644;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #97bbaa; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(13,92,47,.25); border-left-color: var(--accent); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #778877;
+    }
+    .nav-item.active .nav-num { background: var(--primary); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0;
+    }
+    .pill-quiz    { background: #bf360c; color: #fff; }
+    .pill-midterm { background: #6a0d91; color: #fff; }
+    .pill-final   { background: #b71c1c; color: #fff; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--primary), #062615);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '🏦'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .12; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── CARD GRIDS ── */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '✓'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .grade-table { width: 100%; border-collapse: collapse; }
+    .grade-table tr { border-bottom: 1px solid var(--border); }
+    .grade-table tr:last-child { border-bottom: none; }
+    .grade-table td { padding: 8px 0; font-size: 13px; }
+    .grade-table td:last-child { text-align: right; font-weight: 700; color: var(--primary); }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(13,92,47,.15);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* ── WEEK HEADER ── */
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--primary);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--primary); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .banner {
+      border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .banner-quiz    { background: #fff3e0; border: 1px solid #f57c00; color: #e65100; }
+    .banner-midterm { background: #f3e5f5; border: 1px solid #7b1fa2; color: #6a0d91; }
+    .banner-final   { background: #ffebee; border: 1px solid #c62828; color: #b71c1c; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--primary); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* ── SECTION CARDS ── */
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.setup    { background: var(--bg-setup);    border-color: var(--c-setup); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.assign   { background: var(--bg-assign);   border-color: var(--c-assign); }
+    .sec.assess   { background: var(--bg-assess);   border-color: var(--c-assess); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .setup    .sec-icon { background: rgba(123,31,162,.13); }
+    .activity .sec-icon { background: rgba(55,118,171,.13); }
+    .assign   .sec-icon { background: rgba(46,125,50,.13); }
+    .assess   .sec-icon { background: rgba(245,124,0,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .setup    .sec-hdr h3 { color: #6a0d91; }
+    .activity .sec-hdr h3 { color: #1a4a7a; }
+    .assign   .sec-hdr h3 { color: #1b5e20; }
+    .assess   .sec-hdr h3 { color: #bf360c; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .assign .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .assess .due-tag { background: rgba(245,124,0,.15); color: #bf360c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .setup  ul li::before { content: '☐'; color: var(--c-setup); font-size: 15px; line-height: 1.1; flex-shrink: 0; }
+    .assign ul li::before { content: '→'; color: var(--c-assign); font-weight: 700; flex-shrink: 0; }
+    .assess ul li::before { content: '•'; color: var(--c-assess); font-weight: 700; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .sample-qs h5 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: #bf360c; margin: 12px 0 6px;
+    }
+    .sample-qs ul li::before { content: '?'; color: var(--c-assess); font-weight: 900; flex-shrink: 0; }
+    .rubric-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .rubric-table tr { border-bottom: 1px solid rgba(0,0,0,.08); }
+    .rubric-table tr:last-child { border-bottom: none; }
+    .rubric-table td { padding: 7px 2px; font-size: 13px; }
+    .rubric-table td:last-child { text-align: right; font-weight: 700; }
+    .assess .rubric-table td:last-child { color: var(--c-assess); }
+    .exam-list { list-style: none; margin-bottom: 14px; }
+    .exam-list li {
+      padding: 4px 0; font-size: 13.5px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .exam-list li::before { content: '📌'; font-size: 12px; flex-shrink: 0; }
+    .sec-label {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; margin: 14px 0 6px; color: #bf360c;
+    }
+
+    /* ── CODE BLOCK (repurposed for scenario boxes) ── */
+    .code-block {
+      background: var(--code-bg); border-radius: 9px;
+      padding: 16px; margin-top: 14px; overflow-x: auto;
+    }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 12.5px; line-height: 1.65; color: #cdd9e5; white-space: pre-wrap;
+    }
+
+    /* ── SCHEDULE TABLE ── */
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--primary); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #f0f5f0; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--primary); white-space: nowrap; }
+    .tbl-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tbl-quiz    { background: #fff3e0; color: #e65100; }
+    .tbl-midterm { background: #f3e5f5; color: #6a0d91; }
+    .tbl-final   { background: #ffebee; color: #b71c1c; }
+
+    /* ── WEEK NAV BUTTONS ── */
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── MOBILE ── */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">$</div>
+      <div>
+        <h1>Banking Basics</h1>
+        <div class="sub">16-Week Industry Course</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Course Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">Full Schedule</span>
+    </div>
+    <div class="nav-group-label">Weeks</div>
+    <!-- week nav items injected by JS -->
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Course Overview</h2>
+    <span class="chip" id="topChip">16 Weeks · Beginner · No Experience Required</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   COURSE DATA
+═══════════════════════════ */
+const data = {
+  goals: [
+    "Understand the structure and purpose of the modern banking system",
+    "Identify the major facets of banking: retail, commercial, investment, and central banking",
+    "Explain core banking products: deposits, loans, mortgages, and credit",
+    "Navigate banking regulations, compliance, and risk management fundamentals",
+    "Explore career paths and job roles across all banking sectors",
+    "Analyze real-world banking scenarios using financial literacy and critical thinking"
+  ],
+  grading: [
+    { c: "Weekly Assignments (14)",  w: "30%" },
+    { c: "In-Class Activities",      w: "10%" },
+    { c: "Quizzes (4)",              w: "20%" },
+    { c: "Midterm Case Study",       w: "20%" },
+    { c: "Final Capstone Project",   w: "20%" }
+  ],
+  resources: [
+    { icon: "🏛️", title: "Federal Reserve Education",  desc: "federalreserveeducation.org",  url: "https://www.federalreserveeducation.org/" },
+    { icon: "📊", title: "FDIC Learning Bank",          desc: "fdic.gov/resources",           url: "https://www.fdic.gov/resources/" },
+    { icon: "📖", title: "Investopedia: Banking",       desc: "investopedia.com/banking",     url: "https://www.investopedia.com/banking-4427809" },
+    { icon: "🎓", title: "Khan Academy: Finance",       desc: "khanacademy.org",              url: "https://www.khanacademy.org/economics-finance-domain" },
+    { icon: "📰", title: "American Banker",             desc: "americanbanker.com",           url: "https://www.americanbanker.com/" },
+    { icon: "🛡️", title: "OCC Careers",                desc: "occ.gov/about/careers",        url: "https://www.occ.gov/about/careers/index-careers.html" }
+  ],
+  weeks: [
+    {
+      n: 1, title: "What Is Banking?", badge: null,
+      objectives: [
+        "Define banking and explain its role in the economy",
+        "Trace the history of banking from ancient times to modern day",
+        "Identify the key types of banks and financial institutions"
+      ],
+      topics: [
+        "What is a bank? The intermediary role between savers and borrowers",
+        "Brief history: goldsmiths, central banks, modern banking",
+        "Types of institutions: commercial banks, credit unions, savings & loans, online banks",
+        "How banks make money: the interest rate spread",
+        "The fractional reserve system — how deposits become loans",
+        "FDIC insurance and why it matters to depositors"
+      ],
+      setup: [
+        "No software required — bring a notebook and curiosity",
+        "Create a free account at Investopedia.com for the stock simulator used in later weeks",
+        "Bookmark the Federal Reserve Education website for reference throughout the course",
+        "Review your own bank account online — note the type of account, interest rate, and fees",
+        "Read one recent news article about banking (any source) and bring a 1-sentence summary to class"
+      ],
+      activity: {
+        title: '"Follow the Dollar"',
+        desc: 'Trace the journey of a single dollar bill from when a customer deposits it into a bank, through the fractional reserve system, into a loan, and back. Students draw a flow diagram on paper, then compare with a partner. Discussion: what happens if everyone wants their money back at once?',
+        code: 'SCENARIO: "Follow the Dollar"\n─────────────────────────────\nYou deposit $1,000 into First National Bank.\n\nReserve Requirement: 10%\n→ Bank keeps: $100 in reserve\n→ Bank lends:  $900 to a small business owner\n\nThe business owner deposits $900 into their bank.\n→ That bank keeps: $90 in reserve\n→ That bank lends:  $810 to a homebuyer\n\nCycle continues...\n\nQUESTION: How much total money can your\ninitial $1,000 create in the banking system?\n(Hint: 1 / reserve ratio = money multiplier)'
+      },
+      assign: {
+        n: 1, title: "Banking Landscape Report", due: 2,
+        desc: "Research and compare three different types of financial institutions.",
+        reqs: [
+          "Pick one commercial bank, one credit union, and one online-only bank",
+          "For each: list the institution name, type, and what makes it unique",
+          "Compare their savings account interest rates and monthly fees",
+          "Write a 1-paragraph summary: which would you choose and why?"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 2, title: "Retail Banking: Products & Services", badge: null,
+      objectives: [
+        "Describe common retail banking products and their purposes",
+        "Compare checking, savings, money market, and CD accounts",
+        "Understand debit cards, credit cards, and electronic payments"
+      ],
+      topics: [
+        "Checking accounts: features, fees, overdraft protection",
+        "Savings accounts: interest rates, withdrawal limits",
+        "Money Market accounts and Certificates of Deposit (CDs)",
+        "Debit cards vs. credit cards — how each works behind the scenes",
+        "Electronic payments: ACH, wire transfers, mobile wallets",
+        "Account fees: maintenance, ATM, overdraft, foreign transaction"
+      ],
+      setup: null,
+      activity: {
+        title: '"Product Match Game"',
+        desc: 'Students receive scenario cards (e.g., "I\'m a college student who needs quick access to cash" or "I have $10,000 I won\'t need for 2 years"). They match each scenario to the best banking product and defend their choice to the class.',
+        code: 'SCENARIO CARDS:\n─────────────────────────────\n1. "I\'m 19, just started my first job, need\n    somewhere to deposit my paycheck."\n    → Best product: ?\n\n2. "I have $50,000 in savings and want the\n    highest interest with no risk."\n    → Best product: ?\n\n3. "I travel internationally 3x per year\n    and hate paying extra fees."\n    → Best product: ?\n\n4. "I\'m saving for a car in exactly 18 months\n    and don\'t need the money until then."\n    → Best product: ?\n\nDISCUSS: What trade-offs did you consider?\n(Liquidity vs. return, fees vs. features)'
+      },
+      assign: {
+        n: 2, title: "Account Comparison Worksheet", due: 3,
+        desc: "Compare specific retail banking products from real banks.",
+        reqs: [
+          "Choose two real banks and compare their basic checking accounts",
+          "Create a table comparing: minimum balance, monthly fee, ATM network, overdraft fee, APY",
+          "Calculate the total annual cost of each account assuming 2 out-of-network ATM withdrawals per month",
+          "Write a recommendation paragraph for a hypothetical customer"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 3, title: "Lending & Credit Fundamentals", badge: "Quiz 1",
+      objectives: [
+        "Explain how loans and credit work from the bank's perspective",
+        "Identify different types of consumer and business loans",
+        "Understand interest rates, APR, and amortization basics"
+      ],
+      topics: [
+        "The lending process: application, underwriting, approval, disbursement",
+        "Types of loans: personal, auto, student, small business",
+        "Secured vs. unsecured lending",
+        "Interest rates: fixed vs. variable, simple vs. compound",
+        "APR (Annual Percentage Rate) vs. interest rate",
+        "Amortization: how loan payments are structured over time"
+      ],
+      setup: null,
+      activity: {
+        title: '"Loan Officer for a Day"',
+        desc: 'Students play the role of a loan officer. Given three fictional loan applications with different credit profiles, income levels, and purposes, they must decide: approve, deny, or approve with conditions. They present their decision and reasoning to the class.',
+        code: 'LOAN APPLICATION #1:\n─────────────────────────────\nApplicant: Sarah Chen, Age 28\nIncome: $65,000/year\nCredit Score: 740\nExisting Debt: $8,000 (student loans)\nRequest: $25,000 auto loan, 5 years\nDown Payment: $5,000\n\nDTI Ratio = (Monthly Debt Payments / Monthly Income)\nCurrent DTI = ($200 student loan) / ($5,417) = 3.7%\nNew DTI with car = ($200 + $370) / $5,417 = 10.5%\n\n→ YOUR DECISION: Approve / Deny / Conditions?\n→ What interest rate would you offer?'
+      },
+      assign: {
+        n: 3, title: "Loan Analysis Report", due: 4,
+        desc: "Analyze a loan scenario and build an amortization snapshot.",
+        reqs: [
+          "Given: $200,000 mortgage at 6.5% for 30 years — calculate the monthly payment using the provided formula",
+          "Show the first 3 months of the amortization schedule (principal vs. interest breakdown)",
+          "Calculate total interest paid over the life of the loan",
+          "Repeat for a 15-year term and compare: monthly payment, total interest, and total cost"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 1",
+        topics: "Weeks 1-3: banking overview, retail products, lending fundamentals",
+        format: "15 multiple-choice + 2 short answer questions (20 min)",
+        samples: [
+          "What is the fractional reserve system and why does it matter?",
+          "What is the difference between APR and interest rate?",
+          "Name three differences between a credit union and a commercial bank."
+        ]
+      }
+    },
+    {
+      n: 4, title: "Mortgages & Real Estate Lending", badge: null,
+      objectives: [
+        "Describe the mortgage process from pre-approval to closing",
+        "Compare mortgage types: fixed-rate, ARM, FHA, VA, jumbo",
+        "Understand escrow, points, and closing costs"
+      ],
+      topics: [
+        "The home buying process: pre-approval, house hunting, offer, closing",
+        "Fixed-rate vs. adjustable-rate mortgages (ARMs)",
+        "Government-backed loans: FHA, VA, USDA",
+        "Conventional vs. jumbo loans and conforming limits",
+        "Mortgage points: buying down the rate",
+        "Escrow accounts, closing costs, and title insurance"
+      ],
+      setup: null,
+      activity: {
+        title: '"House Hunters: The Math Edition"',
+        desc: 'Given a fictional family profile (income, savings, credit score, location), students determine: how much home they can afford, which mortgage type is best, and calculate their estimated monthly payment including PITI (principal, interest, taxes, insurance).',
+        code: 'THE JOHNSON FAMILY:\n─────────────────────────────\nCombined Income: $95,000/year\nSavings: $30,000\nCredit Score: 680\nLocation: Suburban Ohio\nMonthly Debts: $450 (car + student loans)\n\nRULES OF THUMB:\n→ Max home price ≈ 3-4x annual income\n→ 28% Rule: Housing costs ≤ 28% of gross income\n→ 36% Rule: Total debt ≤ 36% of gross income\n\nMax monthly housing: $95,000 × 0.28 / 12 = $2,217\nMax total debt:      $95,000 × 0.36 / 12 = $2,850\nAvailable for housing: $2,850 - $450 = $2,400\n\n→ Which mortgage type fits best?\n→ How much should the down payment be?'
+      },
+      assign: {
+        n: 4, title: "Mortgage Comparison Worksheet", due: 5,
+        desc: "Compare two mortgage options for a given buyer profile.",
+        reqs: [
+          "Compare a 30-year fixed at 6.5% vs. a 5/1 ARM starting at 5.5%",
+          "Calculate monthly payment (P&I) for each on a $300,000 loan",
+          "Calculate total interest paid over 5 years for each option",
+          "Write a recommendation: which is better for someone who plans to stay 5 years? 20 years?"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 5, title: "Credit Scores & Reporting", badge: null,
+      objectives: [
+        "Explain how credit scores are calculated and why they matter",
+        "Identify the three major credit bureaus and their role",
+        "Describe strategies for building and repairing credit"
+      ],
+      topics: [
+        "The FICO score model: payment history (35%), amounts owed (30%), length of history (15%), new credit (10%), credit mix (10%)",
+        "The three bureaus: Equifax, Experian, TransUnion",
+        "Credit reports: what they contain and how to read them",
+        "Common credit myths debunked",
+        "Building credit from scratch: secured cards, authorized users",
+        "Credit repair strategies and the dispute process"
+      ],
+      setup: null,
+      activity: {
+        title: '"Credit Score Simulator"',
+        desc: 'Students receive a fictional credit profile and a list of financial decisions (open a new card, miss a payment, pay off a balance, etc.). They predict how each action affects the score, assign a +/- point impact, and rank the decisions from best to worst for credit health.',
+        code: 'CREDIT PROFILE: Jamie, Age 24\n─────────────────────────────\nCurrent Score: 670 (Fair)\nAccounts: 1 credit card (2 yrs old, $3,000 limit,\n          $2,400 balance = 80% utilization)\nPayment History: 1 late payment 8 months ago\nInquiries: 2 in past year\n\nSCENARIOS — Predict the impact:\n1. Pay down balance to $900    → Score: +?\n2. Open 2 new store cards       → Score: +/-?\n3. Become authorized user on    → Score: +?\n   parent\'s 15-year-old card\n4. Miss next month\'s payment    → Score: -?\n5. Close the credit card        → Score: +/-?\n\nRANK these from best to worst for Jamie\'s score.'
+      },
+      assign: {
+        n: 5, title: "Credit Profile Analysis", due: 6,
+        desc: "Analyze a fictional credit report and create an improvement plan.",
+        reqs: [
+          "Review the provided sample credit report and identify all negative factors",
+          "Calculate the credit utilization ratio across all accounts",
+          "Create a 6-month action plan with specific steps to improve the score",
+          "Explain which FICO category each action addresses and the expected impact"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 6, title: "Commercial & Business Banking", badge: "Quiz 2",
+      objectives: [
+        "Distinguish retail banking from commercial banking",
+        "Identify the products and services offered to businesses",
+        "Understand business lending and treasury management"
+      ],
+      topics: [
+        "Retail vs. commercial banking: scale, clients, products",
+        "Business checking, payroll services, and merchant processing",
+        "Commercial loans: term loans, lines of credit, SBA loans",
+        "Treasury management: cash management, lockbox, sweep accounts",
+        "Trade finance: letters of credit, import/export financing",
+        "Commercial real estate lending"
+      ],
+      setup: null,
+      activity: {
+        title: '"Bank the Business"',
+        desc: 'Teams of 3-4 students are each assigned a fictional business (a restaurant, a tech startup, a manufacturing company). They must identify every banking product the business needs, build a relationship package, and pitch it to the class acting as business owners.',
+        code: 'YOUR CLIENT: "Fresh Bites Catering"\n─────────────────────────────\nType: Small business, 3 years old\nRevenue: $800,000/year\nEmployees: 12\nNeeds:\n  → Process customer credit card payments\n  → Cover seasonal cash flow gaps (summer is slow)\n  → Purchase a $75,000 commercial kitchen van\n  → Manage bi-weekly payroll for 12 employees\n  → Separate business and personal finances\n\nBUILD A BANKING PACKAGE:\n  1. Which accounts does this business need?\n  2. What type of loan for the van?\n  3. How do you solve the seasonal cash gap?\n  4. What additional services add value?\n  5. What\'s your pitch to the owner?'
+      },
+      assign: {
+        n: 6, title: "Business Banking Package Proposal", due: 7,
+        desc: "Design a complete banking relationship for a fictional business.",
+        reqs: [
+          "Choose a business type (retail store, medical practice, or construction company)",
+          "List at least 5 banking products/services the business needs with justification",
+          "Recommend a lending solution for a growth scenario and explain the terms",
+          "Write a 1-page executive summary as if presenting to the business owner"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 2",
+        topics: "Weeks 4-6: mortgages, credit scores, commercial banking",
+        format: "10 multiple-choice + 3 short answer questions (25 min)",
+        samples: [
+          "What does PITI stand for and what does each component represent?",
+          "Name the five categories that make up a FICO score and their weights.",
+          "What is the difference between a term loan and a line of credit?"
+        ]
+      }
+    },
+    {
+      n: 7, title: "Investment Banking Overview", badge: null,
+      objectives: [
+        "Explain what investment banks do and how they differ from commercial banks",
+        "Understand IPOs, M&A, and capital markets at a high level",
+        "Identify the major divisions within an investment bank"
+      ],
+      topics: [
+        "What is investment banking? The advisory and capital-raising role",
+        "Key divisions: IBD (Investment Banking Division), S&T (Sales & Trading), Research, Asset Management",
+        "IPOs: taking a company public — the process explained",
+        "Mergers & Acquisitions: buy-side vs. sell-side advisory",
+        "Capital markets: debt vs. equity offerings",
+        "The Glass-Steagall Act and its repeal — why it matters"
+      ],
+      setup: null,
+      activity: {
+        title: '"IPO Pitch"',
+        desc: 'Each team picks a well-known private company (or invents one) and creates a mock IPO pitch. They must explain: why the company should go public, the estimated valuation, the target share price, and how many shares to offer. Other teams play the role of institutional investors asking tough questions.',
+        code: 'IPO PITCH TEMPLATE:\n─────────────────────────────\nCompany: [Your Company Name]\nIndustry: [Sector]\n\n1. COMPANY OVERVIEW\n   Revenue: $___M  |  Growth Rate: ___%\n   Employees: ___  |  Founded: ____\n\n2. WHY GO PUBLIC?\n   → Capital for expansion? Debt repayment?\n   → Liquidity for early investors?\n\n3. VALUATION\n   Comparable companies trade at ___x revenue\n   Estimated valuation: $___M\n\n4. OFFERING DETAILS\n   Shares offered: ___ million\n   Target price: $___-$___ per share\n   Proceeds raised: $___M\n\n5. USE OF PROCEEDS\n   → ___% for growth/expansion\n   → ___% for debt repayment\n   → ___% for working capital'
+      },
+      assign: {
+        n: 7, title: "Investment Banking Divisions Report", due: 8,
+        desc: "Research and explain the major divisions of an investment bank.",
+        reqs: [
+          "Describe the four main divisions: IBD, S&T, Research, Asset Management",
+          "For each division: explain what they do, who they serve, and how they make money",
+          "Research one real M&A deal from the past year and summarize: who bought whom, deal size, and the banks involved",
+          "Write a reflection: which division interests you most and why?"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 8, title: "Risk Management in Banking", badge: "Midterm",
+      objectives: [
+        "Identify the major types of risk banks face",
+        "Explain how banks measure and manage credit, market, and operational risk",
+        "Understand the role of stress testing and capital adequacy"
+      ],
+      topics: [
+        "Types of risk: credit risk, market risk, liquidity risk, operational risk",
+        "Credit risk management: underwriting standards, credit ratings, loss reserves",
+        "Market risk: interest rate risk, foreign exchange risk",
+        "Operational risk: fraud, cyber threats, process failures",
+        "Stress testing: what it is and why regulators require it",
+        "Capital adequacy: Tier 1 capital, risk-weighted assets"
+      ],
+      setup: null,
+      activity: {
+        title: '"Risk Assessment Workshop"',
+        desc: 'Teams receive a bank portfolio with different loan types, market exposures, and operational scenarios. They must identify the top 5 risks, rate them by likelihood and impact, and propose mitigation strategies. Present findings as a risk committee briefing.',
+        code: 'BANK PORTFOLIO SNAPSHOT:\n─────────────────────────────\nTotal Assets: $2 billion\n\nLOAN PORTFOLIO:\n  Residential Mortgages: 40%  ($800M)\n  Commercial Real Estate: 25% ($500M)\n  Consumer Loans: 15%          ($300M)\n  Commercial & Industrial: 20% ($400M)\n\nCONCENTRATION CONCERNS:\n  → 60% of CRE loans are in one metro area\n  → Largest single borrower = $45M (2.25% of assets)\n\nMARKET CONDITIONS:\n  → Interest rates expected to rise 1.5% next year\n  → Local unemployment rising from 4% to 6.5%\n  → Commercial vacancy rates climbing\n\nTASK: Identify the top 5 risks and propose\nmitigation strategies for each.\nRate each: Likelihood (1-5) × Impact (1-5) = Risk Score'
+      },
+      assign: {
+        n: 8, title: "Risk Heat Map", due: 9,
+        desc: "Build a risk assessment matrix for a fictional bank.",
+        reqs: [
+          "Identify at least 8 risks across all four categories (credit, market, liquidity, operational)",
+          "Rate each risk on a 1-5 scale for both likelihood and impact",
+          "Create a heat map visualization (can be drawn or digital) showing risk positions",
+          "For the top 3 risks, write detailed mitigation strategies"
+        ]
+      },
+      assess: {
+        type: "midterm", label: "Midterm Case Study",
+        desc: "Analyze a fictional bank scenario that incorporates all concepts from Weeks 1-8. You will evaluate a community bank facing multiple challenges and provide strategic recommendations across retail products, lending, credit risk, and business banking.",
+        reqs: [
+          "Read the provided 2-page case study about 'Heritage Community Bank'",
+          "Identify at least 5 key problems or risks the bank is facing",
+          "Propose solutions for each problem using specific banking concepts from the course",
+          "Recommend a new product or service the bank should offer, with justification",
+          "Write a 1-page executive memo to the bank's board of directors",
+          "Include relevant calculations where applicable (loan analysis, risk metrics, etc.)"
+        ],
+        rubric: [
+          { c: "Problem identification and analysis",           p: 25 },
+          { c: "Application of course concepts",                p: 25 },
+          { c: "Quality of recommendations",                    p: 20 },
+          { c: "Executive memo clarity and professionalism",    p: 15 },
+          { c: "Supporting calculations and data",              p: 15 }
+        ]
+      }
+    },
+    {
+      n: 9, title: "Banking Regulations & Compliance", badge: null,
+      objectives: [
+        "Identify the major U.S. banking regulators and their roles",
+        "Explain key banking laws and their purposes",
+        "Understand compliance functions within a bank"
+      ],
+      topics: [
+        "Regulatory bodies: OCC, FDIC, Federal Reserve, CFPB, state regulators",
+        "Key laws: Bank Secrecy Act (BSA), Dodd-Frank, Community Reinvestment Act (CRA)",
+        "Anti-Money Laundering (AML) and Know Your Customer (KYC) requirements",
+        "Consumer protection: Truth in Lending Act (TILA), Equal Credit Opportunity Act (ECOA)",
+        "The compliance department: structure, responsibilities, and importance",
+        "Recent regulatory trends and hot topics"
+      ],
+      setup: null,
+      activity: {
+        title: '"Compliance Detective"',
+        desc: 'Students review 5 fictional banking scenarios (a customer making many small cash deposits, a loan officer giving different rates to similar applicants, etc.) and must identify which regulation applies, whether a violation occurred, and what the bank should do. Teams compete for the most correct answers.',
+        code: 'SCENARIO 3 OF 5:\n─────────────────────────────\n"A customer walks into your branch and deposits\n$9,500 in cash on Monday, $9,800 on Wednesday,\nand $9,700 on Friday — all just under the\n$10,000 reporting threshold."\n\nQUESTIONS:\n1. Which regulation is relevant here?\n   (Hint: BSA / AML / KYC)\n\n2. What is this pattern called?\n   (A: Structuring, aka "smurfing")\n\n3. Is the customer breaking the law?\n\n4. What should the bank employee do?\n   (A: File a Suspicious Activity Report - SAR)\n\n5. What are the penalties for the bank if\n   they fail to report this activity?'
+      },
+      assign: {
+        n: 9, title: "Regulatory Landscape Brief", due: 10,
+        desc: "Research a major banking regulation and explain its real-world impact.",
+        reqs: [
+          "Choose one major regulation: BSA/AML, Dodd-Frank, CRA, or TILA",
+          "Explain why the regulation was created (what problem it solved)",
+          "Describe 3 specific things banks must do to comply",
+          "Find one real enforcement action or fine related to this regulation and summarize it"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 10, title: "Financial Technology & Digital Banking", badge: "Quiz 3",
+      objectives: [
+        "Describe how fintech is disrupting traditional banking",
+        "Identify emerging technologies: mobile banking, blockchain, AI in banking",
+        "Evaluate the opportunities and threats fintech poses to traditional banks"
+      ],
+      topics: [
+        "The fintech revolution: neobanks, payment apps, robo-advisors",
+        "Mobile banking and the shift away from branches",
+        "Blockchain and cryptocurrency: basics and banking implications",
+        "AI and machine learning in banking: fraud detection, credit scoring, chatbots",
+        "Open banking and APIs: PSD2 and data sharing",
+        "Bank-fintech partnerships vs. competition"
+      ],
+      setup: null,
+      activity: {
+        title: '"Fintech Shark Tank"',
+        desc: 'Student teams invent a fintech product that solves a real banking pain point. They create a 3-minute pitch covering: the problem, their solution, the target market, and how it makes money. Other teams play VC investors who ask questions and vote on which to "fund."',
+        code: 'FINTECH PITCH TEMPLATE:\n─────────────────────────────\n🎯 THE PROBLEM:\n   What banking experience is broken?\n   Who suffers most from this problem?\n\n💡 YOUR SOLUTION:\n   Product name: _______________\n   One-line pitch: "We help [who] do [what]\n   by [how], unlike [existing alternative]."\n\n👥 TARGET MARKET:\n   Primary users: _____________\n   Market size: $___ billion\n\n💰 REVENUE MODEL:\n   □ Subscription fees\n   □ Transaction fees\n   □ Freemium + premium\n   □ Data/analytics\n   □ Other: _______________\n\n🏦 BANK IMPACT:\n   Does this compete with or complement\n   traditional banks? How might a bank respond?'
+      },
+      assign: {
+        n: 10, title: "Fintech Disruption Analysis", due: 11,
+        desc: "Analyze how a specific fintech company is challenging traditional banking.",
+        reqs: [
+          "Choose a fintech company (e.g., Chime, Stripe, Robinhood, SoFi, Block/Square)",
+          "Explain what traditional banking service it replaces or improves",
+          "Analyze its business model: how does it make money without traditional banking fees?",
+          "Assess the threat level to traditional banks (low/medium/high) with reasoning"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 3",
+        topics: "Weeks 7-10: investment banking, risk management, regulations, fintech",
+        format: "10 multiple-choice + 4 short answer questions (30 min)",
+        samples: [
+          "What are the four main divisions of an investment bank?",
+          "What is the difference between credit risk and market risk?",
+          "What does KYC stand for and why is it required?"
+        ]
+      }
+    },
+    {
+      n: 11, title: "Central Banking & Monetary Policy", badge: null,
+      objectives: [
+        "Explain the role and structure of the Federal Reserve",
+        "Describe the tools of monetary policy and how they affect banking",
+        "Understand how interest rate decisions impact banks and consumers"
+      ],
+      topics: [
+        "The Federal Reserve System: structure, Board of Governors, 12 regional banks",
+        "The dual mandate: maximum employment and stable prices",
+        "Monetary policy tools: federal funds rate, open market operations, reserve requirements",
+        "Quantitative easing and tightening",
+        "How the Fed's decisions affect bank profitability",
+        "The yield curve: normal, inverted, flat — and what each signals"
+      ],
+      setup: null,
+      activity: {
+        title: '"Fed Chair for a Day"',
+        desc: 'Students receive economic data (inflation rate, unemployment, GDP growth, housing prices) and must decide: raise rates, lower rates, or hold steady. Each team presents their decision with reasoning. Then reveal what the real Fed decided in a historical scenario and discuss the differences.',
+        code: 'ECONOMIC DASHBOARD:\n─────────────────────────────\nInflation (CPI):        4.2% (target: 2.0%)\nUnemployment:           3.8% (historically low)\nGDP Growth:             2.1% (moderate)\nHousing Prices:         +8% year-over-year\nConsumer Confidence:    Declining\nStock Market:           Near all-time highs\nBank Lending:           Slowing\n\nCURRENT FED FUNDS RATE: 4.50%\n\nYOUR OPTIONS:\n  A) Raise by 0.25% → New rate: 4.75%\n  B) Hold steady    → Rate stays: 4.50%\n  C) Cut by 0.25%   → New rate: 4.25%\n\nCONSIDER:\n  → How does each choice affect inflation?\n  → How does each choice affect employment?\n  → How does each choice affect bank profits?\n  → What are the risks of being wrong?'
+      },
+      assign: {
+        n: 11, title: "Monetary Policy Impact Paper", due: 12,
+        desc: "Analyze a recent Federal Reserve decision and its impact on banking.",
+        reqs: [
+          "Find the most recent FOMC meeting minutes and summarize the key decision",
+          "Explain how the decision impacts: mortgage rates, savings rates, bank profitability",
+          "Research how at least 2 major banks responded (changed rates, earnings impact)",
+          "Give your opinion: was the Fed's decision the right call? Why or why not?"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 12, title: "Wealth Management & Private Banking", badge: null,
+      objectives: [
+        "Differentiate wealth management from retail banking",
+        "Explain the services offered to high-net-worth individuals",
+        "Understand investment products banks offer: funds, trusts, insurance"
+      ],
+      topics: [
+        "What is wealth management? Thresholds and client types",
+        "Private banking vs. wealth management vs. asset management",
+        "Investment products: mutual funds, ETFs, bonds, alternatives",
+        "Trust services: living trusts, estate planning, fiduciary duties",
+        "Insurance products banks sell: life, annuities",
+        "The fee-based vs. commission-based advisory model"
+      ],
+      setup: null,
+      activity: {
+        title: '"Financial Plan Workshop"',
+        desc: 'Each team receives a high-net-worth client profile (age, wealth, goals, risk tolerance, family situation). They must design a basic financial plan: asset allocation, recommended products, estate planning considerations, and tax optimization ideas. Present to the class as if to the client.',
+        code: 'CLIENT PROFILE:\n─────────────────────────────\nDr. Maria Torres, Age 55\nNet Worth: $4.2 million\n  → Home equity: $800K\n  → 401(k): $1.8M\n  → Brokerage: $1.2M\n  → Cash/savings: $400K\n\nGoals:\n  → Retire at 62 with $120K/year income\n  → Fund grandchildren\'s education ($200K)\n  → Leave a legacy to her alma mater\n\nRisk Tolerance: Moderate\nFamily: Widowed, 2 adult children, 3 grandchildren\n\nYOUR TASK:\n  1. Recommended asset allocation?\n  2. Which banking/wealth products fit?\n  3. Estate planning needs?\n  4. Tax-advantaged strategies?\n  5. How does the bank earn revenue here?'
+      },
+      assign: {
+        n: 12, title: "Wealth Management Case Study", due: 13,
+        desc: "Design a wealth management solution for a provided client profile.",
+        reqs: [
+          "Review the provided client profile and identify their top 3 financial priorities",
+          "Recommend an asset allocation (stocks/bonds/alternatives/cash) with justification",
+          "Identify 3 specific banking/wealth products and explain how each serves the client's goals",
+          "Discuss the fee model: how does the bank get compensated for this relationship?"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 13, title: "Banking Careers: Front Office", badge: null,
+      objectives: [
+        "Map the career landscape across all banking sectors",
+        "Understand front-office roles: what they do, skills needed, and pay ranges",
+        "Identify the educational paths and certifications that open doors"
+      ],
+      topics: [
+        "Career map overview: front office, middle office, back office",
+        "Retail banking careers: teller, personal banker, branch manager, regional manager",
+        "Commercial banking careers: relationship manager, credit analyst, portfolio manager",
+        "Investment banking careers: analyst, associate, VP, managing director",
+        "Wealth management careers: financial advisor, private banker, trust officer",
+        "Key certifications: CFP, CFA, Series 7/66, CAMS"
+      ],
+      setup: null,
+      activity: {
+        title: '"Career Speed Dating"',
+        desc: 'Students research a specific banking job role (assigned or chosen). They prepare a 2-minute "elevator pitch" about the role: what it does daily, skills required, typical salary range, and career progression path. Then they rotate and present to different classmates, learning about many roles quickly.',
+        code: 'JOB ROLE RESEARCH CARD:\n─────────────────────────────\nRole: Commercial Relationship Manager\n\nDAILY LIFE:\n  → Meet with business clients to understand\n    their financial needs\n  → Analyze financial statements\n  → Structure and present lending solutions\n  → Cross-sell treasury and deposit products\n  → Manage a portfolio of 40-60 relationships\n\nSKILLS NEEDED:\n  → Financial statement analysis\n  → Sales and relationship building\n  → Credit analysis fundamentals\n  → Presentation and negotiation\n  → Industry knowledge\n\nCOMPENSATION RANGE:\n  Entry: $55K-$70K + bonus\n  Mid:   $80K-$120K + bonus\n  Senior: $130K-$200K+ with incentives\n\nPATH:\n  Credit Analyst → RM → Senior RM\n  → Team Lead → Market President'
+      },
+      assign: {
+        n: 13, title: "Career Path Portfolio", due: 14,
+        desc: "Research and present your ideal banking career path.",
+        reqs: [
+          "Choose a banking sector that interests you and identify an entry-level position",
+          "Map the career progression: entry level → 5 years → 10 years → 20 years",
+          "For each stage: list the title, typical salary range, key responsibilities, and skills needed",
+          "Identify 2 certifications or degrees that would help accelerate this path"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 14, title: "Banking Careers: Middle & Back Office + Ethics", badge: "Quiz 4",
+      objectives: [
+        "Understand middle-office and back-office functions and careers",
+        "Explain the importance of ethics and culture in banking",
+        "Analyze real-world banking scandals and their lessons"
+      ],
+      topics: [
+        "Middle office: risk management, compliance, finance/accounting, data analytics",
+        "Back office: operations, IT/technology, HR, legal, audit",
+        "The growing role of data science and technology in banking",
+        "Banking ethics: fiduciary duty, conflicts of interest, insider trading",
+        "Case studies in banking scandals: Wells Fargo accounts, LIBOR manipulation, 2008 crisis",
+        "Building an ethical culture: tone from the top, whistleblower programs"
+      ],
+      setup: null,
+      activity: {
+        title: '"Ethics Tribunal"',
+        desc: 'Teams receive a real (anonymized) banking ethics scenario where an employee faces a moral dilemma. They must determine: what went wrong, who is responsible, what the employee should have done, and what systemic changes could prevent it. Each team presents their verdict and proposed reforms.',
+        code: 'ETHICS SCENARIO:\n─────────────────────────────\nSituation:\nYou are a personal banker at a large bank.\nYour regional manager has set a goal of 8 new\naccount openings per employee per day.\n\nYou discover that several colleagues are opening\naccounts that customers didn\'t ask for —\nmoving small amounts between existing accounts\nto meet the quota.\n\nYour manager knows but says:\n"Corporate is watching the numbers. Just\nhit your targets and don\'t make waves."\n\nQUESTIONS:\n1. Which regulations are being violated?\n2. Who is responsible? (Employee? Manager?\n   Corporate? All of the above?)\n3. What should you do?\n4. What protections exist for whistleblowers?\n5. What systemic changes could prevent this?\n\n[Based on real events — Wells Fargo 2016]'
+      },
+      assign: {
+        n: 14, title: "Banking Scandal Analysis", due: 15,
+        desc: "Analyze a major banking scandal and extract lessons learned.",
+        reqs: [
+          "Choose a banking scandal: 2008 financial crisis, LIBOR scandal, Wells Fargo fake accounts, or another of your choice",
+          "Summarize what happened, who was involved, and the financial impact",
+          "Identify which regulations (if any) were violated and what new regulations resulted",
+          "Write 3 specific lessons the banking industry should take away and explain how they apply to your future career"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 4",
+        topics: "Weeks 11-14: monetary policy, wealth management, careers, ethics",
+        format: "10 multiple-choice + 3 short answer questions (30 min)",
+        samples: [
+          "What is the Fed's dual mandate and what tools does it use?",
+          "What is the difference between fee-based and commission-based advisory?",
+          "Name three middle-office functions in a bank and explain one in detail."
+        ]
+      }
+    },
+    {
+      n: 15, title: "Capstone Workshop & Industry Trends", badge: null,
+      objectives: [
+        "Identify current trends shaping the future of banking",
+        "Apply all course concepts to a comprehensive capstone project",
+        "Give and receive structured peer feedback"
+      ],
+      topics: [
+        "The future of banking: embedded finance, BaaS (Banking as a Service)",
+        "ESG (Environmental, Social, Governance) in banking",
+        "Financial inclusion and banking the unbanked",
+        "Guided capstone project work time",
+        "Peer review and feedback session",
+        "Q&A and course review"
+      ],
+      setup: null,
+      activity: {
+        title: '"Peer Review Workshop"',
+        desc: 'Students share in-progress capstone projects with a partner and complete a structured review: Is the business plan realistic? Are the financial concepts applied correctly? What is the strongest part? What needs improvement? Each pair exchanges written feedback.',
+        code: null
+      },
+      assign: {
+        n: 15, title: "Capstone Project Checkpoint", due: 16,
+        desc: "Submit your capstone project in its current state for progress review.",
+        reqs: [
+          "Submit your current capstone work (draft, outline, research)",
+          "Write a 1-paragraph summary of your project concept",
+          "List the sections that are complete and those still in progress",
+          "Include any questions you have for the instructor"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 16, title: "Final Presentations & Exam", badge: "Final",
+      objectives: [
+        "Present a comprehensive banking capstone project",
+        "Demonstrate mastery of all course concepts",
+        "Reflect on your learning and career direction"
+      ],
+      topics: [
+        "Capstone presentations (8 min each + 2 min Q&A)",
+        "Final exam — 60 minutes",
+        "Course wrap-up: what's next in your banking journey"
+      ],
+      setup: null,
+      activity: {
+        title: "Capstone Presentations",
+        desc: 'Each student gets 8 minutes to present their capstone project and 2 minutes for Q&A. Presentations should cover: the concept, key findings, financial analysis, and actionable recommendations.',
+        code: null
+      },
+      assign: {
+        n: 16, title: "Capstone Project: Build a Bank", due: 16,
+        desc: "Design a new bank or banking product from the ground up — your ultimate demonstration of everything learned in this course.",
+        reqs: [
+          "Choose one: (A) Design a new community bank, (B) Create an innovative banking product, or (C) Analyze and recommend a turnaround strategy for a struggling bank",
+          "Include: target market analysis, product/service offerings, revenue model, and risk assessment",
+          "Apply regulatory knowledge: which regulations apply and how you'll comply",
+          "Include a competitive analysis against 2-3 existing banks/products",
+          "Create a financial projection or analysis using course concepts (loan calculations, risk metrics, etc.)",
+          "Deliver an 8-minute presentation with professional-quality slides or handout"
+        ]
+      },
+      assess: {
+        type: "final", label: "Final Exam + Capstone Project",
+        desc: "A 60-minute written exam covering all 16 weeks, plus a graded capstone project and 8-minute live presentation.",
+        examSections: [
+          "Multiple Choice — 25 questions (1 pt each) covering all topics from Weeks 1-16",
+          "Scenario Analysis (15 pts) — analyze a banking scenario and answer questions about products, risks, and regulations",
+          "Short Essays (20 pts) — write two short essays: one on a banking trend and one on an ethical dilemma",
+          "Calculation Section (15 pts) — perform loan amortization, risk metrics, or profitability calculations"
+        ],
+        rubric: [
+          { c: "Concept and strategic thinking",             p: 25 },
+          { c: "Application of course concepts",             p: 25 },
+          { c: "Financial analysis and supporting data",     p: 20 },
+          { c: "Presentation quality and professionalism",   p: 15 },
+          { c: "Creativity and real-world applicability",    p: 15 }
+        ]
+      }
+    }
+  ]
+};
+
+/* ═══════════════════════════
+   HELPERS
+═══════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function codeBlock(code) {
+  if (!code) return '';
+  return `<div class="code-block">
+    <div class="code-dots">
+      <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+    </div>
+    <pre>${esc(code)}</pre>
+  </div>`;
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+/* ═══════════════════════════
+   RENDER: OVERVIEW
+═══════════════════════════ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Course Overview';
+  document.getElementById('topChip').textContent  = '16 Weeks · Beginner · No Experience Required';
+
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const grading = data.grading.map(g => `<tr><td>${esc(g.c)}</td><td>${esc(g.w)}</td></tr>`).join('');
+  const res     = data.resources.map(r =>
+    `<div class="resource-card" onclick="window.open('${r.url}','_blank')">
+      <div class="r-icon">${r.icon}</div>
+      <div class="r-title">${esc(r.title)}</div>
+      <div class="r-desc">${esc(r.desc)}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Banking Basics</h1>
+      <div class="tagline">Understanding the Banking Industry — A Complete 16-Week Introductory Course</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">16</div><div class="lbl">Weeks</div></div>
+        <div class="stat-box"><div class="val">14</div><div class="lbl">Assignments</div></div>
+        <div class="stat-box"><div class="val">4</div><div class="lbl">Quizzes</div></div>
+        <div class="stat-box"><div class="val">2</div><div class="lbl">Projects</div></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">🎯</span> Course Goals</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">📊</span> Grading Breakdown</div>
+        <table class="grade-table"><tbody>${grading}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">📦</span> What You'll Need</div>
+        <ul class="check-list">
+          <li>A notebook and calculator (or spreadsheet software)</li>
+          <li>Free Investopedia account for simulations</li>
+          <li>Access to a web browser for research activities</li>
+          <li>No prior finance or banking experience required!</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#f3e5f5">🔗</span> Recommended Resources</div>
+      <div class="row3" style="margin-bottom:0; margin-top:4px">${res}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: SCHEDULE
+═══════════════════════════ */
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = 'Full Course Schedule';
+  document.getElementById('topChip').textContent  = 'All 16 Weeks';
+
+  const rows = data.weeks.map(w => {
+    let assess = '<span style="color:#bbb">—</span>';
+    if (w.assess) {
+      const cls = w.assess.type === 'quiz' ? 'tbl-quiz' : w.assess.type === 'midterm' ? 'tbl-midterm' : 'tbl-final';
+      assess = `<span class="tbl-pill ${cls}">${esc(w.assess.label)}</span>`;
+    }
+    const asgn = w.assign ? `A${w.assign.n}: ${esc(w.assign.title)}` : '<span style="color:#bbb">—</span>';
+    return `<tr onclick="go('week-${w.n}')">
+      <td class="wk-col">Week ${w.n}</td>
+      <td>${esc(w.title)}</td>
+      <td>${asgn}</td>
+      <td>${assess}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Assignment</th><th>Assessment</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that week.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: WEEK
+═══════════════════════════ */
+function renderWeek(num) {
+  const w = data.weeks.find(x => x.n === num);
+  if (!w) return;
+
+  document.getElementById('topTitle').textContent = `Week ${w.n}: ${w.title}`;
+  document.getElementById('topChip').textContent  = `Week ${w.n} of 16`;
+
+  let html = '<div class="fade-in">';
+
+  // Assessment banner
+  let banner = '';
+  if (w.assess) {
+    const cls = { quiz:'banner-quiz', midterm:'banner-midterm', final:'banner-final' }[w.assess.type];
+    const ico = { quiz:'📝', midterm:'🏆', final:'🎓' }[w.assess.type];
+    banner = `<div class="banner ${cls}">${ico} Assessment this week: <strong>${esc(w.assess.label)}</strong></div>`;
+  }
+
+  // Objectives & Topics
+  const objs   = w.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = w.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Week ${w.n}</div>
+    <h2>${esc(w.title)}</h2>
+    ${banner}
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Learning Objectives</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Topics Covered</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  // Setup (Week 1 only)
+  if (w.setup) {
+    const items = w.setup.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec setup">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚙️</div>
+        <h3>Setup Checklist</h3>
+        <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--c-setup);background:rgba(123,31,162,.1);padding:3px 10px;border-radius:20px">Complete Before Class</span>
+      </div>
+      <p>Complete all steps below to prepare for the course.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  // Activity
+  if (w.activity) {
+    html += `<div class="sec activity">
+      <div class="sec-hdr">
+        <div class="sec-icon">🎮</div>
+        <h3>In-Class Activity: ${esc(w.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(w.activity.desc)}</p>
+      ${codeBlock(w.activity.code)}
+    </div>`;
+  }
+
+  // Assignment
+  if (w.assign) {
+    const reqs = w.assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec assign">
+      <div class="sec-hdr">
+        <div class="sec-icon">📝</div>
+        <h3>Assignment ${w.assign.n}: ${esc(w.assign.title)}</h3>
+        <span class="due-tag">Due Week ${w.assign.due}</span>
+      </div>
+      <p class="desc">${esc(w.assign.desc)}</p>
+      <ul>${reqs}</ul>
+    </div>`;
+  }
+
+  // Assessment
+  if (w.assess) {
+    if (w.assess.type === 'quiz') {
+      const samples = w.assess.samples.map(s => `<li>${esc(s)}</li>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">📋</div>
+          <h3>${esc(w.assess.label)}</h3>
+          <span class="due-tag">End of Week ${w.n}</span>
+        </div>
+        <p><strong>Topics:</strong> ${esc(w.assess.topics)}</p>
+        <p><strong>Format:</strong> ${esc(w.assess.format)}</p>
+        <div class="sample-qs">
+          <h5>Sample Questions</h5>
+          <ul>${samples}</ul>
+        </div>
+      </div>`;
+
+    } else if (w.assess.type === 'midterm') {
+      const reqs   = w.assess.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      const rubric = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🏆</div>
+          <h3>Midterm Case Study</h3>
+          <span class="due-tag">Due End of Week 8</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Requirements</div>
+        <ul>${reqs}</ul>
+        <div class="sec-label">Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    } else if (w.assess.type === 'final') {
+      const sections = w.assess.examSections.map(s => `<li>${esc(s)}</li>`).join('');
+      const rubric   = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🎓</div>
+          <h3>Final Exam + Capstone Project</h3>
+          <span class="due-tag">Week 16</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul class="exam-list">${sections}</ul>
+        <div class="sec-label">Capstone Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  // Prev / Next navigation
+  const prev = num > 1  ? num - 1 : null;
+  const next = num < 16 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('week-${prev}')">
+      &#8592; Week ${prev ?? ''}
+    </button>
+    <span style="font-size:12px;color:var(--muted)">Week ${num} of 16</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('week-${next}')">
+      Week ${next ?? ''} &#8594;
+    </button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ═══════════════════════════
+   NAVIGATION
+═══════════════════════════ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')             renderOverview();
+  else if (view === 'schedule')        renderSchedule();
+  else if (view.startsWith('week-'))   renderWeek(+view.replace('week-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+/* ═══════════════════════════
+   INIT — build sidebar
+═══════════════════════════ */
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.weeks.forEach(w => {
+    let pillHtml = '';
+    if (w.badge) {
+      const cls = w.badge.includes('Quiz') ? 'quiz' : w.badge === 'Midterm' ? 'midterm' : 'final';
+      pillHtml = `<span class="pill pill-${cls}">${esc(w.badge)}</span>`;
+    }
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-week-${w.n}`;
+    item.onclick = () => go(`week-${w.n}`);
+    item.innerHTML = `<div class="nav-num">${w.n}</div><span class="nav-label">${esc(w.title)}</span>${pillHtml}`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>

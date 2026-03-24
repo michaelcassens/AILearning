@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Research Quest — Gamified Research Methodology</title>
+<style>
+:root{
+  --pri:#1565c0;--pri-d:#0d47a1;--pri-l:#42a5f5;
+  --sec:#ff8f00;--sec-l:#ffca28;--sec-d:#e65100;
+  --acc:#00c853;--acc-d:#00953e;
+  --xp:#7c4dff;--xp-l:#b388ff;
+  --bg:#f5f6fa;--card:#fff;--txt:#1a1a2e;--muted:#637381;
+  --side-w:280px;--radius:12px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.side{width:var(--side-w);background:linear-gradient(180deg,var(--pri-d),#0a1929);color:#fff;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;display:flex;flex-direction:column}
+.side::-webkit-scrollbar{width:4px}.side::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:4px}
+.side-head{padding:24px 20px 16px;text-align:center;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,var(--sec),var(--sec-d));display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px;box-shadow:0 4px 20px rgba(255,143,0,.3)}
+.side-head h2{font-size:16px;font-weight:700;letter-spacing:.5px}
+.side-head p{font-size:11px;opacity:.6;margin-top:2px}
+
+.xp-panel{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.xp-level{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.xp-level .badge{background:var(--xp);padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.xp-level span{font-size:12px;opacity:.8}
+.xp-bar-outer{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.xp-bar-inner{height:100%;background:linear-gradient(90deg,var(--xp),var(--xp-l));border-radius:4px;transition:width .6s ease}
+.xp-numbers{display:flex;justify-content:space-between;font-size:10px;opacity:.5;margin-top:4px}
+
+.achievements{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.1);display:flex;flex-wrap:wrap;gap:6px}
+.ach{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;position:relative;transition:.3s}
+.ach.locked{background:rgba(255,255,255,.06);filter:grayscale(1) opacity(.3)}
+.ach.unlocked{background:rgba(255,255,255,.15);box-shadow:0 0 12px rgba(124,77,255,.5);filter:none;animation:achPop .5s ease}
+@keyframes achPop{0%{transform:scale(0.5)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+.ach:hover::after{content:attr(data-tip);position:absolute;bottom:110%;left:50%;transform:translateX(-50%);background:#1a1a2e;padding:4px 8px;border-radius:6px;font-size:10px;white-space:nowrap;z-index:10}
+
+.nav-items{flex:1;padding:8px 0;overflow-y:auto}
+.nav-i{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;transition:.12s;border-left:3px solid transparent}
+.nav-i:hover{background:rgba(255,255,255,.06)}
+.nav-i.act{background:rgba(255,255,255,.1);border-left-color:var(--sec)}
+.nav-i .icon{width:24px;text-align:center;font-size:14px}
+.nav-i .quest-status{margin-left:auto;font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600}
+.quest-status.done{background:var(--acc);color:#fff}
+.quest-status.active{background:var(--sec);color:#fff}
+
+.ham{display:none;position:fixed;top:12px;left:12px;z-index:200;width:40px;height:40px;border-radius:10px;background:var(--pri);color:#fff;border:none;font-size:20px;cursor:pointer}
+
+/* ── Main ── */
+.main{margin-left:var(--side-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:var(--card);padding:14px 32px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #e8e8e8;position:sticky;top:0;z-index:50}
+.topbar h3{font-size:15px;font-weight:600}
+.topbar .chip{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--pri);color:#fff;font-weight:600}
+.topbar .xp-chip{background:var(--xp);margin-left:auto;cursor:pointer;transition:.2s}
+.topbar .xp-chip:hover{transform:scale(1.05)}
+
+.content{flex:1;padding:32px;max-width:960px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--pri),var(--pri-d));border-radius:var(--radius);padding:48px 40px;color:#fff;position:relative;overflow:hidden;margin-bottom:32px}
+.hero::after{content:'🔬';position:absolute;right:30px;bottom:-10px;font-size:120px;opacity:.08}
+.hero h1{font-size:32px;font-weight:800;margin-bottom:8px}
+.hero p{font-size:15px;opacity:.85;max-width:560px;line-height:1.6}
+.hero-stats{display:flex;gap:16px;margin-top:24px;flex-wrap:wrap}
+.hero-stat{background:rgba(255,255,255,.12);border-radius:10px;padding:12px 20px;min-width:140px;transition:.2s;cursor:default}
+.hero-stat:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.hero-stat strong{display:block;font-size:20px}.hero-stat span{font-size:11px;opacity:.7}
+
+/* ── Skill Tree ── */
+.skill-tree{background:var(--card);border-radius:var(--radius);padding:28px;margin-bottom:28px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.skill-tree h3{font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.skill-tracks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.track{border:2px solid #e8e8e8;border-radius:10px;padding:16px;text-align:center;transition:.3s;cursor:pointer}
+.track:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.track.active{border-color:var(--pri);background:rgba(21,101,192,.04)}
+.track.completed{border-color:var(--acc);background:rgba(0,200,83,.04)}
+.track .track-icon{font-size:28px;margin-bottom:8px}
+.track h4{font-size:13px;font-weight:600;margin-bottom:4px}
+.track .track-prog{height:6px;background:#e8e8e8;border-radius:3px;margin-top:8px;overflow:hidden}
+.track .track-prog-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.track.active .track-prog-fill{background:linear-gradient(90deg,var(--pri),var(--pri-l))}
+.track.completed .track-prog-fill{background:linear-gradient(90deg,var(--acc),#69f0ae)}
+.track .track-pct{font-size:11px;color:var(--muted);margin-top:4px;font-weight:600}
+
+/* ── Cards ── */
+.card{background:var(--card);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.card h3{font-size:16px;margin-bottom:12px}
+
+/* ── Section blocks ── */
+.sec{border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.sec h4{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec ul{list-style:none;padding-left:4px}.sec li{padding:4px 0;font-size:13px;line-height:1.5}
+.sec.objectives{background:#e3f2fd;border-left:4px solid var(--pri)}
+.sec.objectives li::before{content:'🎯 '}
+.sec.concepts{background:#fff3e0;border-left:4px solid var(--sec)}
+.sec.concepts li::before{content:'💡 '}
+.sec.quest{background:#e8f5e9;border-left:4px solid var(--acc)}
+.sec.boss{background:linear-gradient(135deg,#fce4ec,#fff3e0);border-left:4px solid #e53935}
+.sec.ai-tool{background:#ede7f6;border-left:4px solid var(--xp)}
+.sec.ai-tool li::before{content:'🤖 '}
+.sec.assess{background:#fff8e1;border-left:4px solid var(--sec-d)}
+.sec.assess li::before{content:'• '}
+.sec.tips{background:#e0f7fa;border-left:4px solid #00acc1}
+.sec.tips li::before{content:'💎 '}
+
+/* ── Interactive Checklist ── */
+.checklist{list-style:none;padding:0}
+.check-item-wrap{margin:4px 0}
+.check-item{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;cursor:pointer;transition:.2s;user-select:none}
+.check-item:hover{background:rgba(0,0,0,.04)}
+.check-item.checked{opacity:.6}
+.check-item.checked .check-text{text-decoration:line-through}
+.check-box{width:22px;height:22px;border-radius:6px;border:2px solid #bdbdbd;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.3s;margin-top:1px}
+.check-item.checked .check-box{background:var(--acc);border-color:var(--acc);color:#fff}
+.check-text{font-size:13px;line-height:1.5;flex:1}
+.guide-toggle{width:22px;height:22px;border-radius:50%;border:none;background:var(--pri);color:#fff;font-size:12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:.2s;margin-top:1px;font-weight:700;font-family:var(--font)}
+.guide-toggle:hover{background:var(--pri-d);transform:scale(1.1)}
+.guide-panel{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .35s ease;margin:0 12px;border-radius:0 0 10px 10px}
+.guide-panel.open{max-height:800px;padding:14px 16px;background:rgba(21,101,192,.04);border:1px solid rgba(21,101,192,.12);border-top:none;border-radius:0 0 10px 10px;margin-bottom:4px}
+.guide-panel h5{font-size:12px;font-weight:700;color:var(--pri-d);margin-bottom:6px}
+.guide-panel p{font-size:12px;line-height:1.6;color:#444;margin-bottom:8px}
+.guide-panel .guide-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--pri);text-decoration:none;font-weight:600;padding:4px 10px;background:rgba(21,101,192,.08);border-radius:6px;margin:2px 4px 2px 0;transition:.15s}
+.guide-panel .guide-link:hover{background:rgba(21,101,192,.15)}
+.guide-panel .guide-example{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:12px;margin:8px 0;font-size:12px;line-height:1.6;color:#555;font-style:italic}
+.guide-panel .guide-example strong{color:var(--txt);font-style:normal}
+.guide-panel .guide-img{width:100%;border-radius:8px;margin:8px 0;border:1px solid #e0e0e0}
+.xp-reward{display:inline-block;background:var(--xp);color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;margin-left:8px}
+.xp-reward.boss-xp{background:#e53935}
+.xp-reward.assess-xp{background:var(--sec-d)}
+
+/* ── Diagram ── */
+.cycle-diagram{display:flex;justify-content:center;margin:20px 0}
+.cycle-diagram svg{max-width:100%;height:auto}
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:12px 0}
+.resource-card{background:#fff;border:1px solid #e0e0e0;border-radius:10px;padding:14px;transition:.2s;cursor:pointer;text-decoration:none;color:var(--txt)}
+.resource-card:hover{border-color:var(--pri);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.resource-card .rc-icon{font-size:24px;margin-bottom:6px}
+.resource-card h5{font-size:13px;font-weight:600;margin-bottom:2px}
+.resource-card p{font-size:11px;color:var(--muted);line-height:1.4}
+
+/* ── Progress ring on quest header ── */
+.quest-progress{display:flex;align-items:center;gap:8px;margin-top:8px}
+.quest-prog-bar{flex:1;height:8px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden}
+.quest-prog-fill{height:100%;background:linear-gradient(90deg,var(--acc),#69f0ae);border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.quest-prog-text{font-size:11px;font-weight:700;color:var(--acc-d);min-width:40px;text-align:right}
+
+/* ── Quiz ── */
+.quiz-container{margin-top:12px}
+.quiz-q{background:var(--card);border:2px solid #e8e8e8;border-radius:10px;padding:20px;margin-bottom:16px;transition:.3s}
+.quiz-q.correct{border-color:var(--acc);background:rgba(0,200,83,.04)}
+.quiz-q.wrong{border-color:#e53935;background:rgba(229,57,53,.04)}
+.quiz-q h5{font-size:14px;margin-bottom:12px;font-weight:600}
+.quiz-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;margin:4px 0;border-radius:8px;border:2px solid #e8e8e8;cursor:pointer;transition:.2s;font-size:13px}
+.quiz-opt:hover{border-color:var(--pri-l);background:rgba(21,101,192,.03)}
+.quiz-opt.selected{border-color:var(--pri);background:rgba(21,101,192,.06);font-weight:600}
+.quiz-opt.correct-answer{border-color:var(--acc);background:rgba(0,200,83,.08)}
+.quiz-opt.wrong-answer{border-color:#e53935;background:rgba(229,57,53,.06)}
+.quiz-opt .opt-marker{width:20px;height:20px;border-radius:50%;border:2px solid #bdbdbd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;transition:.2s}
+.quiz-opt.selected .opt-marker{border-color:var(--pri);background:var(--pri);color:#fff}
+.quiz-opt.correct-answer .opt-marker{border-color:var(--acc);background:var(--acc);color:#fff}
+.quiz-opt.wrong-answer .opt-marker{border-color:#e53935;background:#e53935;color:#fff}
+.quiz-feedback{margin-top:8px;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;display:none}
+.quiz-feedback.show{display:block}
+.quiz-feedback.correct{background:rgba(0,200,83,.1);color:var(--acc-d)}
+.quiz-feedback.wrong{background:rgba(229,57,53,.1);color:#c62828}
+.quiz-btn{padding:10px 28px;border-radius:10px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;font-family:var(--font);margin-top:12px}
+.quiz-btn.submit{background:var(--pri);color:#fff}.quiz-btn.submit:hover{background:var(--pri-d)}
+.quiz-btn:disabled{opacity:.4;cursor:not-allowed}
+.quiz-score{text-align:center;padding:24px;background:linear-gradient(135deg,var(--xp),var(--xp-l));border-radius:12px;color:#fff;margin-top:16px}
+.quiz-score h4{font-size:20px;margin-bottom:4px}
+.quiz-score p{opacity:.8;font-size:13px}
+
+/* ── Toast ── */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 20px;border-radius:10px;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;animation:toastIn .4s ease,toastOut .4s ease forwards;animation-delay:0s,2.5s;box-shadow:0 4px 20px rgba(0,0,0,.2);pointer-events:auto}
+.toast.xp{background:linear-gradient(135deg,var(--xp),#651fff)}
+.toast.ach{background:linear-gradient(135deg,var(--sec),var(--sec-d))}
+.toast.level{background:linear-gradient(135deg,#e53935,#ff6f00)}
+.toast.info{background:linear-gradient(135deg,var(--pri),var(--pri-d))}
+@keyframes toastIn{from{opacity:0;transform:translateX(100px)}to{opacity:1;transform:none}}
+@keyframes toastOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(100px)}}
+
+/* ── Level Up Overlay ── */
+.levelup-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);opacity:0;pointer-events:none;transition:opacity .3s}
+.levelup-overlay.show{opacity:1;pointer-events:auto}
+.levelup-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border-radius:20px;padding:48px;text-align:center;color:#fff;transform:scale(.8);transition:transform .4s cubic-bezier(.34,1.56,.64,1);max-width:400px}
+.levelup-overlay.show .levelup-card{transform:scale(1)}
+.levelup-card .lvl-icon{font-size:64px;margin-bottom:16px;animation:lvlBounce 1s ease infinite}
+@keyframes lvlBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.levelup-card h2{font-size:28px;margin-bottom:4px;background:linear-gradient(90deg,var(--sec-l),var(--sec));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.levelup-card p{opacity:.7;font-size:14px;margin-bottom:24px}
+.levelup-card button{padding:12px 36px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--xp),var(--xp-l));color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;font-family:var(--font)}
+.levelup-card button:hover{transform:scale(1.05)}
+
+/* ── Confetti ── */
+.confetti-piece{position:fixed;z-index:10001;width:8px;height:8px;border-radius:2px;pointer-events:none;animation:confettiFall 3s ease-out forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
+
+/* ── Schedule ── */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;background:var(--pri);color:#fff;font-weight:600}
+td{padding:10px 12px;border-bottom:1px solid #eee}
+tr:hover td{background:rgba(21,101,192,.03)}
+tr{cursor:pointer;transition:.15s}
+.pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#fff}
+.pill.quest{background:var(--acc)}.pill.boss{background:#e53935}.pill.skill{background:var(--xp)}.pill.midterm{background:var(--sec)}.pill.final{background:var(--sec-d)}.pill.quiz{background:var(--pri)}
+
+/* ── Nav Buttons ── */
+.nav-btns{display:flex;justify-content:space-between;margin-top:28px;gap:12px}
+.nav-btn{padding:10px 24px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:var(--font)}
+.nav-btn.prev{background:#e8e8e8;color:var(--txt)}.nav-btn.prev:hover{background:#d5d5d5}
+.nav-btn.next{background:var(--pri);color:#fff}.nav-btn.next:hover{background:var(--pri-d)}
+.nav-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── Leaderboard ── */
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);margin-bottom:8px;transition:.2s}
+.lb-row:hover{transform:translateX(4px)}
+.lb-row.you{border:2px solid var(--xp);background:rgba(124,77,255,.04)}
+.lb-rank{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.lb-rank.g{background:linear-gradient(135deg,#ffd700,#ffb300)}.lb-rank.s{background:linear-gradient(135deg,#bdbdbd,#9e9e9e)}.lb-rank.b{background:linear-gradient(135deg,#cd7f32,#a0522d)}
+.lb-rank.n{background:#e0e0e0;color:#666}
+.lb-name{flex:1;font-size:13px;font-weight:500}
+.lb-xp{font-size:12px;color:var(--xp);font-weight:700}
+.lb-bar{flex:1;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden;max-width:120px}
+.lb-bar-fill{height:100%;background:linear-gradient(90deg,var(--xp),var(--xp-l));border-radius:3px;transition:width .8s ease}
+
+/* ── Reset Button ── */
+.reset-btn{padding:6px 16px;border-radius:8px;border:2px solid #e53935;background:transparent;color:#e53935;font-size:11px;font-weight:600;cursor:pointer;transition:.2s;font-family:var(--font)}
+.reset-btn:hover{background:#e53935;color:#fff}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .side{transform:translateX(-100%);transition:.3s}.side.open{transform:none}
+  .ham{display:flex;align-items:center;justify-content:center}
+  .main{margin-left:0}.content{padding:20px 16px}
+  .hero{padding:32px 24px}.hero h1{font-size:24px}
+  .hero-stats{gap:10px}.hero-stat{min-width:120px;padding:10px 14px}
+  .skill-tracks{grid-template-columns:1fr 1fr}
+  .topbar{padding:14px 16px 14px 56px}
+  .toast-container{right:10px;left:10px}
+}
+</style>
+</head>
+<body>
+
+<button class="ham" onclick="toggleNav()">☰</button>
+
+<div class="toast-container" id="toasts"></div>
+
+<div class="levelup-overlay" id="levelup">
+  <div class="levelup-card">
+    <div class="lvl-icon">🏆</div>
+    <h2 id="lvl-up-title">Level Up!</h2>
+    <p id="lvl-up-desc">You've reached a new rank</p>
+    <button onclick="closeLevelUp()">Continue Quest →</button>
+  </div>
+</div>
+
+<aside class="side" id="side">
+  <div class="side-head">
+    <div class="logo">🔬</div>
+    <h2>Research Quest</h2>
+    <p>Master the Art of Research</p>
+  </div>
+  <div class="xp-panel">
+    <div class="xp-level">
+      <span class="badge" id="lvl-badge">Lvl 1</span>
+      <span id="lvl-title">Research Intern</span>
+    </div>
+    <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar" style="width:0%"></div></div>
+    <div class="xp-numbers"><span id="xp-cur">0 XP</span><span id="xp-next">/ 500 XP</span></div>
+  </div>
+  <div class="achievements" id="ach-row"></div>
+  <nav class="nav-items" id="nav"></nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h3 id="topbar-title">Overview</h3>
+    <span class="chip" id="topbar-chip">16 Weeks</span>
+    <span class="chip xp-chip" id="topbar-xp" title="Click to view stats">0 XP</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════════════════════════ */
+const levels=[
+  {n:1,title:'Research Intern',xp:0},
+  {n:2,title:'Research Assistant',xp:500},
+  {n:3,title:'Graduate Scholar',xp:1200},
+  {n:4,title:'Grant Writer',xp:2000},
+  {n:5,title:'Literature Expert',xp:3000},
+  {n:6,title:'AI Research Pioneer',xp:4200},
+  {n:7,title:'Published Author',xp:5500},
+  {n:8,title:'Research Fellow',xp:7000},
+  {n:9,title:'Senior Researcher',xp:9000},
+  {n:10,title:'Principal Investigator',xp:11500}
+];
+
+const achievements=[
+  {id:'first-quest',icon:'⭐',name:'First Quest',desc:'Complete your first quest task',trigger:'taskCount',threshold:1},
+  {id:'grant-hunter',icon:'💰',name:'Grant Hunter',desc:'Complete all Week 3-4 quest tasks',trigger:'weekComplete',threshold:[3,4]},
+  {id:'wordsmith',icon:'✍️',name:'Wordsmith',desc:'Complete all Week 5 quest tasks',trigger:'weekComplete',threshold:[5]},
+  {id:'bookworm',icon:'📚',name:'Bookworm',desc:'Complete all Week 7-8 quest tasks',trigger:'weekComplete',threshold:[7,8]},
+  {id:'ai-pioneer',icon:'🤖',name:'AI Pioneer',desc:'Complete all Week 9 quest tasks',trigger:'weekComplete',threshold:[9]},
+  {id:'data-wizard',icon:'📊',name:'Data Wizard',desc:'Complete all Week 12 quest tasks',trigger:'weekComplete',threshold:[12]},
+  {id:'published',icon:'📰',name:'Published!',desc:'Complete all Week 14-15 quest tasks',trigger:'weekComplete',threshold:[14,15]},
+  {id:'budget-master',icon:'💎',name:'Budget Master',desc:'Complete all Week 6 quest tasks',trigger:'weekComplete',threshold:[6]},
+  {id:'quiz-ace',icon:'🎓',name:'Quiz Ace',desc:'Score 100% on any quiz',trigger:'quizPerfect',threshold:1},
+  {id:'halfway',icon:'🏔️',name:'Halfway There',desc:'Reach 50% total XP',trigger:'xpPercent',threshold:50}
+];
+
+const tracks=[
+  {id:'grants',name:'Grant Mastery',icon:'💰',weeks:[3,4,5,6]},
+  {id:'lit',name:'Literature & Synthesis',icon:'📚',weeks:[7,8]},
+  {id:'ai',name:'AI-Enhanced Research',icon:'🤖',weeks:[9,13]},
+  {id:'methods',name:'Research Methods',icon:'🔬',weeks:[10,11,12]},
+  {id:'publish',name:'Publication Skills',icon:'📰',weeks:[14,15,16]}
+];
+
+const quizData={
+  5:[
+    {q:'What is the most critical page of an NIH-style grant proposal?',opts:['Budget justification','Specific Aims page','Biographical sketch','Cover letter'],answer:1,explain:'The Specific Aims page is your elevator pitch — reviewers often decide their overall impression from this single page.'},
+    {q:'Which framework helps evaluate if a research question is worth pursuing?',opts:['SMART','SWOT','FINER','PDCA'],answer:2,explain:'FINER stands for Feasible, Interesting, Novel, Ethical, and Relevant — a framework for evaluating research questions.'},
+    {q:'What is the typical success rate for competitive federal grants?',opts:['50-75%','30-50%','10-25%','1-5%'],answer:2,explain:'Federal grants typically have 10-25% success rates, making it essential to submit strong, well-targeted proposals.'},
+    {q:'In a grant narrative, "Significance" answers which question?',opts:['How will you do it?','What is new?','Why should we care?','Who are you?'],answer:2,explain:'Significance answers "why should we care?" — it establishes the importance and impact of your research.'},
+    {q:'When should you contact a program officer?',opts:['Never — they are too busy','Only after rejection','Before you apply','Only if you have questions about the portal'],answer:2,explain:'Program officers are allies — reaching out before applying helps ensure your research aligns with funding priorities.'}
+  ],
+  12:[
+    {q:'What does "p-hacking" refer to?',opts:['Hacking into a peer\'s data','Manipulating analyses to find significant p-values','Using Python to analyze data','Publishing too many papers'],answer:1,explain:'P-hacking means trying multiple analyses until you find a statistically significant result, which inflates false positive rates.'},
+    {q:'Your analysis plan should be written:',opts:['After you see the results','While collecting data','Before you see the data','During peer review'],answer:2,explain:'Pre-specifying your analysis prevents p-hacking and HARKing — it keeps your research honest and reproducible.'},
+    {q:'What is the difference between statistical and practical significance?',opts:['They are the same thing','Statistical significance means the effect matters in the real world','Statistical significance means the effect is unlikely due to chance; practical significance means it matters','Practical significance requires p < 0.001'],answer:2,explain:'A result can be statistically significant (unlikely due to chance) but have such a small effect size that it does not matter practically.'},
+    {q:'Which is NOT a questionable research practice?',opts:['HARKing','Pre-registering your study','Selective reporting','Excluding outliers without justification'],answer:1,explain:'Pre-registration is a best practice that increases transparency and reproducibility by documenting your plan before data collection.'},
+    {q:'Why should negative results be published?',opts:['They are not worth publishing','They prevent other researchers from wasting time on the same dead end','Only positive results advance knowledge','Journals only accept negative results'],answer:1,explain:'Negative results advance knowledge by showing what does not work, preventing publication bias and redundant research.'}
+  ]
+};
+
+const weeks=[
+{n:1,title:'The Research Lifecycle',badge:null,
+  objectives:['Understand the complete research lifecycle from idea to publication','Identify the key components of successful research','Set personal research goals and create a researcher profile'],
+  topics:['What is research and why it matters','The research lifecycle: Ideation → Funding → Literature → Methods → Data → Analysis → Publication','Types of research: basic, applied, translational','Research ethics and integrity fundamentals','Building your researcher identity'],
+  concepts:['Research is a systematic inquiry designed to discover new knowledge or validate existing findings','The lifecycle is iterative — findings often loop back to generate new questions','Integrity is the foundation: fabrication, falsification, and plagiarism are career-ending','Your ORCID and researcher profile are your academic identity'],
+  diagram:`<div class="card"><h3>🔄 The Research Lifecycle</h3><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Research is not a straight line — it is a cycle. Each phase feeds into the next, and findings often loop back to generate new questions.</p><div class="cycle-diagram"><svg viewBox="0 0 600 400" width="600" height="400" xmlns="http://www.w3.org/2000/svg"><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/></marker></defs><ellipse cx="300" cy="200" rx="220" ry="150" fill="none" stroke="#e0e0e0" stroke-width="2" stroke-dasharray="8,4"/><g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif" font-size="12" font-weight="600"><circle cx="300" cy="50" r="36" fill="#1565c0"/><text x="300" y="46" text-anchor="middle" fill="#fff">💡</text><text x="300" y="60" text-anchor="middle" fill="#fff" font-size="10">Ideation</text><circle cx="480" cy="110" r="36" fill="#ff8f00"/><text x="480" y="106" text-anchor="middle" fill="#fff">💰</text><text x="480" y="120" text-anchor="middle" fill="#fff" font-size="10">Funding</text><circle cx="520" cy="250" r="36" fill="#7c4dff"/><text x="520" y="246" text-anchor="middle" fill="#fff">📚</text><text x="520" y="260" text-anchor="middle" fill="#fff" font-size="10">Literature</text><circle cx="420" cy="360" r="36" fill="#00c853"/><text x="420" y="356" text-anchor="middle" fill="#fff">🔬</text><text x="420" y="370" text-anchor="middle" fill="#fff" font-size="10">Methods</text><circle cx="180" cy="360" r="36" fill="#e53935"/><text x="180" y="356" text-anchor="middle" fill="#fff">📊</text><text x="180" y="370" text-anchor="middle" fill="#fff" font-size="10">Analysis</text><circle cx="80" cy="250" r="36" fill="#00acc1"/><text x="80" y="246" text-anchor="middle" fill="#fff">📝</text><text x="80" y="260" text-anchor="middle" fill="#fff" font-size="10">Writing</text><circle cx="120" cy="110" r="36" fill="#e65100"/><text x="120" y="106" text-anchor="middle" fill="#fff">📰</text><text x="120" y="120" text-anchor="middle" fill="#fff" font-size="10">Publish</text></g><g stroke="#1565c0" stroke-width="2" fill="none" marker-end="url(#arrow)"><path d="M 330 68 Q 410 70 455 88"/><path d="M 505 140 Q 530 180 525 215"/><path d="M 502 278 Q 480 320 445 340"/><path d="M 390 370 Q 300 390 215 370"/><path d="M 155 340 Q 120 310 95 278"/><path d="M 75 215 Q 70 170 95 135"/><path d="M 145 88 Q 200 60 265 50"/></g><text x="300" y="200" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#637381">Cycle repeats →</text><text x="300" y="216" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="11" fill="#637381">New questions emerge</text></svg></div></div>`,
+  resources:[
+    {icon:'🆔',name:'ORCID',url:'https://orcid.org/register',desc:'Create your unique researcher ID — free and takes 2 minutes'},
+    {icon:'📓',name:'Notion',url:'https://www.notion.so',desc:'Free digital workspace — great for research journals and notes'},
+    {icon:'📝',name:'OneNote',url:'https://www.onenote.com',desc:'Microsoft\'s free note-taking app — integrates with Office'},
+    {icon:'📋',name:'Obsidian',url:'https://obsidian.md',desc:'Knowledge management with linked notes — popular with researchers'},
+    {icon:'🎓',name:'CITI Training',url:'https://about.citiprogram.org',desc:'Required ethics training for most US research institutions'},
+    {icon:'📖',name:'Google Scholar',url:'https://scholar.google.com',desc:'Free academic search engine — start exploring your field'}
+  ],
+  quest:{title:'Create Your Researcher Profile',xp:50,desc:'Set up your academic identity and research journal.',
+    reqs:['Create an ORCID account and note your ID','Write a 200-word research interest statement','Identify 3 potential research areas you want to explore','Set up a digital research journal (Notion, OneNote, or similar)','Map out where you are in the research lifecycle'],
+    guidance:[
+      `<h5>What is ORCID?</h5><p>ORCID (Open Researcher and Contributor ID) is a free, unique identifier for researchers — like a social security number for your academic career. It connects you to all your publications, grants, and reviews regardless of name changes or institutional moves.</p><p><strong>How to create one:</strong></p><p>1. Go to <a class="guide-link" href="https://orcid.org/register" target="_blank">orcid.org/register</a><br>2. Fill in your name and email<br>3. Set your visibility preferences (recommended: "Everyone" for name, "Trusted" for email)<br>4. Your ORCID will look like: <strong>0000-0002-1234-5678</strong></p><p>You will use this ORCID on every grant application, journal submission, and academic profile from now on.</p>`,
+      `<h5>How to Write a Research Interest Statement</h5><p>A research interest statement is a brief summary of what you study, why it matters, and where you want to go. Think of it as your "elevator pitch" for your academic identity.</p><div class="guide-example"><strong>Example (Education Technology):</strong><br><br>"My research interests center on how artificial intelligence can personalize learning experiences for undergraduate students in STEM disciplines. I am particularly interested in adaptive learning platforms that respond to individual student misconceptions in real-time. Drawing on my background in computer science and cognitive psychology, I aim to develop AI tutoring systems that are equitable across diverse student populations. My long-term goal is to reduce achievement gaps in introductory physics and mathematics courses through technology-enhanced instruction."</div><p><strong>Structure to follow:</strong> (1) What you study, (2) Your specific focus area, (3) Your background/approach, (4) Your long-term vision.</p>`,
+      `<h5>How to Identify Research Areas</h5><p>Think about problems that fascinate you. Good research areas sit at the intersection of:</p><p>• <strong>Your passion</strong> — What keeps you up at night thinking?<br>• <strong>Your skills</strong> — What methods or knowledge do you already have?<br>• <strong>Real-world need</strong> — Who benefits from answers to these questions?</p><div class="guide-example"><strong>Example brainstorm:</strong><br>1. "How does social media affect adolescent mental health?" (Psychology + Public Health)<br>2. "Can machine learning predict crop failures earlier?" (CS + Agriculture)<br>3. "What teaching methods work best for first-generation college students?" (Education + Equity)</div><p>Try browsing recent issues of top journals in your field to see what topics are trending.</p>`,
+      `<h5>Setting Up Your Digital Research Journal</h5><p>A research journal is your personal knowledge base — a place to capture ideas, notes, summaries, and reflections. Pick a tool and stick with it:</p><p><a class="guide-link" href="https://www.notion.so" target="_blank">📓 Notion</a> <a class="guide-link" href="https://www.onenote.com" target="_blank">📝 OneNote</a> <a class="guide-link" href="https://obsidian.md" target="_blank">📋 Obsidian</a></p><p><strong>Suggested structure:</strong></p><p>📁 <strong>Research Journal</strong><br>&nbsp;&nbsp;📁 Ideas & Questions<br>&nbsp;&nbsp;📁 Literature Notes<br>&nbsp;&nbsp;📁 Methods & Techniques<br>&nbsp;&nbsp;📁 Weekly Reflections<br>&nbsp;&nbsp;📁 Meeting Notes<br>&nbsp;&nbsp;📁 Grant Ideas</p><p>Commit to writing in it at least once a week. The most valuable ideas come from reviewing old notes months later.</p>`,
+      `<h5>Mapping Your Position in the Research Lifecycle</h5><p>Look at the research lifecycle diagram above and honestly assess where you are. Most new researchers are at the <strong>Ideation</strong> stage, but you may have some experience in other phases.</p><div class="guide-example"><strong>Example self-assessment:</strong><br><br>✅ <strong>Ideation:</strong> I have several questions I'm curious about<br>⚠️ <strong>Funding:</strong> I've never applied for a grant<br>⚠️ <strong>Literature:</strong> I've read some papers but never done a systematic review<br>❌ <strong>Methods:</strong> I need to learn research design<br>❌ <strong>Analysis:</strong> Basic stats knowledge only<br>❌ <strong>Writing:</strong> Never written a research paper<br>❌ <strong>Publication:</strong> No experience with journals</div><p>This honest assessment will help you focus your energy on the areas where you need the most growth throughout this course.</p>`
+    ]},
+  boss:null,ai:null,assess:null,
+  tips:['Start building your network from day one — attend seminars, join research groups','Keep a "questions journal" — great research starts with great questions']},
+{n:2,title:'Finding Your Research Question',badge:null,
+  objectives:['Develop skills to identify meaningful research gaps','Learn to refine broad topics into specific, testable questions','Understand feasibility assessment for research projects'],
+  topics:['From curiosity to research question','The FINER framework (Feasible, Interesting, Novel, Ethical, Relevant)','Narrowing your scope: too broad vs. too narrow','Preliminary literature scanning','Identifying gaps in existing knowledge'],
+  concepts:['A good research question is specific enough to answer but broad enough to matter','FINER criteria help evaluate whether a question is worth pursuing','Preliminary scanning saves months of wasted effort on already-answered questions','Your question should excite you — passion sustains long research projects'],
+  quest:{title:'Forge Your Research Question',xp:75,desc:'Develop and refine a research question using the FINER framework.',reqs:['Brainstorm 10 potential research questions in your area of interest','Apply the FINER framework to each — score them 1-5 on each criterion','Select your top 3 and do a quick literature scan (15 min each)','Refine your #1 choice into a specific, testable research question','Write a 1-page justification for why this question matters'],
+    guidance:[
+      `<h5>Brainstorming Research Questions</h5><p>Great questions come from observing problems, reading widely, and talking to people. Try these brainstorming techniques:</p><p><strong>The "So What?" Ladder:</strong> Start with an observation, then keep asking "so what?" until you reach something meaningful.</p><div class="guide-example"><strong>Example:</strong><br>"Students struggle with online learning" → So what? → "They perform worse on exams" → So what? → "Graduation rates drop" → So what? → <strong>"What instructional design strategies improve learning outcomes in asynchronous online STEM courses?"</strong></div><p><strong>Other techniques:</strong> Mind mapping, reading review articles for "future directions" sections, talking to practitioners in the field.</p>`,
+      `<h5>The FINER Framework</h5><p>Score each question 1-5 on these criteria:</p><p>🟢 <strong>F — Feasible:</strong> Can you actually do this with your time, money, skills, and access to participants?<br>🔵 <strong>I — Interesting:</strong> Will this engage you for months/years? Will others care about the results?<br>🟡 <strong>N — Novel:</strong> Does this add something new? A new finding, method, or perspective?<br>🔴 <strong>E — Ethical:</strong> Can this be done without harming participants or violating standards?<br>🟣 <strong>R — Relevant:</strong> Does this matter to your field, to policy, or to society?</p><div class="guide-example"><strong>Scoring Example:</strong><br>Question: "Does mindfulness meditation reduce test anxiety in nursing students?"<br>F: 4/5 — feasible with university sample<br>I: 4/5 — growing interest in student wellness<br>N: 3/5 — some studies exist, but not in nursing<br>E: 5/5 — low risk, standard IRB<br>R: 5/5 — nursing retention is a national concern<br><strong>Total: 21/25 — Strong candidate!</strong></div>`,
+      `<h5>Quick Literature Scanning</h5><p>Spend exactly 15 minutes per question to check if it has already been answered. Use these tools:</p><p><a class="guide-link" href="https://scholar.google.com" target="_blank">🔍 Google Scholar</a> <a class="guide-link" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">🏥 PubMed</a> <a class="guide-link" href="https://www.semanticscholar.org" target="_blank">🤖 Semantic Scholar</a></p><p><strong>Quick scan checklist:</strong><br>1. Search your question as a phrase<br>2. Search key terms combined with AND<br>3. Look at the first 20 results — are there already reviews on this topic?<br>4. Check dates — is this actively being studied or abandoned?</p><p>If you find 100+ papers already answering your question, narrow your focus. If you find 0, your question may be too specific or too novel (both need investigation).</p>`,
+      `<h5>Refining Into a Testable Question</h5><p>A testable question has <strong>clear variables</strong> and an <strong>implied method</strong>. Use the PICO framework for structure:</p><p><strong>P</strong> — Population: Who are you studying?<br><strong>I</strong> — Intervention/Exposure: What is being done or examined?<br><strong>C</strong> — Comparison: What are you comparing it to?<br><strong>O</strong> — Outcome: What are you measuring?</p><div class="guide-example"><strong>Before:</strong> "How does technology affect learning?"<br><strong>After (PICO):</strong> "Among first-year biology students (P), does the use of AI-powered tutoring systems (I) compared to traditional office hours (C) improve exam scores and course completion rates (O)?"</div>`,
+      `<h5>Writing Your Justification</h5><p>Your 1-page justification should answer four questions:</p><p>1. <strong>What is the problem?</strong> (2-3 sentences with citations)<br>2. <strong>Why hasn't it been solved?</strong> (What gap exists?)<br>3. <strong>Why does your approach work?</strong> (What's different about your question?)<br>4. <strong>Who benefits?</strong> (Impact statement)</p><div class="guide-example"><strong>Example opening:</strong><br>"Despite $2.3 billion invested in educational technology annually, first-generation college students continue to underperform peers by 15% on standardized assessments (Smith, 2024). Current interventions focus on content delivery but overlook the role of adaptive feedback in building academic self-efficacy. This study addresses that gap by..."</div>`
+    ]},
+  boss:null,ai:null,assess:null,
+  tips:['Talk to people outside your field — interdisciplinary conversations spark the best questions','If your question can be answered with a simple Google search, it is not a research question']},
+{n:3,title:'The Funding Landscape',badge:'Skill Unlocked',
+  objectives:['Navigate the grant funding ecosystem','Distinguish between federal, private, and institutional funding sources','Understand the grant timeline and planning process'],
+  topics:['Types of funding: federal agencies (NSF, NIH, DOE, NEH), foundations, industry, internal','Grant mechanisms: R01, R21, CAREER, seed grants, fellowships','Understanding funding cycles and deadlines','Building relationships with program officers','Matching your research to funding priorities'],
+  concepts:['Federal grants are competitive but prestigious — typically 10-25% success rates','Program officers are allies, not gatekeepers — reach out before you apply','Most grants have 6-12 month lead times from announcement to submission','Diversify your funding portfolio — do not depend on a single source'],
+  resources:[
+    {icon:'🏛️',name:'NSF',url:'https://www.nsf.gov/funding/',desc:'National Science Foundation — STEM, education, social sciences'},
+    {icon:'🏥',name:'NIH Reporter',url:'https://reporter.nih.gov',desc:'Search NIH-funded projects and find opportunities'},
+    {icon:'⚡',name:'DOE EERE',url:'https://www.energy.gov/eere/funding',desc:'Department of Energy funding for energy research'},
+    {icon:'📚',name:'NEH',url:'https://www.neh.gov/grants',desc:'National Endowment for the Humanities grants'},
+    {icon:'🔍',name:'Foundation Directory',url:'https://fconline.foundationcenter.org',desc:'Candid\'s database of private foundations and grants'},
+    {icon:'📋',name:'SPIN by InfoEd',url:'https://spin.infoedglobal.com',desc:'Comprehensive funding opportunity database'}
+  ],
+  quest:{title:'Map the Funding Landscape',xp:100,desc:'Research and catalog funding opportunities relevant to your field.',reqs:['Identify 5 federal funding agencies relevant to your research area','Find 3 private foundations that fund work in your domain','Create a funding calendar with deadlines for the next 12 months','Research one program officer and draft a 150-word introductory email','Compare grant mechanisms: create a table of eligibility, amount, and duration'],
+    guidance:[
+      `<h5>Major Federal Funding Agencies</h5><p>Here are the primary US federal agencies that fund research. Most fields have 2-3 relevant agencies:</p><p>🏛️ <strong>NSF</strong> — Science, engineering, education, social sciences ($8B/year)<br>🏥 <strong>NIH</strong> — Health and biomedical research ($47B/year — the biggest funder)<br>⚡ <strong>DOE</strong> — Energy, physics, materials science, computing<br>🛡️ <strong>DoD (DARPA, ONR, AFOSR)</strong> — Defense-related research, also basic science<br>📚 <strong>NEH/NEA</strong> — Humanities, arts, cultural research<br>🌍 <strong>NASA</strong> — Space, earth science, aeronautics<br>📊 <strong>IES</strong> — Education research specifically<br>🌾 <strong>USDA/NIFA</strong> — Agriculture, food science, rural development</p><p><a class="guide-link" href="https://www.nsf.gov/funding/" target="_blank">Browse NSF</a> <a class="guide-link" href="https://reporter.nih.gov" target="_blank">Browse NIH</a></p>`,
+      `<h5>Finding Private Foundations</h5><p>Private foundations often fund more niche topics and can be less competitive than federal grants. Key tools:</p><p><a class="guide-link" href="https://fconline.foundationcenter.org" target="_blank">📋 Foundation Directory Online</a> (may need library access)<br><a class="guide-link" href="https://www.grantforward.com" target="_blank">🔍 GrantForward</a> (university subscription)<br><a class="guide-link" href="https://spin.infoedglobal.com" target="_blank">🔄 SPIN</a> (university subscription)</p><div class="guide-example"><strong>Example foundations by field:</strong><br>• Health: Robert Wood Johnson, Gates Foundation, Wellcome Trust<br>• Education: Spencer Foundation, Carnegie Corporation, Lumina Foundation<br>• Technology: Alfred P. Sloan, Moore Foundation, Simons Foundation<br>• Social Justice: Ford Foundation, MacArthur Foundation, Open Society</div>`,
+      `<h5>Creating a Funding Calendar</h5><p>Most grants have fixed annual deadlines. Missing a deadline by even one minute means waiting another year. Create a spreadsheet or calendar with:</p><div class="guide-example"><strong>Calendar columns:</strong><br>| Funder | Program | Deadline | Amount | Duration | Eligibility | Status |<br>| NSF | CAREER | July 26 | $500K | 5 yr | Jr faculty | Planning |<br>| NIH | R21 | Feb 16, Jun 16, Oct 16 | $275K | 2 yr | Any PI | Drafting |<br>| Spencer | Small Grant | Rolling | $50K | 1-2 yr | Any | Ready |</div><p><strong>Pro tip:</strong> Work backwards from deadlines. Most proposals need 3-6 months of preparation, plus internal review time. Mark "start writing" dates too.</p>`,
+      `<h5>Contacting a Program Officer</h5><p>Program officers <strong>want to hear from you</strong> — it is literally their job to connect researchers with funding. A brief introductory email can save you months of work on a mismatched proposal.</p><div class="guide-example"><strong>Example email:</strong><br><br>Subject: Pre-submission inquiry — [Program Name]<br><br>Dear Dr. [Name],<br><br>I am an assistant professor of [field] at [institution], and I am writing to inquire about the fit of my proposed research with the [specific program name].<br><br>My project investigates [1-2 sentences about your research question]. The proposed work would [1 sentence about approach] and contribute to [1 sentence about impact].<br><br>Would this topic fall within the scope of [program name]? I would welcome any guidance on the most appropriate program or mechanism for this work.<br><br>Thank you for your time.<br>Best regards, [Your name]</div>`,
+      `<h5>Comparing Grant Mechanisms</h5><p>Different mechanisms serve different career stages and project sizes. Here's a quick comparison for NIH:</p><div class="guide-example"><strong>NIH mechanism comparison:</strong><br>| Mechanism | Who | Amount | Duration | Purpose |<br>|-----------|-----|--------|----------|---------|<br>| F31/F32 | Pre/Postdoc | $50-60K/yr | 2-3 yr | Training fellowship |<br>| K99/R00 | Postdoc→Faculty | $100K/yr | 5 yr | Career transition |<br>| R21 | Any PI | $275K total | 2 yr | Exploratory/pilot |<br>| R01 | Established | $250K/yr | 3-5 yr | Major research project |<br>| R15 (AREA) | PUI faculty | $300K total | 3 yr | Undergrad institutions |<br><br><strong>NSF equivalents:</strong><br>• CAREER ($500K, 5yr) — Jr faculty, combines research + education<br>• Standard Grant — varies by program<br>• EAGER — high-risk exploratory ($50-300K)</div>`
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Grant Discovery',desc:'Use AI to accelerate your funding search.',items:['Use an AI assistant to search for grants matching your research keywords','Ask the AI to summarize eligibility criteria for complex grant announcements','Have the AI compare funding opportunities across multiple agencies','Use AI to identify trending funding priorities in your field']},
+  assess:null,
+  tips:['Start small — seed grants and internal funding build the track record you need for bigger awards','Read funded proposals in your area (many agencies publish abstracts of awarded grants)']},
+{n:4,title:'Finding the Right Grants',badge:null,
+  objectives:['Master grant database searching techniques','Evaluate grant fit and alignment with your research','Create a strategic funding plan'],
+  topics:['Grants.gov, NSF Award Search, NIH Reporter, Foundation Directory','Advanced search strategies: keywords, Boolean operators, filters','Reading Requests for Proposals (RFPs) and Broad Agency Announcements','Evaluating fit: does your research align with the funder\'s mission?','Strategic timing: when to apply and when to wait'],
+  concepts:['Not all money is good money — misaligned grants warp your research direction','RFPs contain hidden requirements — read every word, especially the evaluation criteria','Grants.gov is the gateway for most federal funding but individual agency portals have better search','Build a "grants pipeline" — always have 2-3 proposals in development'],
+  resources:[
+    {icon:'🏛️',name:'Grants.gov',url:'https://www.grants.gov',desc:'Central portal for all US federal grant opportunities'},
+    {icon:'🔬',name:'NSF Award Search',url:'https://www.nsf.gov/awardsearch/',desc:'Search previously funded NSF projects'},
+    {icon:'🏥',name:'NIH RePORTER',url:'https://reporter.nih.gov',desc:'Search NIH funded projects, publications, and patents'},
+    {icon:'📊',name:'GrantForward',url:'https://www.grantforward.com',desc:'Funding search engine — often available through university libraries'}
+  ],
+  quest:{title:'The Grant Hunter Quest',xp:100,desc:'Find and evaluate real grant opportunities for your research.',reqs:['Search Grants.gov using at least 3 different keyword strategies','Find one open RFP that matches your research question','Annotate the RFP: highlight evaluation criteria, eligibility, and key dates','Score your research fit against the RFP on a scale of 1-10 for each criterion','Create a 1-page "go/no-go" decision document for the opportunity'],
+    guidance:[
+      `<h5>Searching Grants.gov Effectively</h5><p>Grants.gov is the single largest portal for federal grants, but its search can be tricky. Try multiple strategies:</p><p><a class="guide-link" href="https://www.grants.gov/search-grants" target="_blank">🔍 Open Grants.gov Search</a></p><p><strong>Strategy 1 — Broad keywords:</strong> Use your field name + "research" (e.g., "education research")<br><strong>Strategy 2 — Specific terms:</strong> Use your method or topic (e.g., "machine learning STEM")<br><strong>Strategy 3 — Agency filter:</strong> Select your target agency and browse open opportunities<br><strong>Strategy 4 — CFDA codes:</strong> Use Catalog of Federal Domestic Assistance codes for precise matches</p><p><strong>Pro tip:</strong> Grants.gov search is limited. Also search directly on agency sites: <a class="guide-link" href="https://www.nsf.gov/funding/" target="_blank">NSF</a>, <a class="guide-link" href="https://grants.nih.gov/funding/searchguide/index.htm" target="_blank">NIH Guide</a></p>`,
+      `<h5>Finding an RFP That Matches</h5><p>An RFP (Request for Proposals) or FOA (Funding Opportunity Announcement) describes exactly what the funder wants. Look for these signals of good fit:</p><p>✅ Your topic is explicitly mentioned in the program description<br>✅ Your methods align with what they are seeking<br>✅ You meet all eligibility criteria<br>✅ The budget range matches your needs<br>✅ The timeline works for your research</p><p>🚩 <strong>Red flags of poor fit:</strong> Needing to reshape your project significantly, borderline eligibility, budget too small for your scope.</p>`,
+      `<h5>Reading an RFP Like a Pro</h5><p>RFPs are dense legal documents. Here's what to highlight and annotate:</p><div class="guide-example"><strong>Critical sections to annotate:</strong><br>🔴 <strong>Eligibility</strong> — Who can apply? PI requirements? Institution type?<br>🟡 <strong>Evaluation Criteria</strong> — How will proposals be scored? What weight per section?<br>🟢 <strong>Budget</strong> — Max amount? Duration? Allowed costs? Cost-sharing?<br>🔵 <strong>Key Dates</strong> — LOI deadline, full proposal deadline, start date<br>🟣 <strong>Page Limits</strong> — These are strict. Going over = desk reject.<br>⚫ <strong>Required Components</strong> — Every document they want (bio, data plan, letters, etc.)</div><p>Print it out and use colored highlighters. You will reference this document constantly.</p>`,
+      `<h5>Scoring Your Fit</h5><p>Create a simple fit matrix. Score yourself honestly — a low score now saves months of wasted writing later.</p><div class="guide-example"><strong>Fit Assessment Matrix:</strong><br>| Criterion | Score (1-10) | Notes |<br>|-----------|:---:|-------|<br>| Topic alignment | 8 | Core topic matches well |<br>| Methods match | 6 | Need to add survey component |<br>| Eligibility | 10 | Meet all criteria |<br>| Budget fit | 7 | Slightly under max |<br>| Team expertise | 5 | Need a stats collaborator |<br>| Preliminary data | 4 | Limited pilot data |<br>| <strong>Average</strong> | <strong>6.7</strong> | <strong>Worth pursuing with prep work</strong> |</div><p><strong>Rule of thumb:</strong> Average ≥ 7 = strong fit. 5-7 = consider with modifications. Below 5 = look elsewhere.</p>`,
+      `<h5>The Go/No-Go Decision</h5><p>Before investing 100+ hours writing a proposal, make a formal decision. Your go/no-go document should cover:</p><div class="guide-example"><strong>Go/No-Go Template:</strong><br><br><strong>Opportunity:</strong> [Program name, agency, deadline]<br><strong>Fit Score:</strong> [Your average from the matrix]<br><br><strong>GO Factors:</strong><br>• Strong topic alignment<br>• We have preliminary data<br>• Collaborators confirmed<br><br><strong>NO-GO Factors:</strong><br>• Limited budget for needed equipment<br>• PI needs more publications in this area<br><br><strong>Resources Needed:</strong><br>• 3 months writing time, stats consultant, 2 letters of support<br><br><strong>DECISION: GO / NO-GO / WAIT FOR NEXT CYCLE</strong></div>`
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Smart Grant Matching',desc:'Leverage AI to find hidden funding opportunities.',items:['Feed your research abstract to an AI agent and ask it to suggest matching grant programs','Use AI to parse and summarize complex RFP documents','Ask AI to identify the key evaluation criteria from an RFP and how to address each','Have AI search for recently funded projects similar to yours to find active programs']},
+  assess:null,
+  tips:['Set up email alerts on Grants.gov and agency-specific portals for new opportunities','Talk to recently funded researchers — they know which programs are actively looking for proposals']},
+{n:5,title:'Grant Writing: Narrative & Structure',badge:'Quiz 1',
+  objectives:['Master the structure of a winning grant proposal','Write compelling specific aims and project narratives','Understand what reviewers look for and how scoring works'],
+  topics:['Anatomy of a grant proposal: cover page, abstract, specific aims, narrative, budget, bios','The Specific Aims page — the most important page you will write','Writing a compelling project narrative: significance, innovation, approach','Addressing reviewer concerns proactively','Common mistakes that sink proposals'],
+  concepts:['Reviewers spend 30-60 minutes on your proposal — make every sentence count','The Specific Aims page is your elevator pitch: problem → gap → your solution → impact','Significance answers "why should we care?", Innovation answers "what is new?", Approach answers "how will you do it?"','Write for a smart non-expert — your reviewer may not be in your exact subfield'],
+  resources:[
+    {icon:'📄',name:'NIH Funded Examples',url:'https://www.niaid.nih.gov/grants-contracts/sample-applications',desc:'Real funded NIH proposals — study the winning structure'},
+    {icon:'📝',name:'NSF Funded Abstracts',url:'https://www.nsf.gov/awardsearch/',desc:'Search funded NSF project abstracts for inspiration'},
+    {icon:'🎥',name:'Grant Writing Videos',url:'https://www.youtube.com/results?search_query=grant+writing+specific+aims',desc:'Free tutorials on writing compelling grant proposals'}
+  ],
+  quest:{title:'Write Your Specific Aims',xp:150,desc:'Draft the most critical page of a grant proposal.',reqs:['Read 3 example Specific Aims pages from your field (search for funded examples)','Draft a Specific Aims page for your research question (1 page max)','Include: opening paragraph with hook, gap statement, 2-3 specific aims, impact statement','Have a colleague read it and provide feedback','Revise based on feedback — track what changed and why'],
+    guidance:[
+      `<h5>Where to Find Funded Specific Aims Examples</h5><p>Reading real funded proposals is the single best way to learn grant writing. Here's where to find them:</p><p><a class="guide-link" href="https://www.niaid.nih.gov/grants-contracts/sample-applications" target="_blank">📄 NIH NIAID Sample Apps</a> <a class="guide-link" href="https://reporter.nih.gov" target="_blank">🔍 NIH RePORTER</a></p><p><strong>Other sources:</strong><br>• Ask your mentor or department for successful proposals<br>• Your grants office may have a library of funded proposals<br>• Some universities post examples online (search "[your field] funded R01 example")<br>• NSF's award search shows abstracts of funded projects</p>`,
+      `<h5>Specific Aims Structure</h5><p>The Specific Aims page follows a precise formula. Here's the structure most reviewers expect:</p><div class="guide-example"><strong>Paragraph 1 — The Hook (3-4 sentences):</strong><br>Open with the big-picture problem. Use a compelling statistic or statement that makes the reviewer care.<br><br><strong>Paragraph 2 — The Gap (2-3 sentences):</strong><br>"Despite [progress], a critical barrier remains..." Explain what we do NOT know.<br><br><strong>Paragraph 3 — Your Solution (2-3 sentences):</strong><br>"The long-term goal is... The objective of this proposal is... Our central hypothesis is..."<br><br><strong>The Aims (numbered):</strong><br>Aim 1: [Verb] [what] [how] — Hypothesis: ...<br>Aim 2: [Verb] [what] [how] — Hypothesis: ...<br>Aim 3: (if applicable)<br><br><strong>Final Paragraph — Impact (2-3 sentences):</strong><br>"The expected outcomes are... This work is significant because... This work is innovative because..."</div>`,
+      `<h5>Writing a Strong Opening Hook</h5><p>Your opening paragraph determines whether the reviewer keeps reading with interest or obligation. Strong hooks:</p><div class="guide-example"><strong>🟢 Strong:</strong> "Pancreatic cancer kills 47,000 Americans annually and has a 5-year survival rate of just 11% — the lowest of any major cancer."<br><br><strong>🔴 Weak:</strong> "Cancer is a major health concern that affects many people worldwide."<br><br><strong>🟢 Strong:</strong> "Despite $2.1B invested in reading interventions since 2015, 65% of American fourth-graders still read below grade level."<br><br><strong>🔴 Weak:</strong> "Reading is an important skill for student success."</div><p><strong>Formula:</strong> Specific statistic + scope of problem + urgency = compelling hook</p>`,
+      `<h5>Getting Effective Feedback</h5><p>Not all feedback is equal. Here's how to get useful feedback on your Aims page:</p><p><strong>Who to ask:</strong><br>• Someone IN your field (for scientific accuracy)<br>• Someone OUTSIDE your field (for clarity — if they can't follow it, neither can a reviewer)<br>• Someone who has written or reviewed grants before</p><p><strong>What to ask them:</strong><br>1. "After reading the first paragraph, do you understand why this matters?"<br>2. "Is the gap clearly stated?"<br>3. "Can you tell me what each aim will do without rereading?"<br>4. "What is the weakest part?"<br>5. "Would you fund this? Why or why not?"</p>`,
+      `<h5>Tracking Your Revisions</h5><p>Revision tracking is a skill you will use throughout your career. For each revision:</p><p>1. Save the previous version with a date (e.g., "SpecificAims_v2_2024-03-15.docx")<br>2. Use Track Changes or a comparison tool<br>3. Keep a revision log:</p><div class="guide-example"><strong>Revision log example:</strong><br>| Feedback | Change Made | Reason |<br>|----------|-------------|--------|<br>| "Opening is too vague" | Added NCES statistic | More compelling hook |<br>| "Aim 2 is too ambitious" | Split into 2a and 2b | More feasible scope |<br>| "No mention of innovation" | Added innovation sentence | Addresses reviewer criterion |</div>`
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Grant Writing Assistant',desc:'Use AI to strengthen your proposal writing.',items:['Use AI to review your Specific Aims for clarity and logical flow','Ask AI to identify weak arguments or unsupported claims in your narrative','Have AI suggest stronger opening hooks based on your research area','Use AI to check your proposal against common reviewer criticism patterns']},
+  assess:{type:'quiz',label:'Quiz 1: Funding & Grant Basics',topics:'Weeks 1-5: Research lifecycle, finding grants, proposal structure',format:'5 interactive questions',xp:200},
+  tips:['Write the Specific Aims page first — everything else flows from it','Use strong verbs: "We will determine..." not "We hope to explore..."']},
+{n:6,title:'Grant Writing: Budgets & Justification',badge:null,
+  objectives:['Create realistic and defensible research budgets','Write budget justifications that strengthen your proposal','Understand direct costs, indirect costs, and cost-sharing'],
+  topics:['Budget categories: personnel, equipment, supplies, travel, other, indirect','Salary calculations: effort, fringe benefits, annual increases','Equipment vs. supplies: the $5,000 threshold','Subcontracts and consultants','Budget justification: connecting every dollar to your aims','Cost-sharing: when and how to offer it'],
+  concepts:['Your budget tells a story — it should reflect your methodology step by step','Indirect costs (F&A) are real institutional costs — do not ignore them','Reviewers flag budgets that are too high OR too low — both signal poor planning','Every budget line needs a justification tied to a specific aim or activity'],
+  quest:{title:'Build Your Research Budget',xp:125,desc:'Create a complete budget for your proposed research project.',reqs:['Create a 2-year budget spreadsheet with all standard categories','Calculate personnel costs including fringe benefits for at least 2 positions','Justify every line item with a 1-2 sentence explanation tied to your aims','Calculate indirect costs using your institution\'s negotiated rate','Write a 1-page budget justification narrative','Total budget should be realistic for your field (research typical award sizes)'],
+    guidance:[
+      `<h5>Budget Categories Explained</h5><p>Every research budget uses these standard categories:</p><div class="guide-example"><strong>Standard Budget Template:</strong><br><br>📊 <strong>A. Personnel</strong> — Salaries for PI, co-PIs, postdocs, grad students, staff<br>📊 <strong>B. Fringe Benefits</strong> — Health insurance, retirement, FICA (rates set by your institution)<br>📊 <strong>C. Equipment</strong> — Single items over $5,000 (varies by institution)<br>📊 <strong>D. Travel</strong> — Conferences, fieldwork, collaboration visits<br>📊 <strong>E. Participant Support</strong> — Stipends, travel, subsistence for participants<br>📊 <strong>F. Other Direct Costs</strong><br>&nbsp;&nbsp;F1. Materials & Supplies — lab supplies, software licenses, printing<br>&nbsp;&nbsp;F2. Publication Costs — open access fees, page charges<br>&nbsp;&nbsp;F3. Consultant Services — expert consultants<br>&nbsp;&nbsp;F4. Subawards — work done at partner institutions<br>📊 <strong>G. Indirect Costs (F&A)</strong> — Facilities & administrative rate × modified total direct costs</div>`,
+      `<h5>Calculating Personnel Costs</h5><p>Personnel is typically 60-80% of a research budget. Here's how to calculate:</p><div class="guide-example"><strong>Example calculation:</strong><br><br>PI (Dr. Smith) — 2 months summer salary<br>&nbsp;&nbsp;Annual salary: $95,000<br>&nbsp;&nbsp;Monthly rate: $95,000 / 12 = $7,917<br>&nbsp;&nbsp;2 months effort: $7,917 × 2 = <strong>$15,834</strong><br>&nbsp;&nbsp;Fringe (28%): $15,834 × 0.28 = <strong>$4,434</strong><br>&nbsp;&nbsp;Year 1 total: <strong>$20,268</strong><br>&nbsp;&nbsp;Year 2 (3% raise): $20,268 × 1.03 = <strong>$20,876</strong><br><br>Graduate Research Assistant — 50% time, 12 months<br>&nbsp;&nbsp;Stipend: $28,000 × 0.50 = <strong>$14,000</strong><br>&nbsp;&nbsp;Tuition remission: <strong>$12,500</strong><br>&nbsp;&nbsp;Fringe (8%): $14,000 × 0.08 = <strong>$1,120</strong></div><p><strong>Ask your grants office</strong> for current fringe benefit rates and minimum stipend requirements.</p>`,
+      `<h5>Writing Budget Justifications</h5><p>Every dollar needs a reason tied to your specific aims. Use this formula:</p><p><strong>[Who/What] is needed to [do what activity] under [which Aim].</strong></p><div class="guide-example"><strong>Good justification examples:</strong><br><br>"A graduate research assistant (50% time, 12 months) will conduct participant interviews, code qualitative data, and assist with analysis under Aims 1 and 2."<br><br>"Travel funds ($1,500) support attendance at the American Educational Research Association annual meeting to present preliminary findings from Aim 1."<br><br>"Qualtrics survey license ($500/yr) is required to administer the validated assessment instrument under Aim 2."</div>`,
+      `<h5>Understanding Indirect Costs (F&A)</h5><p>Indirect costs cover institutional overhead — lights, heat, admin support, libraries, etc. Your institution has a <strong>negotiated rate</strong> with the federal government.</p><p><strong>How to find your rate:</strong> Ask your grants/sponsored programs office. Typical rates are 40-60% of Modified Total Direct Costs (MTDC).</p><div class="guide-example"><strong>Calculation example:</strong><br>Total Direct Costs: $150,000<br>Minus exclusions (equipment, tuition, subawards over $25K): -$20,000<br>Modified Total Direct Costs (MTDC): $130,000<br>F&A Rate (52%): $130,000 × 0.52 = <strong>$67,600</strong><br><br><strong>Total project cost: $150,000 + $67,600 = $217,600</strong></div><p>Some foundations and internal grants do not allow indirect costs or cap them at 10-15%.</p>`,
+      `<h5>The Budget Justification Narrative</h5><p>This is a 1-2 page document that tells the story of your budget. Structure it by category and connect everything to your research plan.</p><p><strong>Structure:</strong><br>1. <strong>Personnel</strong> — Describe each person's role and % effort<br>2. <strong>Equipment</strong> — Justify why existing equipment won't work<br>3. <strong>Travel</strong> — Specify conferences or fieldwork<br>4. <strong>Other</strong> — Connect each item to a specific aim<br>5. <strong>Indirect</strong> — State your negotiated rate</p>`,
+      `<h5>Researching Typical Award Sizes</h5><p>Proposing too much or too little signals poor planning. Research typical awards:</p><p><a class="guide-link" href="https://reporter.nih.gov" target="_blank">🔍 NIH RePORTER</a> — Search funded projects to see actual award amounts<br><a class="guide-link" href="https://www.nsf.gov/awardsearch/" target="_blank">🔍 NSF Award Search</a> — View amounts for funded NSF projects</p><div class="guide-example"><strong>Typical ranges by mechanism:</strong><br>• Internal seed grant: $5K - $25K<br>• Foundation small grant: $10K - $50K<br>• NSF Standard Grant: $100K - $500K<br>• NIH R21 (exploratory): $275K total over 2 years<br>• NIH R01: $250K - $500K/year for 3-5 years<br>• NSF CAREER: ~$500K over 5 years</div>`
+    ]},
+  boss:{title:'BOSS CHALLENGE: Mock Grant Review',xp:300,desc:'Submit your complete proposal package for peer review.',reqs:['Compile: Specific Aims, budget, budget justification, and a 2-page project narrative','Exchange proposals with a peer from the course','Score their proposal using NIH-style criteria (1-9 scale)','Write a 1-page summary review with strengths, weaknesses, and overall score','Debrief with your review partner — discuss scores and improvements'],
+    guidance:[
+      null,null,
+      `<h5>NIH-Style Scoring Criteria</h5><p>NIH uses a 1-9 scale for each criterion. Score each independently:</p><div class="guide-example"><strong>Scoring Scale:</strong><br>1 = Exceptional — Outstanding, no weaknesses<br>2 = Outstanding — Very minor weaknesses<br>3 = Excellent — Minor weaknesses<br>4 = Very Good — Some moderate weaknesses<br>5 = Good — Moderate weaknesses<br>6 = Satisfactory — Some major weaknesses<br>7 = Fair — Major weaknesses<br>8 = Marginal — Numerous major weaknesses<br>9 = Poor — Little merit<br><br><strong>Review Criteria:</strong><br>• Significance — Does the project address an important problem?<br>• Investigators — Are the investigators well-suited?<br>• Innovation — Is the approach novel?<br>• Approach — Are the methods sound?<br>• Environment — Is the institutional support adequate?</div>`,
+      null,null
+    ]},
+  ai:null,assess:null,
+  tips:['Ask your grants office for budget templates — do not start from scratch','Slightly under-budget rather than over — you can always reallocate within categories']},
+{n:7,title:'Literature Reviews: Search Strategies',badge:null,
+  objectives:['Design systematic literature search strategies','Master academic databases and search tools','Organize and manage research literature efficiently'],
+  topics:['Types of lit reviews: narrative, systematic, scoping, meta-analysis','Database selection: PubMed, Web of Science, Scopus, Google Scholar','Building search queries: MeSH terms, Boolean operators, truncation','Citation chaining: forward and backward searching','Reference management: Zotero, Mendeley, EndNote','Documenting your search strategy for reproducibility'],
+  concepts:['A literature review is not a book report — it is a critical synthesis that identifies gaps','Your search strategy must be documented well enough for someone else to reproduce it','Google Scholar casts a wide net but lacks the precision of curated databases','Citation chaining finds papers no keyword search will'],
+  resources:[
+    {icon:'🔍',name:'PubMed',url:'https://pubmed.ncbi.nlm.nih.gov',desc:'Biomedical and life sciences literature database'},
+    {icon:'🌐',name:'Web of Science',url:'https://www.webofscience.com',desc:'Multidisciplinary citation index (university access)'},
+    {icon:'📊',name:'Scopus',url:'https://www.scopus.com',desc:'Abstract and citation database (university access)'},
+    {icon:'🤖',name:'Semantic Scholar',url:'https://www.semanticscholar.org',desc:'AI-powered academic search engine — free'},
+    {icon:'📚',name:'Zotero',url:'https://www.zotero.org',desc:'Free, open-source reference manager with browser extension'},
+    {icon:'📖',name:'Mendeley',url:'https://www.mendeley.com',desc:'Free reference manager with PDF annotation'},
+    {icon:'🐰',name:'Research Rabbit',url:'https://www.researchrabbit.ai',desc:'Free AI tool for discovering related papers via citation networks'},
+    {icon:'🧪',name:'Elicit',url:'https://elicit.com',desc:'AI research assistant — summarizes papers and extracts data'}
+  ],
+  quest:{title:'The Literature Hunt',xp:125,desc:'Design and execute a systematic search strategy.',reqs:['Define 3-5 search concepts from your research question','Build search queries for at least 2 databases using Boolean operators','Execute searches and document: database, query, date, number of results','Screen titles and abstracts of at least 50 papers — keep/reject with brief reason','Set up a reference manager and import your "keep" papers','Create a PRISMA-style flow diagram of your search and screening process'],
+    guidance:[
+      `<h5>Breaking Your Question Into Search Concepts</h5><p>Decompose your research question into its core concepts, then brainstorm synonyms for each:</p><div class="guide-example"><strong>Example question:</strong> "Does mindfulness meditation reduce test anxiety in nursing students?"<br><br><strong>Concept 1 — Intervention:</strong> mindfulness, meditation, mindfulness-based stress reduction, MBSR, contemplative practice<br><strong>Concept 2 — Outcome:</strong> test anxiety, exam anxiety, evaluation anxiety, academic stress, performance anxiety<br><strong>Concept 3 — Population:</strong> nursing students, undergraduate nursing, BSN students, nursing education<br><br><strong>Your search combines these:</strong><br>(mindfulness OR meditation OR MBSR) AND ("test anxiety" OR "exam anxiety") AND ("nursing student*")</div>`,
+      `<h5>Building Boolean Search Queries</h5><p>Boolean operators control how search terms are combined:</p><p><strong>AND</strong> — narrows results (both terms must appear)<br><strong>OR</strong> — broadens results (either term can appear)<br><strong>NOT</strong> — excludes results (use sparingly — you might exclude relevant papers)<br><strong>"quotes"</strong> — exact phrase matching<br><strong>*</strong> — truncation/wildcard (student* finds students, student, student's)</p><div class="guide-example"><strong>Query for PubMed:</strong><br>("artificial intelligence" OR "machine learning" OR "deep learning") AND ("medical diagnosis" OR "clinical decision") AND (accuracy OR performance)<br><br><strong>Query for Web of Science:</strong><br>TS=("adaptive learning" OR "personalized learning") AND TS=(STEM OR science OR mathematics) AND TS=(undergraduate* OR "higher education")</div><p>Each database has slightly different syntax — check the help pages.</p>`,
+      `<h5>Documenting Your Search</h5><p>Reproducibility is key. Create a search log spreadsheet:</p><div class="guide-example"><strong>Search Log Template:</strong><br>| # | Database | Date | Query | Filters | Results | Notes |<br>|---|----------|------|-------|---------|---------|-------|<br>| 1 | PubMed | 3/15/26 | (mindfulness OR MBSR) AND "test anxiety" | 2015-2026, English | 127 | Good starting set |<br>| 2 | Web of Science | 3/15/26 | Same terms | Article type, 2015+ | 94 | 52 overlap with PubMed |<br>| 3 | ERIC | 3/16/26 | Modified for education terms | Peer-reviewed | 45 | Found 12 unique |</div>`,
+      `<h5>Screening Efficiently</h5><p>Screening 50+ papers sounds overwhelming. Here's how to do it in 2-3 hours:</p><p><strong>Step 1 — Title scan (30 seconds each):</strong> Reject obviously irrelevant papers<br><strong>Step 2 — Abstract scan (2 minutes each):</strong> Read abstract of remaining papers, decide keep/reject<br><strong>Step 3 — Mark reasons:</strong> For each rejected paper, note why in 3-5 words</p><div class="guide-example"><strong>Screening decisions:</strong><br>✅ Keep — Directly addresses my question<br>✅ Keep — Relevant methods I should review<br>❌ Reject — Wrong population (K-12, not college)<br>❌ Reject — Not empirical (opinion piece)<br>❌ Reject — Duplicate from other database<br>⚠️ Maybe — Tangentially relevant, revisit later</div>`,
+      `<h5>Setting Up Zotero (Recommended)</h5><p>Zotero is free, open-source, and integrates with Word/Google Docs for citations.</p><p><a class="guide-link" href="https://www.zotero.org/download/" target="_blank">⬇️ Download Zotero</a></p><p><strong>Setup steps:</strong><br>1. Install Zotero desktop app<br>2. Install the Zotero Connector browser extension<br>3. Create folders for your project<br>4. When you find a paper, click the Zotero browser icon to save it<br>5. Install the Word/Google Docs plugin for inserting citations</p><p><strong>Organizing tips:</strong><br>• Create a folder per research project<br>• Use tags for themes (e.g., "methods", "theory", "key finding")<br>• Add notes directly to each paper in Zotero<br>• Use the "Related" feature to link connected papers</p>`,
+      `<h5>PRISMA Flow Diagram</h5><p>PRISMA (Preferred Reporting Items for Systematic Reviews) provides a standard way to visualize your search process:</p><div class="guide-example"><strong>PRISMA Flow Structure:</strong><br><br>┌─────────────────────────┐<br>│ IDENTIFICATION           │<br>│ Records from databases:  │<br>│ PubMed (127) + WoS (94) │<br>│ + ERIC (45) = 266 total  │<br>└─────────┬───────────────┘<br>          ▼<br>┌─────────────────────────┐<br>│ Duplicates removed: 52  │<br>│ Records screened: 214   │<br>└─────────┬───────────────┘<br>          ▼<br>┌─────────────────────────┐<br>│ SCREENING                │<br>│ Excluded by title: 98   │<br>│ Excluded by abstract: 64│<br>│ Full-text assessed: 52  │<br>└─────────┬───────────────┘<br>          ▼<br>┌─────────────────────────┐<br>│ INCLUDED                 │<br>│ Studies in review: 28   │<br>└─────────────────────────┘</div><p>Free tools to create PRISMA diagrams: <a class="guide-link" href="https://www.prisma-statement.org/prisma-2020-flow-diagram" target="_blank">PRISMA Generator</a></p>`
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Literature Discovery',desc:'Supercharge your literature search with AI.',items:['Use an AI agent to suggest additional search terms and synonyms','Ask AI to identify seminal papers in your field','Have AI summarize abstracts to speed up screening','Use tools like Semantic Scholar, Elicit, or Research Rabbit','Ask AI to identify gaps in your search coverage']},
+  assess:null,
+  tips:['Save your searches — you will re-run them as your project evolves','Set up database alerts for your key search queries to catch new publications']},
+{n:8,title:'Literature Reviews: Synthesis & Writing',badge:'Midterm',
+  objectives:['Synthesize literature into coherent thematic narratives','Identify and articulate research gaps','Write a literature review that builds your argument'],
+  topics:['From collection to synthesis: organizing by theme, not by paper','Creating concept matrices and evidence tables','Identifying patterns, contradictions, and gaps','Writing the narrative: topic sentences, transitions, critical analysis','Avoiding the "annotated bibliography" trap','Updating your review as new papers emerge'],
+  concepts:['Synthesis means creating new understanding from combined sources, not summarizing each paper','A concept matrix maps papers (rows) against themes (columns) to reveal patterns','Your literature review should build a logical argument for why your research is needed','The gap you identify should directly connect to your research question'],
+  quest:{title:'Synthesize the Knowledge',xp:150,desc:'Transform your collected literature into a synthesis.',reqs:['Create a concept matrix with at least 15 papers across 4-5 themes','Identify 3 patterns or trends in the literature','Identify 2 contradictions or debates in the field','Articulate the specific gap your research addresses','Write a 3-5 page literature review with proper citations','Include a "future directions" paragraph leading to your research question'],
+    guidance:[
+      `<h5>Building a Concept Matrix</h5><p>A concept matrix is the bridge between reading papers and writing a synthesis. Papers go in rows, themes in columns.</p><div class="guide-example"><strong>Example Concept Matrix:</strong><br><br>| Paper | Sample Size | Method | Found Benefits? | Duration | Setting |<br>|-------|:-----------:|--------|:---------------:|----------|---------|<br>| Smith 2023 | 120 | RCT | Yes | 8 weeks | University |<br>| Jones 2022 | 85 | Quasi-exp | Partial | 12 weeks | Community |<br>| Lee 2024 | 200 | Survey | Yes | N/A | Online |<br>| Chen 2023 | 45 | Qualitative | Mixed | 6 months | Clinic |<br><br><strong>Now you can synthesize:</strong><br>• "Studies with larger samples (Lee, Smith) found stronger effects..."<br>• "Duration ranged from 8 weeks to 6 months, suggesting..."<br>• "Only one study (Chen) used qualitative methods, revealing a gap..."</div>`,
+      `<h5>Finding Patterns and Trends</h5><p>Look across your matrix for these types of patterns:</p><p>📈 <strong>Convergence:</strong> Most studies agree on a finding<br>📊 <strong>Methodological trends:</strong> Shift from one method to another over time<br>🌍 <strong>Geographic patterns:</strong> Most research from certain regions<br>📅 <strong>Temporal trends:</strong> Findings changing as field evolves<br>👥 <strong>Population gaps:</strong> Certain groups understudied</p><div class="guide-example"><strong>Example pattern statement:</strong><br>"A consistent finding across seven of the twelve quantitative studies reviewed is that intervention duration of at least 8 weeks is associated with significant outcomes (Smith, 2023; Jones, 2022; Park, 2024). Studies with shorter interventions (Rivera, 2023; Kim, 2022) reported non-significant effects, suggesting a minimum dosage threshold."</div>`,
+      `<h5>Identifying Contradictions</h5><p>Contradictions are not problems — they are opportunities. They often reveal where your research is needed most.</p><div class="guide-example"><strong>How to frame contradictions:</strong><br><br>"While Smith (2023) found that X significantly improved outcomes in university settings, Jones (2022) found no effect in community contexts. This discrepancy may be explained by differences in participant characteristics, implementation fidelity, or outcome measures used. The present study addresses this contradiction by..."</div><p><strong>Common sources of contradictions:</strong> different populations, different measures, different contexts, different time periods, or methodological quality differences.</p>`,
+      `<h5>Articulating the Gap</h5><p>Your gap statement is the most important sentence in your literature review. It bridges what IS known to what is NOT known — and directly sets up your research question.</p><div class="guide-example"><strong>Gap statement formula:</strong><br>"While existing research has established [what we know], [what remains unknown or unaddressed] represents a critical gap. Specifically, [precise gap]. This study addresses this gap by [your approach]."<br><br><strong>Example:</strong><br>"While existing research has established that mindfulness interventions can reduce general anxiety in college students (Smith, 2023; Lee, 2024), no study has examined whether these benefits extend to discipline-specific test anxiety in nursing education. This gap is significant because nursing exams involve unique stressors including clinical simulation evaluations. The present study addresses this gap by testing a tailored mindfulness protocol designed specifically for nursing assessment contexts."</div>`,
+      null,null
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Literature Synthesis',desc:'Use AI to deepen your analysis.',items:['Ask AI to identify thematic connections between papers','Use AI to organize your concept matrix by suggesting category groupings','Have AI compare and contrast findings across multiple papers','Use AI to check if your gap statement is well-supported','Ask AI to suggest how your review narrative could be strengthened']},
+  assess:{type:'midterm',label:'Midterm: Grant Proposal Draft',topics:'Compile work from Weeks 1-8 into a complete mini-proposal',format:'Specific Aims + 3-page narrative + budget + literature review section',xp:500},
+  tips:['Write your literature review BEFORE finalizing your methods','Use a citation manager from the start — reformatting references manually is painful']},
+{n:9,title:'AI Agents for Research',badge:'Skill Unlocked',
+  objectives:['Understand how AI agents can enhance every phase of research','Evaluate AI tools critically — capabilities, limitations, ethics','Build practical AI-assisted research workflows'],
+  topics:['AI in research: current landscape and rapid evolution','AI for literature discovery: Semantic Scholar, Elicit, Consensus, Research Rabbit','AI for writing and editing: drafting, feedback, grammar, clarity','AI for data analysis: pattern recognition, coding assistance, visualization','AI for grant writing: brainstorming, review, compliance checking','Ethical considerations: disclosure, bias, over-reliance, academic integrity'],
+  concepts:['AI agents are research accelerators, not replacements — you are the expert','Always verify AI outputs against primary sources — AI can hallucinate','Transparency is essential: disclose AI use in methods and acknowledgments','AI tools evolve rapidly — build workflows around capabilities, not products','The biggest AI risk in research is trusting it uncritically'],
+  resources:[
+    {icon:'🤖',name:'Elicit',url:'https://elicit.com',desc:'AI research assistant — finds papers, extracts data, summarizes findings'},
+    {icon:'🔍',name:'Semantic Scholar',url:'https://www.semanticscholar.org',desc:'AI-powered academic search with citation analysis'},
+    {icon:'📊',name:'Consensus',url:'https://consensus.app',desc:'AI search engine that finds answers backed by scientific research'},
+    {icon:'🐰',name:'Research Rabbit',url:'https://www.researchrabbit.ai',desc:'Discover related papers through citation networks'},
+    {icon:'💬',name:'Claude',url:'https://claude.ai',desc:'AI assistant for research analysis, writing, and brainstorming'},
+    {icon:'🧠',name:'Perplexity',url:'https://www.perplexity.ai',desc:'AI-powered search with source citations'}
+  ],
+  quest:{title:'Build Your AI Research Toolkit',xp:150,desc:'Explore and evaluate AI tools for research workflows.',reqs:['Test at least 3 AI research tools (Elicit, Semantic Scholar, Consensus, ChatGPT, Claude)','For each tool: document strengths, weaknesses, and limitations','Use an AI agent to find 5 papers your manual search missed','Ask AI to critique your Specific Aims page — evaluate the feedback quality','Create a personal "AI Research Toolkit" document','Write a 1-page reflection on ethical AI use in your research context'],
+    guidance:[
+      `<h5>AI Research Tools to Test</h5><p>Each tool excels at different tasks. Try these with your actual research question:</p><p><a class="guide-link" href="https://elicit.com" target="_blank">🤖 Elicit</a> — Best for: finding papers, extracting data from abstracts, summarizing findings across studies<br><a class="guide-link" href="https://www.semanticscholar.org" target="_blank">🔍 Semantic Scholar</a> — Best for: citation analysis, finding influential papers, TLDR summaries<br><a class="guide-link" href="https://consensus.app" target="_blank">📊 Consensus</a> — Best for: finding evidence-based answers to specific questions<br><a class="guide-link" href="https://www.researchrabbit.ai" target="_blank">🐰 Research Rabbit</a> — Best for: discovering related papers through citation networks (like Spotify for papers)<br><a class="guide-link" href="https://claude.ai" target="_blank">💬 Claude / ChatGPT</a> — Best for: brainstorming, writing feedback, explaining complex concepts, coding help</p>`,
+      `<h5>How to Evaluate AI Tools</h5><p>For each tool, create an evaluation using this template:</p><div class="guide-example"><strong>AI Tool Evaluation Template:</strong><br><br><strong>Tool:</strong> [Name, URL, free/paid]<br><strong>Task tested:</strong> [What did you ask it to do?]<br><br><strong>Strengths:</strong><br>• [What did it do well?]<br>• [What was faster/better than manual?]<br><br><strong>Weaknesses:</strong><br>• [What did it get wrong?]<br>• [What was it unable to do?]<br><br><strong>Accuracy check:</strong> [Did you verify 3+ outputs against sources?]<br><strong>Hallucination rate:</strong> [How many citations/claims were fabricated?]<br><strong>Verdict:</strong> [Would you use this regularly? For what tasks?]</div>`,
+      `<h5>Using AI to Find Missed Papers</h5><p>AI can discover papers that keyword-based searches miss. Try these approaches:</p><p>1. <strong>Concept-based search:</strong> Describe your research topic in natural language to Elicit or Consensus<br>2. <strong>Citation network:</strong> Put a key paper into Research Rabbit and explore the "similar works" graph<br>3. <strong>Seed-based discovery:</strong> Give Semantic Scholar 3-5 of your key papers and use "recommended papers"<br>4. <strong>Ask directly:</strong> Tell Claude/ChatGPT: "I'm studying [topic]. Here are 10 papers I've found. What seminal papers or recent studies am I missing?"</p><p><strong>Important:</strong> Always verify that AI-suggested papers actually exist. Check the DOI or search the title in Google Scholar.</p>`,
+      `<h5>Getting AI to Critique Your Writing</h5><p>AI can serve as a first-round reviewer for your writing. Use specific prompts for better feedback:</p><div class="guide-example"><strong>Effective critique prompts:</strong><br><br>"Review my Specific Aims page as if you were an NIH study section reviewer. Score each aim on significance, innovation, and approach (1-9 scale). Identify the top 3 weaknesses."<br><br>"Read this aims page and identify: (1) any logical gaps, (2) unsupported claims, (3) jargon a non-specialist wouldn't understand, and (4) where the argument is weakest."<br><br>"Compare my aims structure to the standard NIH format. What sections am I missing or underemphasizing?"</div><p><strong>Evaluate the feedback:</strong> Was it generic or specific? Did it identify real issues? Would a human reviewer say the same things?</p>`,
+      null,
+      `<h5>Ethical AI Use in Research</h5><p>Your reflection should address these key questions:</p><p><strong>Transparency:</strong> When and how should you disclose AI use?<br><strong>Accuracy:</strong> How do you verify AI-generated content?<br><strong>Bias:</strong> What biases might AI tools introduce?<br><strong>Authorship:</strong> Can AI be an author? (Most journals say no)<br><strong>Academic integrity:</strong> Where is the line between AI assistance and AI dependence?</p><div class="guide-example"><strong>Example disclosure statement:</strong><br>"Artificial intelligence tools were used in this research for the following purposes: literature search expansion (Semantic Scholar, Elicit), initial screening of abstracts, and grammar review of the manuscript. All AI outputs were verified against primary sources by the research team. The study design, analysis, interpretation, and writing of this manuscript were performed by the human authors."</div><p>Check your institution's AI policy and your target journal's AI disclosure requirements.</p>`
+    ]},
+  boss:null,ai:null,assess:null,
+  tips:['Keep a log of AI interactions that inform your research','Check your institution\'s AI policy before using AI in submitted work']},
+{n:10,title:'Research Design & Methodology',badge:null,
+  objectives:['Select appropriate research designs for your question','Understand validity threats and how to mitigate them','Develop a detailed methodology section'],
+  topics:['Research paradigms: quantitative, qualitative, mixed methods','Experimental vs. observational designs','Sampling strategies and power analysis','Validity: internal, external, construct, statistical conclusion','Reliability and reproducibility','Writing a methods section that enables replication'],
+  concepts:['Your research question dictates your method, not the other way around','The best design is the simplest one that rigorously answers your question','Every design decision is a tradeoff — document your reasoning','Reproducibility means another researcher could follow your methods and get comparable results'],
+  quest:{title:'Design Your Study',xp:150,desc:'Create a detailed research design for your project.',reqs:['Justify your chosen research paradigm (quantitative, qualitative, or mixed)','Describe your study design with a visual diagram','Define your population, sampling strategy, and target sample size','List potential validity threats and your mitigation strategies','Write a detailed methods section (2-3 pages)','Include a timeline with milestones for your research activities'],
+    guidance:[
+      `<h5>Choosing Your Research Paradigm</h5><p>Your research question dictates your paradigm. Use this decision guide:</p><div class="guide-example"><strong>🔢 Quantitative — Choose when:</strong><br>• Your question asks "how much," "how many," or "what is the relationship"<br>• You want to test a hypothesis<br>• You need generalizable results<br>• Example: "Does X improve Y scores?"<br><br><strong>📝 Qualitative — Choose when:</strong><br>• Your question asks "how," "why," or "what is the experience"<br>• You want to explore a phenomenon in depth<br>• You need rich, contextual understanding<br>• Example: "How do students experience X?"<br><br><strong>🔀 Mixed Methods — Choose when:</strong><br>• You need both breadth and depth<br>• Quantitative alone can't capture the complexity<br>• You want to triangulate findings<br>• Example: "Does X improve scores AND how do students experience it?"</div>`,
+      `<h5>Creating a Study Design Diagram</h5><p>A visual diagram makes your design immediately clear. Common formats:</p><div class="guide-example"><strong>Experimental design (RCT):</strong><br><br>Recruit Participants (N=120)<br>         │<br>    Random Assignment<br>    ┌─────┴─────┐<br>Treatment    Control<br> (n=60)      (n=60)<br>    │           │<br> Pretest     Pretest<br>    │           │<br>Intervention  Usual Care<br> (8 weeks)   (8 weeks)<br>    │           │<br> Posttest    Posttest<br>    │           │<br> Follow-up   Follow-up<br> (3 months)  (3 months)<br><br><strong>Mixed methods sequential:</strong><br>Phase 1: Survey (n=200) → Analyze → Inform<br>                                      ↓<br>Phase 2: Interviews (n=15) → Analyze → Integrate → Report</div>`,
+      `<h5>Sampling and Sample Size</h5><p>Your sampling strategy and sample size must be justified:</p><p><a class="guide-link" href="https://www.gpower.hhu.de" target="_blank">📊 G*Power (free power analysis)</a></p><div class="guide-example"><strong>Common sampling strategies:</strong><br>• <strong>Random sampling:</strong> Everyone has equal chance (gold standard)<br>• <strong>Stratified:</strong> Random within defined groups (ensures representation)<br>• <strong>Convenience:</strong> Whoever is available (weakest, but most common)<br>• <strong>Purposive:</strong> Deliberately selected for qualitative depth<br><br><strong>Sample size rules of thumb:</strong><br>• Power analysis is the right way (G*Power is free)<br>• Surveys: minimum 100-200 for basic analyses<br>• Experiments: 30+ per group for t-tests<br>• Qualitative interviews: 12-25 for saturation<br>• Always oversample by 20% to account for attrition</div>`,
+      `<h5>Validity Threats and Mitigations</h5><p>Every design has threats to validity. Identifying them upfront shows rigor:</p><div class="guide-example"><strong>Common validity threats:</strong><br><br><strong>Internal validity</strong> (did X really cause Y?):<br>• History — external events affect outcomes → Use control group<br>• Maturation — natural change over time → Use control group<br>• Selection bias — groups differ at baseline → Randomize<br>• Attrition — participants drop out → Track reasons, intent-to-treat analysis<br><br><strong>External validity</strong> (can results generalize?):<br>• Sample not representative → Describe limitations, use diverse sample<br>• Setting-specific → Multi-site study or describe context clearly<br><br><strong>Construct validity</strong> (are you measuring what you think?):<br>• Poor measures → Use validated instruments, report reliability</div>`,
+      null,
+      `<h5>Creating a Research Timeline</h5><p>Use a Gantt chart or table format. Be realistic — everything takes longer than expected.</p><div class="guide-example"><strong>Example 2-Year Timeline:</strong><br><br>| Activity | Q1 | Q2 | Q3 | Q4 | Q5 | Q6 | Q7 | Q8 |<br>|----------|:--:|:--:|:--:|:--:|:--:|:--:|:--:|:--:|<br>| IRB application | ██ | | | | | | | |<br>| Recruit participants | | ██ | ██ | | | | | |<br>| Data collection | | | ██ | ██ | ██ | | | |<br>| Data analysis | | | | | ██ | ██ | | |<br>| Write manuscript | | | | | | ██ | ██ | |<br>| Submit & revise | | | | | | | ██ | ██ |<br>| Present at conference | | | | | | | | ██ |<br><br><strong>Milestones:</strong><br>• Month 3: IRB approved<br>• Month 6: 50% enrollment<br>• Month 12: Data collection complete<br>• Month 18: Draft manuscript<br>• Month 24: Submit for publication</div>`
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Methods Advisor',desc:'Use AI to strengthen your research design.',items:['Ask AI to identify potential confounding variables','Use AI to help with power analysis calculations','Have AI review your methods section for clarity','Use AI to find similar studies and compare their methods','Ask AI to suggest ways to strengthen validity']},
+  assess:null,
+  tips:['Pilot test everything — small pilots catch big problems','Your methods section is the blueprint — vague methods yield questionable results']},
+{n:11,title:'Data Collection & Management',badge:null,
+  objectives:['Design robust data collection instruments and procedures','Implement data management best practices','Understand IRB requirements and data security'],
+  topics:['Designing surveys, interviews, and observation protocols','Data quality: accuracy, completeness, consistency, timeliness','Data management plans (DMPs): what funders require','Data storage, backup, and version control','IRB and ethical review: when and how to apply','Data security and participant privacy (HIPAA, FERPA, GDPR)'],
+  concepts:['Data management is not glamorous but bad data management kills research careers','Most funders now require a Data Management Plan','IRB approval takes weeks to months — start early','Version control for data is just as important as version control for code','Raw data should be immutable — never edit the original'],
+  resources:[
+    {icon:'📋',name:'DMPTool',url:'https://dmptool.org',desc:'Free tool for creating data management plans — includes funder templates'},
+    {icon:'🏥',name:'CITI Program',url:'https://about.citiprogram.org',desc:'Required ethics/IRB training for most US institutions'},
+    {icon:'📊',name:'REDCap',url:'https://www.project-redcap.org',desc:'Secure data collection platform for research — free through institutions'},
+    {icon:'📝',name:'Qualtrics',url:'https://www.qualtrics.com',desc:'Survey platform — often free through universities'}
+  ],
+  quest:{title:'Prepare Your Data Pipeline',xp:125,desc:'Design your data collection and management strategy.',reqs:['Design or select a data collection instrument for your study','Create a Data Management Plan following your funder\'s template','Design a file naming convention and folder structure','Identify all ethical/IRB requirements for your research','Create a data dictionary defining every variable','Document your backup and data security plan'],
+    guidance:[
+      `<h5>Choosing Data Collection Instruments</h5><p>Use validated instruments whenever possible — creating your own is a last resort.</p><p><strong>Where to find validated instruments:</strong></p><p><a class="guide-link" href="https://www.apa.org/pubs/databases/psyctests" target="_blank">📊 PsycTESTS</a> (psychology measures) — <a class="guide-link" href="https://www.buros.org" target="_blank">📋 Buros Center</a> (test reviews)</p><div class="guide-example"><strong>Choosing the right tool:</strong><br>• <strong>Surveys:</strong> Qualtrics, REDCap, Google Forms<br>• <strong>Interviews:</strong> Semi-structured protocol + recording (Otter.ai for transcription)<br>• <strong>Observations:</strong> Structured rubric + inter-rater reliability<br>• <strong>Physiological:</strong> Calibrated equipment with documented protocols<br>• <strong>Existing data:</strong> Public datasets (ICPSR, Census, NCES)</div><p>Report reliability (Cronbach's alpha) and validity evidence for every instrument.</p>`,
+      `<h5>Creating a Data Management Plan</h5><p>Most federal funders now require a DMP. Use the free DMPTool for templates:</p><p><a class="guide-link" href="https://dmptool.org" target="_blank">📋 DMPTool — Free DMP Generator</a></p><div class="guide-example"><strong>DMP sections (NSF format):</strong><br><br>1. <strong>Types of data:</strong> What data will you collect? Formats? Volume?<br>2. <strong>Standards:</strong> What metadata standards? Naming conventions?<br>3. <strong>Access & sharing:</strong> How will data be shared? When? Restrictions?<br>4. <strong>Re-use:</strong> What are the licensing terms?<br>5. <strong>Archiving:</strong> Where will data be stored long-term? How long?</div>`,
+      `<h5>File Naming & Folder Structure</h5><p>A consistent system prevents chaos as your project grows. Adopt rules from day one:</p><div class="guide-example"><strong>Recommended file naming convention:</strong><br><br>ProjectName_DataType_YYYYMMDD_Version<br><br>Examples:<br>MindfulnessStudy_Survey_20260315_v1.csv<br>MindfulnessStudy_Interviews_20260320_raw.mp3<br>MindfulnessStudy_Analysis_20260401_v2.R<br><br><strong>Folder structure:</strong><br>📁 MindfulnessStudy/<br>&nbsp;&nbsp;📁 01_RawData/ (NEVER modify these files)<br>&nbsp;&nbsp;📁 02_CleanedData/<br>&nbsp;&nbsp;📁 03_Analysis/<br>&nbsp;&nbsp;📁 04_Results/<br>&nbsp;&nbsp;📁 05_Manuscripts/<br>&nbsp;&nbsp;📁 06_Admin/ (IRB, consent, correspondence)<br>&nbsp;&nbsp;📄 README.txt</div>`,
+      `<h5>IRB/Ethics Requirements</h5><p>If your research involves human subjects, you need IRB (Institutional Review Board) approval. Start early — it takes 2-8 weeks.</p><div class="guide-example"><strong>IRB review levels:</strong><br>• <strong>Exempt:</strong> Minimal risk, existing data, educational research (still needs submission)<br>• <strong>Expedited:</strong> Minimal risk with identifiable data<br>• <strong>Full Board:</strong> Greater than minimal risk, vulnerable populations<br><br><strong>Required documents:</strong><br>• Protocol/research plan<br>• Informed consent form<br>• Data collection instruments (surveys, interview guides)<br>• Recruitment materials<br>• CITI training certificates</div><p><a class="guide-link" href="https://about.citiprogram.org" target="_blank">🎓 Complete CITI Training</a> — Required by most US institutions before IRB submission.</p>`,
+      `<h5>Creating a Data Dictionary</h5><p>A data dictionary defines every variable in your dataset. This is essential for reproducibility and collaboration.</p><div class="guide-example"><strong>Data Dictionary Template:</strong><br><br>| Variable | Label | Type | Values | Source |<br>|----------|-------|------|--------|--------|<br>| ID | Participant ID | String | P001-P200 | Assigned |<br>| age | Age in years | Integer | 18-65 | Survey Q1 |<br>| group | Treatment group | Categorical | 1=treatment, 0=control | Randomization |<br>| pre_anx | Pre-test anxiety | Continuous | 10-50 (TAI score) | TAI instrument |<br>| post_anx | Post-test anxiety | Continuous | 10-50 (TAI score) | TAI instrument |<br>| complete | Study completion | Binary | 1=yes, 0=no | Tracking |<br>| notes | Researcher notes | Text | Free text | Researcher |</div>`,
+      null
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Data Management',desc:'Use AI to improve data quality.',items:['Use AI to review survey questions for bias or ambiguity','Ask AI to generate a data dictionary template','Have AI help draft your Data Management Plan','Use AI to suggest data validation rules','Ask AI about relevant data protection regulations']},
+  assess:null,
+  tips:['Test your data collection instrument on 5 people before going live','Automate data backups — "I forgot to back up" is not an acceptable excuse']},
+{n:12,title:'Data Analysis & Interpretation',badge:'Quiz 2',
+  objectives:['Select and apply appropriate analysis methods','Interpret results accurately and honestly','Visualize data effectively for different audiences'],
+  topics:['Choosing the right statistical test','Descriptive vs. inferential statistics','Common analyses: t-tests, ANOVA, regression, chi-square, thematic analysis','Data visualization principles','Handling unexpected results and negative findings','Avoiding p-hacking, HARKing, and other questionable practices'],
+  concepts:['Your analysis plan should be specified BEFORE you see the data','Negative results are still results — they advance knowledge','A beautiful visualization communicates what a table of numbers cannot','Statistical significance is not the same as practical significance','Questionable research practices are more common than outright fraud'],
+  resources:[
+    {icon:'📊',name:'R / RStudio',url:'https://posit.co/download/rstudio-desktop/',desc:'Free statistical computing environment — the standard for academic research'},
+    {icon:'🐍',name:'Python (Jupyter)',url:'https://jupyter.org',desc:'Open-source notebooks for data analysis and visualization'},
+    {icon:'📈',name:'JASP',url:'https://jasp-stats.org',desc:'Free, open-source stats package with a friendly GUI — great for beginners'},
+    {icon:'📉',name:'jamovi',url:'https://www.jamovi.org',desc:'Free statistical software built on R with point-and-click interface'},
+    {icon:'📊',name:'SPSS (IBM)',url:'https://www.ibm.com/spss',desc:'Commercial stats package — check if your university provides access'}
+  ],
+  quest:{title:'Analyze and Visualize',xp:150,desc:'Create an analysis plan and practice with sample data.',reqs:['Write a pre-analysis plan specifying your statistical tests','Find or create a sample dataset relevant to your research','Perform at least 2 different analyses appropriate to your question','Create 3 publication-quality visualizations of your results','Write a results section (1-2 pages) reporting findings objectively','Reflect on how you would handle unexpected or negative results'],
+    guidance:[
+      `<h5>Writing a Pre-Analysis Plan</h5><p>Specifying your analyses BEFORE seeing data prevents unconscious bias (p-hacking, HARKing). Your plan should include:</p><div class="guide-example"><strong>Pre-Analysis Plan Template:</strong><br><br><strong>Research Question:</strong> [Your question]<br><strong>Hypotheses:</strong><br>H1: [Specific, directional prediction]<br>H2: [Second prediction if applicable]<br><br><strong>Primary Analysis:</strong><br>• Test: [e.g., independent samples t-test]<br>• IV: [group assignment]<br>• DV: [post-test score]<br>• Covariates: [pre-test score, if applicable]<br>• Alpha level: .05<br>• Effect size measure: Cohen's d<br><br><strong>Secondary Analyses:</strong><br>• [Subgroup analysis, moderation, etc.]<br><br><strong>Data Exclusion Rules:</strong><br>• [When would you exclude a participant? Define a priori.]</div><p>Consider registering your plan on <a class="guide-link" href="https://osf.io" target="_blank">OSF (Open Science Framework)</a> for credibility.</p>`,
+      `<h5>Finding Sample Datasets</h5><p>Practice with real data before collecting your own:</p><p><a class="guide-link" href="https://www.icpsr.umich.edu" target="_blank">📊 ICPSR</a> — Social science data archive<br><a class="guide-link" href="https://www.kaggle.com/datasets" target="_blank">📈 Kaggle Datasets</a> — Large collection across domains<br><a class="guide-link" href="https://data.gov" target="_blank">🏛️ Data.gov</a> — US government open data<br><a class="guide-link" href="https://nces.ed.gov/datalab/" target="_blank">🎓 NCES DataLab</a> — Education statistics<br><a class="guide-link" href="https://www.cdc.gov/nchs/data_access/ftp_data.htm" target="_blank">🏥 CDC/NCHS</a> — Health data</p><p>Alternatively, simulate data in R or Python that matches your expected study structure.</p>`,
+      `<h5>Choosing the Right Statistical Test</h5><p>Use this decision guide based on your variables:</p><div class="guide-example"><strong>Quick test selection guide:</strong><br><br>Comparing 2 group means → <strong>t-test</strong> (independent or paired)<br>Comparing 3+ group means → <strong>ANOVA</strong> (one-way or factorial)<br>Relationship between 2 continuous variables → <strong>Correlation / Regression</strong><br>Predicting an outcome from multiple variables → <strong>Multiple Regression</strong><br>Categorical outcome → <strong>Logistic Regression / Chi-square</strong><br>Repeated measures over time → <strong>Repeated-measures ANOVA / Mixed models</strong><br>Non-normal data → <strong>Mann-Whitney U, Kruskal-Wallis</strong> (nonparametric)<br><br><strong>Qualitative data:</strong><br>Interview transcripts → <strong>Thematic analysis, Grounded theory</strong><br>Documents → <strong>Content analysis</strong><br>Observations → <strong>Narrative analysis</strong></div>`,
+      `<h5>Publication-Quality Visualizations</h5><p>Journal figures must be clear, properly labeled, and high resolution. Key principles:</p><p>• <strong>Axes:</strong> Labeled with units, readable font (10-12pt)<br>• <strong>Colors:</strong> Accessible to colorblind readers (use colorbrewer palettes)<br>• <strong>Format:</strong> Vector formats (SVG, PDF, EPS) for best quality<br>• <strong>Resolution:</strong> 300+ DPI for raster images</p><div class="guide-example"><strong>Essential figure types:</strong><br>• <strong>Bar chart:</strong> Comparing group means (add error bars!)<br>• <strong>Scatter plot:</strong> Showing relationships between variables<br>• <strong>Box plot:</strong> Showing distribution and outliers<br>• <strong>Line graph:</strong> Showing change over time<br>• <strong>Table:</strong> For exact values and complex comparisons</div><p>Free tools: <a class="guide-link" href="https://posit.co/download/rstudio-desktop/" target="_blank">R/ggplot2</a>, <a class="guide-link" href="https://matplotlib.org" target="_blank">Python/matplotlib</a></p>`,
+      null,null
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Analysis Partner',desc:'Accelerate your analysis with AI.',items:['Use AI coding assistants to write analysis scripts in R or Python','Ask AI to explain assumptions of your chosen statistical tests','Have AI review your visualizations for clarity and accessibility','Use AI to help interpret complex statistical output','Ask AI to suggest alternative analyses for additional insights']},
+  assess:{type:'quiz',label:'Quiz 2: Methods & Analysis',topics:'Weeks 9-12: AI tools, research design, data management, analysis',format:'5 interactive questions',xp:200},
+  tips:['Learn R or Python for analysis — point-and-click tools limit reproducibility','Always report effect sizes alongside p-values']},
+{n:13,title:'AI-Enhanced Research Workflows',badge:null,
+  objectives:['Design end-to-end AI-enhanced research workflows','Critically evaluate when AI helps and when it hinders','Build sustainable AI practices for long-term research'],
+  topics:['Integrating AI across the full research lifecycle','AI for literature monitoring and research tracking','AI for collaborative research and team coordination','Building custom AI agents and prompts','AI limitations: hallucinations, bias, reproducibility','Future of AI in research: trends and emerging tools'],
+  concepts:['The best AI workflows combine AI efficiency with human judgment at every decision point','Custom prompts tuned to your research domain outperform generic tools','AI reproducibility is an emerging challenge — document prompts, tools, and versions','Researchers who use AI effectively will outperform those who do not'],
+  quest:{title:'Design Your AI Research Workflow',xp:150,desc:'Create a comprehensive AI-enhanced workflow.',reqs:['Map your complete research workflow from question to publication','Identify every point where AI could assist (mark: high/medium/low value)','Build 3 custom prompts or agent workflows for highest-value use cases','Test each workflow and document: time saved, quality impact, limitations','Create a decision framework: "When to use AI vs. when to do it manually"','Write guidelines for your research team on responsible AI use'],
+    guidance:[
+      `<h5>Mapping Your Research Workflow</h5><p>Create a visual map of every step from idea to publication. This becomes the backbone for identifying where AI adds value.</p><div class="guide-example"><strong>Research Workflow Map:</strong><br><br>1. 💡 Ideation → brainstorm topics, scan trends<br>2. ❓ Question → refine, FINER assessment<br>3. 📚 Literature → search, screen, synthesize<br>4. 💰 Funding → find grants, write proposals<br>5. 📐 Design → choose methods, plan study<br>6. 📋 IRB → ethics approval<br>7. 📊 Data Collection → instruments, recruitment<br>8. 🔬 Analysis → clean, analyze, visualize<br>9. ✍️ Writing → draft, revise, format<br>10. 📰 Publication → submit, respond to reviews<br>11. 📢 Dissemination → present, share, network<br><br>For each step, note: time spent, difficulty level, bottlenecks</div>`,
+      `<h5>AI Value Assessment</h5><p>Not every research task benefits equally from AI. Rate each workflow step:</p><div class="guide-example"><strong>AI Value Matrix:</strong><br><br>| Task | AI Value | Why |<br>|------|:--------:|-----|<br>| Literature searching | 🟢 HIGH | AI finds papers keyword search misses |<br>| Abstract screening | 🟢 HIGH | AI summarizes 50+ abstracts quickly |<br>| Writing first drafts | 🟡 MED | Good for structure, needs heavy editing |<br>| Statistical analysis | 🟡 MED | Good for code help, not interpretation |<br>| Research design | 🔴 LOW | Requires deep domain expertise |<br>| IRB applications | 🔴 LOW | Institutional-specific, needs human review |<br>| Interpretation | 🔴 LOW | Core researcher skill, AI lacks context |<br>| Peer interaction | 🔴 LOW | Human relationships can't be automated |</div>`,
+      `<h5>Building Custom Research Prompts</h5><p>Generic prompts give generic results. Custom prompts tuned to your domain dramatically improve AI output quality.</p><div class="guide-example"><strong>Example custom prompt (literature gap analysis):</strong><br><br>"You are a research methods expert in [your field]. I will give you summaries of 10 papers on [topic]. For each paper, note: (1) research question, (2) method, (3) sample, (4) key finding, (5) limitation. Then synthesize across all papers to identify: (a) what is well-established, (b) what is contradictory, (c) what gaps remain. Focus specifically on [your variable of interest]. Format as a structured table followed by a narrative synthesis."<br><br><strong>Key prompt design principles:</strong><br>• Assign a specific expert role<br>• Provide context about your field<br>• Structure the expected output format<br>• Ask for specific types of analysis<br>• Include quality checks ("cite specific papers")</div>`,
+      null,null,null
+    ]},
+  boss:{title:'BOSS CHALLENGE: AI Research Demo',xp:250,desc:'Demonstrate your AI research workflow.',reqs:['Prepare a 10-minute presentation demonstrating your AI workflow','Show a live example of AI assisting with at least 2 research tasks','Include critical analysis: what worked, what didn\'t, what surprised you','Address ethical considerations and limitations honestly','Be prepared to answer questions about your choices']},
+  ai:null,assess:null,
+  tips:['Save your custom prompts in a research prompt library','Stay current: follow AI research tool newsletters and communities']},
+{n:14,title:'Writing for Publication: Structure',badge:null,
+  objectives:['Understand the anatomy of a research paper','Write each section effectively following field conventions','Navigate journal selection and formatting requirements'],
+  topics:['Paper structure: IMRaD (Introduction, Methods, Results, and Discussion)','Writing the Introduction: funnel structure','Methods section: detail for reproducibility','Results: presenting findings without interpretation','Discussion: interpreting results, limitations, implications','Abstract writing: the 250-word elevator pitch','Choosing the right journal: impact factor, scope, audience, open access'],
+  concepts:['Write Methods and Results first — they are the most concrete sections','The Introduction is a funnel: broad context → specific problem → your contribution','Discussion is where you show you are a scholar, not just a data collector','Your abstract will be read 100x more than your full paper','Predatory journals are a real threat — use DOAJ and Beall\'s List to verify'],
+  resources:[
+    {icon:'📖',name:'DOAJ',url:'https://doaj.org',desc:'Directory of Open Access Journals — verify legitimate OA journals'},
+    {icon:'⚠️',name:'Predatory Journal Checker',url:'https://beallslist.net',desc:'Beall\'s List of predatory journals and publishers — avoid these'},
+    {icon:'📊',name:'Journal Finder (Elsevier)',url:'https://journalfinder.elsevier.com',desc:'Find the right Elsevier journal for your manuscript'},
+    {icon:'🔍',name:'Jane (Journal/Author Name)',url:'https://jane.biosemantics.org',desc:'Paste your abstract to find matching journals'}
+  ],
+  quest:{title:'Draft Your Paper',xp:175,desc:'Write the first draft of a research paper.',reqs:['Select a target journal and download their formatting guidelines','Write your Methods section (adapted from Week 10)','Write your Results section with integrated figures and tables','Draft your Introduction using the funnel structure','Write your Discussion including limitations and future directions','Compose a 250-word structured abstract','Format everything according to your target journal\'s requirements'],
+    guidance:[
+      `<h5>Selecting a Target Journal</h5><p>Choose your journal BEFORE writing — it dictates format, length, audience, and style.</p><p><a class="guide-link" href="https://jane.biosemantics.org" target="_blank">🔍 Jane</a> — Paste your abstract to find matching journals<br><a class="guide-link" href="https://journalfinder.elsevier.com" target="_blank">📊 Elsevier Journal Finder</a></p><div class="guide-example"><strong>Journal selection criteria:</strong><br><br>• <strong>Scope:</strong> Does the journal publish work like yours?<br>• <strong>Audience:</strong> Who reads it? Your target audience?<br>• <strong>Impact:</strong> Impact factor / CiteScore (higher = more competitive)<br>• <strong>Turnaround:</strong> How long from submission to decision? (Check Publons)<br>• <strong>Open Access:</strong> Required by your funder? APC costs ($0-$5,000+)?<br>• <strong>Acceptance rate:</strong> Top journals: 5-15%, good journals: 15-30%<br><br>⚠️ <strong>Avoid predatory journals!</strong> Check <a class="guide-link" href="https://beallslist.net" target="_blank">Beall's List</a> and <a class="guide-link" href="https://doaj.org" target="_blank">DOAJ</a></div>`,
+      null,null,
+      `<h5>The Funnel Introduction Structure</h5><p>Your introduction should funnel from broad context to your specific contribution:</p><div class="guide-example"><strong>Introduction Funnel (4-6 paragraphs):</strong><br><br><strong>¶1 — Big Picture:</strong> Why does this topic matter? (Broad context, statistics, societal relevance)<br><br><strong>¶2 — What We Know:</strong> Brief summary of key findings in the field (cite major studies)<br><br><strong>¶3 — What We Don't Know:</strong> The gap. What's missing, contradictory, or unexplored?<br><br><strong>¶4 — Why It Matters:</strong> Why does this gap need to be filled? Who benefits?<br><br><strong>¶5 — What You Did:</strong> "The purpose of this study was to..." State your question, approach, and hypotheses.<br><br><strong>¶6 (optional) — Preview:</strong> Brief roadmap of the paper's structure.</div><p><strong>First sentence tip:</strong> Start with a compelling fact or statistic, not a dictionary definition. Never begin with "Since the dawn of time..."</p>`,
+      `<h5>Writing the Discussion</h5><p>The Discussion is where you show you are a scholar, not just a data reporter. Structure:</p><div class="guide-example"><strong>Discussion Structure (4-6 paragraphs):</strong><br><br><strong>¶1 — Summary:</strong> Restate the purpose and key findings (2-3 sentences, no new stats)<br><br><strong>¶2-3 — Interpretation:</strong> What do the results mean? How do they compare to previous research? Why might you have found what you found?<br><br><strong>¶4 — Limitations:</strong> Be honest. Address design weaknesses, sampling, measurement, generalizability. Show you understand the constraints.<br><br><strong>¶5 — Implications:</strong> For practice, for policy, for the field. "So what?"<br><br><strong>¶6 — Future Directions:</strong> What should researchers do next? What questions remain?<br><br><strong>Final Sentence:</strong> End with a strong concluding statement about contribution.</div>`,
+      `<h5>Writing a Structured Abstract</h5><p>Your abstract is the most-read part of your paper. Many journals require a structured format (250 words max):</p><div class="guide-example"><strong>Structured Abstract Template:</strong><br><br><strong>Background:</strong> 1-2 sentences on the problem and gap (why this study?)<br><br><strong>Purpose:</strong> 1 sentence stating the aim of the study<br><br><strong>Methods:</strong> 2-3 sentences on design, participants, measures, analysis<br><br><strong>Results:</strong> 2-3 sentences on key findings with specific numbers (not just "significant")<br><br><strong>Conclusions:</strong> 1-2 sentences on implications and significance</div><p><strong>Write the abstract LAST</strong> — after the full paper is drafted. It should accurately represent what's actually in the paper, not what you planned.</p>`,
+      null
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Writing Coach',desc:'Use AI to improve your academic writing.',items:['Use AI to check your paper for logical flow and argument structure','Ask AI to identify unclear or jargon-heavy writing','Have AI suggest stronger topic sentences','Use AI to verify your abstract accurately represents your paper','Ask AI to review your Discussion for common weaknesses']},
+  assess:null,
+  tips:['Write badly first, then edit — perfectionism in the first draft kills progress','Read papers in your target journal to internalize their style']},
+{n:15,title:'Writing for Publication: Revision & Submission',badge:null,
+  objectives:['Master the peer review and revision process','Respond effectively to reviewer feedback','Navigate the submission and publication pipeline'],
+  topics:['Self-editing strategies: reading aloud, reverse outlining','Peer feedback: giving and receiving constructive criticism','Submission process: cover letters, suggested reviewers, conflicts of interest','Understanding peer review: what reviewers look for','Responding to reviews: the point-by-point response letter','Handling rejection: revise & resubmit vs. move to another journal','Post-publication: preprints, social media, press releases'],
+  concepts:['Every paper gets reviewed — embrace feedback as a gift','Your response-to-reviewers letter is almost as important as the revision','Rejection is normal — even Nobel laureates get papers rejected','Preprints get your work out faster and establish priority','The cover letter is your first impression with the editor'],
+  quest:{title:'Polish and Submit',xp:175,desc:'Revise your paper and prepare for submission.',reqs:['Perform a self-edit using the reverse outline technique','Exchange papers with a peer and provide detailed feedback','Revise your paper based on peer feedback','Write a mock point-by-point response to your peer\'s comments','Draft a cover letter to your target journal editor','Prepare a submission checklist verifying all journal requirements'],
+    guidance:[
+      `<h5>The Reverse Outline Technique</h5><p>A reverse outline checks if your paper actually says what you think it says:</p><div class="guide-example"><strong>How to reverse outline:</strong><br><br>1. Read each paragraph of your paper<br>2. Write ONE sentence summarizing what that paragraph actually says<br>3. List these sentences in order<br><br><strong>Now check:</strong><br>• Does each paragraph have one clear point?<br>• Do the points flow logically?<br>• Are any points repeated?<br>• Is anything missing?<br>• Does the order make sense?<br><br><strong>Common problems revealed:</strong><br>• Paragraph about methods buried in the introduction<br>• Same finding discussed in 3 different places<br>• A key limitation never mentioned<br>• Results section contains interpretation (belongs in Discussion)</div>`,
+      null,null,
+      `<h5>Writing a Point-by-Point Response</h5><p>When reviewers give feedback (or later, when you respond to journal reviews), use this structured format:</p><div class="guide-example"><strong>Response letter format:</strong><br><br>Dear Editor,<br><br>We thank the reviewers for their thoughtful feedback. We have addressed each comment below. Reviewer comments are in <strong>bold</strong>, our responses in plain text, and changes to the manuscript are in <em>italics</em>.<br><br><strong>Reviewer 1, Comment 1:</strong> "The sample size seems insufficient for the proposed analyses."<br><br>Response: We appreciate this concern. We have added a post-hoc power analysis showing that our sample of 120 participants provides 85% power to detect a medium effect size (d=0.5) at alpha=.05. <em>This has been added to the Methods section, paragraph 3, page 8.</em><br><br><strong>Reviewer 1, Comment 2:</strong> "The limitation about generalizability is too brief."<br><br>Response: We have expanded the limitations section to address generalizability more thoroughly. <em>See Discussion, paragraph 4, pages 14-15.</em></div><p><strong>Key rule:</strong> Address EVERY comment. Even if you disagree, explain why respectfully.</p>`,
+      `<h5>Writing a Cover Letter</h5><p>The cover letter is your first impression with the editor. Keep it professional and concise (1 page).</p><div class="guide-example"><strong>Cover letter template:</strong><br><br>Dear [Editor Name or "Editor-in-Chief"],<br><br>We are pleased to submit our manuscript entitled "[Title]" for consideration in [Journal Name].<br><br>[1-2 sentences about what the study examined and key findings]<br><br>[1-2 sentences about why this manuscript is a good fit for this journal and its readership]<br><br>[1 sentence about significance/novelty of the contribution]<br><br>This manuscript has not been published or submitted elsewhere. All authors have approved the final version and agree to its submission to [Journal Name]. [Add any required disclosures: conflicts of interest, funding, ethical approval]<br><br>We suggest the following reviewers: [2-3 names with affiliations and emails]<br><br>Thank you for your consideration.<br><br>Sincerely,<br>[Your name and credentials]</div>`,
+      null
+    ]},
+  boss:null,
+  ai:{title:'AI Agent: Editor\'s Eye',desc:'AI-powered revision and submission prep.',items:['Use AI to check grammar, style, and readability','Ask AI to identify inconsistencies between abstract, intro, and results','Have AI draft a cover letter template','Use AI to format references according to journal style','Ask AI to simulate reviewer questions to strengthen your Discussion']},
+  assess:null,
+  tips:['Save every version of your paper with dates','Follow up if you haven\'t heard from a journal in 3 months']},
+{n:16,title:'Building Your Research Career',badge:'Final',
+  objectives:['Create a long-term research strategy and career plan','Build your academic presence and professional network','Reflect on your growth and set goals for the future'],
+  topics:['Building a research agenda: short-term and long-term goals','Networking: conferences, collaborations, social media presence','Your CV and professional website','Mentorship: finding mentors and becoming one','Balancing teaching, research, and service','The evolving landscape: open science, reproducibility, team science'],
+  concepts:['Your research career is a marathon — pace yourself and build sustainably','Collaboration multiplies your impact — no one does important research alone','Open science practices are the future standard','Mentorship is bidirectional — good mentors learn from mentees','Your network is your net worth in academia'],
+  resources:[
+    {icon:'🌐',name:'Google Scholar Profile',url:'https://scholar.google.com/intl/en/scholar/citations.html',desc:'Create your free author profile — tracks citations and h-index'},
+    {icon:'🔗',name:'ResearchGate',url:'https://www.researchgate.net',desc:'Academic social network for sharing papers and finding collaborators'},
+    {icon:'💼',name:'Academic CV Guide',url:'https://career.berkeley.edu/sites/default/files/pdf/Guide/CVWritingBasics.pdf',desc:'UC Berkeley guide to academic CV writing'},
+    {icon:'📅',name:'WikiCFP',url:'http://www.wikicfp.com',desc:'Find upcoming conferences with calls for papers in your field'}
+  ],
+  quest:{title:'Your Research Roadmap',xp:200,desc:'Create a comprehensive plan for your research future.',reqs:['Write a 5-year research agenda with 3-5 major goals','Identify 3 potential collaborators and draft outreach messages','Create or update your academic CV','Plan your first conference submission (identify conference, deadline, topic)','Write a 1-page reflection on your growth through this course','Set 3 specific, measurable goals for the next 6 months'],
+    guidance:[
+      `<h5>Creating a 5-Year Research Agenda</h5><p>A research agenda is your strategic plan — it shows where you are going and how each project builds toward a larger vision.</p><div class="guide-example"><strong>Research Agenda Structure:</strong><br><br><strong>Vision Statement (2-3 sentences):</strong><br>"My research program investigates [broad area]. My long-term goal is to [ultimate contribution]. My work integrates [methods/approaches] to address [type of problem]."<br><br><strong>Year 1-2: Foundation</strong><br>• Complete current study and publish findings<br>• Apply for seed grant / R21 / early career award<br>• Present at 2 national conferences<br>• Establish 1-2 key collaborations<br><br><strong>Year 3-4: Expansion</strong><br>• Launch second study building on initial findings<br>• Apply for major grant (R01 / NSF Standard)<br>• Mentor 1-2 graduate students<br>• Publish 3-4 papers<br><br><strong>Year 5: Leadership</strong><br>• Lead multi-site or collaborative study<br>• Establish reputation as expert in niche area<br>• Serve on review panels and editorial boards</div>`,
+      `<h5>Reaching Out to Collaborators</h5><p>Cold outreach works better than you think — most researchers are happy to discuss shared interests.</p><div class="guide-example"><strong>Collaboration outreach template:</strong><br><br>Subject: Potential collaboration on [topic] — [your name], [your institution]<br><br>Dear Dr. [Name],<br><br>I am [your title] at [institution], researching [your area]. I recently read your work on [specific paper/project], and I was particularly interested in [specific finding or method].<br><br>My current project examines [1-2 sentences about your work] and I see a strong connection with your expertise in [their area]. Specifically, I think a collaboration could [1 sentence about what you could do together].<br><br>Would you be open to a 20-minute call to explore potential synergies?<br><br>Best regards,<br>[Your name]<br>[Your ORCID link]</div><p><strong>Where to find collaborators:</strong> Conference speakers, authors of papers you cite, researchers at complementary institutions, <a class="guide-link" href="https://www.researchgate.net" target="_blank">ResearchGate</a></p>`,
+      `<h5>Academic CV Essentials</h5><p>An academic CV is NOT a resume — it is a comprehensive record of your scholarly work. Include everything.</p><p><a class="guide-link" href="https://career.berkeley.edu/sites/default/files/pdf/Guide/CVWritingBasics.pdf" target="_blank">📄 UC Berkeley CV Guide</a></p><div class="guide-example"><strong>Academic CV sections (in order):</strong><br><br>1. Contact Information + ORCID<br>2. Education<br>3. Academic Positions<br>4. Publications (peer-reviewed, then other)<br>5. Grants & Funding (awarded, then pending)<br>6. Conference Presentations<br>7. Teaching Experience<br>8. Mentoring / Advising<br>9. Service (department, university, field)<br>10. Awards & Honors<br>11. Professional Memberships<br>12. Skills (methods, software, languages)</div><p><strong>Key difference from a resume:</strong> CVs grow throughout your career. Do NOT limit to 2 pages. Update after every publication, presentation, or grant.</p>`,
+      `<h5>Planning Your First Conference Submission</h5><p>Presenting at conferences builds your network and gets feedback on your work before publication.</p><p><a class="guide-link" href="http://www.wikicfp.com" target="_blank">📅 WikiCFP — Find Conferences</a></p><div class="guide-example"><strong>Conference planning checklist:</strong><br><br>1. <strong>Identify conferences:</strong> Ask your mentor, check society websites, search WikiCFP<br>2. <strong>Check deadlines:</strong> Most are 4-6 months before the conference<br>3. <strong>Choose format:</strong><br>&nbsp;&nbsp;• Paper presentation (15-20 min talk + Q&A)<br>&nbsp;&nbsp;• Poster presentation (stand by your poster, discuss with visitors)<br>&nbsp;&nbsp;• Roundtable (discussion-based, good for early-stage work)<br>4. <strong>Write abstract:</strong> Usually 250-500 words<br>5. <strong>Budget:</strong> Registration ($100-500), travel, hotel (check if your department funds this)<br><br><strong>Top tip for first-timers:</strong> Poster presentations are lower-pressure and allow more in-depth conversations. Start there if presenting makes you nervous.</div>`,
+      null,null
+    ]},
+  boss:{title:'FINAL BOSS: Research Portfolio Defense',xp:500,desc:'Present your complete research portfolio.',reqs:['Compile your complete portfolio: question, lit review, methods, grant, paper','Prepare a 15-minute presentation covering your research journey','Present and respond to questions from peers and instructor','Demonstrate how AI tools enhanced your research process','Articulate your 5-year research vision and next steps']},
+  ai:null,
+  assess:{type:'final',label:'Final: Research Portfolio',topics:'Complete portfolio demonstrating mastery of all course components',format:'Portfolio + 15-min presentation + Q&A defense',xp:750},
+  tips:['Celebrate — completing this course is a real accomplishment','The best time to start your next research project is now']}
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE (persisted to localStorage)
+   ═══════════════════════════════════════════════════════════════ */
+const SAVE_KEY='researchquest_save';
+let state=loadState();
+
+function defaultState(){
+  return {xp:0,completed:{},quizScores:{},unlockedAch:[],currentView:'overview'};
+}
+function loadState(){
+  try{const s=localStorage.getItem(SAVE_KEY);return s?{...defaultState(),...JSON.parse(s)}:defaultState();}
+  catch(e){return defaultState();}
+}
+function saveState(){localStorage.setItem(SAVE_KEY,JSON.stringify(state));}
+function resetProgress(){
+  if(confirm('Reset all progress? This cannot be undone.')){
+    state=defaultState();saveState();updateXP();renderAchievements();go(state.currentView);
+    showToast('Progress reset','info');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   XP & LEVELS
+   ═══════════════════════════════════════════════════════════════ */
+function getLevel(xp){
+  let l=levels[0];for(const lv of levels)if(xp>=lv.xp)l=lv;return l;
+}
+function getNextLevel(xp){
+  const cur=getLevel(xp);return levels.find(l=>l.xp>cur.xp)||cur;
+}
+function getTotalXP(){
+  return weeks.reduce((s,w)=>{let t=w.quest?w.quest.xp:0;if(w.boss)t+=w.boss.xp;if(w.assess)t+=w.assess.xp;return s+t;},0);
+}
+
+function addXP(amount,source){
+  const oldLevel=getLevel(state.xp);
+  state.xp+=amount;
+  const newLevel=getLevel(state.xp);
+  saveState();updateXP();
+  showToast(`+${amount} XP — ${source}`,'xp');
+  if(newLevel.n>oldLevel.n){
+    setTimeout(()=>showLevelUp(newLevel),600);
+  }
+  checkAchievements();
+}
+
+function updateXP(){
+  const cur=getLevel(state.xp),nxt=getNextLevel(state.xp);
+  const pct=nxt.xp>cur.xp?((state.xp-cur.xp)/(nxt.xp-cur.xp)*100):100;
+  document.getElementById('lvl-badge').textContent='Lvl '+cur.n;
+  document.getElementById('lvl-title').textContent=cur.title;
+  document.getElementById('xp-bar').style.width=pct+'%';
+  document.getElementById('xp-cur').textContent=state.xp+' XP';
+  document.getElementById('xp-next').textContent='/ '+nxt.xp+' XP';
+  document.getElementById('topbar-xp').textContent=state.xp+' XP';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOASTS
+   ═══════════════════════════════════════════════════════════════ */
+function showToast(msg,type='info'){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  const icons={xp:'✨',ach:'🏅',level:'🎉',info:'ℹ️'};
+  t.innerHTML=`${icons[type]||'ℹ️'} ${msg}`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEVEL UP
+   ═══════════════════════════════════════════════════════════════ */
+function showLevelUp(level){
+  document.getElementById('lvl-up-title').textContent=`Level ${level.n}!`;
+  document.getElementById('lvl-up-desc').textContent=`You are now a ${level.title}`;
+  document.getElementById('levelup').classList.add('show');
+  spawnConfetti();
+}
+function closeLevelUp(){document.getElementById('levelup').classList.remove('show');}
+
+function spawnConfetti(){
+  const colors=['#ff5722','#ff9800','#ffeb3b','#4caf50','#2196f3','#9c27b0','#e91e63'];
+  for(let i=0;i<60;i++){
+    const c=document.createElement('div');
+    c.className='confetti-piece';
+    c.style.left=Math.random()*100+'vw';
+    c.style.top=-10+'px';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*.5)+'s';
+    c.style.width=(6+Math.random()*6)+'px';
+    c.style.height=(6+Math.random()*6)+'px';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),4000);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACHIEVEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+function checkAchievements(){
+  const totalTasks=Object.keys(state.completed).filter(k=>state.completed[k]).length;
+  const totalXP=getTotalXP();
+
+  achievements.forEach(a=>{
+    if(state.unlockedAch.includes(a.id))return;
+    let unlocked=false;
+    if(a.trigger==='taskCount'&&totalTasks>=a.threshold) unlocked=true;
+    if(a.trigger==='xpPercent'&&(state.xp/totalXP*100)>=a.threshold) unlocked=true;
+    if(a.trigger==='quizPerfect'){
+      for(const k in state.quizScores){if(state.quizScores[k]===100)unlocked=true;}
+    }
+    if(a.trigger==='weekComplete'){
+      unlocked=a.threshold.every(wn=>{
+        const w=weeks.find(x=>x.n===wn);
+        if(!w||!w.quest)return false;
+        return w.quest.reqs.every((_,i)=>state.completed[`w${wn}-q-${i}`]);
+      });
+    }
+    if(unlocked){
+      state.unlockedAch.push(a.id);saveState();
+      showToast(`Achievement Unlocked: ${a.name}!`,'ach');
+      renderAchievements();
+    }
+  });
+}
+
+function renderAchievements(){
+  const row=document.getElementById('ach-row');
+  row.innerHTML=achievements.map(a=>{
+    const u=state.unlockedAch.includes(a.id);
+    return `<div class="ach ${u?'unlocked':'locked'}" data-tip="${a.name}: ${a.desc}">${a.icon}</div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TASK COMPLETION
+   ═══════════════════════════════════════════════════════════════ */
+function toggleTask(key,weekN,type,totalTasks,xpPerTask){
+  if(state.completed[key])return; // no un-checking
+  state.completed[key]=true;saveState();
+  addXP(xpPerTask, type==='quest'?'Quest Task':type==='boss'?'Boss Challenge':'Task');
+  // Re-render current week to update UI
+  const c=document.getElementById('content');
+  renderWeek(c,weekN);
+  buildNav();
+}
+
+function getWeekCompletion(wn){
+  const w=weeks.find(x=>x.n===wn);if(!w)return 0;
+  let total=0,done=0;
+  if(w.quest){total+=w.quest.reqs.length;w.quest.reqs.forEach((_,i)=>{if(state.completed[`w${wn}-q-${i}`])done++;});}
+  if(w.boss){total+=w.boss.reqs.length;w.boss.reqs.forEach((_,i)=>{if(state.completed[`w${wn}-b-${i}`])done++;});}
+  return total>0?Math.round(done/total*100):0;
+}
+
+function getTrackCompletion(track){
+  const pcts=track.weeks.map(wn=>getWeekCompletion(wn));
+  return Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   QUIZ
+   ═══════════════════════════════════════════════════════════════ */
+function renderQuiz(weekN){
+  const qs=quizData[weekN];if(!qs)return '<p style="color:var(--muted);font-size:13px"><em>Full quiz available during class — sample questions shown above.</em></p>';
+  const existing=state.quizScores[`quiz-${weekN}`];
+  if(existing!==undefined){
+    const w=weeks.find(x=>x.n===weekN);
+    return `<div class="quiz-score"><h4>Quiz Complete! Score: ${existing}%</h4><p>You earned ${Math.round(w.assess.xp*(existing/100))} XP from this quiz</p></div>`;
+  }
+  let h='<div class="quiz-container" id="quiz-'+weekN+'">';
+  qs.forEach((q,qi)=>{
+    h+=`<div class="quiz-q" id="qq-${weekN}-${qi}">
+      <h5>Q${qi+1}. ${q.q}</h5>
+      ${q.opts.map((o,oi)=>`<div class="quiz-opt" id="qo-${weekN}-${qi}-${oi}" onclick="selectQuizOpt(${weekN},${qi},${oi})"><span class="opt-marker">${String.fromCharCode(65+oi)}</span>${o}</div>`).join('')}
+      <div class="quiz-feedback" id="qf-${weekN}-${qi}"></div>
+    </div>`;
+  });
+  h+=`<button class="quiz-btn submit" onclick="submitQuiz(${weekN})">Submit Quiz</button></div>`;
+  return h;
+}
+
+let quizSelections={};
+function selectQuizOpt(wn,qi,oi){
+  if(state.quizScores[`quiz-${wn}`]!==undefined)return;
+  quizSelections[`${wn}-${qi}`]=oi;
+  const qs=quizData[wn];
+  qs[qi].opts.forEach((_,o)=>{
+    const el=document.getElementById(`qo-${wn}-${qi}-${o}`);
+    el.classList.toggle('selected',o===oi);
+  });
+}
+
+function submitQuiz(wn){
+  const qs=quizData[wn];
+  let correct=0;
+  qs.forEach((q,qi)=>{
+    const sel=quizSelections[`${wn}-${qi}`];
+    const fb=document.getElementById(`qf-${wn}-${qi}`);
+    const qbox=document.getElementById(`qq-${wn}-${qi}`);
+    if(sel===q.answer){
+      correct++;
+      qbox.classList.add('correct');
+      fb.className='quiz-feedback show correct';
+      fb.textContent='✓ Correct! '+q.explain;
+      document.getElementById(`qo-${wn}-${qi}-${sel}`).classList.add('correct-answer');
+    } else {
+      qbox.classList.add('wrong');
+      fb.className='quiz-feedback show wrong';
+      fb.textContent='✗ '+(sel!==undefined?q.explain:'No answer selected. '+q.explain);
+      if(sel!==undefined) document.getElementById(`qo-${wn}-${qi}-${sel}`).classList.add('wrong-answer');
+      document.getElementById(`qo-${wn}-${qi}-${q.answer}`).classList.add('correct-answer');
+    }
+  });
+  const pct=Math.round(correct/qs.length*100);
+  state.quizScores[`quiz-${wn}`]=pct;saveState();
+  const w=weeks.find(x=>x.n===wn);
+  const earnedXP=Math.round(w.assess.xp*(pct/100));
+  addXP(earnedXP,`Quiz — ${pct}%`);
+  // Disable further interaction
+  document.querySelectorAll(`#quiz-${wn} .quiz-opt`).forEach(el=>el.style.pointerEvents='none');
+  document.querySelector(`#quiz-${wn} .quiz-btn`).disabled=true;
+  // Add score display
+  const cont=document.getElementById(`quiz-${wn}`);
+  cont.insertAdjacentHTML('beforeend',`<div class="quiz-score" style="margin-top:16px"><h4>Score: ${pct}% (${correct}/${qs.length})</h4><p>+${earnedXP} XP earned</p></div>`);
+  checkAchievements();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVIGATION & RENDERING
+   ═══════════════════════════════════════════════════════════════ */
+function buildNav(){
+  const nav=document.getElementById('nav');
+  let h='';
+  const views=[['overview','🏠','Overview'],['schedule','📅','Schedule'],['leaderboard','🏆','Leaderboard'],['skills','🌳','Skill Tree']];
+  views.forEach(([id,icon,label])=>{
+    h+=`<div class="nav-i${state.currentView===id?' act':''}" onclick="go('${id}')"><span class="icon">${icon}</span>${label}</div>`;
+  });
+  h+='<div style="padding:8px 20px;font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:.4;margin-top:8px">Quests</div>';
+  weeks.forEach(w=>{
+    const active=state.currentView==='week-'+w.n;
+    const pct=getWeekCompletion(w.n);
+    let status='';
+    if(pct===100) status='<span class="quest-status done">✓</span>';
+    else if(pct>0) status=`<span class="quest-status active">${pct}%</span>`;
+    else if(w.badge) status=`<span class="quest-status active">${w.badge}</span>`;
+    h+=`<div class="nav-i${active?' act':''}" onclick="go('week-${w.n}')"><span class="icon">${pct===100?'✅':'⚔️'}</span>W${w.n}: ${w.title.length>18?w.title.slice(0,18)+'…':w.title}${status}</div>`;
+  });
+  nav.innerHTML=h;
+}
+
+function go(view){
+  state.currentView=view;saveState();
+  buildNav();
+  const c=document.getElementById('content');
+  c.style.animation='none';c.offsetHeight;c.style.animation='fadeIn .3s ease';
+  if(view==='overview') renderOverview(c);
+  else if(view==='schedule') renderSchedule(c);
+  else if(view==='leaderboard') renderLeaderboard(c);
+  else if(view==='skills') renderSkillTree(c);
+  else if(view.startsWith('week-')) renderWeek(c,parseInt(view.split('-')[1]));
+  document.getElementById('topbar-title').textContent=view==='overview'?'Overview':view==='schedule'?'Quest Schedule':view==='leaderboard'?'Leaderboard':view==='skills'?'Skill Tree':'Week '+view.split('-')[1];
+  document.getElementById('topbar-chip').textContent=view==='overview'?'16 Weeks':view==='schedule'?'Full Map':view==='leaderboard'?'Rankings':view==='skills'?'Progress':getLevel(state.xp).title;
+  window.scrollTo(0,0);
+  if(window.innerWidth<=768)document.getElementById('side').classList.remove('open');
+}
+
+function renderOverview(c){
+  const totalXP=getTotalXP();
+  const completedWeeks=weeks.filter(w=>getWeekCompletion(w.n)===100).length;
+  c.innerHTML=`
+  <div class="hero">
+    <h1>Research Quest</h1>
+    <p>Embark on an epic 16-week journey to master research methodology. Complete quests, earn XP, unlock achievements, and level up from Research Intern to Principal Investigator.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>${completedWeeks}/16</strong><span>Quests Completed</span></div>
+      <div class="hero-stat"><strong>3</strong><span>Boss Challenges</span></div>
+      <div class="hero-stat"><strong>${state.xp}/${totalXP}</strong><span>XP Earned</span></div>
+      <div class="hero-stat"><strong>Lvl ${getLevel(state.xp).n}</strong><span>${getLevel(state.xp).title}</span></div>
+    </div>
+  </div>
+
+  <div class="skill-tree">
+    <h3>🌳 Skill Tracks — Click to explore</h3>
+    <div class="skill-tracks">
+      ${tracks.map(t=>{
+        const pct=getTrackCompletion(t);
+        const cls=pct===100?'completed':pct>0?'active':'';
+        return `<div class="track ${cls}" onclick="go('week-${t.weeks[0]}')">
+          <div class="track-icon">${t.icon}</div>
+          <h4>${t.name}</h4>
+          <div style="font-size:11px;color:var(--muted)">Weeks ${t.weeks.join(', ')}</div>
+          <div class="track-prog"><div class="track-prog-fill" style="width:${pct}%"></div></div>
+          <div class="track-pct">${pct}%</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🎮 How It Works</h3>
+    <div class="sec concepts">
+      <h4>💡 Game Mechanics</h4>
+      <ul>
+        <li><strong>Complete Quest Tasks:</strong> Check off requirements in each week to earn XP</li>
+        <li><strong>Take Quizzes:</strong> Test your knowledge with interactive quizzes for bonus XP</li>
+        <li><strong>Boss Challenges:</strong> Major milestone challenges worth big XP rewards</li>
+        <li><strong>Unlock Achievements:</strong> Special badges for reaching milestones</li>
+        <li><strong>Level Up:</strong> Progress from Research Intern (Lvl 1) to Principal Investigator (Lvl 10)</li>
+        <li><strong>Track Progress:</strong> Your progress is saved automatically — pick up where you left off</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🤖 AI-Enhanced Learning</h3>
+    <div class="sec ai-tool">
+      <h4>🤖 AI Integration Throughout the Course</h4>
+      <ul>
+        <li>Every applicable module includes AI agent exercises to enhance your skills</li>
+        <li>Learn to use AI for grant discovery, literature reviews, writing, and analysis</li>
+        <li>Dedicated weeks on building AI workflows and evaluating tools critically</li>
+        <li>Emphasis on ethical AI use, transparency, and knowing when NOT to use AI</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
+    <div><h3 style="margin:0">🔄 Reset Progress</h3><p style="font-size:12px;color:var(--muted);margin-top:4px">Start fresh — this cannot be undone</p></div>
+    <button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>
+  </div>`;
+}
+
+function renderSchedule(c){
+  let h='<div class="card"><h3>📅 Quest Schedule — Click any week to begin</h3><table><tr><th>Week</th><th>Quest</th><th>Track</th><th>XP</th><th>Progress</th><th>Special</th></tr>';
+  weeks.forEach(w=>{
+    const track=tracks.find(t=>t.weeks.includes(w.n));
+    let totalWeekXP=(w.quest?w.quest.xp:0)+(w.boss?w.boss.xp:0)+(w.assess?w.assess.xp:0);
+    const pct=getWeekCompletion(w.n);
+    let specials=[];
+    if(w.boss) specials.push('<span class="pill boss">Boss</span>');
+    if(w.assess) specials.push(`<span class="pill ${w.assess.type}">${w.assess.type}</span>`);
+    if(w.ai) specials.push('<span class="pill skill">AI</span>');
+    h+=`<tr onclick="go('week-${w.n}')" style="cursor:pointer"><td><strong>W${w.n}</strong></td><td>${w.title}</td><td>${track?track.icon+' '+track.name:'🏠 Foundation'}</td><td>${totalWeekXP}</td><td><div style="display:flex;align-items:center;gap:6px"><div style="width:60px;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden"><div style="width:${pct}%;height:100%;background:${pct===100?'var(--acc)':'var(--pri)'};border-radius:3px"></div></div><span style="font-size:11px;font-weight:600;color:${pct===100?'var(--acc-d)':'var(--muted)'}">${pct}%</span></div></td><td>${specials.join(' ')||'—'}</td></tr>`;
+  });
+  h+='</table></div>';
+  c.innerHTML=h;
+}
+
+function renderLeaderboard(c){
+  const maxXP=getTotalXP();
+  const players=[
+    {name:'You',xp:state.xp,you:true},
+    {name:'Dr. Hypothesis',xp:4850},
+    {name:'Grant Guru',xp:4200},
+    {name:'LitReview Legend',xp:3800},
+    {name:'Data Dynamo',xp:3100},
+    {name:'Methodical Max',xp:2700},
+    {name:'Citation Sam',xp:2100},
+    {name:'AI Explorer',xp:1500}
+  ].sort((a,b)=>b.xp-a.xp);
+
+  c.innerHTML=`<div class="card">
+    <h3>🏆 Research Cohort Leaderboard</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Complete quests and challenges to climb the rankings!</p>
+    ${players.map((p,i)=>{
+      const rankClass=i===0?'g':i===1?'s':i===2?'b':'n';
+      return `<div class="lb-row${p.you?' you':''}"><div class="lb-rank ${rankClass}">${i+1}</div><div class="lb-name">${p.name}${p.you?' (You)':''}</div><div class="lb-bar"><div class="lb-bar-fill" style="width:${(p.xp/maxXP*100).toFixed(1)}%"></div></div><div class="lb-xp">${p.xp} XP</div></div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderSkillTree(c){
+  c.innerHTML=`<div class="card">
+    <h3>🌳 Skill Tree — Your Research Mastery</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Complete weekly quests to fill each track. Click a track to jump to its first week.</p>
+    <div class="skill-tracks">
+      ${tracks.map(t=>{
+        const pct=getTrackCompletion(t);
+        const cls=pct===100?'completed':pct>0?'active':'';
+        return `<div class="track ${cls}" onclick="go('week-${t.weeks[0]}')">
+          <div class="track-icon">${t.icon}</div>
+          <h4>${t.name}</h4>
+          <div style="font-size:11px;color:var(--muted);margin:4px 0">Weeks ${t.weeks.join(', ')}</div>
+          <ul style="text-align:left;font-size:12px;list-style:none;padding:0;margin:8px 0">
+            ${t.weeks.map(wn=>{const w=weeks.find(x=>x.n===wn);const wp=getWeekCompletion(wn);return `<li style="padding:2px 0">${wp===100?'✅':'⚔️'} W${wn}: ${w.title} <span style="float:right;font-size:10px;font-weight:700;color:${wp===100?'var(--acc-d)':'var(--muted)'}">${wp}%</span></li>`;}).join('')}
+          </ul>
+          <div class="track-prog"><div class="track-prog-fill" style="width:${pct}%"></div></div>
+          <div class="track-pct">${pct}% Complete</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🏅 Achievements (${state.unlockedAch.length}/${achievements.length})</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      ${achievements.map(a=>{const u=state.unlockedAch.includes(a.id);return `<div style="display:flex;align-items:center;gap:10px;padding:12px;background:${u?'rgba(124,77,255,.06)':'var(--bg)'};border:2px solid ${u?'var(--xp)':'transparent'};border-radius:8px;opacity:${u?1:.45}"><span style="font-size:24px">${a.icon}</span><div><div style="font-size:13px;font-weight:600">${a.name}</div><div style="font-size:11px;color:var(--muted)">${a.desc}</div>${u?'<div style="font-size:10px;color:var(--xp);font-weight:700;margin-top:2px">UNLOCKED</div>':''}</div></div>`;}).join('')}
+    </div>
+  </div>`;
+}
+
+function renderWeek(c,n){
+  const w=weeks.find(x=>x.n===n);
+  if(!w){c.innerHTML='<p>Week not found.</p>';return;}
+  const track=tracks.find(t=>t.weeks.includes(n));
+  let totalWeekXP=(w.quest?w.quest.xp:0)+(w.boss?w.boss.xp:0)+(w.assess?w.assess.xp:0);
+  const pct=getWeekCompletion(n);
+
+  let h=`<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+    <h2 style="font-size:22px">Week ${w.n}: ${w.title}</h2>
+    ${track?`<span class="pill skill">${track.icon} ${track.name}</span>`:''}
+    <span class="pill quest">${totalWeekXP} XP</span>
+  </div>
+  <div class="quest-progress" style="margin-bottom:24px">
+    <div class="quest-prog-bar"><div class="quest-prog-fill" style="width:${pct}%"></div></div>
+    <div class="quest-prog-text">${pct}%</div>
+  </div>`;
+
+  h+=`<div class="sec objectives"><h4>🎯 Learning Objectives</h4><ul>${w.objectives.map(o=>`<li>${o}</li>`).join('')}</ul></div>`;
+  h+=`<div class="sec concepts"><h4>💡 Key Topics</h4><ul>${w.topics.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+
+  if(w.concepts){
+    h+=`<div class="card"><h3>📖 Core Concepts</h3><ul style="list-style:none;padding:0">${w.concepts.map(c=>`<li style="padding:8px 0;font-size:13px;line-height:1.6;border-bottom:1px solid #eee">📌 ${c}</li>`).join('')}</ul></div>`;
+  }
+
+  if(w.ai){
+    h+=`<div class="sec ai-tool"><h4>🤖 ${w.ai.title}</h4><p style="font-size:13px;margin-bottom:8px">${w.ai.desc}</p><ul>${w.ai.items.map(i=>`<li>${i}</li>`).join('')}</ul></div>`;
+  }
+
+  // Diagram
+  if(w.diagram){h+=w.diagram;}
+
+  // Resources
+  if(w.resources){
+    h+=`<div class="card"><h3>🔗 Key Resources & Tools</h3><div class="resource-grid">${w.resources.map(r=>`<a class="resource-card" href="${r.url}" target="_blank" rel="noopener"><div class="rc-icon">${r.icon}</div><h5>${r.name}</h5><p>${r.desc}</p></a>`).join('')}</div></div>`;
+  }
+
+  // Interactive Quest Checklist with guidance
+  if(w.quest){
+    const doneCount=w.quest.reqs.filter((_,i)=>state.completed[`w${n}-q-${i}`]).length;
+    const xpPer=Math.round(w.quest.xp/w.quest.reqs.length);
+    h+=`<div class="sec quest"><h4>⚔️ Quest: ${w.quest.title} <span class="xp-reward">+${w.quest.xp} XP</span></h4>
+      <p style="font-size:13px;margin-bottom:4px">${w.quest.desc}</p>
+      <p style="font-size:11px;color:var(--acc-d);font-weight:600;margin-bottom:10px">${doneCount}/${w.quest.reqs.length} tasks complete — ${xpPer} XP per task</p>
+      <ul class="checklist">${w.quest.reqs.map((r,i)=>{
+        const key=`w${n}-q-${i}`;
+        const done=state.completed[key];
+        const g=w.quest.guidance?w.quest.guidance[i]:null;
+        const gid=`guide-${n}-q-${i}`;
+        return `<li class="check-item-wrap">
+          <div class="check-item${done?' checked':''}" onclick="${done?'':`toggleTask('${key}',${n},'quest',${w.quest.reqs.length},${xpPer})`}">
+            <div class="check-box">${done?'✓':''}</div>
+            <span class="check-text">${r}</span>
+            ${g?`<button class="guide-toggle" onclick="event.stopPropagation();toggleGuide('${gid}')" title="Show guidance">?</button>`:''}
+          </div>
+          ${g?`<div class="guide-panel" id="${gid}">${g}</div>`:''}
+        </li>`;
+      }).join('')}</ul>
+    </div>`;
+  }
+
+  // Interactive Boss Checklist with guidance
+  if(w.boss){
+    const doneCount=w.boss.reqs.filter((_,i)=>state.completed[`w${n}-b-${i}`]).length;
+    const xpPer=Math.round(w.boss.xp/w.boss.reqs.length);
+    h+=`<div class="sec boss"><h4>🐉 Boss Challenge: ${w.boss.title} <span class="xp-reward boss-xp">+${w.boss.xp} XP</span></h4>
+      <p style="font-size:13px;margin-bottom:4px">${w.boss.desc}</p>
+      <p style="font-size:11px;color:#c62828;font-weight:600;margin-bottom:10px">${doneCount}/${w.boss.reqs.length} tasks complete — ${xpPer} XP per task</p>
+      <ul class="checklist">${w.boss.reqs.map((r,i)=>{
+        const key=`w${n}-b-${i}`;
+        const done=state.completed[key];
+        const g=w.boss.guidance?w.boss.guidance[i]:null;
+        const gid=`guide-${n}-b-${i}`;
+        return `<li class="check-item-wrap">
+          <div class="check-item${done?' checked':''}" onclick="${done?'':`toggleTask('${key}',${n},'boss',${w.boss.reqs.length},${xpPer})`}">
+            <div class="check-box">${done?'✓':''}</div>
+            <span class="check-text">${r}</span>
+            ${g?`<button class="guide-toggle" onclick="event.stopPropagation();toggleGuide('${gid}')" title="Show guidance">?</button>`:''}
+          </div>
+          ${g?`<div class="guide-panel" id="${gid}">${g}</div>`:''}
+        </li>`;
+      }).join('')}</ul>
+    </div>`;
+  }
+
+  // Interactive Quiz
+  if(w.assess){
+    h+=`<div class="sec assess"><h4>📋 ${w.assess.label} <span class="xp-reward assess-xp">Up to +${w.assess.xp} XP</span></h4>
+      <ul><li><strong>Covers:</strong> ${w.assess.topics}</li><li><strong>Format:</strong> ${w.assess.format}</li></ul>
+      ${quizData[n]?renderQuiz(n):'<p style="font-size:12px;color:var(--muted);margin-top:8px"><em>This assessment is completed in class with your instructor.</em></p>'}
+    </div>`;
+  }
+
+  if(w.tips){
+    h+=`<div class="sec tips"><h4>💎 Pro Tips</h4><ul>${w.tips.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+  }
+
+  h+=`<div class="nav-btns">
+    <button class="nav-btn prev" ${n<=1?'disabled ':''} onclick="go('week-${n-1}')">← Previous Quest</button>
+    <button class="nav-btn next" ${n>=16?'disabled ':''} onclick="go('week-${n+1}')">Next Quest →</button>
+  </div>`;
+
+  c.innerHTML=h;
+}
+
+function toggleNav(){document.getElementById('side').classList.toggle('open')}
+function toggleGuide(id){document.getElementById(id).classList.toggle('open');}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════ */
+renderAchievements();
+updateXP();
+go(state.currentView);
+</script>
+</body>
+</html>
