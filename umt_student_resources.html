@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UM Student Resource Hub — University of Montana</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --maroon:#6d2047;
+  --maroon-dark:#4e1633;
+  --maroon-light:#f8f0f4;
+  --silver:#a7a9ac;
+  --silver-light:#d9dadb;
+  --gold:#d4a843;
+  --bg:#f4f3f1;
+  --card-bg:#fff;
+  --text:#2c2c2c;
+  --text-light:#555;
+  --radius:12px;
+  --shadow:0 2px 12px rgba(0,0,0,.08);
+  --shadow-hover:0 8px 28px rgba(109,32,71,.15);
+  --transition:0.25s ease;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{color:var(--maroon);text-decoration:none;transition:color var(--transition)}
+a:hover{color:var(--maroon-dark);text-decoration:underline}
+a:focus-visible{outline:2px solid var(--maroon);outline-offset:2px;border-radius:3px}
+
+/* ── Hero ── */
+.hero{background:linear-gradient(135deg,var(--maroon) 0%,var(--maroon-dark) 100%);color:#fff;padding:48px 24px 40px;text-align:center}
+.hero h1{font-size:2.4rem;font-weight:800;margin-bottom:6px;letter-spacing:-.02em}
+.hero p{font-size:1.1rem;opacity:.88;max-width:560px;margin:0 auto 28px}
+.search-wrap{max-width:520px;margin:0 auto;position:relative}
+.search-wrap input{width:100%;padding:14px 18px 14px 48px;font-size:1rem;border:none;border-radius:50px;background:rgba(255,255,255,.95);color:var(--text);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.search-wrap input::placeholder{color:var(--silver)}
+.search-wrap input:focus{outline:3px solid var(--gold);outline-offset:0}
+.search-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);width:20px;height:20px;opacity:.45;pointer-events:none}
+
+/* ── Filter Pills ── */
+.filters{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:20px 24px 0;max-width:900px;margin:0 auto}
+.pill{padding:8px 18px;border-radius:50px;border:2px solid var(--silver-light);background:#fff;font-size:.88rem;font-weight:600;cursor:pointer;transition:all var(--transition);color:var(--text-light);white-space:nowrap}
+.pill:hover{border-color:var(--maroon);color:var(--maroon)}
+.pill:focus-visible{outline:2px solid var(--maroon);outline-offset:2px}
+.pill.active{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+
+/* ── Grid ── */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:28px 32px 60px;max-width:1200px;margin:0 auto}
+@media(max-width:1024px){.grid{grid-template-columns:repeat(2,1fr);padding:24px 20px 48px}}
+@media(max-width:640px){.grid{grid-template-columns:1fr;padding:20px 16px 40px}}
+
+/* ── Cards ── */
+.card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;transition:transform var(--transition),box-shadow var(--transition);display:flex;flex-direction:column;opacity:0;animation:fadeUp .45s ease forwards;cursor:pointer}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.card-header{background:var(--maroon);color:#fff;padding:18px 20px;display:flex;align-items:center;gap:12px}
+.card-icon{font-size:1.6rem;flex-shrink:0}
+.card-header h2{font-size:1.1rem;font-weight:700;line-height:1.3}
+.card-body{padding:18px 20px;flex:1;display:flex;flex-direction:column}
+.card-desc{font-size:.92rem;color:var(--text-light);margin-bottom:12px;line-height:1.55}
+
+/* ── Highlight Chips ── */
+.card-highlights{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.highlight-chip{padding:4px 12px;border-radius:50px;font-size:.75rem;font-weight:600;background:var(--maroon-light);color:var(--maroon);border:1px solid rgba(109,32,71,.12);white-space:nowrap}
+
+/* ── Quote Preview (on card) ── */
+.card-quote-preview{font-style:italic;font-size:.84rem;color:var(--text-light);padding:10px 14px;margin-bottom:14px;background:linear-gradient(135deg,#faf8f9,#f5f0f3);border-radius:8px;border-left:3px solid var(--gold);line-height:1.5;position:relative}
+.card-quote-preview::before{content:"\201C";font-size:1.8rem;color:var(--gold);position:absolute;top:2px;left:8px;line-height:1;opacity:.5}
+.card-quote-preview .quote-text{padding-left:16px}
+.card-quote-preview .quote-author{display:block;font-style:normal;font-size:.76rem;font-weight:600;color:var(--maroon);margin-top:4px;text-align:right}
+
+/* ── Contact ── */
+.card-contact{display:flex;align-items:center;gap:10px;padding:12px 14px;margin-bottom:14px;background:#f8f5f7;border-radius:8px;border-left:3px solid var(--maroon)}
+.card-contact .contact-avatar{width:36px;height:36px;border-radius:50%;background:var(--maroon);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0}
+.card-contact .contact-info{font-size:.82rem;line-height:1.4}
+.card-contact .contact-name{font-weight:700;color:var(--text)}
+.card-contact .contact-title{color:var(--text-light)}
+.card-contact .contact-email a{color:var(--maroon);font-size:.78rem}
+
+/* ── Card Details & Links ── */
+.card-details{font-size:.82rem;color:var(--text-light);margin-bottom:14px;display:flex;flex-direction:column;gap:4px}
+.card-details span{display:flex;align-items:baseline;gap:6px}
+.card-details .label{font-weight:600;color:var(--text);min-width:60px}
+.card-links{list-style:none;margin-top:auto;display:flex;flex-direction:column;gap:6px}
+.card-links li a{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;font-weight:600;padding:4px 0;transition:color var(--transition)}
+.card-links li a::before{content:"\2192";color:var(--maroon);font-weight:700}
+.card-links li a:hover{color:var(--maroon-dark)}
+
+/* ── Learn More Button ── */
+.card-learn-more{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:16px;padding:10px 20px;background:var(--maroon);color:#fff;border:none;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all var(--transition)}
+.card-learn-more:hover{background:var(--maroon-dark);transform:scale(1.02)}
+.card-learn-more:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.card.hidden{display:none}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal-content{background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);transform:translateY(20px) scale(.97);transition:transform .3s ease;position:relative}
+.modal-overlay.open .modal-content{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.9);color:var(--text);font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:background var(--transition);box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.modal-close:hover{background:#fff}
+.modal-close:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+.modal-header{background:var(--maroon);color:#fff;padding:28px 24px;display:flex;align-items:center;gap:14px}
+.modal-header .card-icon{font-size:2rem}
+.modal-header h2{font-size:1.4rem;font-weight:800}
+.modal-body{padding:24px}
+.modal-desc{font-size:1rem;color:var(--text-light);line-height:1.65;margin-bottom:20px}
+
+/* ── Modal Highlights ── */
+.modal-highlights{margin-bottom:24px}
+.modal-highlights h3{font-size:.88rem;font-weight:700;color:var(--maroon);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.modal-highlights .chips{display:flex;flex-wrap:wrap;gap:8px}
+.modal-highlights .highlight-chip{padding:6px 16px;font-size:.84rem}
+
+/* ── Modal Quote Carousel ── */
+.modal-quotes{margin-bottom:24px;background:linear-gradient(135deg,#faf8f9,#f5f0f3);border-radius:12px;padding:24px;position:relative;min-height:120px}
+.modal-quotes h3{font-size:.88rem;font-weight:700;color:var(--maroon);text-transform:uppercase;letter-spacing:.05em;margin-bottom:14px}
+.quote-slide{opacity:0;position:absolute;left:24px;right:24px;top:48px;transition:opacity .5s ease}
+.quote-slide.active{opacity:1;position:relative;left:auto;right:auto;top:auto}
+.quote-slide blockquote{font-style:italic;font-size:1rem;color:var(--text);line-height:1.6;margin:0;padding-left:20px;border-left:3px solid var(--gold)}
+.quote-slide .quote-author{display:block;font-style:normal;font-size:.84rem;font-weight:600;color:var(--maroon);margin-top:10px;padding-left:20px}
+.quote-nav{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px}
+.quote-dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--maroon);background:transparent;cursor:pointer;transition:all var(--transition);padding:0}
+.quote-dot.active{background:var(--maroon)}
+.quote-dot:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.quote-arrow{width:28px;height:28px;border-radius:50%;border:2px solid var(--silver-light);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--text);transition:all var(--transition)}
+.quote-arrow:hover{border-color:var(--maroon);color:var(--maroon)}
+
+/* ── Modal Contact & Details ── */
+.modal-contact{display:flex;align-items:center;gap:14px;padding:16px 18px;margin-bottom:20px;background:#f8f5f7;border-radius:10px;border-left:4px solid var(--maroon)}
+.modal-contact .contact-avatar{width:44px;height:44px;font-size:1rem}
+.modal-contact .contact-info{font-size:.9rem}
+.modal-contact .contact-name{font-weight:700;font-size:.95rem}
+.modal-details{margin-bottom:20px}
+.modal-details span{display:flex;align-items:baseline;gap:8px;font-size:.9rem;color:var(--text-light);padding:3px 0}
+.modal-details .label{font-weight:600;color:var(--text);min-width:70px}
+.modal-links{list-style:none;display:flex;flex-direction:column;gap:8px}
+.modal-links li a{display:inline-flex;align-items:center;gap:8px;font-size:.95rem;font-weight:600;padding:6px 0;transition:color var(--transition)}
+.modal-links li a::before{content:"\2192";color:var(--maroon);font-weight:700}
+.modal-links li a:hover{color:var(--maroon-dark)}
+
+/* ── No Results ── */
+.no-results{display:none;text-align:center;padding:60px 24px;color:var(--text-light);font-size:1.1rem;grid-column:1/-1}
+.no-results.show{display:block}
+
+/* ── Footer ── */
+footer{text-align:center;padding:24px;font-size:.82rem;color:var(--silver);border-top:1px solid var(--silver-light)}
+
+@media(max-width:640px){
+  .modal-content{max-height:92vh;border-radius:12px}
+  .modal-header{padding:20px 18px}
+  .modal-body{padding:18px}
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <h1>UM Student Resource Hub</h1>
+  <p>Your one-stop guide to everything the University of Montana offers — from admissions to academics and campus life.</p>
+  <div class="search-wrap">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+    <input type="search" id="search" placeholder="Search resources (e.g. scholarships, housing, clubs...)" aria-label="Search student resources">
+  </div>
+</header>
+
+<nav class="filters" aria-label="Filter by category">
+  <button class="pill active" data-filter="all">All Resources</button>
+  <button class="pill" data-filter="getting-started">Getting Started</button>
+  <button class="pill" data-filter="health">Health &amp; Wellbeing</button>
+  <button class="pill" data-filter="campus-life">Campus Life</button>
+  <button class="pill" data-filter="support">Support Services</button>
+  <button class="pill" data-filter="academics">Academics</button>
+</nav>
+
+<main class="grid" id="grid">
+  <div class="no-results" id="no-results">No resources match your search. Try a different term.</div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-label="Resource details">
+  <div class="modal-content" id="modal-content">
+    <button class="modal-close" id="modal-close" aria-label="Close">&times;</button>
+    <div id="modal-inner"></div>
+  </div>
+</div>
+
+<footer>
+  <p>University of Montana &mdash; 32 Campus Drive, Missoula, MT 59812 &mdash; <a href="https://www.umt.edu/" target="_blank" rel="noopener">umt.edu</a></p>
+</footer>
+
+<script>
+const resources = [
+  /* ── Getting Started ── */
+  {
+    group: "getting-started",
+    icon: "\uD83C\uDF93",
+    title: "Admissions",
+    desc: "Start your journey at UM. Find application requirements, important deadlines, campus visit opportunities, and everything you need to apply as an undergraduate or transfer student.",
+    highlights: ["Campus Tours", "Application Help", "Transfer Support", "Virtual Info Sessions"],
+    quotes: [
+      { text: "The admissions team made me feel welcome from day one. They walked me through every step of the application process.", author: "Maria L., Freshman" },
+      { text: "I transferred from a community college and was worried about credits. Admissions helped me map everything out seamlessly.", author: "Tyler K., Junior" }
+    ],
+    contact: { name: "Office of Admissions", title: "Director of Admissions", email: "directorofadmissions@umontana.edu" },
+    details: { Phone: "(406) 243-6266", Location: "Lommasson Center 101" },
+    links: [
+      ["Apply Now", "https://www.umt.edu/admissions/"],
+      ["Application Portal", "https://apply.umt.edu/apply/"],
+      ["Dates & Deadlines", "https://www.umt.edu/admissions/"],
+    ]
+  },
+  {
+    group: "getting-started",
+    icon: "\uD83D\uDCB0",
+    title: "Financial Aid",
+    desc: "Explore scholarships, grants, work-study, and loan options. Get help completing your FAFSA and find non-resident tuition waivers to make UM affordable.",
+    highlights: ["Scholarships", "FAFSA Assistance", "Work-Study", "Tuition Waivers"],
+    quotes: [
+      { text: "I didn't think I could afford college until Financial Aid helped me find scholarships I didn't even know existed.", author: "Jess W., Sophomore" },
+      { text: "The FAFSA workshop saved me so much stress. They literally sat with me and walked through every field.", author: "Andre P., Freshman" }
+    ],
+    contact: { name: "Katie Bivens", title: "Director of Financial Aid" },
+    details: { Phone: "(406) 243-5373", Location: "Aber Hall, 5th Floor" },
+    links: [
+      ["Financial Aid Office", "https://www.umt.edu/finaid/"],
+      ["Apply for Scholarships", "https://www.umt.edu/student-financial-services/financial-aid/scholarships/apply-for-scholarships.php"],
+      ["FAFSA Information", "https://www.umt.edu/financial-education/fafsa/"],
+      ["Non-Resident Scholarships", "https://www.umt.edu/finaid/scholarships/non-resident-scholarships-for-entering-students/"],
+    ]
+  },
+  {
+    group: "getting-started",
+    icon: "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67",
+    title: "Parents & Families",
+    desc: "Resources for families supporting a UM student \u2014 orientation info, the Griz Family Portal, Family Weekend details, and guides to help your student succeed.",
+    highlights: ["Family Orientation", "Griz Family Portal", "Family Weekend", "Parent Guides"],
+    quotes: [
+      { text: "Family Weekend was such a wonderful experience. We got to see campus life through our daughter's eyes.", author: "The Hendersons, Parent" },
+      { text: "The Griz Family Portal keeps me connected without being overbearing. I love the updates about campus events.", author: "Linda M., Parent" }
+    ],
+    contact: { name: "UM Orientation Team", title: "Parent & Family Programs" },
+    details: {},
+    links: [
+      ["Parents & Families", "https://www.umt.edu/admissions/parents-families/"],
+      ["Orientation \u2014 Family Info", "https://www.umt.edu/orientation/family/"],
+      ["Griz Family Portal", "https://umt.campusesp.com/"],
+      ["Family Weekend", "https://www.umt.edu/family-weekend/"],
+    ]
+  },
+
+  /* ── Health & Wellbeing ── */
+  {
+    group: "health",
+    icon: "\uD83C\uDFE5",
+    title: "Curry Health Center",
+    desc: "On-campus medical care for enrolled students including primary care, pharmacy, lab, and x-ray services. No appointment needed for urgent concerns.",
+    highlights: ["Primary Care", "Pharmacy", "Lab & X-Ray", "Walk-In Urgent Care"],
+    quotes: [
+      { text: "Having a health center right on campus is a lifesaver. I got sick during finals and they got me in the same day.", author: "Rachel S., Junior" },
+      { text: "The pharmacy is super convenient \u2014 I pick up prescriptions between classes without leaving campus.", author: "David C., Senior" }
+    ],
+    contact: { name: "Curry Health Center", title: "Student Health Services" },
+    details: { Phone: "(406) 243-2122", Location: "Curry Health Center", Hours: "Mon\u2013Fri 8am\u20135pm" },
+    links: [
+      ["Curry Health Center", "https://www.umt.edu/curry-health-center/"],
+      ["Medical Services", "https://www.umt.edu/curry-health-center/medical/"],
+      ["Hours & Contact", "https://www.umt.edu/curry-health-center/hours-contact.php"],
+      ["Patient Portal", "https://umt.medicatconnect.com/"],
+    ]
+  },
+  {
+    group: "health",
+    icon: "\uD83E\uDDE0",
+    title: "Counseling Services",
+    desc: "Confidential counseling and psychological services for students. Individual therapy, group sessions, crisis support, and referrals \u2014 all included with your health fee.",
+    highlights: ["Individual Therapy", "Group Sessions", "Crisis Support", "Referrals"],
+    quotes: [
+      { text: "Counseling services helped me manage my anxiety during a really tough semester. I honestly don't know what I would have done without them.", author: "Anonymous Student" },
+      { text: "The group therapy sessions helped me realize I wasn't alone in what I was going through. Highly recommend.", author: "Sam T., Sophomore" }
+    ],
+    contact: { name: "Counseling Staff", title: "Licensed Counselors & Psychologists" },
+    details: { Phone: "(406) 243-4711", Location: "Curry Health Center" },
+    links: [
+      ["Counseling Services", "https://www.umt.edu/curry-health-center/counseling/"],
+      ["Getting Started", "https://www.umt.edu/curry-health-center/counseling/services_offered.php"],
+      ["Mental Health Resources", "https://www.umt.edu/diversity/resources/identity-based-campus-offices-and-support/mental-health.php"],
+    ]
+  },
+  {
+    group: "health",
+    icon: "\uD83C\uDF3F",
+    title: "Wellbeing",
+    desc: "Programs and workshops focused on student wellness \u2014 stress management, healthy relationships, substance use prevention, and peer health education.",
+    highlights: ["Stress Management", "Peer Education", "Wellness Workshops", "Healthy Relationships"],
+    quotes: [
+      { text: "The stress management workshop before finals week was exactly what I needed. Simple techniques that actually work.", author: "Emily R., Junior" },
+      { text: "I became a peer health educator through Wellbeing and it changed my whole college experience.", author: "Jordan B., Senior" }
+    ],
+    contact: { name: "Kayli Julius", title: "Wellness Director" },
+    details: { Location: "Curry Health Center" },
+    links: [
+      ["Wellbeing Programs", "https://www.umt.edu/curry-health-center/wellbeing/"],
+      ["Request a Program", "https://www.umt.edu/curry-health-center/wellbeing/request-a-program/"],
+      ["Resources for Families", "https://www.umt.edu/curry-health-center/wellbeing/resources-for-families/"],
+    ]
+  },
+
+  /* ── Campus Life ── */
+  {
+    group: "campus-life",
+    icon: "\uD83C\uDFE0",
+    title: "Housing",
+    desc: "Live on campus in one of UM's residence halls. Explore room options, rates, virtual tours, and apply through the StarRez housing portal.",
+    highlights: ["Residence Halls", "Room Selection", "Virtual Tours", "Living-Learning Communities"],
+    quotes: [
+      { text: "Living in Jesse Hall my freshman year was the best decision. I met my closest friends on my floor within the first week.", author: "Megan F., Sophomore" },
+      { text: "The living-learning community for honors students made my transition to college so much smoother.", author: "Alex N., Freshman" }
+    ],
+    contact: { name: "John Nugent", title: "Director of Housing" },
+    details: { Phone: "(406) 243-2611", Location: "Turner Hall" },
+    links: [
+      ["UM Housing", "https://www.umt.edu/housing/"],
+      ["Residence Halls", "https://www.umt.edu/housing/rh/"],
+      ["Hall Descriptions", "https://www.umt.edu/housing/rh/descriptions/"],
+      ["Housing Portal (StarRez)", "https://umt.starrezhousing.com/StarRezPortalX"],
+    ]
+  },
+  {
+    group: "campus-life",
+    icon: "\uD83C\uDF7D\uFE0F",
+    title: "Dining Services",
+    desc: "Meal plans, dining locations, hours of operation, and menus. From the Food Zoo to the University Center food court, find the right option for your schedule.",
+    highlights: ["Food Zoo Buffet", "Meal Plans", "Food Court", "Late-Night Dining"],
+    quotes: [
+      { text: "The Food Zoo has way more variety than I expected. Taco Tuesdays are legendary among my friend group.", author: "Chris M., Freshman" },
+      { text: "As someone with dietary restrictions, I was impressed by how many options they have for gluten-free and vegan meals.", author: "Priya S., Junior" }
+    ],
+    contact: { name: "UM Dining", title: "Dining Services Office" },
+    details: { Location: "The Lodge (Food Zoo)" },
+    links: [
+      ["UM Dining", "https://www.umt.edu/dining/"],
+      ["Locations & Hours", "https://www.umt.edu/dining/locations/"],
+      ["Dining Plans", "https://www.umt.edu/dining/dining-plans/"],
+      ["Food Court", "https://www.umt.edu/dining/locations/food-court/"],
+    ]
+  },
+  {
+    group: "campus-life",
+    icon: "\uD83E\uDD1D",
+    title: "Student Clubs & Organizations",
+    desc: "Join one of 150+ student organizations at UM. From outdoor recreation to academic honor societies, there's a group for every interest.",
+    highlights: ["150+ Clubs", "Outdoor Recreation", "Honor Societies", "Cultural Groups"],
+    quotes: [
+      { text: "Joining the Outdoor Program changed my life. I've gone backpacking, skiing, and kayaking \u2014 all through student orgs.", author: "Ben H., Senior" },
+      { text: "I started a club for first-gen students and it became a support system I didn't know I needed.", author: "Rosa D., Junior" }
+    ],
+    contact: { name: "ASUM", title: "Associated Students of UM" },
+    details: { Location: "University Center" },
+    links: [
+      ["GrizHub \u2014 Browse Orgs", "https://grizhub.umt.edu/organizations"],
+      ["Student Groups (ASUM)", "https://www.umt.edu/asum/student-groups/"],
+      ["UC Clubs Directory", "https://www.umt.edu/uc/orgs-and-clubs.php"],
+    ]
+  },
+  {
+    group: "campus-life",
+    icon: "\uD83C\uDFDB\uFE0F",
+    title: "Fraternities & Sororities",
+    desc: "UM's Greek community offers leadership development, philanthropy, academic support, and lifelong friendships across multiple fraternity and sorority chapters.",
+    highlights: ["Leadership Development", "Philanthropy", "Academic Support", "Brotherhood & Sisterhood"],
+    quotes: [
+      { text: "Going Greek gave me a built-in study group, leadership opportunities, and friends who push me to be better.", author: "Kelsey A., Junior" },
+      { text: "Our chapter raised over $10,000 for charity last year. Greek life is so much more than the stereotypes.", author: "Marcus J., Senior" }
+    ],
+    contact: { name: "Esteban Castillo", title: "Director, Fraternity & Sorority Involvement" },
+    details: {},
+    links: [
+      ["Greek Life Home", "https://www.umt.edu/fsi/"],
+      ["Fraternity Chapters", "https://www.umt.edu/fsi/our-chapters/fraternities.php"],
+      ["Sorority Chapters", "https://www.umt.edu/fsi/our-chapters/sororities.php"],
+      ["How to Join", "https://www.umt.edu/fsi/how-to-join/"],
+      ["Why Greek Life?", "https://www.umt.edu/fsi/about-us/why-greek-life.php"],
+    ]
+  },
+  {
+    group: "campus-life",
+    icon: "\uD83D\uDCCB",
+    title: "Dean of Students",
+    desc: "The Dean of Students office supports student success and well-being. Get help navigating university policies, student conduct, or personal challenges.",
+    highlights: ["Student Advocacy", "Conduct Support", "Emergency Assistance", "Policy Guidance"],
+    quotes: [
+      { text: "When I had a family emergency, the Dean of Students office contacted all my professors and helped me get extensions. They truly care.", author: "Anonymous Student" },
+      { text: "They helped me navigate a really confusing situation with a fair and compassionate approach.", author: "Taylor G., Sophomore" }
+    ],
+    contact: { name: "Dean of Students Office", title: "Student Affairs" },
+    details: { Phone: "(406) 243-6413" },
+    links: [
+      ["Dean of Students", "https://www.umt.edu/campus-life/dean-of-students/"],
+      ["Community Standards", "https://www.umt.edu/student-affairs/dean-of-students/default.php"],
+    ]
+  },
+
+  /* ── Support Services ── */
+  {
+    group: "support",
+    icon: "\uD83C\uDF96\uFE0F",
+    title: "Veteran Services",
+    desc: "Dedicated support for military-connected students \u2014 GI Bill benefits, enrollment certification, priority registration, and a community of fellow veterans.",
+    highlights: ["GI Bill Support", "Priority Registration", "Veteran Community", "Benefits Certification"],
+    quotes: [
+      { text: "Transitioning from military to college was daunting, but the veteran services team made it feel manageable. They understand us.", author: "Staff Sgt. Mike R., Junior" },
+      { text: "Priority registration is a game-changer. And having a veterans' lounge on campus gives us a place to connect.", author: "Sgt. Amanda K., Senior" }
+    ],
+    contact: { name: "Patrick Beckwith", title: "Director, Military & Veteran Services", email: "patrick.beckwith@mso.umt.edu" },
+    details: { Phone: "(406) 243-2744", Location: "Lommasson Center 230" },
+    links: [
+      ["Military & Veteran Services", "https://www.umt.edu/veterans/"],
+      ["Student Resources", "https://www.umt.edu/veterans/student_resources_page.php"],
+      ["Contact Veterans Services", "https://www.umt.edu/veterans/contact_us_page.php"],
+    ]
+  },
+  {
+    group: "support",
+    icon: "\uD83E\uDD6B",
+    title: "UM Food Pantry",
+    desc: "Free, confidential food assistance for any UM student experiencing food insecurity. No paperwork or proof of need required.",
+    highlights: ["No-Questions-Asked", "Fresh Produce", "Pantry Staples", "Hygiene Products"],
+    quotes: [
+      { text: "The food pantry helped me get through a tough month when money was tight. No judgment, just support.", author: "Anonymous Student" },
+      { text: "I volunteer at the pantry every week. It feels good to help fellow students and reduce the stigma around food insecurity.", author: "Kayla N., Senior" }
+    ],
+    contact: { name: "Lucy Hicks", title: "Program Coordinator", email: "umpantry@mso.umt.edu" },
+    details: { Phone: "(406) 243-5125", Location: "University Center" },
+    links: [
+      ["UM Food Pantry", "https://www.umt.edu/asum/agencies/food-pantry/"],
+      ["Additional Food Resources", "https://www.umt.edu/american-indian-student-services/resources/food-resources.php"],
+    ]
+  },
+  {
+    group: "support",
+    icon: "\u2B50",
+    title: "TRIO Programs",
+    desc: "Federally funded programs supporting first-generation college students, low-income students, and students with disabilities through mentoring, tutoring, and advising.",
+    highlights: ["First-Gen Support", "Tutoring", "Mentoring", "College Prep"],
+    quotes: [
+      { text: "As a first-gen student, TRIO was my lifeline. My mentor helped me understand everything from registration to financial aid.", author: "Daniel V., Sophomore" },
+      { text: "TRIO's tutoring program helped me go from a C to an A in chemistry. The support is real and personalized.", author: "Natalie E., Junior" }
+    ],
+    contact: { name: "Dannette Fadness", title: "TRIO Upward Bound Director", email: "dannette.fadness@umontana.edu" },
+    details: { Phone: "(406) 243-2219", Location: "Aber Hall 312" },
+    links: [
+      ["TRIO at UM", "https://www.umt.edu/trio/"],
+      ["Programs in Montana", "https://www.umt.edu/trio/programs-montana.php"],
+    ]
+  },
+  {
+    group: "support",
+    icon: "\uD83E\uDEB6",
+    title: "American Indian Student Services",
+    desc: "Cultural support, academic advising, financial aid guidance, and community for Native American students at UM. Home to the Payne Family Native American Center.",
+    highlights: ["Cultural Events", "Academic Advising", "Scholarship Help", "Community Space"],
+    quotes: [
+      { text: "AISS gave me a home away from home. The cultural events and the community at the Native American Center kept me grounded.", author: "Cheyenne W., Senior" },
+      { text: "They helped me find tribal scholarships and connected me with Native faculty mentors. I wouldn't be graduating without them.", author: "James T., Senior" }
+    ],
+    contact: { name: "Michelle Guzman", title: "Director, American Indian Student Services" },
+    details: { Phone: "(406) 243-6352", Location: "Payne Family Native American Center, Suite 113" },
+    links: [
+      ["American Indian Student Services", "https://www.umt.edu/american-indian-student-services/"],
+      ["About AISS", "https://www.umt.edu/american-indian-student-services/about-aiss/"],
+      ["Native American Center", "https://www.umt.edu/native-american-studies/tpfnac.php"],
+      ["Native American Center of Excellence", "https://www.umt.edu/native-american-center-of-excellence/"],
+    ]
+  },
+  {
+    group: "support",
+    icon: "\uD83D\uDCBC",
+    title: "Experiential Learning & Career Success",
+    desc: "Career coaching, resume help, internship placement, job fairs, and experiential learning opportunities to prepare you for life after UM.",
+    highlights: ["Career Coaching", "Resume Reviews", "Internship Placement", "Job Fairs"],
+    quotes: [
+      { text: "ELCS helped me land an internship at a national park. That experience led directly to my job after graduation.", author: "Hannah L., Alumni" },
+      { text: "The resume workshop was a game-changer. I went from zero callbacks to three interviews in two weeks.", author: "Kevin O., Senior" }
+    ],
+    contact: { name: "Karey Sabol", title: "Associate Director, Experiential Learning" },
+    details: { Location: "Aber Hall, 2nd Level" },
+    links: [
+      ["ELCS Home", "https://www.umt.edu/experiential-learning-career-success/"],
+      ["Career Hub", "https://careerhub.umt.edu/"],
+      ["About ELCS", "https://www.umt.edu/experiential-learning-career-success/about-us/"],
+    ]
+  },
+
+  /* ── Academics ── */
+  {
+    group: "academics",
+    icon: "\uD83E\uDDED",
+    title: "Academic Advising & Choosing a Major",
+    desc: "Not sure what to study? The Undergraduate Advising Center helps you explore majors, plan your coursework, and connect with faculty in your area of interest.",
+    highlights: ["Major Exploration", "Course Planning", "Faculty Connections", "Undecided-Friendly"],
+    quotes: [
+      { text: "I came in as undeclared and my advisor helped me discover wildlife biology. Now it's my passion and my career path.", author: "Sarah M., Junior" },
+      { text: "I switched majors twice and they supported me each time without making me feel behind. That patience meant everything.", author: "Jake R., Senior" }
+    ],
+    contact: { name: "Nathan Domitrovich", title: "UAC Director", email: "nathan.domitrovich@mso.umt.edu" },
+    details: { Phone: "(406) 243-2851", Location: "Lommasson Center 269" },
+    links: [
+      ["Undergraduate Advising Center", "https://www.umt.edu/undergrad-advising-center/"],
+      ["Discover a Major", "https://www.umt.edu/undergrad-advising-center/i-need-to/discover-major.php"],
+      ["HS Advising Center", "https://www.umt.edu/humanities-sciences/advising-center/default.php"],
+    ]
+  },
+  {
+    group: "academics",
+    icon: "\uD83D\uDDFA\uFE0F",
+    title: "Degree Maps & Academic Catalog",
+    desc: "View semester-by-semester degree maps for every UM program. Browse the full academic catalog for course descriptions, requirements, and program details.",
+    highlights: ["Semester-by-Semester Plans", "100+ Programs", "Course Descriptions", "Degree Requirements"],
+    quotes: [
+      { text: "The degree map for my major laid out exactly what classes to take each semester. It took so much guesswork out of planning.", author: "Olivia P., Sophomore" },
+      { text: "I used the catalog to find electives that counted for two requirements at once. Saved me a whole semester.", author: "Ryan T., Senior" }
+    ],
+    contact: { name: "Office of the Registrar", title: "Academic Records & Degree Audits" },
+    details: {},
+    links: [
+      ["Degree Maps", "https://www.umt.edu/degree-maps/"],
+      ["Search by College", "https://www.umt.edu/degree-maps/search-by-college.php"],
+      ["Search A to Z", "https://www.umt.edu/degree-maps/search-a-to-z.php"],
+      ["Academic Catalog", "https://catalog.umt.edu/"],
+      ["All Programs", "https://catalog.umt.edu/programs/"],
+    ]
+  }
+];
+
+/* ── Render Cards ── */
+const grid = document.getElementById("grid");
+const noResults = document.getElementById("no-results");
+const searchInput = document.getElementById("search");
+
+function buildCard(r, i) {
+  const c = r.contact || {};
+  const initials = (c.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const chipsHTML = (r.highlights || []).map(h => `<span class="highlight-chip">${h}</span>`).join("");
+
+  const q = (r.quotes || [])[0];
+  const quoteHTML = q
+    ? `<div class="card-quote-preview"><span class="quote-text">${q.text.length > 100 ? q.text.slice(0, 100) + "\u2026" : q.text}</span><span class="quote-author">\u2014 ${q.author}</span></div>`
+    : "";
+
+  const contactHTML = c.name
+    ? `<div class="card-contact">
+        <div class="contact-avatar">${initials}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-title">${c.title || ""}</div>
+          ${c.email ? `<div class="contact-email"><a href="mailto:${c.email}">${c.email}</a></div>` : ""}
+        </div>
+      </div>`
+    : "";
+
+  const detailsHTML = Object.keys(r.details).length
+    ? `<div class="card-details">${Object.entries(r.details).map(([k,v]) => `<span><span class="label">${k}:</span> ${v}</span>`).join("")}</div>`
+    : "";
+
+  const linksHTML = r.links.slice(0, 3).map(([text, url]) => `<li><a href="${url}" target="_blank" rel="noopener">${text}</a></li>`).join("");
+
+  return `<article class="card" data-group="${r.group}" data-index="${i}" style="animation-delay:${i * 40}ms" role="region" aria-label="${r.title}">
+    <div class="card-header"><span class="card-icon" aria-hidden="true">${r.icon}</span><h2>${r.title}</h2></div>
+    <div class="card-body">
+      <p class="card-desc">${r.desc}</p>
+      <div class="card-highlights">${chipsHTML}</div>
+      ${quoteHTML}
+      ${contactHTML}
+      ${detailsHTML}
+      <ul class="card-links">${linksHTML}</ul>
+      <button class="card-learn-more" data-index="${i}" aria-label="Learn more about ${r.title}">Learn More &amp; Student Stories</button>
+    </div>
+  </article>`;
+}
+
+grid.insertAdjacentHTML("afterbegin", resources.map((r, i) => buildCard(r, i)).join(""));
+
+/* ── Search ── */
+function filterCards() {
+  const query = searchInput.value.toLowerCase().trim();
+  const activeGroup = document.querySelector(".pill.active")?.dataset.filter || "all";
+  const cards = grid.querySelectorAll(".card");
+  let visible = 0;
+  cards.forEach(card => {
+    const matchesGroup = activeGroup === "all" || card.dataset.group === activeGroup;
+    const text = card.textContent.toLowerCase();
+    const matchesSearch = !query || text.includes(query);
+    const show = matchesGroup && matchesSearch;
+    card.classList.toggle("hidden", !show);
+    if (show) visible++;
+  });
+  noResults.classList.toggle("show", visible === 0);
+}
+searchInput.addEventListener("input", filterCards);
+
+/* ── Pills ── */
+document.querySelectorAll(".pill").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelector(".pill.active").classList.remove("active");
+    pill.classList.add("active");
+    filterCards();
+  });
+});
+
+/* ── Modal ── */
+const modal = document.getElementById("modal");
+const modalInner = document.getElementById("modal-inner");
+const modalClose = document.getElementById("modal-close");
+let currentQuoteIndex = 0;
+
+function openModal(index) {
+  const r = resources[index];
+  const c = r.contact || {};
+  const initials = (c.name || "").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const chipsHTML = (r.highlights || []).map(h => `<span class="highlight-chip">${h}</span>`).join("");
+
+  const quotesHTML = (r.quotes || []).map((q, qi) =>
+    `<div class="quote-slide${qi === 0 ? " active" : ""}" data-qi="${qi}">
+      <blockquote>${q.text}</blockquote>
+      <span class="quote-author">\u2014 ${q.author}</span>
+    </div>`
+  ).join("");
+
+  const dotsHTML = (r.quotes || []).length > 1
+    ? `<div class="quote-nav">
+        <button class="quote-arrow" data-dir="-1" aria-label="Previous quote">\u25C0</button>
+        ${(r.quotes || []).map((_, qi) => `<button class="quote-dot${qi === 0 ? " active" : ""}" data-qi="${qi}" aria-label="Quote ${qi + 1}"></button>`).join("")}
+        <button class="quote-arrow" data-dir="1" aria-label="Next quote">\u25B6</button>
+      </div>`
+    : "";
+
+  const contactHTML = c.name
+    ? `<div class="modal-contact card-contact">
+        <div class="contact-avatar">${initials}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-title">${c.title || ""}</div>
+          ${c.email ? `<div class="contact-email"><a href="mailto:${c.email}">${c.email}</a></div>` : ""}
+        </div>
+      </div>`
+    : "";
+
+  const detailsHTML = Object.keys(r.details).length
+    ? `<div class="modal-details">${Object.entries(r.details).map(([k,v]) => `<span><span class="label">${k}:</span> ${v}</span>`).join("")}</div>`
+    : "";
+
+  const linksHTML = r.links.map(([text, url]) => `<li><a href="${url}" target="_blank" rel="noopener">${text}</a></li>`).join("");
+
+  modalInner.innerHTML = `
+    <div class="modal-header"><span class="card-icon" aria-hidden="true">${r.icon}</span><h2>${r.title}</h2></div>
+    <div class="modal-body">
+      <p class="modal-desc">${r.desc}</p>
+      ${chipsHTML ? `<div class="modal-highlights"><h3>What We Offer</h3><div class="chips">${chipsHTML}</div></div>` : ""}
+      ${quotesHTML ? `<div class="modal-quotes" id="quote-carousel"><h3>Student Voices</h3>${quotesHTML}${dotsHTML}</div>` : ""}
+      ${contactHTML}
+      ${detailsHTML}
+      <ul class="modal-links">${linksHTML}</ul>
+    </div>
+  `;
+
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  modalClose.focus();
+  currentQuoteIndex = 0;
+}
+
+function closeModal() {
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function goToQuote(quotes, qi) {
+  if (!quotes.length) return;
+  currentQuoteIndex = ((qi % quotes.length) + quotes.length) % quotes.length;
+  const carousel = document.getElementById("quote-carousel");
+  if (!carousel) return;
+  carousel.querySelectorAll(".quote-slide").forEach((s, i) => s.classList.toggle("active", i === currentQuoteIndex));
+  carousel.querySelectorAll(".quote-dot").forEach((d, i) => d.classList.toggle("active", i === currentQuoteIndex));
+}
+
+modalClose.addEventListener("click", closeModal);
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+document.addEventListener("keydown", e => {
+  if (!modal.classList.contains("open")) return;
+  if (e.key === "Escape") closeModal();
+  if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+    const idx = parseInt(modalInner.querySelector(".modal-header")?.closest(".modal-content")?.dataset.index);
+    const r = resources.find((_, i) => modalInner.innerHTML.includes(resources[i]?.title));
+    // Use carousel dots for navigation
+    const dir = e.key === "ArrowRight" ? 1 : -1;
+    const slides = document.querySelectorAll("#quote-carousel .quote-slide");
+    if (slides.length > 1) {
+      goToQuote(Array.from(slides), currentQuoteIndex + dir);
+    }
+  }
+});
+
+// Delegate clicks for Learn More buttons and quote nav
+document.addEventListener("click", e => {
+  const learnMore = e.target.closest(".card-learn-more");
+  if (learnMore) {
+    e.stopPropagation();
+    openModal(parseInt(learnMore.dataset.index));
+    return;
+  }
+  const card = e.target.closest(".card");
+  if (card && !e.target.closest("a") && !e.target.closest("button")) {
+    openModal(parseInt(card.dataset.index));
+    return;
+  }
+  const dot = e.target.closest(".quote-dot");
+  if (dot) {
+    const qi = parseInt(dot.dataset.qi);
+    const slides = document.querySelectorAll("#quote-carousel .quote-slide");
+    goToQuote(Array.from(slides), qi);
+    return;
+  }
+  const arrow = e.target.closest(".quote-arrow");
+  if (arrow) {
+    const dir = parseInt(arrow.dataset.dir);
+    const slides = document.querySelectorAll("#quote-carousel .quote-slide");
+    goToQuote(Array.from(slides), currentQuoteIndex + dir);
+  }
+});
+</script>
+</body>
+</html>
