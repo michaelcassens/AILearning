@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UM Esports Code of Conduct Training</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.2; }
+      to { opacity: 0.8; }
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(15, 15, 26, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 12px 0;
+      margin-bottom: 20px;
+    }
+    .progress-bar-bg {
+      height: 8px;
+      background: #1e1e3a;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6d28d9, #a855f7);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .progress-text {
+      font-size: 12px;
+      color: #888;
+      margin-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Score display */
+    .score-display {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .score-badge {
+      background: linear-gradient(135deg, #1e1e3a, #2a2a4a);
+      border: 1px solid #3a3a5a;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .score-badge .val { color: #a855f7; }
+
+    /* Cards */
+    .card {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      border: 1px solid #2a2a4a;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.4s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card h1 {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #a855f7, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #c084fc;
+      margin-bottom: 12px;
+    }
+    .card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #818cf8;
+      margin-bottom: 8px;
+    }
+    .card p, .card li {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #c0c0d0;
+    }
+    .card ul { list-style: none; padding-left: 0; }
+    .card ul li::before {
+      content: "\25B8";
+      color: #a855f7;
+      margin-right: 8px;
+    }
+    .card ul li { margin-bottom: 8px; }
+
+    /* Section badge */
+    .section-badge {
+      display: inline-block;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #c084fc;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    /* Scenario box */
+    .scenario-box {
+      background: rgba(99, 102, 241, 0.08);
+      border-left: 3px solid #6366f1;
+      border-radius: 0 12px 12px 0;
+      padding: 16px 20px;
+      margin: 16px 0;
+    }
+    .scenario-box .label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 6px;
+    }
+
+    /* Answer buttons */
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .answer-btn {
+      background: rgba(30, 30, 58, 0.8);
+      border: 2px solid #3a3a5a;
+      border-radius: 12px;
+      padding: 14px 20px;
+      color: #d0d0e0;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .answer-btn:hover:not(:disabled) {
+      border-color: #a855f7;
+      background: rgba(168, 85, 247, 0.08);
+      transform: translateX(4px);
+    }
+    .answer-btn.correct {
+      border-color: #22c55e;
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+    }
+    .answer-btn.incorrect {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.12);
+      color: #fca5a5;
+    }
+    .answer-btn:disabled { cursor: default; opacity: 0.7; }
+
+    /* Feedback */
+    .feedback {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      animation: fadeUp 0.3s ease;
+    }
+    .feedback.correct {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+    .feedback.incorrect {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    /* Nav buttons */
+    .nav-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .btn {
+      background: linear-gradient(135deg, #6d28d9, #7c3aed);
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4); }
+    .btn.secondary {
+      background: transparent;
+      border: 2px solid #3a3a5a;
+      color: #c0c0d0;
+    }
+    .btn.secondary:hover { border-color: #a855f7; box-shadow: none; }
+
+    /* Title screen */
+    .title-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex: 1;
+      padding: 40px 20px;
+    }
+    .title-screen .logo {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .title-screen h1 {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #a855f7, #6366f1, #22d3ee);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .title-screen p {
+      color: #888;
+      font-size: 16px;
+      max-width: 500px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+    .title-screen .btn { padding: 16px 48px; font-size: 18px; }
+
+    /* Completion screen */
+    .completion-screen {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .completion-screen .trophy { font-size: 80px; margin-bottom: 20px; }
+    .completion-screen h1 {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #fbbf24, #f59e0b, #d97706);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .final-score {
+      font-size: 48px;
+      font-weight: 800;
+      color: #a855f7;
+      margin: 20px 0;
+    }
+    .grade-label {
+      display: inline-block;
+      padding: 8px 24px;
+      border-radius: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 24px;
+    }
+    .grade-a { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .grade-b { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .grade-c { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .grade-f { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+    .survey-section {
+      margin-top: 32px;
+      padding-top: 32px;
+      border-top: 1px solid #2a2a4a;
+    }
+    .survey-section h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #c084fc;
+      margin-bottom: 8px;
+    }
+    .survey-section p {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    .survey-frame {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #2a2a4a;
+    }
+
+    /* Key point highlight */
+    .key-point {
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 14px;
+      color: #fbbf24;
+    }
+    .key-point strong { color: #fde68a; }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .card { padding: 20px; }
+      .title-screen h1 { font-size: 26px; }
+      .card h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars" id="stars"></div>
+  <div id="app"></div>
+
+  <script>
+  // Stars background
+  (() => {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random() * 2 + 1;
+      star.style.cssText = `
+        width: ${size}px; height: ${size}px;
+        top: ${Math.random()*100}%; left: ${Math.random()*100}%;
+        --dur: ${Math.random()*3+2}s;
+        animation-delay: ${Math.random()*3}s;
+      `;
+      container.appendChild(star);
+    }
+  })();
+
+  // Game Data
+  const sections = [
+    // ===== SECTION 0: POLICY INTRO =====
+    {
+      type: 'info',
+      badge: 'Section 1 of 7',
+      title: 'Policy Overview',
+      content: `
+        <p>The Esports program at the University of Montana is dedicated to the well-being of all participants. This Code of Conduct runs <strong>concurrently</strong> with the UM Student-Athlete Conduct Code.</p>
+        <p style="margin-top:12px">As a team member, you are expected to:</p>
+        <ul>
+          <li>Promote a safe and inclusive gaming environment</li>
+          <li>Avoid offensive or inciteful speech and behavior</li>
+          <li>Respect teammates, opponents, and all program participants</li>
+          <li>Represent UM, its esports program, and staff positively</li>
+          <li>Play honestly with respect to in-game rules</li>
+          <li>Treat gaming facilities and equipment with care</li>
+          <li>Maintain a <strong>2.0 cumulative GPA</strong> for good academic standing</li>
+        </ul>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 1 of 7',
+      title: 'Policy Check',
+      scenario: 'A teammate brags that since they are on the esports team, they only need to follow the esports code of conduct and not the general Student-Athlete code.',
+      question: 'Is this teammate correct?',
+      answers: [
+        'Yes, the esports code replaces the Student-Athlete code',
+        'No, both codes apply concurrently to esports participants',
+        'Only the Student-Athlete code matters',
+        'It depends on the game being played'
+      ],
+      correct: 1,
+      explanation: 'The Code of Conduct states it runs concurrently with the UM Student-Athlete Conduct Code. Esports participants are subject to BOTH codes.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 1 of 7',
+      title: 'Policy Check',
+      scenario: 'Your friend on the team is struggling in classes and their GPA has dropped to 1.8 this semester.',
+      question: 'What does the Code of Conduct say about academic standing?',
+      answers: [
+        'There is no GPA requirement for esports',
+        'Players must maintain a 3.0 GPA',
+        'Players must maintain a 2.0 cumulative GPA',
+        'GPA requirements only apply during competition season'
+      ],
+      correct: 2,
+      explanation: 'Members must maintain a 2.0 cumulative GPA to remain in good academic standing at UM. Your friend would need to raise their GPA to continue participating.'
+    },
+
+    // ===== SECTION 1: OFFENSIVE EXPRESSION =====
+    {
+      type: 'info',
+      badge: 'Section 2 of 7',
+      title: 'Misconduct: Offensive Expression',
+      content: `
+        <p>You may not express yourself in a manner intended to offend others. This includes actions that are insulting, mocking, disruptive, or antagonistic.</p>
+        <h3>Offensive Language</h3>
+        <p>You may not use language, nicknames, or expressions that insult another player's sex, gender identity, sexual orientation, race, ethnicity, disability, physical appearance, body size, age, or religion.</p>
+        <h3>Offensive In-Game Names</h3>
+        <p>You may not create or use nicknames, team names, skins, or anything else that may be offensive.</p>
+        <h3>Political Expression</h3>
+        <p>You may not use the esports platform for politically inciteful actions or speech.</p>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 2 of 7',
+      title: 'Offensive Expression',
+      scenario: 'During a match, a teammate changes their in-game display name to something that mocks a religious group as a "joke."',
+      question: 'Does this violate the Code of Conduct?',
+      answers: [
+        'No, in-game names are just for fun',
+        'Only if someone reports it',
+        'Yes, offensive in-game names and handles are prohibited',
+        'Only if it happens during a tournament'
+      ],
+      correct: 2,
+      explanation: 'Offensive in-game names or handles are explicitly prohibited. You may not create or use nicknames, team names, skins, or anything else that may be offensive based on religion or any other protected characteristic.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 2 of 7',
+      title: 'Offensive Expression',
+      scenario: 'A player uses their stream title and esports team affiliation to promote a controversial political campaign before a match.',
+      question: 'What does the Code of Conduct say about this?',
+      answers: [
+        'This is fine as long as it is off-stream',
+        'Free speech allows any political expression',
+        'This is only prohibited during tournaments',
+        'Political expression through the esports platform is not allowed'
+      ],
+      correct: 3,
+      explanation: 'The code states you may not use the esports platform, either in-game or through your role as an esports athlete, for politically inciteful actions or speech.'
+    },
+
+    // ===== SECTION 2: HARASSMENT =====
+    {
+      type: 'info',
+      badge: 'Section 3 of 7',
+      title: 'Misconduct: Harassment',
+      content: `
+        <p>All forms of harassment are <strong>strictly forbidden</strong>. Harassment is defined as systematic, hostile, and repeated acts, or a single egregious instance, intended to isolate or ostracize a person or affect their dignity.</p>
+        <h3>Verbal Harassment</h3>
+        <p>You may not use words or actions to make another person uncomfortable: name calling, spreading rumors, unsolicited jokes, or spamming messages.</p>
+        <h3>Physical Harassment</h3>
+        <p>Any unwelcome touching of a person or their clothing is not allowed.</p>
+        <h3>Sexual Harassment</h3>
+        <p>There is <strong>zero tolerance</strong> for unwelcome sexual advances, threats, coercion, or the promise of advantages in exchange for sexual favors.</p>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 3 of 7',
+      title: 'Harassment',
+      scenario: 'A team member keeps sending the same player repeated negative messages in Discord after every practice, criticizing their gameplay in a hostile way over several weeks.',
+      question: 'How does the Code of Conduct classify this behavior?',
+      answers: [
+        'Constructive feedback that is acceptable',
+        'Verbal harassment: systematic, hostile, and repeated acts',
+        'Mild trash talk that is part of gaming culture',
+        'Only a problem if it happens in-game'
+      ],
+      correct: 1,
+      explanation: 'This is verbal harassment: systematic, hostile, and repeated acts over a considerable period of time intended to isolate or ostracize a person. Name calling, spreading rumors, and spamming messages are all included.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 3 of 7',
+      title: 'Harassment',
+      scenario: 'A coach hints that a player might get more game time if they go on a date with them.',
+      question: 'What type of violation is this?',
+      answers: [
+        'This is acceptable if the player agrees',
+        'It is only an issue if repeated multiple times',
+        'Sexual harassment: promising advantages in exchange for sexual favors',
+        'Not covered by the Code of Conduct'
+      ],
+      correct: 2,
+      explanation: 'This is sexual harassment. The code explicitly includes the promise of advantages in exchange for sexual favors, and states there is zero tolerance for any such conduct.'
+    },
+
+    // ===== SECTION 3: DISCRIMINATION & VIOLENCE =====
+    {
+      type: 'info',
+      badge: 'Section 4 of 7',
+      title: 'Misconduct: Discrimination, Violence, and Privacy',
+      content: `
+        <h3>Discrimination</h3>
+        <p>Do not offend the dignity or integrity of a person or group through contemptuous or discriminatory words or actions on account of race, ethnicity, socioeconomic status, ability status, gender identity, language, religion, political opinion, sexual orientation, or any other reason.</p>
+        <h3>Violent Language and Actions</h3>
+        <p>You may not use language or actions that refer to any type of violence, and you may not act in a threatening or violent manner.</p>
+        <h3>Private Information</h3>
+        <p>You may not share account information or any other private information that could put another team member or associated party at risk.</p>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 4 of 7',
+      title: 'Discrimination & Privacy',
+      scenario: 'After losing a match, a frustrated player shares another team member\'s home address and phone number in a public Discord server out of spite.',
+      question: 'Which violations does this involve?',
+      answers: [
+        'No violation, it is public information anyway',
+        'Only a violation if the information is used maliciously by others',
+        'Sharing private information that could put another person at risk',
+        'Only a problem if it is done repeatedly'
+      ],
+      correct: 2,
+      explanation: 'The code prohibits sharing account information or any other private information that could put another team member or associated party at risk. This is a clear violation regardless of intent.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 4 of 7',
+      title: 'Discrimination & Violence',
+      scenario: 'During voice chat, a player gets angry and tells an opponent, "I will find you and make you regret that play."',
+      question: 'How is this classified under the Code of Conduct?',
+      answers: [
+        'Acceptable competitive banter',
+        'Only wrong if they actually act on it',
+        'Violent language: threatening language is prohibited',
+        'Harassment, but not violent language'
+      ],
+      correct: 2,
+      explanation: 'You may not use language or actions that refer to any type of violence, and you may not act in a threatening manner. This threat violates the violent language provision.'
+    },
+
+    // ===== SECTION 4: CRIMINAL, GAMBLING, BRIBERY, PROFANITY =====
+    {
+      type: 'info',
+      badge: 'Section 5 of 7',
+      title: 'Misconduct: Criminal Activity, Gambling, Bribery, and Profanity',
+      content: `
+        <h3>Criminal Activity</h3>
+        <p>You may not engage in any activity prohibited by law that leads to or could reasonably be deemed likely to lead to conviction.</p>
+        <h3>Gambling</h3>
+        <p>You may not engage in betting or gambling, directly or indirectly, on any results of any esports tournament, match, or event.</p>
+        <h3>Bribery</h3>
+        <p>You may not accept or offer any gift or reward for services in defeating or attempting to defeat a competing team.</p>
+        <h3>Profanity and Hate Speech</h3>
+        <p>You may not use language that is obscene, vulgar, threatening, abusive, or that promotes hatred. This applies in the match area, on public social media, live streams, and player comms during live events.</p>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 5 of 7',
+      title: 'Gambling & Bribery',
+      scenario: 'A fan DMs you offering $200 if you "take it easy" in the next match so their favorite team advances. You think no one will notice.',
+      question: 'What does the Code of Conduct say?',
+      answers: [
+        'It is fine as long as you do not actually throw the match',
+        'This is bribery: accepting gifts/rewards for influencing match outcomes is prohibited',
+        'Only a violation if the amount is over $500',
+        'Only coaches can be bribed, not players'
+      ],
+      correct: 1,
+      explanation: 'The code prohibits accepting any gift or reward for services promised, rendered, or to be rendered in defeating or attempting to defeat a competing team. This is bribery regardless of the amount.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 5 of 7',
+      title: 'Profanity & Hate Speech',
+      scenario: 'After a tournament loss, a player posts a rant on their personal Twitter/X account with hateful and vulgar language about the opposing team, while their bio identifies them as a UM Esports player.',
+      question: 'Does the Code of Conduct apply to social media?',
+      answers: [
+        'No, personal social media is private',
+        'Only during active tournament weekends',
+        'Yes, profanity and hate speech rules apply to public social media and live streaming',
+        'Only if they tag the official UM Esports account'
+      ],
+      correct: 2,
+      explanation: 'The profanity and hate speech rule explicitly applies to public social media, live streaming, and player comms during live events such as Live Finals.'
+    },
+
+    // ===== SECTION 5: COMPETITION CODE (CHEATING/COLLUSION) =====
+    {
+      type: 'info',
+      badge: 'Section 6 of 7',
+      title: 'Competition Code of Conduct',
+      content: `
+        <h3>Collusion</h3>
+        <p>You may not enter into agreements to disadvantage opponents. This includes:</p>
+        <ul>
+          <li><strong>Soft Play:</strong> Agreeing not to play to a reasonable standard of competition</li>
+          <li><strong>Prize Splitting:</strong> Pre-arranging to split any prize</li>
+          <li><strong>In-Game Communication:</strong> Sending/receiving communication from other participants</li>
+          <li><strong>Deliberate Losing:</strong> Intentionally losing for compensation or any reason</li>
+        </ul>
+        <h3>Cheating and Hacking</h3>
+        <ul>
+          <li><strong>Ringing:</strong> Playing under another player's account</li>
+          <li><strong>Cheating Devices:</strong> Using any cheating device or technology</li>
+          <li><strong>Account Sharing/Rank Manipulation:</strong> Sharing accounts for boosting or rank manipulation</li>
+          <li><strong>Hacking:</strong> Any modification of the game client</li>
+        </ul>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 6 of 7',
+      title: 'Fair Play',
+      scenario: 'Two teams that are friends agree before a match to "just have fun" and not play seriously so neither team gets knocked out of the bracket.',
+      question: 'What type of collusion is this?',
+      answers: [
+        'Soft Play: agreeing not to play to a reasonable standard of competition',
+        'Prize Splitting',
+        'Deliberate Losing',
+        'This is not collusion, just sportsmanship'
+      ],
+      correct: 0,
+      explanation: 'Soft Play is defined as an agreement among two or more players not to damage, impede, or otherwise play to a reasonable standard of competition. Even if the intent is friendly, it harms competitive integrity.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 6 of 7',
+      title: 'Cheating & Hacking',
+      scenario: 'A friend who is a better player offers to log into your account and play your ranked placement matches to get you a higher rank before tryouts.',
+      question: 'Which violations would this involve?',
+      answers: [
+        'No violation, it is just a friend helping out',
+        'Only a violation if you get caught',
+        'Ringing and Account Sharing/Rank Manipulation',
+        'Only the friend would be in violation'
+      ],
+      correct: 2,
+      explanation: 'This involves both Ringing (playing under another player\'s account) and Account Sharing/Rank Manipulation (sharing accounts for boosting or to gain competitive advantage). Both are strictly prohibited.'
+    },
+
+    // ===== SECTION 6: VIOLATIONS & SANCTIONS =====
+    {
+      type: 'info',
+      badge: 'Section 7 of 7',
+      title: 'Violations and Sanctions',
+      content: `
+        <p>UM Esports coaches and administration are responsible for enforcement. They will monitor and investigate incidents and issue sanctions. If investigated, you <strong>must cooperate and be truthful</strong>.</p>
+        <h3>Possible Sanctions (in increasing severity)</h3>
+        <ul>
+          <li><strong>Verbal Warning</strong> - Verbal notice of a violation</li>
+          <li><strong>Written Warning</strong> - Written notice of a violation</li>
+          <li><strong>Match Forfeiture</strong> - Current match forfeited</li>
+          <li><strong>Probation</strong> - Heightened disciplinary period</li>
+          <li><strong>Loss of Privileges</strong> - Specific privileges withheld</li>
+          <li><strong>Behavioral Contract</strong> - Written agreement with conditions</li>
+          <li><strong>Team Suspension</strong> - Temporary removal from the team</li>
+          <li><strong>Team Expulsion</strong> - Permanent removal from the team</li>
+        </ul>
+        <div class="key-point"><strong>Note:</strong> More than one sanction may be issued for a single incident. Failure to comply with a behavioral contract can result in suspension or expulsion.</div>
+      `
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 7 of 7',
+      title: 'Sanctions',
+      scenario: 'A player is caught cheating in a match. The administration issues both a match forfeiture and places the player on probation.',
+      question: 'Can multiple sanctions be issued for one incident?',
+      answers: [
+        'No, only one sanction per incident',
+        'Yes, more than one sanction may be issued for a single incident',
+        'Only if the player has prior violations',
+        'Multiple sanctions require a formal hearing first'
+      ],
+      correct: 1,
+      explanation: 'The Code of Conduct explicitly states that more than one sanction may be issued for a single incident or occurrence, based on the severity as determined by coaches or administration.'
+    },
+    {
+      type: 'quiz',
+      badge: 'Section 7 of 7',
+      title: 'Investigations',
+      scenario: 'You are informed that a coach is investigating a Code of Conduct violation you may have been involved in. They ask you to provide your account of what happened.',
+      question: 'What are your obligations during the investigation?',
+      answers: [
+        'You can choose not to participate',
+        'You only need to cooperate if formally charged',
+        'You must cooperate with the investigation and be truthful',
+        'You can have a lawyer present before answering questions'
+      ],
+      correct: 2,
+      explanation: 'The Code of Conduct states that if a student has violated the code, they shall cooperate with any investigation and are required to be truthful during any part of it.'
+    }
+  ];
+
+  // Game State
+  let currentStep = -1; // -1 = title screen
+  let score = 0;
+  let totalQuestions = sections.filter(s => s.type === 'quiz').length;
+  let answeredQuestions = 0;
+  let answered = false;
+
+  const app = document.getElementById('app');
+
+  function render() {
+    if (currentStep === -1) {
+      renderTitle();
+    } else if (currentStep >= sections.length) {
+      renderCompletion();
+    } else {
+      renderSection(sections[currentStep]);
+    }
+  }
+
+  function renderTitle() {
+    app.innerHTML = `
+      <div class="title-screen">
+        <div class="logo">&#127918;</div>
+        <h1>UM Esports Code of Conduct</h1>
+        <p>Welcome to the University of Montana Esports Code of Conduct Training. You will learn about team policies, misconduct rules, fair play, and sanctions through interactive scenarios and knowledge checks.</p>
+        <p style="color:#a855f7; font-weight:600; margin-bottom:32px;">${totalQuestions} questions across 7 sections</p>
+        <button class="btn" onclick="startGame()">Begin Training</button>
+      </div>
+    `;
+  }
+
+  function renderSection(section) {
+    const progress = ((currentStep + 1) / sections.length) * 100;
+    const progressHTML = `
+      <div class="progress-container">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: ${progress}%"></div>
+        </div>
+        <div class="progress-text">
+          <span>${section.badge}</span>
+          <span>${Math.round(progress)}% Complete</span>
+        </div>
+      </div>
+    `;
+
+    const scoreHTML = `
+      <div class="score-display">
+        <div class="score-badge">Score: <span class="val">${score}</span> / ${totalQuestions}</div>
+        <div class="score-badge">Questions: <span class="val">${answeredQuestions}</span> / ${totalQuestions}</div>
+      </div>
+    `;
+
+    if (section.type === 'info') {
+      app.innerHTML = `
+        ${progressHTML}
+        ${scoreHTML}
+        <div class="card">
+          <span class="section-badge">${section.badge}</span>
+          <h1>${section.title}</h1>
+          ${section.content}
+          <div class="nav-buttons">
+            ${currentStep > 0 ? '<button class="btn secondary" onclick="prevStep()">Back</button>' : ''}
+            <button class="btn" onclick="nextStep()">Continue</button>
+          </div>
+        </div>
+      `;
+    } else if (section.type === 'quiz') {
+      answered = false;
+      const answersHTML = section.answers.map((a, i) => `
+        <button class="answer-btn" id="ans-${i}" onclick="checkAnswer(${i})">${a}</button>
+      `).join('');
+
+      app.innerHTML = `
+        ${progressHTML}
+        ${scoreHTML}
+        <div class="card">
+          <span class="section-badge">${section.badge}</span>
+          <h2>${section.title}</h2>
+          <div class="scenario-box">
+            <div class="label">Scenario</div>
+            <p>${section.scenario}</p>
+          </div>
+          <p style="margin-top:16px; font-weight:600; color:#e0e0e0;">${section.question}</p>
+          <div class="answers" id="answers">
+            ${answersHTML}
+          </div>
+          <div id="feedback"></div>
+          <div class="nav-buttons" id="quiz-nav" style="display:none;">
+            <button class="btn secondary" onclick="prevStep()">Back</button>
+            <button class="btn" onclick="nextStep()">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function checkAnswer(idx) {
+    if (answered) return;
+    answered = true;
+    answeredQuestions++;
+    const section = sections[currentStep];
+    const buttons = document.querySelectorAll('.answer-btn');
+    buttons.forEach((btn, i) => {
+      btn.disabled = true;
+      if (i === section.correct) btn.classList.add('correct');
+      if (i === idx && idx !== section.correct) btn.classList.add('incorrect');
+    });
+
+    const isCorrect = idx === section.correct;
+    if (isCorrect) score++;
+
+    // Update score display live
+    document.querySelectorAll('.score-badge .val')[0].textContent = score;
+    document.querySelectorAll('.score-badge .val')[1].textContent = answeredQuestions;
+
+    const feedbackDiv = document.getElementById('feedback');
+    feedbackDiv.innerHTML = `
+      <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}">
+        <strong>${isCorrect ? 'Correct!' : 'Not quite.'}</strong> ${section.explanation}
+      </div>
+    `;
+
+    document.getElementById('quiz-nav').style.display = 'flex';
+  }
+
+  function renderCompletion() {
+    const pct = Math.round((score / totalQuestions) * 100);
+    let gradeClass, gradeText;
+    if (pct >= 90) { gradeClass = 'grade-a'; gradeText = 'Excellent'; }
+    else if (pct >= 75) { gradeClass = 'grade-b'; gradeText = 'Good'; }
+    else if (pct >= 60) { gradeClass = 'grade-c'; gradeText = 'Needs Review'; }
+    else { gradeClass = 'grade-f'; gradeText = 'Study Required'; }
+
+    app.innerHTML = `
+      <div class="completion-screen">
+        <div class="card">
+          <div class="trophy">&#127942;</div>
+          <h1>Training Complete!</h1>
+          <p style="color:#888; margin-top:8px;">You have completed all 7 sections of the UM Esports Code of Conduct training.</p>
+          <div class="final-score">${score} / ${totalQuestions}</div>
+          <div class="grade-label ${gradeClass}">${pct}% - ${gradeText}</div>
+          <div class="survey-section">
+            <h2>Final Step: Complete the Survey</h2>
+            <p>Please complete the following survey to confirm you have read and understood the Code of Conduct.</p>
+            <div class="survey-frame">
+             <iframe width="640px" height="480px" src="https://forms.office.com/Pages/ResponsePage.aspx?id=5XxAaNoD_0mvCnJL4NN8nRGkvjSB5SJMqs4WilIECw1UN09YNjhBNVhST1NGTTZCQ0hBVk9KOUNFTyQlQCN0PWcu&embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
+            </div>
+          </div>
+          <div class="nav-buttons" style="margin-top:32px; justify-content:center;">
+            <button class="btn secondary" onclick="restartGame()">Retake Training</button>
+          </div>
+        </div>
+      </div>
+    `;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function startGame() {
+    currentStep = 0;
+    score = 0;
+    answeredQuestions = 0;
+    render();
+  }
+
+  function nextStep() {
+    currentStep++;
+    render();
+  }
+
+  function prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+      // If going back to a quiz, reset answered count
+      if (sections[currentStep]?.type === 'quiz') {
+        answeredQuestions = Math.max(0, answeredQuestions - 1);
+      }
+      render();
+    }
+  }
+
+  function restartGame() {
+    currentStep = -1;
+    score = 0;
+    answeredQuestions = 0;
+    render();
+  }
+
+  // Initial render
+  render();
+  </script>
+</body>
+</html>
