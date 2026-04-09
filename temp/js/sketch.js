@@ -265,7 +265,7 @@ function drawTextOverlay() {
     fill(255, 200, 100);
     textSize(18);
     textAlign(CENTER);
-    text("Created by Grant Grady", 0, 0);
+    text("", 0, 0);
     pop();
     
     pop();
