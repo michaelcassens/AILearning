@@ -16,7 +16,7 @@
       --text:        #2a2215;
       --muted:       #6b5e4a;
       --shadow:      0 2px 10px rgba(42,34,21,.08);
-      --c-concept:   #7b5e00;
+      --c-concept:   #6b5000;
       --c-activity:  #1565c0;
       --c-reflect:   #6a3d8a;
       --c-takeaway:  #2e7d32;
@@ -26,8 +26,123 @@
       --bg-reflect:  #f3e8fa;
       --bg-takeaway: #e8f5e9;
       --bg-myth:     #fce8e6;
+      --card-bg:     #fff;
+      --topbar-bg:   #fff;
+      --hero-grad1:  var(--gold);
+      --hero-grad2:  #5a3e1b;
+      --map-hover:   #fdf6e3;
+      --quiz-opt-bg: #fff;
+      --myth-item-bg:#fff;
+      --compare-bg:  #fff;
+      --order-bg:    #fff;
+      --reveal-bg:   #fff;
+      --dnd-bg:      #fff;
+      --synth-pool-bg: #f9f9f9;
+      --synth-group-bg: #fff;
+      --decoder-bg:  #fff;
+      --decoder-sent-bg: transparent;
     }
+
+    /* ===== DARK MODE ===== */
+    [data-theme="dark"] {
+      --bg:          #1a1a2e;
+      --border:      #2e2e4a;
+      --text:        #e0dce8;
+      --muted:       #a8a0b8;
+      --shadow:      0 2px 10px rgba(0,0,0,.3);
+      --dark:        #12121f;
+      --dark2:       #1e1e33;
+      --c-concept:   #d4a017;
+      --c-activity:  #5c9ce6;
+      --c-reflect:   #b388d9;
+      --c-takeaway:  #66bb6a;
+      --c-myth:      #ef5350;
+      --bg-concept:  #2a2415;
+      --bg-activity: #151e2e;
+      --bg-reflect:  #211828;
+      --bg-takeaway: #152015;
+      --bg-myth:     #2a1515;
+      --card-bg:     #22223a;
+      --topbar-bg:   #1e1e33;
+      --hero-grad1:  #7a5a0b;
+      --hero-grad2:  #2a1e0b;
+      --map-hover:   #2a2a44;
+      --quiz-opt-bg: #2a2a44;
+      --myth-item-bg:#2a2a44;
+      --compare-bg:  #2a2a44;
+      --order-bg:    #2a2a44;
+      --reveal-bg:   #2a2a44;
+      --dnd-bg:      #2a2a44;
+      --synth-pool-bg: #1e1e33;
+      --synth-group-bg:#22223a;
+      --decoder-bg:  #22223a;
+      --decoder-sent-bg: #2a2a44;
+      --gold:        #d4a017;
+      --gold-light:  #e8b830;
+    }
+    [data-theme="dark"] .sidebar { background: var(--dark); }
+    [data-theme="dark"] .sidebar-head { background: linear-gradient(150deg, #12121f, #1e1e33); }
+    [data-theme="dark"] .topbar { background: var(--topbar-bg); border-bottom-color: var(--border); }
+    [data-theme="dark"] .card { background: var(--card-bg); border-color: var(--border); }
+    [data-theme="dark"] .map-wrap { background: var(--card-bg); border-color: var(--border); }
+    [data-theme="dark"] .map-table tbody tr:hover { background: var(--map-hover); }
+    [data-theme="dark"] .map-table tbody tr { border-bottom-color: var(--border); }
+    [data-theme="dark"] .sec-hdr-block { background: var(--card-bg); border-color: var(--border); border-left-color: var(--gold); }
+    [data-theme="dark"] .quiz-opt { background: var(--quiz-opt-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .quiz-opt:hover { border-color: var(--gold); background: #33334d; }
+    [data-theme="dark"] .quiz-opt.correct { border-color: #2e7d32; background: #1a2e1a; color: #66bb6a; }
+    [data-theme="dark"] .quiz-opt.wrong { border-color: #c62828; background: #2e1a1a; color: #ef5350; }
+    [data-theme="dark"] .quiz-explain { background: rgba(46,125,50,.12); }
+    [data-theme="dark"] .myth-item { background: var(--myth-item-bg); border-color: var(--border); }
+    [data-theme="dark"] .myth-btn { background: var(--quiz-opt-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .myth-btn:hover { border-color: var(--gold); }
+    [data-theme="dark"] .myth-btn.myth-correct { border-color: #2e7d32; background: #1a2e1a; color: #66bb6a; }
+    [data-theme="dark"] .myth-btn.myth-wrong { border-color: #c62828; background: #2e1a1a; color: #ef5350; }
+    [data-theme="dark"] .myth-explain { background: rgba(46,125,50,.12); }
+    [data-theme="dark"] .compare-panel { background: var(--compare-bg); border-color: var(--border); }
+    [data-theme="dark"] .order-item { background: var(--order-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .reveal-btn { background: var(--card-bg); border-color: var(--gold); color: var(--gold); }
+    [data-theme="dark"] .reveal-btn:hover { background: var(--gold); color: #fff; }
+    [data-theme="dark"] .key-takeaway { background: linear-gradient(135deg, #2a2415, #221e15); border-color: var(--gold); }
+    [data-theme="dark"] .resource-card { background: var(--card-bg); border-color: var(--border); }
+    [data-theme="dark"] .resource-card:hover { border-color: var(--gold); }
+    [data-theme="dark"] .nav-btn { background: var(--card-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    [data-theme="dark"] .group-foundations { background: #2a2415; color: #d4a017; }
+    [data-theme="dark"] .group-deeper { background: #211828; color: #b388d9; }
+    [data-theme="dark"] .group-practical { background: #152015; color: #66bb6a; }
+    [data-theme="dark"] .concept .sec-hdr h3 { color: #d4a017; }
+    [data-theme="dark"] .activity .sec-hdr h3 { color: #5c9ce6; }
+    [data-theme="dark"] .reflect .sec-hdr h3 { color: #b388d9; }
+    [data-theme="dark"] .takeaway .sec-hdr h3 { color: #66bb6a; }
+    [data-theme="dark"] .myth-card .sec-hdr h3 { color: #ef5350; }
+    [data-theme="dark"] .dnd-item { background: var(--dnd-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .dnd-item:hover { border-color: var(--gold); }
+    [data-theme="dark"] .dnd-item.dnd-correct { border-color: #2e7d32; background: #1a2e1a; }
+    [data-theme="dark"] .dnd-item.dnd-wrong { border-color: #c62828; background: #2e1a1a; }
+    [data-theme="dark"] .synth-pool { background: var(--synth-pool-bg); }
+    [data-theme="dark"] .synth-source { background: var(--card-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .synth-group { background: var(--synth-group-bg); border-color: var(--border); }
+    [data-theme="dark"] .synth-textarea { background: #1a1a2e; border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .decoder-card { background: var(--decoder-bg); border-color: var(--border); }
+    [data-theme="dark"] .decoder-tag-btn { background: var(--card-bg); border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .reflect-textarea { background: #1a1a2e; border-color: var(--border); color: var(--text); }
+    [data-theme="dark"] .progress-wrap { background: rgba(255,255,255,.05); border-top-color: rgba(255,255,255,.08); }
+    [data-theme="dark"] .progress-bar-bg { background: rgba(255,255,255,.1); }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* SKIP LINK */
+    .skip-link {
+      position: absolute; top: -100px; left: 0; z-index: 9999;
+      background: var(--gold); color: #fff; padding: 8px 16px;
+      font-size: 14px; font-weight: 700; text-decoration: none;
+      border-radius: 0 0 8px 0;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* FOCUS VISIBLE */
+    *:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -79,14 +194,53 @@
       width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; flex-shrink: 0; color: #887766;
+      position: relative;
     }
     .nav-item.active .nav-num { background: var(--gold); color: #fff; }
     .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .nav-time {
+      font-size: 10px; color: #6b5e4a; flex-shrink: 0; white-space: nowrap;
+    }
+
+    /* Visited checkmark */
+    .nav-item.visited .nav-num::after {
+      content: '\2713';
+      position: absolute; bottom: -4px; right: -4px;
+      width: 14px; height: 14px; background: #2e7d32; color: #fff;
+      border-radius: 50%; font-size: 8px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      line-height: 1;
+    }
+
+    /* PROGRESS BAR in sidebar */
+    .progress-wrap {
+      padding: 12px 14px; flex-shrink: 0;
+      border-top: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+    }
+    .progress-label {
+      font-size: 10px; color: #a89878; margin-bottom: 6px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .progress-bar-bg {
+      height: 6px; background: rgba(255,255,255,.08); border-radius: 3px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; background: var(--gold); border-radius: 3px;
+      transition: width .4s ease;
+    }
+    .export-btn {
+      display: block; width: 100%; margin-top: 8px;
+      padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.15);
+      background: transparent; color: #a89878; font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: all .15s; text-align: center;
+    }
+    .export-btn:hover { background: rgba(255,255,255,.08); color: #fff; }
 
     /* MAIN */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
     .topbar {
-      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      height: 54px; flex-shrink: 0; background: var(--topbar-bg); border-bottom: 1px solid var(--border);
       display: flex; align-items: center; padding: 0 24px; gap: 12px;
     }
     .topbar h2 {
@@ -97,8 +251,15 @@
       font-size: 12px; color: var(--muted);
       background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
     }
+    .dark-toggle {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 10px; font-size: 16px; cursor: pointer; flex-shrink: 0;
+      transition: background .15s;
+    }
+    .dark-toggle:hover { background: var(--bg); }
     .content {
       flex: 1; overflow-y: auto; padding: 24px;
+      scroll-behavior: smooth;
       scrollbar-width: thin; scrollbar-color: #ccc transparent;
     }
     .content::-webkit-scrollbar { width: 6px; }
@@ -107,9 +268,38 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
     .fade-in { animation: fadeIn .2s ease; }
 
+    /* SHAKE animation */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+    .quiz-opt.wrong { animation: shake .4s ease; }
+    .myth-btn.myth-wrong { animation: shake .4s ease; }
+
+    /* Counter animation */
+    @keyframes countUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* CONFETTI */
+    @keyframes confetti-fall {
+      0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    .confetti-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 9998; overflow: hidden;
+    }
+    .confetti-particle {
+      position: absolute; top: -10px;
+      width: 10px; height: 10px; border-radius: 2px;
+      animation: confetti-fall 3s ease-out forwards;
+    }
+
     /* HERO */
     .hero {
-      background: linear-gradient(135deg, var(--gold), #5a3e1b);
+      background: linear-gradient(135deg, var(--hero-grad1), var(--hero-grad2));
       border-radius: 14px; padding: 36px; color: #fff;
       margin-bottom: 22px; position: relative; overflow: hidden;
     }
@@ -129,7 +319,7 @@
     .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
 
     .card {
-      background: #fff; border-radius: 12px; padding: 22px;
+      background: var(--card-bg); border-radius: 12px; padding: 22px;
       box-shadow: var(--shadow); border: 1px solid var(--border);
     }
     .card-title {
@@ -147,7 +337,7 @@
     }
     .check-list li::before { content: '\2713'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
     .resource-card {
-      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px;
       padding: 14px; cursor: pointer; transition: all .18s;
       display: flex; flex-direction: column; gap: 5px;
     }
@@ -162,7 +352,7 @@
 
     /* SECTION MAP */
     .map-wrap {
-      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--card-bg); border-radius: 12px; border: 1px solid var(--border);
       box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
     }
     .map-table { width: 100%; border-collapse: collapse; }
@@ -173,20 +363,27 @@
     }
     .map-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
     .map-table tbody tr:last-child { border-bottom: none; }
-    .map-table tbody tr:hover { background: #fdf6e3; }
+    .map-table tbody tr:hover { background: var(--map-hover); }
     .map-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
     .map-table .sec-col { font-weight: 700; color: var(--gold); white-space: nowrap; }
     .group-pill {
       display: inline-block; padding: 2px 8px; border-radius: 4px;
       font-size: 11px; font-weight: 700;
     }
-    .group-foundations { background: #fdf3dc; color: #7b5e00; }
+    .group-foundations { background: #fdf3dc; color: #6b5000; }
     .group-deeper      { background: #f3e8fa; color: #6a3d8a; }
     .group-practical    { background: #e8f5e9; color: #2e7d32; }
 
+    /* TIME CHIP */
+    .time-chip {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      color: var(--muted); background: var(--bg); padding: 2px 7px;
+      border-radius: 10px; margin-left: 6px; vertical-align: middle;
+    }
+
     /* SECTION HEADER */
     .sec-hdr-block {
-      background: #fff; border-radius: 12px; padding: 26px;
+      background: var(--card-bg); border-radius: 12px; padding: 26px;
       margin-bottom: 18px; box-shadow: var(--shadow);
       border: 1px solid var(--border); border-left: 5px solid var(--gold);
     }
@@ -253,7 +450,7 @@
     .quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
     .quiz-opt {
       padding: 7px 16px; border-radius: 8px; border: 2px solid var(--border);
-      background: #fff; font-size: 13px; cursor: pointer; transition: all .15s;
+      background: var(--quiz-opt-bg); font-size: 13px; cursor: pointer; transition: all .15s;
       color: var(--text); font-weight: 500;
     }
     .quiz-opt:hover { border-color: var(--gold); background: #fdf6e3; }
@@ -269,14 +466,19 @@
 
     /* Myth toggle cards */
     .myth-item {
-      background: #fff; border-radius: 10px; padding: 16px;
+      background: var(--myth-item-bg); border-radius: 10px; padding: 16px;
       margin-bottom: 12px; border: 1px solid var(--border);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .myth-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0,0,0,.1);
     }
     .myth-statement { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
     .myth-btns { display: flex; gap: 8px; margin-bottom: 8px; }
     .myth-btn {
       padding: 6px 18px; border-radius: 8px; border: 2px solid var(--border);
-      background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer;
+      background: var(--quiz-opt-bg); font-size: 12.5px; font-weight: 700; cursor: pointer;
       transition: all .15s; text-transform: uppercase; letter-spacing: .5px;
     }
     .myth-btn:hover { border-color: var(--gold); }
@@ -294,7 +496,7 @@
     .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
     @media(max-width:640px) { .compare-grid { grid-template-columns: 1fr; } }
     .compare-panel {
-      background: #fff; border-radius: 10px; padding: 16px; border: 1px solid var(--border);
+      background: var(--compare-bg); border-radius: 10px; padding: 16px; border: 1px solid var(--border);
     }
     .compare-panel h4 {
       font-size: 12px; font-weight: 700; text-transform: uppercase;
@@ -304,9 +506,48 @@
     .compare-panel.not-lr h4 { color: #c62828; }
     .compare-panel p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
 
-    /* Ordering exercise */
+    /* DnD Ordering exercise */
+    .dnd-list { list-style: none; padding: 0; margin: 0; }
+    .dnd-item {
+      background: var(--dnd-bg); border-radius: 8px; padding: 10px 14px;
+      margin-bottom: 8px; border: 2px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--text); cursor: grab;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      user-select: none;
+    }
+    .dnd-item:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .dnd-item.dragging { opacity: .5; }
+    .dnd-item.drag-over { border-color: var(--gold); background: rgba(184,134,11,.08); }
+    .dnd-item.dnd-correct { border-color: #2e7d32; background: rgba(46,125,50,.08); }
+    .dnd-item.dnd-wrong { border-color: #c62828; background: rgba(198,40,40,.08); }
+    .dnd-grip { color: var(--muted); font-size: 16px; flex-shrink: 0; cursor: grab; }
+    .dnd-num {
+      width: 26px; height: 26px; background: var(--bg); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0;
+    }
+    .dnd-text { flex: 1; }
+    .dnd-arrows { display: none; flex-shrink: 0; gap: 4px; }
+    .dnd-arrow-btn {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      width: 28px; height: 28px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); transition: all .12s;
+    }
+    .dnd-arrow-btn:hover { border-color: var(--gold); color: var(--gold); }
+    @media(max-width:768px) { .dnd-arrows { display: flex; } }
+    .dnd-check-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 8px; border: 2px solid var(--c-activity);
+      background: var(--card-bg); color: var(--c-activity); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all .15s; margin-top: 10px; margin-right: 8px;
+    }
+    .dnd-check-btn:hover { background: var(--c-activity); color: #fff; }
+
+    /* Old ordering styles kept for reveal */
     .order-item {
-      background: #fff; border-radius: 8px; padding: 10px 14px;
+      background: var(--order-bg); border-radius: 8px; padding: 10px 14px;
       margin-bottom: 8px; border: 1px solid var(--border);
       display: flex; align-items: center; gap: 10px;
       font-size: 13px; color: var(--text);
@@ -319,7 +560,7 @@
     .reveal-btn {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 18px; border-radius: 8px; border: 2px solid var(--gold);
-      background: #fff; color: var(--gold); font-size: 13px; font-weight: 700;
+      background: var(--card-bg); color: var(--gold); font-size: 13px; font-weight: 700;
       cursor: pointer; transition: all .15s; margin-top: 10px;
     }
     .reveal-btn:hover { background: var(--gold); color: #fff; }
@@ -335,19 +576,114 @@
     .key-takeaway .kt-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
     .key-takeaway .kt-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.5; }
 
+    /* Reflection textarea */
+    .reflect-textarea {
+      width: 100%; min-height: 80px; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid var(--border); font-family: inherit; font-size: 13px;
+      color: var(--text); background: var(--card-bg); resize: vertical;
+      line-height: 1.6; margin-top: 6px;
+    }
+    .reflect-textarea:focus { outline: none; border-color: var(--c-reflect); }
+
+    /* SYNTHESIS BUILDER */
+    .synth-pool {
+      background: var(--synth-pool-bg); border-radius: 10px; padding: 14px;
+      margin-bottom: 14px; min-height: 60px; border: 2px dashed var(--border);
+    }
+    .synth-pool-label {
+      font-size: 11px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px;
+    }
+    .synth-source {
+      background: var(--card-bg); border: 2px solid var(--border); border-radius: 8px;
+      padding: 10px 14px; margin-bottom: 8px; cursor: grab; user-select: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .synth-source:hover { border-color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .synth-source.dragging { opacity: .5; }
+    .synth-source .synth-cite { font-size: 12px; font-weight: 700; color: var(--gold); margin-bottom: 4px; }
+    .synth-source .synth-snip { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .synth-source.synth-correct { border-color: #2e7d32; background: rgba(46,125,50,.06); }
+    .synth-source.synth-wrong { border-color: #c62828; background: rgba(198,40,40,.06); }
+    .synth-mobile-btns { display: none; margin-top: 6px; gap: 6px; flex-wrap: wrap; }
+    @media(max-width:768px) { .synth-mobile-btns { display: flex; } .synth-source { cursor: pointer; } }
+    .synth-mobile-btn {
+      padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--card-bg); font-size: 11px; font-weight: 600; cursor: pointer;
+      color: var(--text); transition: all .12s;
+    }
+    .synth-mobile-btn:hover { border-color: var(--gold); }
+    .synth-groups-wrap { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; margin-bottom: 14px; }
+    .synth-group {
+      background: var(--synth-group-bg); border-radius: 10px; padding: 14px;
+      border: 2px dashed var(--border); min-height: 80px;
+      transition: border-color .15s;
+    }
+    .synth-group.drag-over { border-color: var(--gold); background: rgba(184,134,11,.05); }
+    .synth-group-label {
+      font-size: 12px; font-weight: 700; margin-bottom: 8px; padding-bottom: 6px;
+      border-bottom: 3px solid;
+    }
+    .synth-group .synth-sources-area { min-height: 40px; }
+    .synth-textarea {
+      width: 100%; min-height: 50px; padding: 8px 10px; border-radius: 6px;
+      border: 1px solid var(--border); font-family: inherit; font-size: 12px;
+      color: var(--text); background: var(--card-bg); resize: vertical;
+      line-height: 1.5; margin-top: 8px;
+    }
+    .synth-textarea:focus { outline: none; border-color: var(--c-activity); }
+    .synth-textarea-label { font-size: 10px; font-weight: 600; color: var(--muted); margin-top: 8px; text-transform: uppercase; }
+
+    /* ABSTRACT DECODER */
+    .decoder-toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;
+      padding: 10px 14px; background: var(--bg); border-radius: 8px;
+    }
+    .decoder-tag-btn {
+      padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border);
+      background: var(--card-bg); font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all .15s; color: var(--text);
+    }
+    .decoder-tag-btn:hover { border-color: var(--gold); }
+    .decoder-tag-btn.active { color: #fff; }
+    .decoder-card {
+      background: var(--decoder-bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 14px;
+    }
+    .decoder-difficulty {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 10px; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px;
+    }
+    .decoder-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
+    .decoder-sentence {
+      display: inline; padding: 2px 4px; border-radius: 4px; cursor: pointer;
+      transition: background .15s; line-height: 1.8; font-size: 13px; color: var(--muted);
+    }
+    .decoder-sentence:hover { background: rgba(184,134,11,.1); }
+    .decoder-sentence.tagged { color: var(--text); font-weight: 500; }
+    .decoder-sentence.dec-correct-ring { box-shadow: 0 0 0 2px #2e7d32; }
+    .decoder-sentence.dec-wrong-ring { box-shadow: 0 0 0 2px #c62828; }
+
     /* PREV/NEXT NAV */
     .sec-nav {
       display: flex; justify-content: space-between; align-items: center;
       padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
     }
     .nav-btn {
-      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
       padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
       display: flex; align-items: center; gap: 6px;
       transition: all .14s; color: var(--text);
     }
     .nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
     .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ANNOUNCE (screen reader) */
+    .sr-announce {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
 
     /* MOBILE */
     @media(max-width: 768px) {
@@ -358,12 +694,29 @@
       .hamburger { display: block; }
       .main { overflow: visible; }
       .content { overflow: visible; }
+      .progress-wrap.mobile-hide { }
+    }
+
+    /* PRINT */
+    @media print {
+      .sidebar, .topbar, .sec-nav, .dark-toggle, .progress-wrap, .skip-link, .sr-announce { display: none !important; }
+      body { display: block; overflow: visible; height: auto; background: #fff; color: #000; }
+      .main { overflow: visible; }
+      .content { overflow: visible; padding: 0; }
+      .reveal-content { display: block !important; }
+      .sec, .card, .sec-hdr-block, .key-takeaway, .myth-item, .compare-panel, .decoder-card {
+        break-inside: avoid; page-break-inside: avoid;
+      }
+      .hero { color: #000; background: #f0f0f0 !important; }
     }
   </style>
 </head>
 <body>
 
-<aside class="sidebar">
+<a href="#content" class="skip-link">Skip to content</a>
+<div class="sr-announce" id="announcer" role="status" aria-live="polite"></div>
+
+<aside class="sidebar" role="navigation" aria-label="Module navigation">
   <div class="sidebar-head">
     <div class="logo-row">
       <div class="mod-badge">LR</div>
@@ -371,36 +724,45 @@
         <h1>Literature Reviews</h1>
         <div class="sub">Research Foundations Module</div>
       </div>
-      <button class="hamburger" onclick="toggleNav()">&#9776;</button>
+      <button class="hamburger" onclick="toggleNav()" aria-label="Toggle navigation menu">&#9776;</button>
     </div>
   </div>
-  <nav class="nav-scroll" id="navScroll">
+  <nav class="nav-scroll" id="navScroll" aria-label="Section navigation">
     <div class="nav-group-label">Overview</div>
-    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+    <div class="nav-item active" id="nav-overview" tabindex="0" onclick="go('overview')" role="button">
       <div class="nav-num">&nbsp;&nbsp;</div>
       <span class="nav-label">Module Overview</span>
     </div>
-    <div class="nav-item" id="nav-map" onclick="go('map')">
+    <div class="nav-item" id="nav-map" tabindex="0" onclick="go('map')" role="button">
       <div class="nav-num">&nbsp;&nbsp;</div>
       <span class="nav-label">Section Map</span>
     </div>
     <!-- section nav items injected by JS -->
   </nav>
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="progressText">0 / 7 sections</span>
+    </div>
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    <button class="export-btn" onclick="exportReflections()" aria-label="Export reflections to text file">Export Reflections</button>
+  </div>
 </aside>
 
 <div class="main">
   <div class="topbar">
     <h2 id="topTitle">Module Overview</h2>
     <span class="chip" id="topChip">7 Sections &middot; Self-Paced &middot; Interactive</span>
+    <button class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">&#127769;</button>
   </div>
-  <div class="content" id="content"></div>
+  <div class="content" id="content" role="main"></div>
 </div>
 
 <script>
 /* ============================================================
    MODULE DATA
 ============================================================ */
-const data = {
+var data = {
   goals: [
     "Explain what a literature review is and how it differs from other academic writing",
     "Articulate why researchers conduct literature reviews before starting new research",
@@ -420,7 +782,7 @@ const data = {
   sections: [
     /* ───── SECTION 1 ───── */
     {
-      n: 1, title: "What Even IS a Literature Review?", group: "Foundations",
+      n: 1, title: "What Even IS a Literature Review?", group: "Foundations", time: 15,
       objectives: [
         "Define a literature review in plain language",
         "Distinguish it from a book report, an annotated bibliography, and a research paper",
@@ -474,7 +836,7 @@ const data = {
 
     /* ───── SECTION 2 ───── */
     {
-      n: 2, title: "The Essential Why \u2014 What\u2019s the Point?", group: "Foundations",
+      n: 2, title: "The Essential Why \u2014 What\u2019s the Point?", group: "Foundations", time: 15,
       objectives: [
         "Explain at least three reasons researchers conduct literature reviews",
         "Understand that all research builds on previous work",
@@ -534,7 +896,7 @@ const data = {
 
     /* ───── SECTION 3 ───── */
     {
-      n: 3, title: "How Research Actually Works \u2014 The Big Picture", group: "Foundations",
+      n: 3, title: "How Research Actually Works \u2014 The Big Picture", group: "Foundations", time: 20,
       objectives: [
         "Map where the literature review falls in the research process",
         "Understand that research is iterative, not linear",
@@ -559,7 +921,7 @@ const data = {
       activity: {
         type: "ordering",
         title: "Build the Research Timeline",
-        desc: "Below are the stages of a research project, but they have been scrambled. Think about what order they should go in, then click \"Reveal the Process\" to see the answer \u2014 and an important twist.",
+        desc: "Below are the stages of a research project, but they have been scrambled. Drag them into the correct order (or use the arrow buttons on mobile), then click \"Check My Order\" to see how you did.",
         scrambled: [
           "Analyze your data and look for patterns",
           "Review the existing literature on your topic",
@@ -585,7 +947,7 @@ const data = {
 
     /* ───── SECTION 4 ───── */
     {
-      n: 4, title: "Myths and Misconceptions", group: "Going Deeper",
+      n: 4, title: "Myths and Misconceptions", group: "Going Deeper", time: 15,
       objectives: [
         "Identify and correct at least four common misconceptions about literature reviews",
         "Build confidence by normalizing the difficulty",
@@ -644,7 +1006,7 @@ const data = {
 
     /* ───── SECTION 5 ───── */
     {
-      n: 5, title: "Literature Review vs. Everything Else", group: "Going Deeper",
+      n: 5, title: "Literature Review vs. Everything Else", group: "Going Deeper", time: 15,
       objectives: [
         "Clearly distinguish a literature review from a summary, annotated bibliography, research paper, and essay",
         "Understand the unique purpose of synthesis in a literature review",
@@ -695,12 +1057,30 @@ const data = {
           }
         ]
       },
+      activity2: {
+        type: "synthesis",
+        title: "Source Synthesis Builder",
+        desc: "Now try synthesis yourself! Below are five source snippets about social media and sleep. Drag each source into the thematic group where it best fits, then write a one-sentence synthesis statement for each group.",
+        topic: "Social Media and Sleep Quality",
+        sources: [
+          { id: "src1", citation: "Chen (2022)", snippet: "Surveyed 1,200 students. Those using social media within 30 minutes of bedtime reported 40% lower sleep quality scores. Effect was dose-dependent: more screen time meant worse sleep.", correctGroup: 0 },
+          { id: "src2", citation: "Nakamura (2021)", snippet: "Measured melatonin levels in 85 participants after 1 hour of phone use. Blue light exposure suppressed melatonin production by 23%, with LED screens showing stronger effects than OLED.", correctGroup: 1 },
+          { id: "src3", citation: "Williams (2020)", snippet: "Compared active posting vs. passive scrolling in 300 college students. Passive scrolling showed minimal sleep impact, while active engagement (commenting, posting) delayed sleep onset by an average of 28 minutes.", correctGroup: 0 },
+          { id: "src4", citation: "Park & Liu (2023)", snippet: "Exposed participants to emotionally arousing vs. neutral content before bed. Arousing content (news, debates) increased pre-sleep cognitive activity and delayed sleep onset regardless of screen brightness.", correctGroup: 2 },
+          { id: "src5", citation: "Torres (2022)", snippet: "Tested blue-light filtering glasses in a 4-week RCT with 150 students. Glasses improved sleep latency by 12 minutes but did not affect overall sleep quality, suggesting light is only one factor.", correctGroup: 1 }
+        ],
+        groups: [
+          { id: 0, label: "Usage Patterns & Sleep Quality", color: "#1565c0" },
+          { id: 1, label: "Blue Light & Biological Mechanisms", color: "#6a3d8a" },
+          { id: 2, label: "Content Type & Emotional Arousal", color: "#c62828" }
+        ]
+      },
       reflection: "In your own words, explain the difference between summarizing sources and synthesizing them. Can you think of a non-academic example of synthesis? (Hint: think about making a playlist, cooking a meal from multiple recipes, or forming an opinion after hearing from several friends.)"
     },
 
     /* ───── SECTION 6 ───── */
     {
-      n: 6, title: "Reading Academic Sources Without Panicking", group: "Practical Skills",
+      n: 6, title: "Reading Academic Sources Without Panicking", group: "Practical Skills", time: 20,
       objectives: [
         "Apply a practical strategy for reading academic papers",
         "Identify the key sections of a standard academic article",
@@ -773,12 +1153,58 @@ const data = {
           }
         ]
       },
+      activity2: {
+        type: "decoder",
+        title: "Abstract Decoder",
+        desc: "Practice strategic reading! Select a tag type from the toolbar, then click sentences in each abstract to label them. When you are done, click Check to see how you did.",
+        tagTypes: [
+          { id: "question", label: "Research Question", color: "#1565c0", bg: "#e3f0fd" },
+          { id: "method", label: "Method", color: "#6a3d8a", bg: "#f3e8fa" },
+          { id: "finding", label: "Finding", color: "#2e7d32", bg: "#e8f5e9" },
+          { id: "gap", label: "Gap / Limitation", color: "#c62828", bg: "#fce8e6" }
+        ],
+        abstracts: [
+          {
+            id: "abs1", difficulty: "Introductory", title: "Group Study Effectiveness",
+            sentences: [
+              { text: "This study investigated whether collaborative study groups improve exam performance compared to individual study.", tag: "question" },
+              { text: "A quasi-experimental design compared 120 biology students across four sections, with two sections assigned to mandatory study groups and two to individual study.", tag: "method" },
+              { text: "Students in study groups scored an average of 12 points higher on the final exam (p < .01).", tag: "finding" },
+              { text: "Group students also reported higher confidence in the material and greater course satisfaction.", tag: "finding" },
+              { text: "The study was limited to a single course at one institution, and students were not randomly assigned to conditions.", tag: "gap" }
+            ]
+          },
+          {
+            id: "abs2", difficulty: "Intermediate", title: "Office Hours and Student Success",
+            sentences: [
+              { text: "Despite widespread availability of faculty office hours, few studies have examined which students attend and whether attendance predicts academic outcomes.", tag: "question" },
+              { text: "This mixed-methods study tracked office hour attendance for 450 students across 12 sections of introductory chemistry over two semesters and conducted follow-up interviews with 30 frequent and infrequent attendees.", tag: "method" },
+              { text: "Only 18% of students attended office hours more than twice per semester, with first-generation students attending at significantly lower rates.", tag: "finding" },
+              { text: "Frequent attendees earned final grades 0.4 points higher on a 4.0 scale, even after controlling for prior GPA.", tag: "finding" },
+              { text: "Interview data revealed that non-attendees perceived office hours as intended only for struggling students, suggesting a framing problem rather than an access problem.", tag: "finding" },
+              { text: "Future research should test whether reframing office hours as collaborative learning sessions rather than help-seeking changes attendance patterns across demographic groups.", tag: "gap" }
+            ]
+          },
+          {
+            id: "abs3", difficulty: "Advanced", title: "AI Writing Tools in Composition Courses",
+            sentences: [
+              { text: "As AI writing assistants become ubiquitous, composition instructors face the question of whether these tools support or undermine the development of critical writing skills.", tag: "question" },
+              { text: "This semester-long ethnographic study embedded researchers in three sections of first-year composition at a large public university, collecting student drafts, revision histories, instructor feedback, and weekly reflective journals from 68 participants.", tag: "method" },
+              { text: "Students who used AI tools for brainstorming and outlining produced first drafts with stronger organizational structure.", tag: "finding" },
+              { text: "However, students who used AI for sentence-level revision showed less improvement in grammatical accuracy over the semester compared to non-users.", tag: "finding" },
+              { text: "Notably, students across all groups struggled to critically evaluate AI-generated suggestions, accepting approximately 80% without modification.", tag: "finding" },
+              { text: "The single-institution design and self-selected AI usage limit generalizability, and the study could not control for differences in writing motivation between users and non-users.", tag: "gap" },
+              { text: "Longitudinal research is needed to determine whether early reliance on AI tools affects writing development across multiple semesters.", tag: "gap" }
+            ]
+          }
+        ]
+      },
       reflection: "What is your biggest worry about reading academic articles? After this section, what one strategy would you try first? Remember: every expert was once a beginner who felt exactly the way you feel right now."
     },
 
     /* ───── SECTION 7 ───── */
     {
-      n: 7, title: "Putting It All Together", group: "Practical Skills",
+      n: 7, title: "Putting It All Together", group: "Practical Skills", time: 20,
       objectives: [
         "Synthesize everything learned across all sections of this module",
         "Feel prepared and motivated to approach a real literature review",
@@ -865,6 +1291,162 @@ const data = {
 };
 
 /* ============================================================
+   STORAGE HELPERS
+============================================================ */
+function storageGet(key, fallback) {
+  try {
+    var raw = localStorage.getItem('lrmod_' + key);
+    return raw !== null ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+
+function storageSet(key, val) {
+  try { localStorage.setItem('lrmod_' + key, JSON.stringify(val)); } catch (e) {}
+}
+
+/* ============================================================
+   PROGRESS STATE
+============================================================ */
+var progress = {
+  visited: storageGet('visited', []),
+  activities: storageGet('activities', {}),
+  reflections: storageGet('reflections', {}),
+  synthesis: storageGet('synthesis', {})
+};
+
+function markVisited(viewId) {
+  if (progress.visited.indexOf(viewId) === -1) {
+    progress.visited.push(viewId);
+    storageSet('visited', progress.visited);
+  }
+  updateProgressUI();
+  var navEl = document.getElementById('nav-' + viewId);
+  if (navEl) navEl.classList.add('visited');
+  // Check if all 7 sections visited
+  var sectionCount = 0;
+  for (var i = 0; i < progress.visited.length; i++) {
+    if (progress.visited[i].indexOf('sec-') === 0) sectionCount++;
+  }
+  if (sectionCount >= 7) renderConfetti();
+}
+
+function markActivity(activityId) {
+  progress.activities[activityId] = true;
+  storageSet('activities', progress.activities);
+}
+
+function updateProgressUI() {
+  var sectionCount = 0;
+  for (var i = 0; i < progress.visited.length; i++) {
+    if (progress.visited[i].indexOf('sec-') === 0) sectionCount++;
+  }
+  var el = document.getElementById('progressText');
+  if (el) el.textContent = sectionCount + ' / 7 sections';
+  var fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = Math.round((sectionCount / 7) * 100) + '%';
+}
+
+function saveReflection(secNum, text) {
+  progress.reflections[secNum] = text;
+  storageSet('reflections', progress.reflections);
+}
+
+function saveSynthesisState(secNum) {
+  // Gather grouping state
+  var state = { placements: {}, statements: {} };
+  var groups = document.querySelectorAll('.synth-group[data-secnum="' + secNum + '"]');
+  groups.forEach(function(g) {
+    var gid = g.getAttribute('data-gid');
+    var sources = g.querySelectorAll('.synth-source');
+    var ids = [];
+    sources.forEach(function(s) { ids.push(s.getAttribute('data-srcid')); });
+    state.placements[gid] = ids;
+    var ta = g.querySelector('.synth-textarea');
+    if (ta) state.statements[gid] = ta.value;
+  });
+  progress.synthesis[secNum] = state;
+  storageSet('synthesis', progress.synthesis);
+}
+
+function renderConfetti() {
+  var container = document.createElement('div');
+  container.className = 'confetti-container';
+  var colors = ['#b8860b', '#d4a017', '#2e7d32', '#1565c0', '#6a3d8a', '#c62828', '#ff9800'];
+  for (var i = 0; i < 50; i++) {
+    var p = document.createElement('div');
+    p.className = 'confetti-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDelay = (Math.random() * 2) + 's';
+    p.style.width = (6 + Math.random() * 8) + 'px';
+    p.style.height = (6 + Math.random() * 8) + 'px';
+    container.appendChild(p);
+  }
+  document.body.appendChild(container);
+  setTimeout(function() { if (container.parentNode) container.parentNode.removeChild(container); }, 3500);
+}
+
+function exportReflections() {
+  var lines = ['Literature Review Module - My Reflections', '==========================================', ''];
+  data.sections.forEach(function(s) {
+    lines.push('Section ' + s.n + ': ' + s.title);
+    lines.push('---');
+    var text = progress.reflections[s.n] || '(No reflection written)';
+    lines.push(text);
+    lines.push('');
+  });
+  var blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'LitReview_Reflections.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+/* ============================================================
+   DARK MODE
+============================================================ */
+function initDarkMode() {
+  var dm = storageGet('darkmode', 'light');
+  if (dm === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  updateDarkToggleIcon();
+}
+
+function toggleDarkMode() {
+  var current = document.documentElement.getAttribute('data-theme');
+  var next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  storageSet('darkmode', next);
+  updateDarkToggleIcon();
+}
+
+function updateDarkToggleIcon() {
+  var btn = document.getElementById('darkToggle');
+  if (!btn) return;
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.innerHTML = isDark ? '&#9728;' : '&#127769;';
+  btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+}
+
+// Init dark mode before render to prevent flash
+initDarkMode();
+
+/* ============================================================
+   ANNOUNCE (accessibility)
+============================================================ */
+function announce(msg) {
+  var el = document.getElementById('announcer');
+  if (el) {
+    el.textContent = '';
+    setTimeout(function() { el.textContent = msg; }, 50);
+  }
+}
+
+/* ============================================================
    HELPERS
 ============================================================ */
 function esc(s) {
@@ -876,13 +1458,40 @@ function esc(s) {
 }
 
 function setActive(id) {
-  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-  const el = document.getElementById('nav-' + id);
+  document.querySelectorAll('.nav-item').forEach(function(el) { el.classList.remove('active'); });
+  var el = document.getElementById('nav-' + id);
   if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
 
 function nl2p(text) {
-  return text.split('\n\n').map(p => '<p>' + esc(p) + '</p>').join('');
+  return text.split('\n\n').map(function(p) { return '<p>' + esc(p) + '</p>'; }).join('');
+}
+
+function getTotalTime() {
+  var total = 0;
+  data.sections.forEach(function(s) { total += (s.time || 15); });
+  return total;
+}
+
+/* ============================================================
+   ANIMATE COUNTERS
+============================================================ */
+function animateCounters() {
+  var boxes = document.querySelectorAll('.stat-box .val[data-target]');
+  boxes.forEach(function(box) {
+    var target = parseInt(box.getAttribute('data-target'), 10);
+    if (isNaN(target)) return;
+    var current = 0;
+    var step = Math.max(1, Math.floor(target / 30));
+    var interval = setInterval(function() {
+      current += step;
+      if (current >= target) {
+        current = target;
+        clearInterval(interval);
+      }
+      box.textContent = current;
+    }, 30);
+  });
 }
 
 /* ============================================================
@@ -892,23 +1501,25 @@ function renderOverview() {
   document.getElementById('topTitle').textContent = 'Module Overview';
   document.getElementById('topChip').textContent  = '7 Sections \u00B7 Self-Paced \u00B7 Interactive';
 
-  const goals = data.goals.map(g => '<li>' + esc(g) + '</li>').join('');
-  const res   = data.resources.map(r =>
-    '<div class="resource-card" onclick="window.open(\'' + r.url + '\',\'_blank\')">' +
+  var goals = data.goals.map(function(g) { return '<li>' + esc(g) + '</li>'; }).join('');
+  var res   = data.resources.map(function(r) {
+    return '<div class="resource-card" onclick="window.open(\'' + r.url + '\',\'_blank\')">' +
       '<div class="r-icon">' + r.icon + '</div>' +
       '<div class="r-title">' + esc(r.title) + '</div>' +
       '<div class="r-desc">' + esc(r.desc) + '</div>' +
-    '</div>'
-  ).join('');
+    '</div>';
+  }).join('');
+
+  var totalMin = getTotalTime();
 
   document.getElementById('content').innerHTML = '<div class="fade-in">' +
     '<div class="hero">' +
       '<h1>Understanding Literature Reviews</h1>' +
       '<div class="tagline">A Research Foundations Module for Emerging Scholars</div>' +
       '<div class="hero-stats">' +
-        '<div class="stat-box"><div class="val">7</div><div class="lbl">Sections</div></div>' +
-        '<div class="stat-box"><div class="val">\u223C2h</div><div class="lbl">Estimated</div></div>' +
-        '<div class="stat-box"><div class="val">6</div><div class="lbl">Activities</div></div>' +
+        '<div class="stat-box"><div class="val" data-target="7">0</div><div class="lbl">Sections</div></div>' +
+        '<div class="stat-box"><div class="val">~' + totalMin + 'min</div><div class="lbl">Estimated</div></div>' +
+        '<div class="stat-box"><div class="val" data-target="6">0</div><div class="lbl">Activities</div></div>' +
         '<div class="stat-box"><div class="val">\u221E</div><div class="lbl">Self-Paced</div></div>' +
       '</div>' +
     '</div>' +
@@ -936,6 +1547,8 @@ function renderOverview() {
       '<div class="row3" style="margin-bottom:0; margin-top:4px">' + res + '</div>' +
     '</div>' +
   '</div>';
+
+  animateCounters();
 }
 
 /* ============================================================
@@ -954,13 +1567,14 @@ function renderMap() {
       '<td>' + esc(s.title) + '</td>' +
       '<td><span class="group-pill ' + gc + '">' + esc(s.group) + '</span></td>' +
       '<td>' + s.objectives.length + ' objectives</td>' +
+      '<td><span class="time-chip">~' + (s.time || 15) + 'min</span></td>' +
     '</tr>';
   }).join('');
 
   document.getElementById('content').innerHTML = '<div class="fade-in">' +
     '<div class="map-wrap">' +
       '<table class="map-table">' +
-        '<thead><tr><th>Section</th><th>Title</th><th>Group</th><th>Scope</th></tr></thead>' +
+        '<thead><tr><th>Section</th><th>Title</th><th>Group</th><th>Scope</th><th>Time</th></tr></thead>' +
         '<tbody>' + rows + '</tbody>' +
       '</table>' +
     '</div>' +
@@ -985,7 +1599,7 @@ function renderSection(num) {
   var topics = s.topics.map(function(t) { return '<li>' + esc(t) + '</li>'; }).join('');
 
   html += '<div class="sec-hdr-block">' +
-    '<div class="sec-label-top">Section ' + s.n + ' \u2014 ' + esc(s.group) + '</div>' +
+    '<div class="sec-label-top">Section ' + s.n + ' \u2014 ' + esc(s.group) + '<span class="time-chip">~' + (s.time || 15) + 'min</span></div>' +
     '<h2>' + esc(s.title) + '</h2>' +
     '<div class="ot-grid">' +
       '<div class="ot-section"><h4>Learning Objectives</h4><ul class="ot-list obj-list">' + objs + '</ul></div>' +
@@ -1016,11 +1630,18 @@ function renderSection(num) {
     html += renderActivity(s.activity, num);
   }
 
+  // Activity2 (synthesis or decoder)
+  if (s.activity2) {
+    html += renderActivity(s.activity2, num);
+  }
+
   // Reflection
   if (s.reflection) {
+    var savedRef = progress.reflections[num] || '';
     html += '<div class="sec reflect">' +
       '<div class="sec-hdr"><div class="sec-icon">\uD83D\uDCAD</div><h3>Pause and Reflect</h3></div>' +
       '<p>' + esc(s.reflection) + '</p>' +
+      '<textarea class="reflect-textarea" placeholder="Write your reflection here..." aria-label="Your reflection for section ' + num + '" oninput="saveReflection(' + num + ', this.value)">' + esc(savedRef) + '</textarea>' +
     '</div>';
   }
 
@@ -1040,6 +1661,19 @@ function renderSection(num) {
   html += '</div>';
   document.getElementById('content').innerHTML = html;
   document.getElementById('content').scrollTop = 0;
+
+  // Init DnD for ordering (section 3)
+  if (s.activity && s.activity.type === 'ordering') {
+    initDnD(num);
+  }
+  // Init Synthesis DnD
+  if (s.activity2 && s.activity2.type === 'synthesis') {
+    initSynthesisDnD(num);
+  }
+  // Init Decoder
+  if (s.activity2 && s.activity2.type === 'decoder') {
+    initDecoderKeyboard(num);
+  }
 }
 
 /* ============================================================
@@ -1060,6 +1694,10 @@ function renderActivity(act, secNum) {
     html += renderOrdering(act, secNum);
   } else if (act.type === 'comparison') {
     html += renderComparison(act.items, secNum);
+  } else if (act.type === 'synthesis') {
+    html += renderSynthesis(act, secNum);
+  } else if (act.type === 'decoder') {
+    html += renderDecoder(act, secNum);
   }
 
   html += '</div>';
@@ -1072,9 +1710,9 @@ function renderQuiz(items, secNum) {
     var id = 'q' + secNum + '_' + qi;
     html += '<div class="quiz-item">';
     html += '<div class="quiz-q">' + (qi + 1) + '. ' + esc(item.q) + '</div>';
-    html += '<div class="quiz-opts" id="opts_' + id + '">';
+    html += '<div class="quiz-opts" id="opts_' + id + '" role="listbox" aria-label="Answer options for question ' + (qi + 1) + '">';
     item.options.forEach(function(opt, oi) {
-      html += '<button class="quiz-opt" onclick="checkQuiz(\'' + id + '\',' + oi + ',' + item.correct + ')">' + esc(opt) + '</button>';
+      html += '<button class="quiz-opt" role="option" onclick="checkQuiz(\'' + id + '\',' + oi + ',' + item.correct + ',' + secNum + ')">' + esc(opt) + '</button>';
     });
     html += '</div>';
     html += '<div class="quiz-explain" id="exp_' + id + '">' + esc(item.explain) + '</div>';
@@ -1090,8 +1728,8 @@ function renderMyth(items, secNum) {
     html += '<div class="myth-item">';
     html += '<div class="myth-statement">"' + esc(item.statement) + '"</div>';
     html += '<div class="myth-btns" id="btns_' + id + '">';
-    html += '<button class="myth-btn" onclick="checkMyth(\'' + id + '\',\'myth\',\'' + item.answer + '\')">Myth</button>';
-    html += '<button class="myth-btn" onclick="checkMyth(\'' + id + '\',\'reality\',\'' + item.answer + '\')">Reality</button>';
+    html += '<button class="myth-btn" aria-label="Mark as myth" onclick="checkMyth(\'' + id + '\',\'myth\',\'' + item.answer + '\',' + secNum + ')">Myth</button>';
+    html += '<button class="myth-btn" aria-label="Mark as reality" onclick="checkMyth(\'' + id + '\',\'reality\',\'' + item.answer + '\',' + secNum + ')">Reality</button>';
     html += '</div>';
     html += '<div class="myth-explain" id="mexp_' + id + '">' + esc(item.explain) + '</div>';
     html += '</div>';
@@ -1103,7 +1741,7 @@ function renderScenario(items, secNum) {
   var html = '';
   items.forEach(function(item, si) {
     var id = 'sc' + secNum + '_' + si;
-    html += '<div class="myth-item" style="cursor:pointer" onclick="toggleScenario(\'' + id + '\')">';
+    html += '<div class="myth-item" style="cursor:pointer" onclick="toggleScenario(\'' + id + '\')" tabindex="0" role="button" aria-expanded="false">';
     html += '<div class="myth-statement" style="margin-bottom:4px">\u2753 ' + esc(item.q) + '</div>';
     html += '<div class="myth-explain" id="scexp_' + id + '">' + esc(item.explain) + '</div>';
     html += '</div>';
@@ -1114,13 +1752,25 @@ function renderScenario(items, secNum) {
 function renderOrdering(act, secNum) {
   var html = '';
 
-  // Show scrambled items
+  // Drag-and-drop list
+  html += '<div class="dnd-list" id="dndList_' + secNum + '" role="listbox" aria-label="Reorder the research steps">';
   act.scrambled.forEach(function(item, i) {
-    html += '<div class="order-item"><div class="order-num">?</div><span>' + esc(item) + '</span></div>';
+    html += '<div class="dnd-item" draggable="true" data-idx="' + i + '" role="option" tabindex="0" aria-label="Step: ' + esc(item) + '. Position ' + (i + 1) + ' of ' + act.scrambled.length + '">' +
+      '<span class="dnd-grip" aria-hidden="true">\u2630</span>' +
+      '<div class="dnd-num">' + (i + 1) + '</div>' +
+      '<span class="dnd-text">' + esc(item) + '</span>' +
+      '<span class="dnd-arrows">' +
+        '<button class="dnd-arrow-btn" onclick="event.stopPropagation();moveDnD(' + secNum + ',' + i + ',-1)" aria-label="Move up" tabindex="-1">\u25B2</button>' +
+        '<button class="dnd-arrow-btn" onclick="event.stopPropagation();moveDnD(' + secNum + ',' + i + ',1)" aria-label="Move down" tabindex="-1">\u25BC</button>' +
+      '</span>' +
+    '</div>';
   });
+  html += '</div>';
+
+  html += '<button class="dnd-check-btn" onclick="checkOrdering(' + secNum + ')">Check My Order</button>';
 
   var revealId = 'reveal_' + secNum;
-  html += '<button class="reveal-btn" onclick="document.getElementById(\'' + revealId + '\').classList.add(\'show\'); this.style.display=\'none\';">\uD83D\uDD0D Reveal the Process</button>';
+  html += '<button class="reveal-btn" onclick="document.getElementById(\'' + revealId + '\').classList.add(\'show\'); this.style.display=\'none\';">\uD83D\uDD0D Reveal Correct Order</button>';
 
   html += '<div class="reveal-content" id="' + revealId + '">';
   html += '<div style="margin-top:12px">';
@@ -1150,9 +1800,379 @@ function renderComparison(items, secNum) {
 }
 
 /* ============================================================
+   RENDER: SYNTHESIS BUILDER
+============================================================ */
+function renderSynthesis(act, secNum) {
+  var html = '';
+
+  // Source pool
+  html += '<div class="synth-pool" id="synthPool_' + secNum + '">';
+  html += '<div class="synth-pool-label">Source Pool &mdash; ' + esc(act.topic) + '</div>';
+  act.sources.forEach(function(src) {
+    html += '<div class="synth-source" draggable="true" data-srcid="' + src.id + '" data-correct="' + src.correctGroup + '" data-secnum="' + secNum + '">' +
+      '<div class="synth-cite">' + esc(src.citation) + '</div>' +
+      '<div class="synth-snip">' + esc(src.snippet) + '</div>' +
+      '<div class="synth-mobile-btns">';
+    act.groups.forEach(function(g) {
+      html += '<button class="synth-mobile-btn" onclick="event.stopPropagation();moveSynthSource(\'' + src.id + '\',' + g.id + ',' + secNum + ')" style="border-left:3px solid ' + g.color + '">' + esc(g.label) + '</button>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // Group drop zones
+  html += '<div class="synth-groups-wrap">';
+  act.groups.forEach(function(g) {
+    html += '<div class="synth-group" data-gid="' + g.id + '" data-secnum="' + secNum + '">' +
+      '<div class="synth-group-label" style="border-bottom-color:' + g.color + ';color:' + g.color + '">' + esc(g.label) + '</div>' +
+      '<div class="synth-sources-area"></div>' +
+      '<div class="synth-textarea-label">Your synthesis statement:</div>' +
+      '<textarea class="synth-textarea" placeholder="Write a one-sentence synthesis for this group..." aria-label="Synthesis statement for ' + esc(g.label) + '" oninput="saveSynthesisState(' + secNum + ')"></textarea>' +
+    '</div>';
+  });
+  html += '</div>';
+
+  html += '<button class="dnd-check-btn" onclick="checkSynthesis(' + secNum + ')">Check My Groupings</button>';
+
+  return html;
+}
+
+/* ============================================================
+   RENDER: ABSTRACT DECODER
+============================================================ */
+function renderDecoder(act, secNum) {
+  var html = '';
+
+  // Toolbar
+  html += '<div class="decoder-toolbar" role="radiogroup" aria-label="Select tag type">';
+  act.tagTypes.forEach(function(t, ti) {
+    html += '<button class="decoder-tag-btn" role="radio" aria-checked="false" data-tagid="' + t.id + '" ' +
+      'style="border-color:' + t.color + '" ' +
+      'onclick="selectDecoderTag(\'' + t.id + '\',this,' + secNum + ')">' +
+      esc(t.label) + '</button>';
+  });
+  html += '</div>';
+
+  // Abstracts
+  act.abstracts.forEach(function(abs, ai) {
+    var diffColor = abs.difficulty === 'Introductory' ? '#2e7d32' : (abs.difficulty === 'Intermediate' ? '#1565c0' : '#6a3d8a');
+    var diffBg = abs.difficulty === 'Introductory' ? '#e8f5e9' : (abs.difficulty === 'Intermediate' ? '#e3f0fd' : '#f3e8fa');
+    html += '<div class="decoder-card">';
+    html += '<span class="decoder-difficulty" style="background:' + diffBg + ';color:' + diffColor + '">' + esc(abs.difficulty) + '</span>';
+    html += '<h4>' + esc(abs.title) + '</h4>';
+    html += '<p style="line-height:1.8;margin-bottom:10px">';
+    abs.sentences.forEach(function(sent, si) {
+      html += '<span class="decoder-sentence" tabindex="0" data-secnum="' + secNum + '" data-absidx="' + ai + '" data-sentidx="' + si + '" data-correct="' + sent.tag + '" onclick="tagSentence(' + secNum + ',' + ai + ',' + si + ')">' + esc(sent.text) + ' </span>';
+    });
+    html += '</p>';
+    html += '<button class="dnd-check-btn" onclick="checkDecoder(' + secNum + ',' + ai + ')">Check Abstract ' + (ai + 1) + '</button>';
+    html += '</div>';
+  });
+
+  return html;
+}
+
+/* ============================================================
+   DnD: ORDERING (Section 3)
+============================================================ */
+var dndDragIdx = null;
+
+function initDnD(secNum) {
+  var list = document.getElementById('dndList_' + secNum);
+  if (!list) return;
+  var items = list.querySelectorAll('.dnd-item');
+
+  items.forEach(function(item) {
+    item.addEventListener('dragstart', function(e) {
+      dndDragIdx = Array.prototype.indexOf.call(list.children, item);
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dndDragIdx);
+    });
+
+    item.addEventListener('dragend', function() {
+      item.classList.remove('dragging');
+      list.querySelectorAll('.dnd-item').forEach(function(el) { el.classList.remove('drag-over'); });
+    });
+
+    item.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      list.querySelectorAll('.dnd-item').forEach(function(el) { el.classList.remove('drag-over'); });
+      item.classList.add('drag-over');
+    });
+
+    item.addEventListener('drop', function(e) {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      var fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      var toIdx = Array.prototype.indexOf.call(list.children, item);
+      if (fromIdx === toIdx) return;
+      var allItems = Array.prototype.slice.call(list.children);
+      var moved = allItems.splice(fromIdx, 1)[0];
+      allItems.splice(toIdx, 0, moved);
+      // Re-append
+      allItems.forEach(function(el, i) {
+        list.appendChild(el);
+        el.querySelector('.dnd-num').textContent = (i + 1);
+      });
+      renumberDnDArrows(secNum);
+    });
+
+    // Keyboard
+    item.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        var idx = Array.prototype.indexOf.call(list.children, item);
+        var dir = e.key === 'ArrowUp' ? -1 : 1;
+        moveDnD(secNum, idx, dir);
+      }
+    });
+  });
+}
+
+function moveDnD(secNum, fromIdx, dir) {
+  var list = document.getElementById('dndList_' + secNum);
+  if (!list) return;
+  var items = Array.prototype.slice.call(list.children);
+  var toIdx = fromIdx + dir;
+  if (toIdx < 0 || toIdx >= items.length) return;
+  var moved = items.splice(fromIdx, 1)[0];
+  items.splice(toIdx, 0, moved);
+  items.forEach(function(el, i) {
+    list.appendChild(el);
+    el.querySelector('.dnd-num').textContent = (i + 1);
+  });
+  // Focus the moved item
+  moved.focus();
+  renumberDnDArrows(secNum);
+}
+
+function renumberDnDArrows(secNum) {
+  var list = document.getElementById('dndList_' + secNum);
+  if (!list) return;
+  var items = list.querySelectorAll('.dnd-item');
+  items.forEach(function(item, i) {
+    var arrows = item.querySelectorAll('.dnd-arrow-btn');
+    if (arrows.length >= 2) {
+      arrows[0].setAttribute('onclick', 'event.stopPropagation();moveDnD(' + secNum + ',' + i + ',-1)');
+      arrows[1].setAttribute('onclick', 'event.stopPropagation();moveDnD(' + secNum + ',' + i + ',1)');
+    }
+    item.setAttribute('aria-label', 'Step: ' + item.querySelector('.dnd-text').textContent + '. Position ' + (i + 1) + ' of ' + items.length);
+  });
+}
+
+function checkOrdering(secNum) {
+  var s = data.sections.find(function(x) { return x.n === secNum; });
+  if (!s || !s.activity || s.activity.type !== 'ordering') return;
+  var list = document.getElementById('dndList_' + secNum);
+  if (!list) return;
+  var items = list.querySelectorAll('.dnd-item');
+  var correctCount = 0;
+  items.forEach(function(item, i) {
+    var text = item.querySelector('.dnd-text').textContent;
+    item.classList.remove('dnd-correct', 'dnd-wrong');
+    if (text === s.activity.correct[i].step) {
+      item.classList.add('dnd-correct');
+      correctCount++;
+    } else {
+      item.classList.add('dnd-wrong');
+    }
+  });
+  markActivity('ordering_' + secNum);
+  announce(correctCount + ' of ' + items.length + ' steps in the correct position.');
+}
+
+/* ============================================================
+   DnD: SYNTHESIS BUILDER
+============================================================ */
+function initSynthesisDnD(secNum) {
+  var sources = document.querySelectorAll('.synth-source[data-secnum="' + secNum + '"]');
+  var groups = document.querySelectorAll('.synth-group[data-secnum="' + secNum + '"]');
+  var pool = document.getElementById('synthPool_' + secNum);
+
+  sources.forEach(function(src) {
+    src.addEventListener('dragstart', function(e) {
+      e.dataTransfer.setData('text/plain', src.getAttribute('data-srcid'));
+      e.dataTransfer.effectAllowed = 'move';
+      src.classList.add('dragging');
+    });
+    src.addEventListener('dragend', function() {
+      src.classList.remove('dragging');
+      groups.forEach(function(g) { g.classList.remove('drag-over'); });
+      if (pool) pool.classList.remove('drag-over');
+    });
+  });
+
+  function handleGroupDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    this.classList.add('drag-over');
+  }
+  function handleGroupDragLeave() {
+    this.classList.remove('drag-over');
+  }
+  function handleGroupDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    var srcId = e.dataTransfer.getData('text/plain');
+    var srcEl = document.querySelector('.synth-source[data-srcid="' + srcId + '"]');
+    if (srcEl) {
+      this.querySelector('.synth-sources-area').appendChild(srcEl);
+      saveSynthesisState(secNum);
+    }
+  }
+
+  groups.forEach(function(g) {
+    g.addEventListener('dragover', handleGroupDragOver);
+    g.addEventListener('dragleave', handleGroupDragLeave);
+    g.addEventListener('drop', handleGroupDrop);
+  });
+
+  // Allow dragging back to pool
+  if (pool) {
+    pool.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      pool.classList.add('drag-over');
+    });
+    pool.addEventListener('dragleave', function() {
+      pool.classList.remove('drag-over');
+    });
+    pool.addEventListener('drop', function(e) {
+      e.preventDefault();
+      pool.classList.remove('drag-over');
+      var srcId = e.dataTransfer.getData('text/plain');
+      var srcEl = document.querySelector('.synth-source[data-srcid="' + srcId + '"]');
+      if (srcEl) {
+        pool.appendChild(srcEl);
+        saveSynthesisState(secNum);
+      }
+    });
+  }
+}
+
+function moveSynthSource(srcId, groupId, secNum) {
+  var srcEl = document.querySelector('.synth-source[data-srcid="' + srcId + '"]');
+  var groupEl = document.querySelector('.synth-group[data-gid="' + groupId + '"][data-secnum="' + secNum + '"]');
+  if (srcEl && groupEl) {
+    groupEl.querySelector('.synth-sources-area').appendChild(srcEl);
+    saveSynthesisState(secNum);
+  }
+}
+
+function checkSynthesis(secNum) {
+  var sources = document.querySelectorAll('.synth-source[data-secnum="' + secNum + '"]');
+  var correctCount = 0;
+  var total = 0;
+  sources.forEach(function(src) {
+    src.classList.remove('synth-correct', 'synth-wrong');
+    var parent = src.closest('.synth-group');
+    if (!parent) return; // still in pool
+    total++;
+    var gid = parseInt(parent.getAttribute('data-gid'), 10);
+    var correct = parseInt(src.getAttribute('data-correct'), 10);
+    if (gid === correct) {
+      src.classList.add('synth-correct');
+      correctCount++;
+    } else {
+      src.classList.add('synth-wrong');
+    }
+  });
+  markActivity('synthesis_' + secNum);
+  announce(correctCount + ' of ' + total + ' sources correctly grouped.');
+}
+
+/* ============================================================
+   ABSTRACT DECODER
+============================================================ */
+var activeDecoderTag = null;
+
+function selectDecoderTag(tagId, btn, secNum) {
+  var s = data.sections.find(function(x) { return x.n === secNum; });
+  if (!s || !s.activity2 || s.activity2.type !== 'decoder') return;
+  var toolbar = btn.closest('.decoder-toolbar');
+  var buttons = toolbar.querySelectorAll('.decoder-tag-btn');
+  var tagType = s.activity2.tagTypes.find(function(t) { return t.id === tagId; });
+
+  buttons.forEach(function(b) {
+    b.classList.remove('active');
+    b.setAttribute('aria-checked', 'false');
+    b.style.background = '';
+    b.style.color = '';
+  });
+  btn.classList.add('active');
+  btn.setAttribute('aria-checked', 'true');
+  if (tagType) {
+    btn.style.background = tagType.color;
+    btn.style.color = '#fff';
+  }
+  activeDecoderTag = tagId;
+}
+
+function tagSentence(secNum, absIdx, sentIdx) {
+  if (!activeDecoderTag) return;
+  var s = data.sections.find(function(x) { return x.n === secNum; });
+  if (!s || !s.activity2) return;
+  var tagType = s.activity2.tagTypes.find(function(t) { return t.id === activeDecoderTag; });
+  if (!tagType) return;
+
+  var sentence = document.querySelector('.decoder-sentence[data-secnum="' + secNum + '"][data-absidx="' + absIdx + '"][data-sentidx="' + sentIdx + '"]');
+  if (!sentence) return;
+
+  var currentTag = sentence.getAttribute('data-usertag');
+  if (currentTag === activeDecoderTag) {
+    // Remove tag
+    sentence.removeAttribute('data-usertag');
+    sentence.style.background = '';
+    sentence.classList.remove('tagged');
+    sentence.setAttribute('aria-label', '');
+  } else {
+    // Apply tag
+    sentence.setAttribute('data-usertag', activeDecoderTag);
+    sentence.style.background = tagType.bg;
+    sentence.classList.add('tagged');
+    sentence.setAttribute('aria-label', 'Tagged as ' + tagType.label);
+  }
+}
+
+function checkDecoder(secNum, absIdx) {
+  var sentences = document.querySelectorAll('.decoder-sentence[data-secnum="' + secNum + '"][data-absidx="' + absIdx + '"]');
+  var correctCount = 0;
+  var total = sentences.length;
+  sentences.forEach(function(sent) {
+    sent.classList.remove('dec-correct-ring', 'dec-wrong-ring');
+    var userTag = sent.getAttribute('data-usertag');
+    var correctTag = sent.getAttribute('data-correct');
+    if (userTag === correctTag) {
+      sent.classList.add('dec-correct-ring');
+      correctCount++;
+    } else {
+      sent.classList.add('dec-wrong-ring');
+    }
+  });
+  markActivity('decoder_' + secNum + '_' + absIdx);
+  announce('Abstract ' + (absIdx + 1) + ': ' + correctCount + ' of ' + total + ' sentences correctly tagged.');
+}
+
+function initDecoderKeyboard(secNum) {
+  var sentences = document.querySelectorAll('.decoder-sentence[data-secnum="' + secNum + '"]');
+  sentences.forEach(function(sent) {
+    sent.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var ai = parseInt(sent.getAttribute('data-absidx'), 10);
+        var si = parseInt(sent.getAttribute('data-sentidx'), 10);
+        tagSentence(secNum, ai, si);
+      }
+    });
+  });
+}
+
+/* ============================================================
    INTERACTIVE HANDLERS
 ============================================================ */
-function checkQuiz(id, chosen, correct) {
+function checkQuiz(id, chosen, correct, secNum) {
   var opts = document.getElementById('opts_' + id);
   var buttons = opts.querySelectorAll('.quiz-opt');
   buttons.forEach(function(btn, i) {
@@ -1161,9 +2181,12 @@ function checkQuiz(id, chosen, correct) {
     else if (i === chosen && chosen !== correct) btn.classList.add('wrong');
   });
   document.getElementById('exp_' + id).classList.add('show');
+  if (secNum) markActivity('quiz_' + id);
+  var isCorrect = chosen === correct;
+  announce(isCorrect ? 'Correct! Explanation shown below.' : 'Incorrect. The correct answer is highlighted. Explanation shown below.');
 }
 
-function checkMyth(id, chosen, answer) {
+function checkMyth(id, chosen, answer, secNum) {
   var btns = document.getElementById('btns_' + id).querySelectorAll('.myth-btn');
   btns.forEach(function(btn) { btn.classList.add('disabled'); });
   if (chosen === answer) {
@@ -1173,11 +2196,17 @@ function checkMyth(id, chosen, answer) {
     btns[answer === 'myth' ? 0 : 1].classList.add('myth-correct');
   }
   document.getElementById('mexp_' + id).classList.add('show');
+  if (secNum) markActivity('myth_' + id);
+  announce(chosen === answer ? 'Correct!' : 'Incorrect. The correct answer is highlighted.');
 }
 
 function toggleScenario(id) {
   var el = document.getElementById('scexp_' + id);
   el.classList.toggle('show');
+  var parent = el.closest('[aria-expanded]');
+  if (parent) {
+    parent.setAttribute('aria-expanded', el.classList.contains('show') ? 'true' : 'false');
+  }
 }
 
 /* ============================================================
@@ -1189,6 +2218,18 @@ function go(view) {
   else if (view === 'map')           renderMap();
   else if (view.startsWith('sec-'))  renderSection(+view.replace('sec-', ''));
 
+  // Mark visited
+  markVisited(view);
+
+  // Announce navigation
+  if (view === 'overview') announce('Navigated to Module Overview.');
+  else if (view === 'map') announce('Navigated to Section Map.');
+  else if (view.startsWith('sec-')) {
+    var secN = +view.replace('sec-', '');
+    var secData = data.sections.find(function(x) { return x.n === secN; });
+    if (secData) announce('Navigated to Section ' + secN + ': ' + secData.title + '.');
+  }
+
   // Close mobile nav
   if (window.innerWidth <= 768) {
     document.getElementById('navScroll').classList.remove('open');
@@ -1198,6 +2239,33 @@ function go(view) {
 function toggleNav() {
   document.getElementById('navScroll').classList.toggle('open');
 }
+
+/* ============================================================
+   GLOBAL KEYBOARD NAVIGATION
+============================================================ */
+document.addEventListener('keydown', function(e) {
+  // Don't intercept if user is typing in an input/textarea
+  var tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  if (document.activeElement && document.activeElement.getAttribute('contenteditable') === 'true') return;
+
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+    var currentActive = document.querySelector('.nav-item.active');
+    if (!currentActive) return;
+    var currentId = currentActive.id.replace('nav-', '');
+    if (currentId.indexOf('sec-') === 0) {
+      var num = parseInt(currentId.replace('sec-', ''), 10);
+      if (e.key === 'ArrowLeft' && num > 1) { e.preventDefault(); go('sec-' + (num - 1)); }
+      else if (e.key === 'ArrowRight' && num < 7) { e.preventDefault(); go('sec-' + (num + 1)); }
+    }
+  }
+
+  // Nav items: Enter/Space to activate
+  if ((e.key === 'Enter' || e.key === ' ') && document.activeElement && document.activeElement.classList.contains('nav-item')) {
+    e.preventDefault();
+    document.activeElement.click();
+  }
+});
 
 /* ============================================================
    INIT - build sidebar nav
@@ -1216,12 +2284,23 @@ function toggleNav() {
     var item = document.createElement('div');
     item.className = 'nav-item';
     item.id = 'nav-sec-' + s.n;
+    item.setAttribute('tabindex', '0');
+    item.setAttribute('role', 'button');
     item.onclick = function() { go('sec-' + s.n); };
-    item.innerHTML = '<div class="nav-num">' + s.n + '</div><span class="nav-label">' + esc(s.title) + '</span>';
+    item.innerHTML = '<div class="nav-num">' + s.n + '</div><span class="nav-label">' + esc(s.title) + '</span><span class="nav-time">~' + (s.time || 15) + 'min</span>';
     nav.appendChild(item);
+
+    // Restore visited state
+    if (progress.visited.indexOf('sec-' + s.n) !== -1) {
+      item.classList.add('visited');
+    }
   });
 })();
 
+// Init progress UI
+updateProgressUI();
+
+// Render overview
 renderOverview();
 </script>
 </body>
