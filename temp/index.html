@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Art - Cosmic Food Galaxy</title>
+    <script src="libs/p5.min.js"></script>
+    <script src="js/sketch.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 100;
+            font-size: 14px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: rgba(255,255,255,0.6);
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 100;
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: gold;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+            pointer-events: none;
+            z-index: 100;
+            letter-spacing: 3px;
+            animation: pulse 3s infinite;
+        }
+        
+        .subtitle {
+            position: absolute;
+            top: 70px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #ffaa66;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">✨ COSMIC FOOD GALAXY ✨</div>
+    <div class="subtitle">A 3D Culinary Universe</div>
+    <div class="info">
+        Created by Grant Grady<br>
+        Food-themed 3D Artwork
+    </div>
+    <div class="controls-hint">
+        Objects rotate continuously
+    </div>
+</body>
+</html>
