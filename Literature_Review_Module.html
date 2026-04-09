@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Understanding Literature Reviews — A Research Foundations Module</title>
+  <style>
+    :root {
+      --gold:        #b8860b;
+      --gold-light:  #d4a017;
+      --dark:        #2a2215;
+      --dark2:       #3d3525;
+      --sidebar-w:   270px;
+      --bg:          #faf6ed;
+      --border:      #e8dcc8;
+      --text:        #2a2215;
+      --muted:       #6b5e4a;
+      --shadow:      0 2px 10px rgba(42,34,21,.08);
+      --c-concept:   #7b5e00;
+      --c-activity:  #1565c0;
+      --c-reflect:   #6a3d8a;
+      --c-takeaway:  #2e7d32;
+      --c-myth:      #c62828;
+      --bg-concept:  #fdf3dc;
+      --bg-activity: #e3f0fd;
+      --bg-reflect:  #f3e8fa;
+      --bg-takeaway: #e8f5e9;
+      --bg-myth:     #fce8e6;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #2a2215, #3d3525);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .mod-badge {
+      width: 38px; height: 38px; background: var(--gold); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #a89878; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #6b5e4a;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #97887a; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(184,134,11,.18); border-left-color: var(--gold); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #887766;
+    }
+    .nav-item.active .nav-num { background: var(--gold); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--gold), #5a3e1b);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '\1F4DA'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .12; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* CARD GRIDS */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '\2713'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--gold);
+      box-shadow: 0 4px 12px rgba(184,134,11,.15);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* SECTION MAP */
+    .map-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .map-table { width: 100%; border-collapse: collapse; }
+    .map-table thead { background: var(--gold); color: #fff; }
+    .map-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .map-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .map-table tbody tr:last-child { border-bottom: none; }
+    .map-table tbody tr:hover { background: #fdf6e3; }
+    .map-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .map-table .sec-col { font-weight: 700; color: var(--gold); white-space: nowrap; }
+    .group-pill {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 700;
+    }
+    .group-foundations { background: #fdf3dc; color: #7b5e00; }
+    .group-deeper      { background: #f3e8fa; color: #6a3d8a; }
+    .group-practical    { background: #e8f5e9; color: #2e7d32; }
+
+    /* SECTION HEADER */
+    .sec-hdr-block {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--gold);
+    }
+    .sec-hdr-block .sec-label-top {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--gold); margin-bottom: 5px;
+    }
+    .sec-hdr-block h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '\1F3AF'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '\00B7'; color: var(--gold); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* CONTENT SECTION CARDS */
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.concept   { background: var(--bg-concept);  border-color: var(--c-concept); }
+    .sec.activity  { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.reflect   { background: var(--bg-reflect);  border-color: var(--c-reflect); }
+    .sec.takeaway  { background: var(--bg-takeaway); border-color: var(--c-takeaway); }
+    .sec.myth-card { background: var(--bg-myth);     border-color: var(--c-myth); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .concept  .sec-icon { background: rgba(123,94,0,.13); }
+    .activity .sec-icon { background: rgba(21,101,192,.13); }
+    .reflect  .sec-icon { background: rgba(106,61,138,.13); }
+    .takeaway .sec-icon { background: rgba(46,125,50,.13); }
+    .myth-card .sec-icon { background: rgba(198,40,40,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .concept  .sec-hdr h3 { color: #5a4400; }
+    .activity .sec-hdr h3 { color: #0d47a1; }
+    .reflect  .sec-hdr h3 { color: #4a148c; }
+    .takeaway .sec-hdr h3 { color: #1b5e20; }
+    .myth-card .sec-hdr h3 { color: #b71c1c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .concept  ul li::before { content: '\25B8'; color: var(--c-concept); font-weight: 700; flex-shrink: 0; }
+    .activity ul li::before { content: '\25B8'; color: var(--c-activity); font-weight: 700; flex-shrink: 0; }
+    .myth-card ul li::before { content: '\25B8'; color: var(--c-myth); font-weight: 700; flex-shrink: 0; }
+
+    /* INTERACTIVE: Quiz / Toggles */
+    .quiz-item { margin-bottom: 14px; }
+    .quiz-q {
+      font-size: 13.5px; font-weight: 600; color: var(--text); margin-bottom: 8px; line-height: 1.5;
+    }
+    .quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+    .quiz-opt {
+      padding: 7px 16px; border-radius: 8px; border: 2px solid var(--border);
+      background: #fff; font-size: 13px; cursor: pointer; transition: all .15s;
+      color: var(--text); font-weight: 500;
+    }
+    .quiz-opt:hover { border-color: var(--gold); background: #fdf6e3; }
+    .quiz-opt.correct { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; font-weight: 700; }
+    .quiz-opt.wrong   { border-color: #c62828; background: #fce8e6; color: #c62828; opacity: .7; }
+    .quiz-opt.disabled { pointer-events: none; }
+    .quiz-explain {
+      font-size: 12.5px; color: var(--muted); line-height: 1.6; padding: 8px 12px;
+      background: rgba(46,125,50,.06); border-radius: 8px; display: none;
+      border-left: 3px solid #2e7d32;
+    }
+    .quiz-explain.show { display: block; }
+
+    /* Myth toggle cards */
+    .myth-item {
+      background: #fff; border-radius: 10px; padding: 16px;
+      margin-bottom: 12px; border: 1px solid var(--border);
+    }
+    .myth-statement { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 10px; line-height: 1.5; }
+    .myth-btns { display: flex; gap: 8px; margin-bottom: 8px; }
+    .myth-btn {
+      padding: 6px 18px; border-radius: 8px; border: 2px solid var(--border);
+      background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer;
+      transition: all .15s; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .myth-btn:hover { border-color: var(--gold); }
+    .myth-btn.myth-correct  { border-color: #2e7d32; background: #e8f5e9; color: #1b5e20; }
+    .myth-btn.myth-wrong    { border-color: #c62828; background: #fce8e6; color: #c62828; }
+    .myth-btn.disabled      { pointer-events: none; }
+    .myth-explain {
+      font-size: 12.5px; color: var(--muted); line-height: 1.6; padding: 8px 12px;
+      background: rgba(46,125,50,.06); border-radius: 8px; display: none;
+      border-left: 3px solid #2e7d32;
+    }
+    .myth-explain.show { display: block; }
+
+    /* Comparison panels */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+    @media(max-width:640px) { .compare-grid { grid-template-columns: 1fr; } }
+    .compare-panel {
+      background: #fff; border-radius: 10px; padding: 16px; border: 1px solid var(--border);
+    }
+    .compare-panel h4 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; margin-bottom: 8px;
+    }
+    .compare-panel.is-lr h4  { color: #2e7d32; }
+    .compare-panel.not-lr h4 { color: #c62828; }
+    .compare-panel p { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+
+    /* Ordering exercise */
+    .order-item {
+      background: #fff; border-radius: 8px; padding: 10px 14px;
+      margin-bottom: 8px; border: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--text);
+    }
+    .order-num {
+      width: 26px; height: 26px; background: var(--bg); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--gold); flex-shrink: 0;
+    }
+    .reveal-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 8px; border: 2px solid var(--gold);
+      background: #fff; color: var(--gold); font-size: 13px; font-weight: 700;
+      cursor: pointer; transition: all .15s; margin-top: 10px;
+    }
+    .reveal-btn:hover { background: var(--gold); color: #fff; }
+    .reveal-content { display: none; margin-top: 12px; }
+    .reveal-content.show { display: block; }
+
+    /* Key takeaway callout */
+    .key-takeaway {
+      border-radius: 10px; padding: 16px 20px; margin-bottom: 18px;
+      background: linear-gradient(135deg, #fdf6e3, #f5edd5);
+      border: 2px solid var(--gold); display: flex; align-items: flex-start; gap: 12px;
+    }
+    .key-takeaway .kt-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .key-takeaway .kt-text { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.5; }
+
+    /* PREV/NEXT NAV */
+    .sec-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* MOBILE */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="mod-badge">LR</div>
+      <div>
+        <h1>Literature Reviews</h1>
+        <div class="sub">Research Foundations Module</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">&#9776;</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">&nbsp;&nbsp;</div>
+      <span class="nav-label">Module Overview</span>
+    </div>
+    <div class="nav-item" id="nav-map" onclick="go('map')">
+      <div class="nav-num">&nbsp;&nbsp;</div>
+      <span class="nav-label">Section Map</span>
+    </div>
+    <!-- section nav items injected by JS -->
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Module Overview</h2>
+    <span class="chip" id="topChip">7 Sections &middot; Self-Paced &middot; Interactive</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ============================================================
+   MODULE DATA
+============================================================ */
+const data = {
+  goals: [
+    "Explain what a literature review is and how it differs from other academic writing",
+    "Articulate why researchers conduct literature reviews before starting new research",
+    "Identify how a literature review fits into the broader research process",
+    "Read and extract key information from an academic source",
+    "Recognize common misconceptions about literature reviews",
+    "Develop confidence in approaching scholarly sources as an emerging researcher"
+  ],
+  resources: [
+    { icon: "\uD83D\uDD0D", title: "Google Scholar",       desc: "Search academic literature",        url: "https://scholar.google.com/" },
+    { icon: "\uD83D\uDCDA", title: "Zotero",               desc: "Free citation manager",             url: "https://www.zotero.org/" },
+    { icon: "\uD83C\uDFEB", title: "Purdue OWL",           desc: "Writing & citation guides",         url: "https://owl.purdue.edu/" },
+    { icon: "\uD83D\uDCC4", title: "DOAJ",                 desc: "Directory of Open Access Journals",  url: "https://doaj.org/" },
+    { icon: "\uD83D\uDCD6", title: "Connected Papers",     desc: "Visual paper explorer",             url: "https://www.connectedpapers.com/" },
+    { icon: "\u270D\uFE0F",  title: "Academic Phrasebank", desc: "Templates for academic writing",    url: "https://www.phrasebank.manchester.ac.uk/" }
+  ],
+  sections: [
+    /* ───── SECTION 1 ───── */
+    {
+      n: 1, title: "What Even IS a Literature Review?", group: "Foundations",
+      objectives: [
+        "Define a literature review in plain language",
+        "Distinguish it from a book report, an annotated bibliography, and a research paper",
+        "Identify a literature review when you encounter one"
+      ],
+      topics: [
+        "The simplest definition: a survey of what others have already found out about a topic",
+        "What it is NOT: not a summary dump, not an opinion essay, not a list of sources",
+        "Where you encounter them: introduction sections of papers, standalone review articles, thesis chapters",
+        "Think of it as mapping the territory before you explore unknown land"
+      ],
+      keyTakeaway: "A literature review is your map of what researchers already know \u2014 it shows where knowledge exists, where it overlaps, and where the blank spots are.",
+      content: [
+        "Imagine you are about to set off on an expedition into uncharted territory. Would you just start walking? Probably not. You would look at every map, journal entry, and field report from previous explorers first. You would want to know: What has already been discovered? Where did others run into trouble? What parts of the landscape remain completely unexplored?",
+        "That is exactly what a literature review does for a researcher. It is a careful survey of the existing research on a topic \u2014 not just listing what other people wrote, but weaving those findings together into a story that shows the current state of knowledge.",
+        "Here is what catches most new researchers off guard: a literature review is NOT the same as a book report. You are not summarizing sources one by one. Instead, you are organizing ideas by themes, showing how different studies relate to each other, and identifying patterns across the research. The individual sources are the threads; your job is to show the bigger tapestry."
+      ],
+      activity: {
+        type: "quiz",
+        title: "Spot the Literature Review",
+        desc: "Read each excerpt below and decide: Is this from a literature review, or is it a different type of academic writing?",
+        items: [
+          {
+            q: "\"Smith (2020) found that students who used spaced repetition scored 23% higher on retention tests. Similarly, Jones (2019) and Park (2021) reported significant improvements when spacing was combined with active recall. However, these studies focused primarily on STEM subjects, leaving a gap in our understanding of how these techniques perform in humanities courses.\"",
+            options: ["Literature Review", "Book Report", "Personal Essay"],
+            correct: 0,
+            explain: "This is a literature review excerpt. Notice how it weaves multiple sources together around a theme (spaced repetition), identifies a pattern (it works), and points to a gap (humanities courses are under-studied). It does not just summarize one source \u2014 it synthesizes several."
+          },
+          {
+            q: "\"In Chapter 3, the author argues that social media has fundamentally changed political discourse. She provides several compelling examples from the 2020 election cycle and concludes that platforms should implement stronger fact-checking measures.\"",
+            options: ["Literature Review", "Book Report", "Research Paper"],
+            correct: 1,
+            explain: "This is a book report. It summarizes one author\u2019s argument from a single source. A literature review would bring together findings from multiple researchers and compare their conclusions."
+          },
+          {
+            q: "\"Growing up in a bilingual household, I always felt torn between two worlds. This personal experience led me to question whether bilingual education truly benefits children or whether it creates confusion, as some of my relatives believed.\"",
+            options: ["Literature Review", "Personal Essay", "Annotated Bibliography"],
+            correct: 1,
+            explain: "This is a personal essay. It is grounded in individual experience and personal reflection. While a literature review might study this same topic (bilingual education), it would focus on published research findings rather than personal stories."
+          },
+          {
+            q: "\"Garcia, M. (2022). Sleep quality in college students. Journal of Health, 15(3), 45-62. \u2014 This study surveyed 500 undergraduates and found that 68% reported poor sleep. The sample was limited to one university. Relevant to my research on student wellness.\"",
+            options: ["Literature Review", "Annotated Bibliography", "Abstract"],
+            correct: 1,
+            explain: "This is an annotated bibliography entry. It describes one source at a time with a brief summary and evaluation. A literature review would not be organized source-by-source like this \u2014 it would be organized by themes or ideas, drawing from many sources at once."
+          }
+        ]
+      },
+      reflection: "Before reading this section, how would you have described a literature review to a friend? Has your understanding changed? What surprised you most?"
+    },
+
+    /* ───── SECTION 2 ───── */
+    {
+      n: 2, title: "The Essential Why \u2014 What\u2019s the Point?", group: "Foundations",
+      objectives: [
+        "Explain at least three reasons researchers conduct literature reviews",
+        "Understand that all research builds on previous work",
+        "See the literature review as joining a conversation, not just completing a homework assignment"
+      ],
+      topics: [
+        "Research as conversation: you would not walk into a room mid-conversation and repeat what someone already said",
+        "Avoiding reinventing the wheel: someone may have already answered your question",
+        "Finding gaps: discovering what has NOT been studied is just as important as knowing what has",
+        "Establishing credibility: showing you know the field earns trust from your audience",
+        "Framing your own questions: the lit review sharpens and refines what you are actually asking",
+        "The \"so what?\" factor: your research matters because of how it fits into the bigger picture"
+      ],
+      keyTakeaway: "The literature review is how you join the research conversation \u2014 it proves you have been listening before you start talking.",
+      content: [
+        "Here is the most important thing to understand about research: nobody works in a vacuum. Every study, every experiment, every paper builds on what came before. The literature review is how you show that you understand this.",
+        "Think of it like walking into a room where a conversation has been going on for years. You would not just start talking about your idea without first listening to what others have said, right? That would be awkward at best, and at worst, you might repeat something that has already been thoroughly discussed. The literature review is your way of listening first.",
+        "But it goes deeper than just being polite. There are concrete, practical reasons why the literature review is the engine of good research:",
+        "First, it saves you from reinventing the wheel. Maybe someone already answered your question \u2014 or tried to and hit a dead end that you can learn from. Either way, you need to know.",
+        "Second, it helps you find the gaps. This is where it gets exciting. When you survey what has been done, you start to see what has NOT been done. Those gaps are where new, original research lives. Your contribution becomes clear.",
+        "Third, it sharpens your research question. You might start with a vague curiosity like \"I wonder if music helps people study.\" After reviewing the literature, that question becomes much more precise: \"How does instrumental music at 60 BPM affect reading comprehension in college freshmen during exam periods?\" The literature review turns fuzzy ideas into focused, answerable questions.",
+        "Finally, it establishes your credibility. When you demonstrate that you know the field \u2014 who has studied what, what methods they used, what they found \u2014 your audience trusts that your own research is grounded in solid understanding."
+      ],
+      activity: {
+        type: "scenario",
+        title: "The Research Conversation",
+        desc: "Imagine you want to study whether background music helps students study more effectively. Before you design your experiment, what would you want to know? Check each question below to see why it matters and how a literature review answers it.",
+        items: [
+          {
+            q: "Has anyone studied this before?",
+            explain: "A literature review answers this immediately. You might discover hundreds of studies on music and studying, or you might find that your specific angle is surprisingly under-explored. Either answer shapes your entire approach."
+          },
+          {
+            q: "What did they find? Did music help or hurt?",
+            explain: "The literature review reveals patterns across studies. Maybe most found that instrumental music helps but music with lyrics hurts concentration. This prevents you from designing an experiment that has already been done and gives you a foundation to build on."
+          },
+          {
+            q: "What methods did previous researchers use?",
+            explain: "Knowing the methods helps you design a better study. If previous researchers only used self-reported data, maybe you can improve on that by measuring actual test performance. The lit review shows you what worked, what did not, and what could be improved."
+          },
+          {
+            q: "What kinds of students were studied?",
+            explain: "If every study focused on psychology undergraduates at large universities, there is a gap: What about community college students? STEM students? Students with ADHD? Identifying who was studied (and who was not) helps you find your unique contribution."
+          },
+          {
+            q: "Are there conflicting findings I should know about?",
+            explain: "Research rarely agrees perfectly. The literature review helps you see debates and contradictions in the field. Maybe some studies say music helps and others say it hurts \u2014 understanding why they disagree (different methods, different populations, different types of music) is critical for designing meaningful new research."
+          },
+          {
+            q: "What is still unknown or unanswered?",
+            explain: "This is the gold mine. The literature review reveals the blank spaces on the map. Maybe nobody has studied the effect of lo-fi beats specifically, or nobody has looked at studying in noisy dorm environments versus quiet libraries. These gaps become your research opportunity."
+          }
+        ]
+      },
+      reflection: "Think of a topic you are genuinely curious about. It does not have to be academic \u2014 it could be anything. Now write down three things you would want to know about what others have already discovered before you started your own investigation. How does that instinct connect to what a literature review does?"
+    },
+
+    /* ───── SECTION 3 ───── */
+    {
+      n: 3, title: "How Research Actually Works \u2014 The Big Picture", group: "Foundations",
+      objectives: [
+        "Map where the literature review falls in the research process",
+        "Understand that research is iterative, not linear",
+        "See the literature review as a living document that evolves with your project"
+      ],
+      topics: [
+        "The research lifecycle: question \u2192 literature review \u2192 method \u2192 data \u2192 analysis \u2192 conclusions \u2192 publication",
+        "The literature review happens early but gets revised throughout the entire process",
+        "How the literature review shapes (and reshapes) your research question",
+        "Peer review: how knowledge gets validated by the research community",
+        "Open access vs. paywalled research: the practical reality for students",
+        "Your university library: the most underused resource on campus"
+      ],
+      keyTakeaway: "The literature review is not a one-time assignment at the beginning of a project \u2014 it is a living document that grows and changes as your research evolves.",
+      content: [
+        "Most students picture research as a straight line: pick a topic, find some sources, write a paper, turn it in. But real research looks much more like a spiral. You circle back, you revise, you discover something new that changes your direction.",
+        "Here is a more accurate picture of how research works: You start with a question or curiosity. You review the literature to see what is already known. That review changes your question \u2014 makes it more specific, or sends you in a completely new direction. Then you design a method, collect data, analyze it, and draw conclusions. But even as you analyze your data, you may return to the literature to help explain unexpected results.",
+        "The literature review is not just step two on a checklist. It is the foundation that supports every other step. It shapes your research question. It informs your methods (because you can see what methods other researchers used and what worked). It helps you interpret your results (because you can compare your findings to what others found). And when you write up your final paper, the literature review becomes the opening act that sets the stage for your contribution.",
+        "Here is something else worth knowing: research does not happen in isolation. Once a study is completed, it goes through peer review \u2014 other experts in the field read it, critique it, and decide whether it is rigorous enough to be published. This is how knowledge gets quality-checked. The sources you read in a literature review have (usually) been through this process, which is why academic sources carry more weight than a random blog post.",
+        "One practical note: as a student, you will encounter paywalled journals \u2014 articles that cost $30 or more to read. The good news is that your university library likely has subscriptions that give you free access. Your library is arguably the most powerful and most underused tool in your academic life."
+      ],
+      activity: {
+        type: "ordering",
+        title: "Build the Research Timeline",
+        desc: "Below are the stages of a research project, but they have been scrambled. Think about what order they should go in, then click \"Reveal the Process\" to see the answer \u2014 and an important twist.",
+        scrambled: [
+          "Analyze your data and look for patterns",
+          "Review the existing literature on your topic",
+          "Publish or present your findings",
+          "Start with a broad question or curiosity",
+          "Design your method (experiment, survey, interviews, etc.)",
+          "Draw conclusions and discuss implications",
+          "Collect your data"
+        ],
+        correct: [
+          { step: "Start with a broad question or curiosity", note: "Everything begins with wondering about something." },
+          { step: "Review the existing literature on your topic", note: "See what is already known and refine your question." },
+          { step: "Design your method (experiment, survey, interviews, etc.)", note: "Informed by what worked (or did not) in previous studies." },
+          { step: "Collect your data", note: "Execute your study design." },
+          { step: "Analyze your data and look for patterns", note: "You may return to the literature here to explain unexpected findings." },
+          { step: "Draw conclusions and discuss implications", note: "Connect your findings back to the literature \u2014 the conversation continues." },
+          { step: "Publish or present your findings", note: "Now YOUR work becomes part of the literature for the next researcher." }
+        ],
+        twist: "Notice something important: the literature review does not just appear at step 2 and vanish. Researchers return to it during analysis (to explain surprising results), during conclusions (to show how findings fit the bigger picture), and even during peer review (when reviewers ask \"did you consider this study?\"). It is a living, breathing part of the entire process."
+      },
+      reflection: "Why do you think the literature review is not just a one-time step at the beginning? When else during a research project might you return to it? Can you think of a time in your own life when you had to \"go back and do more research\" midway through a project?"
+    },
+
+    /* ───── SECTION 4 ───── */
+    {
+      n: 4, title: "Myths and Misconceptions", group: "Going Deeper",
+      objectives: [
+        "Identify and correct at least four common misconceptions about literature reviews",
+        "Build confidence by normalizing the difficulty",
+        "Reframe the literature review as a tool rather than a hurdle"
+      ],
+      topics: [
+        "Why misconceptions form: literature reviews are often poorly explained to students",
+        "The difference between what students think a lit review is and what it actually is",
+        "How reframing your understanding changes your entire approach",
+        "Every researcher started exactly where you are right now"
+      ],
+      keyTakeaway: "Most of what makes literature reviews feel intimidating comes from misconceptions, not from actual difficulty. Once you see what it really is, the task becomes much more manageable.",
+      content: [
+        "If you feel intimidated by literature reviews, you are not alone. Most students do. But a surprising amount of that intimidation comes not from the actual task, but from misunderstandings about what the task involves.",
+        "Let us tackle the five biggest myths head-on. For each one, try to guess whether the statement is a myth or reality before you click."
+      ],
+      activity: {
+        type: "myth",
+        title: "Myth Busters",
+        desc: "For each statement, decide: is this a MYTH or REALITY? Click your answer to find out.",
+        items: [
+          {
+            statement: "A literature review is basically just summarizing a bunch of articles.",
+            answer: "myth",
+            explain: "This is the most common misconception. A literature review requires synthesis, not just summary. Summary retells what each source said individually. Synthesis finds patterns, themes, contradictions, and gaps ACROSS sources. Think of it this way: a playlist is not just a list of songs \u2014 it is curated, themed, and tells a story. That is what synthesis does with research."
+          },
+          {
+            statement: "You need to read every single thing ever written on your topic.",
+            answer: "myth",
+            explain: "This is impossible and unnecessary. A good literature review is strategic and focused. You identify the most relevant, most cited, and most recent sources. You follow citation trails (who cited whom) to find the key works. Quality and relevance matter far more than quantity. Even professional researchers do not read everything \u2014 they read strategically."
+          },
+          {
+            statement: "A literature review should be organized around themes or ideas, not source by source.",
+            answer: "reality",
+            explain: "This is a key feature that distinguishes a literature review from an annotated bibliography. Instead of going source-by-source (\"Smith said X. Jones said Y. Park said Z.\"), a literature review is organized thematically: \"Several studies have found that X (Smith 2020; Jones 2019; Park 2021), while others suggest Y...\""
+          },
+          {
+            statement: "Only graduate students and professional researchers do literature reviews.",
+            answer: "myth",
+            explain: "Undergraduates do literature reviews too! Any time you research a topic before forming your own argument or study, you are doing a form of literature review. The skill also transfers way beyond academia \u2014 market researchers, policy analysts, doctors, journalists, and product designers all review existing knowledge before making decisions."
+          },
+          {
+            statement: "The literature review is the boring part of research \u2014 the real work comes later.",
+            answer: "myth",
+            explain: "Many researchers describe the literature review as detective work and one of the most intellectually engaging parts of a project. You are piecing together clues from dozens of sources, finding patterns nobody else has noticed, and identifying the exact gap where your contribution will matter. It is like solving a puzzle."
+          },
+          {
+            statement: "Your literature review will change and evolve as your project progresses.",
+            answer: "reality",
+            explain: "Absolutely true. You do not write a literature review once and forget about it. As you learn more, as you collect data, as reviewers give you feedback, your literature review grows and shifts. This is completely normal and expected in any serious research project."
+          }
+        ]
+      },
+      reflection: "Which myth did you believe before reading this section? Why do you think that misconception is so common? How does knowing the truth change how you feel about tackling a literature review?"
+    },
+
+    /* ───── SECTION 5 ───── */
+    {
+      n: 5, title: "Literature Review vs. Everything Else", group: "Going Deeper",
+      objectives: [
+        "Clearly distinguish a literature review from a summary, annotated bibliography, research paper, and essay",
+        "Understand the unique purpose of synthesis in a literature review",
+        "Recognize different organizational patterns (thematic, chronological, methodological)"
+      ],
+      topics: [
+        "Summary: retells ONE source vs. Literature Review: weaves MANY sources into themes",
+        "Annotated bibliography: organized source-by-source vs. Literature Review: organized by ideas",
+        "Research paper: presents NEW findings vs. Literature Review: maps EXISTING findings",
+        "Essay: argues a personal position vs. Literature Review: surveys the field objectively",
+        "The key word: SYNTHESIS \u2014 combining pieces into a new understanding",
+        "Organizational patterns: thematic (by idea), chronological (by time), methodological (by approach)"
+      ],
+      keyTakeaway: "The literature review\u2019s superpower is synthesis \u2014 it does not just collect information, it weaves sources together to create a new understanding of the whole landscape.",
+      content: [
+        "By now you know what a literature review IS, but it can be just as helpful to clarify what it is NOT. Students often confuse literature reviews with other types of academic writing, and those mix-ups lead to work that misses the mark.",
+        "The secret ingredient that makes a literature review unique is synthesis. Synthesis means combining individual pieces into something new and bigger than the sum of its parts. An analogy: if you have a pile of LEGO bricks, a summary describes each brick. An annotated bibliography labels each brick. But synthesis builds them into a structure \u2014 and explains how they fit together and what the structure reveals.",
+        "Let us look at the same topic handled four different ways to make this concrete."
+      ],
+      activity: {
+        type: "comparison",
+        title: "Same Topic, Four Genres",
+        desc: "Below, the topic of \"social media and sleep\" is presented in four different academic formats. Notice the structural differences.",
+        items: [
+          {
+            label: "Summary",
+            icon: "\uD83D\uDCC3",
+            isLR: false,
+            text: "Chen (2022) surveyed 1,200 college students and found that those who used social media within 30 minutes of bedtime reported lower sleep quality. The study used a validated sleep quality index and controlled for caffeine intake and stress levels."
+          },
+          {
+            label: "Annotated Bibliography Entry",
+            icon: "\uD83D\uDCCB",
+            isLR: false,
+            text: "Chen, R. (2022). Screen time before sleep. Journal of Digital Health, 8(2), 112-128. \u2014 Surveyed 1,200 students; found bedtime social media use correlates with poor sleep. Controlled for caffeine and stress. Limitation: single university. Relevant to my research on student wellness."
+          },
+          {
+            label: "Literature Review Excerpt",
+            icon: "\u2B50",
+            isLR: true,
+            text: "A growing body of research links pre-sleep social media use to decreased sleep quality among college students (Chen, 2022; Nakamura, 2021; Williams, 2020). While these studies agree on the general relationship, they diverge on mechanism: Chen attributes the effect primarily to blue light exposure, whereas Nakamura emphasizes the cognitive arousal from engaging content. Notably, Williams found that passive scrolling had less impact than active posting, suggesting that the type of engagement matters more than screen time alone. No studies to date have examined how platform-specific features (e.g., infinite scroll, autoplay) independently contribute to sleep disruption."
+          },
+          {
+            label: "Personal Essay",
+            icon: "\u270D\uFE0F",
+            isLR: false,
+            text: "I know I should put my phone down before bed, but I never do. The endless scroll is almost hypnotic. Last semester my sleep was terrible, and I am convinced it was because of late-night TikTok sessions. I believe universities should educate students about digital wellness."
+          }
+        ]
+      },
+      reflection: "In your own words, explain the difference between summarizing sources and synthesizing them. Can you think of a non-academic example of synthesis? (Hint: think about making a playlist, cooking a meal from multiple recipes, or forming an opinion after hearing from several friends.)"
+    },
+
+    /* ───── SECTION 6 ───── */
+    {
+      n: 6, title: "Reading Academic Sources Without Panicking", group: "Practical Skills",
+      objectives: [
+        "Apply a practical strategy for reading academic papers",
+        "Identify the key sections of a standard academic article",
+        "Know that you do NOT have to read every paper cover-to-cover",
+        "Extract the information most relevant to a literature review"
+      ],
+      topics: [
+        "The anatomy of an academic article: Abstract, Introduction, Methods, Results, Discussion",
+        "Strategic reading: start with the abstract, then introduction and conclusion",
+        "Skimming vs. deep reading \u2014 and when to do each",
+        "Taking useful notes: what did they study, what did they find, how does it relate to your topic",
+        "Dealing with jargon: it is okay (and expected) to look things up",
+        "Managing the emotional reality: feeling overwhelmed is normal, not a sign you do not belong"
+      ],
+      keyTakeaway: "You do not need to read every paper from start to finish. Strategic reading \u2014 abstract first, then introduction and conclusion \u2014 lets you decide in minutes whether a source is worth a deep dive.",
+      content: [
+        "Here is a confession that most professors will not tell you: even experienced researchers do not read every paper from beginning to end. They cannot \u2014 there are too many. Instead, they read strategically, and you can learn to do the same.",
+        "A typical academic article has a standard structure, and knowing that structure is your cheat code. Here is the anatomy:\n\nAbstract: A 150-300 word summary of the entire paper. Read this first \u2014 always. It tells you the research question, method, key findings, and conclusion in one paragraph. This alone helps you decide if the paper is relevant to your topic.\n\nIntroduction: Sets up the problem and reviews prior research (their literature review!). This is where you find out why the study matters and what gap it fills.\n\nMethods: How they conducted the study. Skim this unless you need to evaluate the quality of their approach or replicate their methods.\n\nResults: What they found. Often dense with statistics. Skim for the big takeaways; do not get lost in the numbers.\n\nDiscussion/Conclusion: What the findings mean and what questions remain. This is gold for your literature review because it often explicitly states limitations and future directions.",
+        "Here is a practical reading workflow that saves enormous time:\n\n1. Read the abstract (2 minutes). Is this relevant? If not, move on.\n2. Read the introduction and conclusion (10 minutes). Now you know the full story.\n3. Decide: Do I need to read the whole thing? Most of the time, the answer is no \u2014 and that is perfectly fine.\n4. If yes, now do a deep read. Take notes as you go: What was the research question? What did they find? How does it connect to my topic?",
+        "One more thing: if you open an academic paper and feel lost, that is normal. Everyone feels this way at first. Academic writing uses specialized language, and it takes practice to become comfortable with it. Give yourself permission to look up terms, read slowly, and re-read sections. You are not supposed to understand everything on the first pass. You are supposed to get better at it over time \u2014 and you will."
+      ],
+      activity: {
+        type: "quiz",
+        title: "Article Autopsy",
+        desc: "Read this simplified abstract, then answer the questions below to practice extracting key information \u2014 the same way you would when building a literature review.\n\n\"This study examined whether brief mindfulness exercises (5 minutes) before lectures improved note-taking quality among first-year college students. A randomized controlled trial with 240 participants across 8 lecture sections found that students in the mindfulness condition produced notes with 31% more key concepts and 22% better organizational structure compared to controls. Effects were strongest for students who self-reported high anxiety levels. Limitations include the single-institution setting and the short duration of the intervention period (4 weeks). Future research should explore whether longer interventions produce lasting effects.\"",
+        items: [
+          {
+            q: "What was the main research question?",
+            options: [
+              "Do mindfulness exercises improve note-taking in college students?",
+              "Do first-year students take worse notes than seniors?",
+              "Is anxiety related to academic performance?",
+              "How long should mindfulness exercises last?"
+            ],
+            correct: 0,
+            explain: "The study specifically tested whether brief (5-minute) mindfulness exercises before lectures improved note-taking quality in first-year students. Being able to quickly identify the research question is the most important reading skill for literature reviews."
+          },
+          {
+            q: "What was the key finding?",
+            options: [
+              "Mindfulness had no significant effect",
+              "Students in the mindfulness group captured more key concepts and better organization",
+              "Anxious students performed worse overall",
+              "The study needed to be longer"
+            ],
+            correct: 1,
+            explain: "The core finding was positive: the mindfulness group showed 31% more key concepts and 22% better organization. For a literature review, you would note this finding and how it relates to the broader theme of interventions that support student learning."
+          },
+          {
+            q: "What gap does this study leave open for future research?",
+            options: [
+              "Whether mindfulness works for graduate students",
+              "Whether longer interventions produce lasting effects",
+              "Whether note-taking quality matters for grades",
+              "Whether meditation apps are better than guided exercises"
+            ],
+            correct: 1,
+            explain: "The study itself names this gap: \"Future research should explore whether longer interventions produce lasting effects.\" Spotting these future-directions statements is incredibly valuable when writing a literature review \u2014 they are literally telling you where the blank spots on the map are."
+          },
+          {
+            q: "If your research topic is \"supporting anxious students in higher education,\" how relevant is this study?",
+            options: [
+              "Highly relevant \u2014 it found stronger effects for high-anxiety students",
+              "Somewhat relevant \u2014 it mentions anxiety but is really about note-taking",
+              "Not relevant \u2014 it is about mindfulness, not anxiety",
+              "Cannot determine from the abstract alone"
+            ],
+            correct: 0,
+            explain: "This study is highly relevant because it found that mindfulness effects were strongest for students with high anxiety. In a literature review on supporting anxious students, this would be a valuable source showing that brief mindfulness interventions may be especially beneficial for this population."
+          }
+        ]
+      },
+      reflection: "What is your biggest worry about reading academic articles? After this section, what one strategy would you try first? Remember: every expert was once a beginner who felt exactly the way you feel right now."
+    },
+
+    /* ───── SECTION 7 ───── */
+    {
+      n: 7, title: "Putting It All Together", group: "Practical Skills",
+      objectives: [
+        "Synthesize everything learned across all sections of this module",
+        "Feel prepared and motivated to approach a real literature review",
+        "Connect the literature review skill to your own academic journey and beyond"
+      ],
+      topics: [
+        "Quick recap of all key concepts from Sections 1-6",
+        "The literature review as a professional skill that extends far beyond academia",
+        "First steps: what to do when your next assignment says \"conduct a literature review\"",
+        "Growth mindset: everyone starts somewhere, and it gets easier with practice"
+      ],
+      keyTakeaway: "You now have the conceptual foundation to approach any literature review with confidence. The skill you are building here \u2014 surveying existing knowledge to inform new work \u2014 is one of the most transferable skills you will ever learn.",
+      content: [
+        "Let us take a step back and see how far you have come. At the beginning of this module, a \"literature review\" might have sounded like an intimidating academic ritual. Now you know it is something much more practical and powerful: it is the process of surveying what is already known so you can contribute something new.",
+        "Here is what you have learned:\n\nSection 1: A literature review is a survey of existing research \u2014 not a summary, not a list, but a synthesis that reveals patterns, themes, and gaps.\n\nSection 2: Researchers do literature reviews because all knowledge builds on what came before. It is how you join the conversation, find gaps, sharpen your question, and establish credibility.\n\nSection 3: The literature review is not a one-time step. It is woven throughout the entire research process, from initial question to final publication.\n\nSection 4: Most of the intimidation comes from myths. You do not need to read everything, it is not just summarizing, and it is not only for graduate students.\n\nSection 5: The superpower of a literature review is synthesis \u2014 weaving individual sources into a new understanding of the whole landscape.\n\nSection 6: You can read strategically. Start with abstracts. Use the structure of academic articles to your advantage. It is okay to feel overwhelmed \u2014 everyone does at first.",
+        "And here is something you might not have expected: this skill is not just for school. Market researchers review existing data before launching products. Doctors review medical literature before recommending treatments. Policy analysts review evidence before proposing changes. Journalists review sources before writing investigative pieces. The ability to systematically survey existing knowledge and identify what is missing is one of the most versatile professional skills that exists.",
+        "So what do you do when you face your next literature review assignment? Start here:\n\n1. Define your topic narrowly enough that it is manageable.\n2. Start with Google Scholar or your library databases. Search your topic and read abstracts.\n3. Keep track of what you read (use Zotero or a simple spreadsheet).\n4. Look for patterns: What do most studies agree on? Where do they disagree? What has not been studied?\n5. Organize by themes, not by source. Ask: \"What are the big ideas?\" not \"What did each author say?\"\n6. Write your review as a narrative that tells the story of the research landscape.\n7. End by identifying the gap your own work will fill.\n\nYou have the foundation. The rest comes with practice. And every single researcher, no matter how accomplished, started exactly where you are right now."
+      ],
+      activity: {
+        type: "quiz",
+        title: "Module Self-Assessment",
+        desc: "Test your understanding across all sections. This is not graded \u2014 it is just for you to check your own learning.",
+        items: [
+          {
+            q: "What is the primary difference between a literature review and an annotated bibliography?",
+            options: [
+              "A lit review is organized by themes; an annotated bibliography is organized source-by-source",
+              "A lit review is longer",
+              "An annotated bibliography uses more sources",
+              "There is no real difference"
+            ],
+            correct: 0,
+            explain: "The key structural difference is organization. A literature review groups information by themes and ideas, showing how sources relate to each other. An annotated bibliography lists and describes sources individually."
+          },
+          {
+            q: "Why is the literature review sometimes called \"joining a conversation\"?",
+            options: [
+              "Because research builds on what others have already discovered and discussed",
+              "Because you have to talk to other researchers",
+              "Because it is an oral presentation",
+              "Because you need to interview people"
+            ],
+            correct: 0,
+            explain: "Research is a community activity. Every study responds to, builds on, or challenges previous work. The literature review shows that you understand the conversation so far and have something meaningful to add."
+          },
+          {
+            q: "When reading an academic article for your literature review, which section should you read FIRST?",
+            options: [
+              "The abstract",
+              "The methods",
+              "The results",
+              "The references"
+            ],
+            correct: 0,
+            explain: "The abstract gives you the entire study in miniature \u2014 question, method, findings, and conclusion. It helps you decide in about two minutes whether the paper is relevant to your topic."
+          },
+          {
+            q: "What does \"synthesis\" mean in the context of a literature review?",
+            options: [
+              "Combining findings from multiple sources to identify patterns, themes, and gaps",
+              "Summarizing each source in your own words",
+              "Using direct quotes from each article",
+              "Listing sources alphabetically"
+            ],
+            correct: 0,
+            explain: "Synthesis is the literature review\u2019s superpower. It means weaving individual findings together to reveal the bigger picture \u2014 what the research collectively tells us, where it agrees, where it conflicts, and what remains unknown."
+          },
+          {
+            q: "Which of these is a MYTH about literature reviews?",
+            options: [
+              "You need to read every single source ever published on your topic",
+              "Your literature review may change as your project evolves",
+              "Literature reviews help you find gaps in existing research",
+              "Synthesis means organizing by themes rather than by individual sources"
+            ],
+            correct: 0,
+            explain: "It is both impossible and unnecessary to read everything. Good literature reviews are strategic and focused. You find the most relevant, most cited, and most recent sources \u2014 and you follow citation trails to identify the key works in your area."
+          }
+        ]
+      },
+      reflection: "Imagine you are writing a letter to a future freshman who is about to encounter their first literature review assignment. What would you want them to know? What advice would help them feel less intimidated and more prepared? Take a moment to think about this \u2014 the act of explaining it to someone else is one of the best ways to solidify your own understanding."
+    }
+  ]
+};
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+function nl2p(text) {
+  return text.split('\n\n').map(p => '<p>' + esc(p) + '</p>').join('');
+}
+
+/* ============================================================
+   RENDER: OVERVIEW
+============================================================ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Module Overview';
+  document.getElementById('topChip').textContent  = '7 Sections \u00B7 Self-Paced \u00B7 Interactive';
+
+  const goals = data.goals.map(g => '<li>' + esc(g) + '</li>').join('');
+  const res   = data.resources.map(r =>
+    '<div class="resource-card" onclick="window.open(\'' + r.url + '\',\'_blank\')">' +
+      '<div class="r-icon">' + r.icon + '</div>' +
+      '<div class="r-title">' + esc(r.title) + '</div>' +
+      '<div class="r-desc">' + esc(r.desc) + '</div>' +
+    '</div>'
+  ).join('');
+
+  document.getElementById('content').innerHTML = '<div class="fade-in">' +
+    '<div class="hero">' +
+      '<h1>Understanding Literature Reviews</h1>' +
+      '<div class="tagline">A Research Foundations Module for Emerging Scholars</div>' +
+      '<div class="hero-stats">' +
+        '<div class="stat-box"><div class="val">7</div><div class="lbl">Sections</div></div>' +
+        '<div class="stat-box"><div class="val">\u223C2h</div><div class="lbl">Estimated</div></div>' +
+        '<div class="stat-box"><div class="val">6</div><div class="lbl">Activities</div></div>' +
+        '<div class="stat-box"><div class="val">\u221E</div><div class="lbl">Self-Paced</div></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="row2">' +
+      '<div class="card">' +
+        '<div class="card-title"><span class="card-icon" style="background:#fdf3dc">\uD83C\uDFAF</span> What You\u2019ll Learn</div>' +
+        '<ul class="check-list">' + goals + '</ul>' +
+      '</div>' +
+      '<div class="card">' +
+        '<div class="card-title"><span class="card-icon" style="background:#e8f5e9">\uD83D\uDCA1</span> How This Module Works</div>' +
+        '<ul class="check-list">' +
+          '<li>Self-paced: go at your own speed, revisit any section anytime</li>' +
+          '<li>Interactive: quizzes, comparisons, and reflection prompts throughout</li>' +
+          '<li>No grades: this is about building understanding, not performance pressure</li>' +
+          '<li>Designed for beginners: no prior research experience needed</li>' +
+          '<li>7 sections progressing from "what" to "why" to "how"</li>' +
+          '<li>Each section ends with a reflection prompt to deepen your thinking</li>' +
+        '</ul>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<div class="card-title"><span class="card-icon" style="background:#f3e8fa">\uD83D\uDD17</span> Recommended Resources</div>' +
+      '<div class="row3" style="margin-bottom:0; margin-top:4px">' + res + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ============================================================
+   RENDER: SECTION MAP
+============================================================ */
+function renderMap() {
+  document.getElementById('topTitle').textContent = 'Section Map';
+  document.getElementById('topChip').textContent  = 'All 7 Sections';
+
+  var groupCls = { Foundations: 'group-foundations', 'Going Deeper': 'group-deeper', 'Practical Skills': 'group-practical' };
+
+  var rows = data.sections.map(function(s) {
+    var gc = groupCls[s.group] || 'group-foundations';
+    return '<tr onclick="go(\'sec-' + s.n + '\')">' +
+      '<td class="sec-col">Section ' + s.n + '</td>' +
+      '<td>' + esc(s.title) + '</td>' +
+      '<td><span class="group-pill ' + gc + '">' + esc(s.group) + '</span></td>' +
+      '<td>' + s.objectives.length + ' objectives</td>' +
+    '</tr>';
+  }).join('');
+
+  document.getElementById('content').innerHTML = '<div class="fade-in">' +
+    '<div class="map-wrap">' +
+      '<table class="map-table">' +
+        '<thead><tr><th>Section</th><th>Title</th><th>Group</th><th>Scope</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+    '</div>' +
+    '<p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that section.</p>' +
+  '</div>';
+}
+
+/* ============================================================
+   RENDER: SECTION
+============================================================ */
+function renderSection(num) {
+  var s = data.sections.find(function(x) { return x.n === num; });
+  if (!s) return;
+
+  document.getElementById('topTitle').textContent = 'Section ' + s.n + ': ' + s.title;
+  document.getElementById('topChip').textContent  = 'Section ' + s.n + ' of 7';
+
+  var html = '<div class="fade-in">';
+
+  // Header block
+  var objs   = s.objectives.map(function(o) { return '<li>' + esc(o) + '</li>'; }).join('');
+  var topics = s.topics.map(function(t) { return '<li>' + esc(t) + '</li>'; }).join('');
+
+  html += '<div class="sec-hdr-block">' +
+    '<div class="sec-label-top">Section ' + s.n + ' \u2014 ' + esc(s.group) + '</div>' +
+    '<h2>' + esc(s.title) + '</h2>' +
+    '<div class="ot-grid">' +
+      '<div class="ot-section"><h4>Learning Objectives</h4><ul class="ot-list obj-list">' + objs + '</ul></div>' +
+      '<div class="ot-section"><h4>Topics Covered</h4><ul class="ot-list top-list">' + topics + '</ul></div>' +
+    '</div>' +
+  '</div>';
+
+  // Content paragraphs
+  if (s.content && s.content.length) {
+    html += '<div class="sec concept">';
+    html += '<div class="sec-hdr"><div class="sec-icon">\uD83D\uDCD6</div><h3>Understanding the Concept</h3></div>';
+    s.content.forEach(function(para) {
+      html += '<p>' + esc(para) + '</p>';
+    });
+    html += '</div>';
+  }
+
+  // Key Takeaway
+  if (s.keyTakeaway) {
+    html += '<div class="key-takeaway">' +
+      '<div class="kt-icon">\uD83D\uDCA1</div>' +
+      '<div class="kt-text">' + esc(s.keyTakeaway) + '</div>' +
+    '</div>';
+  }
+
+  // Activity
+  if (s.activity) {
+    html += renderActivity(s.activity, num);
+  }
+
+  // Reflection
+  if (s.reflection) {
+    html += '<div class="sec reflect">' +
+      '<div class="sec-hdr"><div class="sec-icon">\uD83D\uDCAD</div><h3>Pause and Reflect</h3></div>' +
+      '<p>' + esc(s.reflection) + '</p>' +
+    '</div>';
+  }
+
+  // Prev / Next
+  var prev = num > 1 ? num - 1 : null;
+  var next = num < 7 ? num + 1 : null;
+  html += '<div class="sec-nav">' +
+    '<button class="nav-btn" ' + (!prev ? 'disabled' : '') + ' onclick="go(\'sec-' + (prev || '') + '\')">' +
+      '\u2190 Section ' + (prev || '') +
+    '</button>' +
+    '<span style="font-size:12px;color:var(--muted)">Section ' + num + ' of 7</span>' +
+    '<button class="nav-btn" ' + (!next ? 'disabled' : '') + ' onclick="go(\'sec-' + (next || '') + '\')">' +
+      'Section ' + (next || '') + ' \u2192' +
+    '</button>' +
+  '</div>';
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ============================================================
+   RENDER: ACTIVITIES (dispatch by type)
+============================================================ */
+function renderActivity(act, secNum) {
+  var html = '<div class="sec activity">' +
+    '<div class="sec-hdr"><div class="sec-icon">\uD83C\uDFAE</div><h3>Activity: ' + esc(act.title) + '</h3></div>' +
+    '<p class="desc">' + esc(act.desc) + '</p>';
+
+  if (act.type === 'quiz') {
+    html += renderQuiz(act.items, secNum);
+  } else if (act.type === 'myth') {
+    html += renderMyth(act.items, secNum);
+  } else if (act.type === 'scenario') {
+    html += renderScenario(act.items, secNum);
+  } else if (act.type === 'ordering') {
+    html += renderOrdering(act, secNum);
+  } else if (act.type === 'comparison') {
+    html += renderComparison(act.items, secNum);
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderQuiz(items, secNum) {
+  var html = '';
+  items.forEach(function(item, qi) {
+    var id = 'q' + secNum + '_' + qi;
+    html += '<div class="quiz-item">';
+    html += '<div class="quiz-q">' + (qi + 1) + '. ' + esc(item.q) + '</div>';
+    html += '<div class="quiz-opts" id="opts_' + id + '">';
+    item.options.forEach(function(opt, oi) {
+      html += '<button class="quiz-opt" onclick="checkQuiz(\'' + id + '\',' + oi + ',' + item.correct + ')">' + esc(opt) + '</button>';
+    });
+    html += '</div>';
+    html += '<div class="quiz-explain" id="exp_' + id + '">' + esc(item.explain) + '</div>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function renderMyth(items, secNum) {
+  var html = '';
+  items.forEach(function(item, mi) {
+    var id = 'm' + secNum + '_' + mi;
+    html += '<div class="myth-item">';
+    html += '<div class="myth-statement">"' + esc(item.statement) + '"</div>';
+    html += '<div class="myth-btns" id="btns_' + id + '">';
+    html += '<button class="myth-btn" onclick="checkMyth(\'' + id + '\',\'myth\',\'' + item.answer + '\')">Myth</button>';
+    html += '<button class="myth-btn" onclick="checkMyth(\'' + id + '\',\'reality\',\'' + item.answer + '\')">Reality</button>';
+    html += '</div>';
+    html += '<div class="myth-explain" id="mexp_' + id + '">' + esc(item.explain) + '</div>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function renderScenario(items, secNum) {
+  var html = '';
+  items.forEach(function(item, si) {
+    var id = 'sc' + secNum + '_' + si;
+    html += '<div class="myth-item" style="cursor:pointer" onclick="toggleScenario(\'' + id + '\')">';
+    html += '<div class="myth-statement" style="margin-bottom:4px">\u2753 ' + esc(item.q) + '</div>';
+    html += '<div class="myth-explain" id="scexp_' + id + '">' + esc(item.explain) + '</div>';
+    html += '</div>';
+  });
+  return html;
+}
+
+function renderOrdering(act, secNum) {
+  var html = '';
+
+  // Show scrambled items
+  act.scrambled.forEach(function(item, i) {
+    html += '<div class="order-item"><div class="order-num">?</div><span>' + esc(item) + '</span></div>';
+  });
+
+  var revealId = 'reveal_' + secNum;
+  html += '<button class="reveal-btn" onclick="document.getElementById(\'' + revealId + '\').classList.add(\'show\'); this.style.display=\'none\';">\uD83D\uDD0D Reveal the Process</button>';
+
+  html += '<div class="reveal-content" id="' + revealId + '">';
+  html += '<div style="margin-top:12px">';
+  act.correct.forEach(function(item, i) {
+    html += '<div class="order-item"><div class="order-num">' + (i + 1) + '</div><span><strong>' + esc(item.step) + '</strong><br><span style="font-size:12px;color:var(--muted)">' + esc(item.note) + '</span></span></div>';
+  });
+  html += '</div>';
+  html += '<div class="key-takeaway" style="margin-top:14px"><div class="kt-icon">\u26A0\uFE0F</div><div class="kt-text">' + esc(act.twist) + '</div></div>';
+  html += '</div>';
+
+  return html;
+}
+
+function renderComparison(items, secNum) {
+  var html = '<div class="compare-grid" style="grid-template-columns:1fr 1fr">';
+  items.forEach(function(item) {
+    var cls = item.isLR ? 'is-lr' : 'not-lr';
+    var badge = item.isLR ? '\u2705 This IS a Lit Review' : '\u274C This is NOT a Lit Review';
+    html += '<div class="compare-panel ' + cls + '">' +
+      '<h4>' + item.icon + ' ' + esc(item.label) + '</h4>' +
+      '<p>' + esc(item.text) + '</p>' +
+      '<div style="margin-top:8px;font-size:11px;font-weight:700;color:' + (item.isLR ? '#2e7d32' : '#c62828') + '">' + badge + '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+/* ============================================================
+   INTERACTIVE HANDLERS
+============================================================ */
+function checkQuiz(id, chosen, correct) {
+  var opts = document.getElementById('opts_' + id);
+  var buttons = opts.querySelectorAll('.quiz-opt');
+  buttons.forEach(function(btn, i) {
+    btn.classList.add('disabled');
+    if (i === correct) btn.classList.add('correct');
+    else if (i === chosen && chosen !== correct) btn.classList.add('wrong');
+  });
+  document.getElementById('exp_' + id).classList.add('show');
+}
+
+function checkMyth(id, chosen, answer) {
+  var btns = document.getElementById('btns_' + id).querySelectorAll('.myth-btn');
+  btns.forEach(function(btn) { btn.classList.add('disabled'); });
+  if (chosen === answer) {
+    btns[chosen === 'myth' ? 0 : 1].classList.add('myth-correct');
+  } else {
+    btns[chosen === 'myth' ? 0 : 1].classList.add('myth-wrong');
+    btns[answer === 'myth' ? 0 : 1].classList.add('myth-correct');
+  }
+  document.getElementById('mexp_' + id).classList.add('show');
+}
+
+function toggleScenario(id) {
+  var el = document.getElementById('scexp_' + id);
+  el.classList.toggle('show');
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')           renderOverview();
+  else if (view === 'map')           renderMap();
+  else if (view.startsWith('sec-'))  renderSection(+view.replace('sec-', ''));
+
+  // Close mobile nav
+  if (window.innerWidth <= 768) {
+    document.getElementById('navScroll').classList.remove('open');
+  }
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+/* ============================================================
+   INIT - build sidebar nav
+============================================================ */
+(function buildNav() {
+  var nav = document.getElementById('navScroll');
+  var currentGroup = '';
+  data.sections.forEach(function(s) {
+    if (s.group !== currentGroup) {
+      currentGroup = s.group;
+      var label = document.createElement('div');
+      label.className = 'nav-group-label';
+      label.textContent = currentGroup;
+      nav.appendChild(label);
+    }
+    var item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = 'nav-sec-' + s.n;
+    item.onclick = function() { go('sec-' + s.n); };
+    item.innerHTML = '<div class="nav-num">' + s.n + '</div><span class="nav-label">' + esc(s.title) + '</span>';
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
