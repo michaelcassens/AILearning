@@ -1,0 +1,2328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unity 6 Quest: Dev Academy — MART 460</title>
+  <meta name="description" content="An interactive game that teaches Unity 6 fundamentals, mapped to MART 460 at the University of Montana." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --bg: #0b1020;
+      --bg-2: #121a35;
+      --panel: #17214a;
+      --panel-2: #1f2a5e;
+      --ink: #e8ecff;
+      --ink-dim: #aab3d6;
+      --accent: #7dd3fc;   /* Unity cyan-ish */
+      --accent-2: #a78bfa; /* purple */
+      --good: #4ade80;
+      --bad: #f87171;
+      --warn: #fbbf24;
+      --border: #2a3670;
+      --focus: #fde047;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, #1a2558 0%, transparent 60%),
+                  radial-gradient(1000px 700px at 110% 10%, #241a55 0%, transparent 60%),
+                  var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    a { color: var(--accent); }
+    a:focus, button:focus, [role="button"]:focus, input:focus {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Skip link for screen readers */
+    .skip {
+      position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden;
+    }
+    .skip:focus {
+      left: 16px; top: 16px; width: auto; height: auto;
+      background: var(--focus); color: #000; padding: 8px 12px; border-radius: 6px; z-index: 1000;
+    }
+
+    #app {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px 20px 60px;
+    }
+
+    header.topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 18px;
+      position: sticky;
+      top: 8px;
+      z-index: 20;
+      backdrop-filter: blur(6px);
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .logo {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: conic-gradient(from 200deg, #7dd3fc, #a78bfa, #f472b6, #7dd3fc);
+      display: grid; place-items: center;
+      box-shadow: 0 4px 20px rgba(125, 211, 252, 0.25);
+    }
+    .logo::after {
+      content: "U6";
+      font-weight: 800; font-size: 14px; color: #0b1020;
+    }
+    .brand h1 {
+      font-size: 18px; font-weight: 800; letter-spacing: 0.3px;
+    }
+    .brand p {
+      font-size: 12px; color: var(--ink-dim);
+    }
+
+    .hud {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .stat {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: flex; align-items: center; gap: 6px;
+      min-width: 72px;
+    }
+    .stat b { color: var(--accent); }
+
+    .progress-shell {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      height: 10px;
+      width: 180px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    main { display: grid; grid-template-columns: 260px 1fr; gap: 18px; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+    nav.levels {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    nav.levels h2 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--ink-dim);
+      margin-bottom: 10px;
+      padding: 0 6px;
+    }
+    .level-btn {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink);
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .level-btn:hover { background: var(--bg-2); }
+    .level-btn[aria-current="true"] {
+      background: var(--bg-2);
+      border-color: var(--accent);
+    }
+    .level-badge {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 12px; font-weight: 700;
+      color: var(--ink-dim);
+    }
+    .level-btn.completed .level-badge {
+      background: var(--good); color: #0b1020; border-color: transparent;
+    }
+    .level-btn.locked {
+      opacity: 0.55; cursor: not-allowed;
+    }
+    .level-btn .check { font-size: 14px; color: var(--good); }
+    .level-btn .lock { font-size: 14px; color: var(--ink-dim); }
+
+    section.stage {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      min-height: 560px;
+      position: relative;
+    }
+
+    .level-header { margin-bottom: 14px; }
+    .level-tag {
+      display: inline-block;
+      background: rgba(125, 211, 252, 0.15);
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(125, 211, 252, 0.3);
+    }
+    .level-header h2 {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .level-header p.sub { color: var(--ink-dim); margin-top: 4px; font-size: 14px; }
+
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+    .card h3 {
+      font-size: 15px;
+      color: var(--accent);
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+    }
+    .card p, .card li { font-size: 14.5px; color: var(--ink); }
+    .card ul { margin: 8px 0 0 20px; }
+    .card ul li { margin-bottom: 4px; }
+
+    code, pre {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    code.inline {
+      background: #0b132e;
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #c4f1ff;
+    }
+    pre {
+      background: #0b132e;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #dbeafe;
+      overflow-x: auto;
+      margin: 10px 0;
+      white-space: pre;
+    }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(180deg, var(--accent) 0%, #38bdf8 100%);
+      color: #0b1020;
+      border: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(125, 211, 252, 0.3); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.secondary {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid var(--border);
+    }
+    .btn.secondary:hover { background: var(--bg-2); box-shadow: none; }
+    .btn.ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px dashed var(--border);
+    }
+
+    .controls {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;
+      margin-top: 18px;
+    }
+
+    /* Quiz styles */
+    .quiz .q {
+      font-weight: 700; margin-bottom: 8px;
+    }
+    .choices { display: grid; gap: 8px; }
+    .choice {
+      text-align: left;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .choice:hover { border-color: var(--accent); }
+    .choice.correct { background: rgba(74, 222, 128, 0.18); border-color: var(--good); }
+    .choice.wrong { background: rgba(248, 113, 113, 0.18); border-color: var(--bad); }
+    .choice:disabled { cursor: default; }
+    .feedback {
+      margin-top: 10px; font-size: 14px;
+      padding: 10px 12px; border-radius: 8px;
+      background: var(--bg-2); border: 1px solid var(--border);
+    }
+    .feedback.good { border-color: var(--good); }
+    .feedback.bad { border-color: var(--bad); }
+
+    /* Canvas / mini-game area */
+    .minigame {
+      background: #060a18;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .minigame canvas {
+      display: block;
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      background: #0a1230;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      image-rendering: pixelated;
+    }
+    .minigame .help {
+      font-size: 12px; color: var(--ink-dim); text-align: center; margin-top: 8px;
+    }
+
+    /* Hierarchy drag mini-game */
+    .hierarchy-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    }
+    @media (max-width: 720px){ .hierarchy-grid { grid-template-columns: 1fr; } }
+    .drop-zone, .drag-pool {
+      background: #0a1230; border: 1px dashed var(--border); border-radius: 10px; padding: 10px; min-height: 160px;
+    }
+    .drop-zone h4, .drag-pool h4 {
+      font-size: 12px; color: var(--ink-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .drag-item {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      cursor: grab;
+      font-size: 13px;
+    }
+    .drag-item[draggable="true"]:active { cursor: grabbing; }
+    .drag-item.correct { border-color: var(--good); }
+    .drag-item.wrong { border-color: var(--bad); }
+
+    /* Badges */
+    .badges {
+      display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
+    }
+    .badge {
+      background: linear-gradient(180deg, #1b2550 0%, #243067 100%);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--ink);
+    }
+    .badge .dot { color: var(--warn); margin-right: 4px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--panel-2); color: var(--ink);
+      border: 1px solid var(--accent);
+      padding: 10px 16px; border-radius: 10px;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+      font-size: 14px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    /* Blank fills for C# challenge */
+    .blank {
+      display: inline-block;
+      background: #0b132e;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 6px;
+      min-width: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: #fde68a;
+    }
+    .blank select, .blank input {
+      background: transparent; border: none; color: #fde68a;
+      font-family: inherit; font-size: inherit; width: 100%;
+      outline: none;
+    }
+    .blank select option { background: var(--panel); color: var(--ink); }
+
+    /* Final screen */
+    .finale {
+      text-align: center; padding: 30px 20px;
+    }
+    .finale h2 { font-size: 32px; margin-bottom: 10px; }
+    .finale .stars { font-size: 36px; margin: 10px 0; }
+
+    /* Screen reader only */
+    .sr {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    /* Options menu */
+    details.options {
+      background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 12px; margin-top: 10px; font-size: 13px;
+    }
+    details.options summary { cursor: pointer; color: var(--ink-dim); }
+    details.options label { display: block; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <a href="#stage" class="skip">Skip to current level</a>
+
+  <div id="app">
+    <header class="topbar" role="banner">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Unity 6 Quest: Dev Academy</h1>
+          <p>MART 460 · Fundamentals of the Unity Game Engine</p>
+        </div>
+      </div>
+      <div class="hud" role="status" aria-live="polite">
+        <div class="stat" title="Experience points">XP <b id="hud-xp">0</b></div>
+        <div class="stat" title="Badges earned">Badges <b id="hud-badges">0</b></div>
+        <div class="stat" title="Lives remaining">Lives <b id="hud-lives">3</b></div>
+        <div class="stat" title="Progress through the course">
+          <span class="sr">Progress</span>
+          <div class="progress-shell" aria-hidden="true">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <span id="progress-pct" aria-hidden="true">0%</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <nav class="levels" aria-label="Course levels">
+        <h2>Weekly Missions</h2>
+        <div id="level-list"></div>
+        <details class="options">
+          <summary>Options</summary>
+          <label><input type="checkbox" id="opt-reduce-motion" /> Reduce motion</label>
+          <label><input type="checkbox" id="opt-hi-contrast" /> High contrast</label>
+          <label><button class="btn secondary" id="btn-reset" style="margin-top:8px;">Reset progress</button></label>
+        </details>
+      </nav>
+
+      <section class="stage" id="stage" aria-live="polite" tabindex="-1">
+        <!-- dynamically rendered -->
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // ===== Game data will be loaded next =====
+    window.GAME_DATA = null;
+  </script>
+  <script id="data-script">
+    /* ---------------- GAME DATA ----------------
+       Each level maps to a week of MART 460 — Fundamentals of the Unity Game Engine.
+       Every level has: id, week, title, tag, intro (HTML), sections of learning,
+       an interactive challenge type, and a quiz.
+       References updated for Unity 6 (released Oct 2024).
+    */
+    window.GAME_DATA = {
+      meta: {
+        course: "MART 460 — Fundamentals of the Unity Game Engine",
+        instructor: "Michael Cassens",
+        unityVersion: "Unity 6 (6000.0 LTS)",
+        editor: "Visual Studio 2022 / VS Code / Rider",
+        references: [
+          "Unity 6 User Manual — https://docs.unity3d.com/6000.0/Documentation/Manual/",
+          "Unity Learn — https://learn.unity.com/",
+          "Microsoft C# Docs — https://learn.microsoft.com/dotnet/csharp/",
+          "Joseph Hocking, Unity in Action, 3rd ed. (updated for modern Unity)",
+          "Heather M. Chandler, Fundamentals of Game Development",
+          "Alan Thorn, Game Development Principles"
+        ]
+      },
+
+      levels: [
+        {
+          id: "w1", week: 1, tag: "Setup",
+          title: "Install Unity 6 & Meet the Editor",
+          objective: "Install Unity Hub, add Unity 6 LTS, and identify the main Editor panels.",
+          intro: `Welcome, developer! Before you ship anything, you need a workshop.
+                  In Unity 6 that workshop is the <b>Unity Editor</b>, managed through <b>Unity Hub 3.x</b>.`,
+          sections: [
+            {
+              h: "The Unity 6 install path",
+              html: `<ol style="margin-left:20px;">
+                <li>Download <b>Unity Hub</b> from <code class="inline">unity.com/download</code>.</li>
+                <li>In Hub, open <em>Installs → Install Editor</em> and choose <b>Unity 6 (6000.0 LTS)</b>.</li>
+                <li>Add modules: <em>Microsoft Visual Studio / Build Support (WebGL, Windows, Android, iOS)</em>.</li>
+                <li>Sign in with a <em>Unity Personal</em> license (free for students).</li>
+                <li>Open <em>Projects → New project → 3D (URP) Core</em>.</li>
+              </ol>`
+            },
+            {
+              h: "Editor panels you must know",
+              html: `<ul>
+                <li><b>Hierarchy</b> — every GameObject in the open Scene.</li>
+                <li><b>Scene</b> — 3D/2D authoring view.</li>
+                <li><b>Game</b> — what the Camera will render at runtime.</li>
+                <li><b>Inspector</b> — components and properties of the selected object.</li>
+                <li><b>Project</b> — assets on disk (under <code class="inline">Assets/</code>).</li>
+                <li><b>Console</b> — logs, warnings, errors from scripts.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "match-panels" },
+          quiz: [
+            {
+              q: "Which tool installs and manages multiple Unity Editor versions side-by-side?",
+              choices: ["Unity Hub", "Visual Studio", "Package Manager", "Asset Store"],
+              correct: 0,
+              why: "Unity Hub is the launcher that installs editors, manages licenses, and opens projects."
+            },
+            {
+              q: "Which panel lists all GameObjects currently in your open scene?",
+              choices: ["Project", "Inspector", "Hierarchy", "Console"],
+              correct: 2,
+              why: "The Hierarchy shows the scene graph; the Project window shows files on disk."
+            }
+          ]
+        },
+
+        {
+          id: "w2", week: 2, tag: "Design",
+          title: "Game Design Fundamentals",
+          objective: "Recognize the 3 building blocks of a game: mechanic, goal, and player experience.",
+          intro: `A great game stands on three legs: <b>mechanics</b> (what the player can do),
+                  <b>goals</b> (what they're trying to achieve), and <b>feel</b> (how it responds to them).`,
+          sections: [
+            {
+              h: "The MDA lens",
+              html: `<p><b>Mechanics → Dynamics → Aesthetics.</b> Designers set mechanics; players create dynamics
+                     as they interact; the emotional result is the aesthetic. In Unity 6 you prototype
+                     mechanics fast with <b>primitives</b>, <b>PlayerInput</b>, and <b>Rigidbody</b>.</p>`
+            },
+            {
+              h: "Prototype in hours, not weeks",
+              html: `<p>Drop a <code class="inline">Cube</code>, add a <code class="inline">Rigidbody</code>,
+                     attach a 10-line movement script — you have a toy. Ship the toy first, polish later.</p>`
+            }
+          ],
+          challenge: { type: "classify-mechanics" },
+          quiz: [
+            {
+              q: "Which describes a MECHANIC (not a dynamic or aesthetic)?",
+              choices: [
+                "The tense feeling of being chased",
+                "Players forming alliances to survive",
+                "Press Space to jump",
+                "The joy of discovery"
+              ],
+              correct: 2,
+              why: "Mechanics are concrete rules and actions. 'Press Space to jump' is a rule; the others are emergent or emotional."
+            }
+          ]
+        },
+
+        {
+          id: "w3", week: 3, tag: "Scripting",
+          title: "C# Basics: Start & Update",
+          objective: "Write a MonoBehaviour that logs a message and moves a GameObject every frame.",
+          intro: `Scripts in Unity are C# classes that inherit from <code class="inline">MonoBehaviour</code>.
+                  Unity calls <b>Start()</b> once, then <b>Update()</b> every rendered frame.`,
+          sections: [
+            {
+              h: "The MonoBehaviour lifecycle",
+              html: `<pre>using UnityEngine;
+
+public class Mover : MonoBehaviour
+{
+    public float speed = 5f;
+
+    void Start()   // called once
+    {
+        Debug.Log("Hello, Unity 6!");
+    }
+
+    void Update()  // called every frame
+    {
+        transform.Translate(Vector3.right * speed * Time.deltaTime);
+    }
+}</pre>
+              <p><code class="inline">Time.deltaTime</code> makes motion framerate-independent —
+              never skip it in Update.</p>`
+            }
+          ],
+          challenge: { type: "fill-csharp" },
+          quiz: [
+            {
+              q: "Which method runs exactly once when the GameObject is first enabled?",
+              choices: ["Update()", "Awake()", "Start()", "FixedUpdate()"],
+              correct: 2,
+              why: "Start() runs once, just before the first Update(). Awake() runs earlier, when the script instance is loaded."
+            },
+            {
+              q: "Why multiply motion by Time.deltaTime inside Update?",
+              choices: [
+                "To save battery",
+                "To make movement framerate-independent",
+                "Unity refuses to compile otherwise",
+                "It converts meters to feet"
+              ],
+              correct: 1,
+              why: "deltaTime is seconds since last frame, so speed * deltaTime = meters per frame regardless of fps."
+            }
+          ]
+        },
+
+        {
+          id: "w4", week: 4, tag: "GDD",
+          title: "Game Design Documents & Assets",
+          objective: "Identify the core sections of a GDD and organize Unity project assets.",
+          intro: `A <b>Game Design Document</b> is your north star. It doesn't need to be long —
+                  but it must answer: <em>What is this game? Who is it for? How does it play?</em>`,
+          sections: [
+            {
+              h: "GDD sections that actually matter",
+              html: `<ul>
+                <li><b>High Concept</b> — one sentence the grandma test can pass.</li>
+                <li><b>Core Loop</b> — the 10-second action the player repeats.</li>
+                <li><b>Mechanics</b> — verbs: move, shoot, build, talk.</li>
+                <li><b>Art & Audio Targets</b> — references, mood boards.</li>
+                <li><b>Scope & Milestones</b> — what ships for vertical slice, alpha, beta.</li>
+              </ul>`
+            },
+            {
+              h: "Asset folder hygiene",
+              html: `<p>In Unity 6 keep your <code class="inline">Assets/</code> folder tidy:
+              <code class="inline">Art/</code>, <code class="inline">Audio/</code>,
+              <code class="inline">Prefabs/</code>, <code class="inline">Scenes/</code>,
+              <code class="inline">Scripts/</code>, <code class="inline">Settings/</code>.
+              Unity 6 ships with <b>Asset Dependency Tracker</b> to find unused files before you ship.</p>`
+            }
+          ],
+          challenge: { type: "sort-gdd" },
+          quiz: [
+            {
+              q: "Which belongs in the 'Core Loop' section of a GDD?",
+              choices: [
+                "Hex color palette",
+                "Company logo",
+                "'Explore room → fight monster → collect loot → level up'",
+                "List of playtester names"
+              ],
+              correct: 2,
+              why: "The core loop is the 10-30 second action the player repeats — the heart of gameplay."
+            }
+          ]
+        },
+
+        {
+          id: "w5", week: 5, tag: "2D",
+          title: "2D Platformer Mini-Mission",
+          objective: "Move a 2D sprite across a tilemap using Rigidbody2D physics.",
+          intro: `Unity 6's 2D workflow uses <b>Tilemaps</b>, <b>Sprite Renderer</b>,
+                  <b>Rigidbody2D</b>, and <b>BoxCollider2D</b>. You'll pilot a hero to the goal.`,
+          sections: [
+            {
+              h: "The 2D stack",
+              html: `<ul>
+                <li><b>Tilemap</b> + <b>Tile Palette</b> — paint levels quickly.</li>
+                <li><b>Rigidbody2D</b> — gravity and forces.</li>
+                <li><b>Composite Collider 2D</b> — merges tile colliders for smooth movement.</li>
+                <li><b>Input System</b> package (Unity 6 default) — replaces legacy <code class="inline">Input.GetAxis</code>.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "platformer" },
+          quiz: [
+            {
+              q: "Which component gives a 2D sprite gravity and velocity?",
+              choices: ["Transform", "Rigidbody2D", "SpriteRenderer", "Animator"],
+              correct: 1,
+              why: "Rigidbody2D is the 2D physics body. Transform only stores position/rotation/scale."
+            }
+          ]
+        },
+
+        {
+          id: "w6", week: 6, tag: "Testing",
+          title: "Testing with the Unity Test Framework",
+          objective: "Distinguish Edit Mode vs Play Mode tests and spot obvious bugs.",
+          intro: `The <b>Unity Test Framework</b> (UTF) ships with every Unity 6 project.
+                  <b>Edit Mode</b> tests run without entering Play; <b>Play Mode</b> tests run the game loop.`,
+          sections: [
+            {
+              h: "Anatomy of a test",
+              html: `<pre>using NUnit.Framework;
+
+public class HealthTests
+{
+    [Test]
+    public void Damage_ReducesHealth()
+    {
+        var h = new Health(100);
+        h.Take(30);
+        Assert.AreEqual(70, h.Current);
+    }
+}</pre>`
+            }
+          ],
+          challenge: { type: "bug-hunt" },
+          quiz: [
+            {
+              q: "Which test type is best for logic that does NOT depend on Unity's runtime?",
+              choices: ["Play Mode test", "Edit Mode test", "Performance test", "Integration test"],
+              correct: 1,
+              why: "Edit Mode tests run fast, outside Play, perfect for pure logic (math, state, formulas)."
+            }
+          ]
+        },
+
+        {
+          id: "w7", week: 7, tag: "AI",
+          title: "AI in Games: NPC Dialogue & Behavior",
+          objective: "Follow a simple NPC dialogue tree and recognize Unity 6's AI building blocks.",
+          intro: `Unity 6 upgraded the <b>AI Navigation</b> package (NavMesh) and added official support
+                  for <b>Unity Sentis</b> — run neural networks locally. For conversational NPCs you can
+                  also use third-party platforms like Convai or Inworld.`,
+          sections: [
+            {
+              h: "From scripted to intelligent",
+              html: `<ol style="margin-left:20px;">
+                <li><b>Finite State Machine</b> — idle / patrol / chase / attack.</li>
+                <li><b>NavMeshAgent</b> — pathfinding on baked navigation meshes.</li>
+                <li><b>Behavior Trees</b> — modular decision logic (via packages).</li>
+                <li><b>LLM-backed NPCs</b> — Convai, Inworld, or local Sentis models.</li>
+              </ol>`
+            }
+          ],
+          challenge: { type: "dialogue" },
+          quiz: [
+            {
+              q: "Which Unity 6 package lets you run ML models (like small LLMs) entirely on the player's device?",
+              choices: ["Unity Analytics", "Unity Sentis", "Unity Ads", "Unity Cloud Build"],
+              correct: 1,
+              why: "Sentis is Unity's on-device neural network runtime; great for offline AI NPCs."
+            }
+          ]
+        },
+
+        {
+          id: "w8", week: 8, tag: "Animation",
+          title: "Tilemaps & Animation Keyframes",
+          objective: "Place keyframes in the correct order to animate a walk cycle.",
+          intro: `Unity 6's <b>Animator</b> drives state machines; the <b>Animation window</b> records
+                  keyframes. A walk cycle is typically 4–8 frames looped.`,
+          sections: [
+            {
+              h: "Keyframe basics",
+              html: `<p>A <b>keyframe</b> captures a property at a moment in time.
+                     Unity interpolates between them. For 2D sprite animation, each keyframe swaps a sprite;
+                     for 3D, keyframes drive bone rotations.</p>`
+            }
+          ],
+          challenge: { type: "keyframe-order" },
+          quiz: [
+            {
+              q: "What does the Animator Controller manage?",
+              choices: [
+                "The GPU pipeline",
+                "Transitions between animation states",
+                "Audio mixing",
+                "Tile painting"
+              ],
+              correct: 1,
+              why: "An Animator Controller is a state machine; states are animation clips and arrows are transitions."
+            }
+          ]
+        },
+
+        {
+          id: "w9", week: 9, tag: "Review",
+          title: "Midterm Review: Show & Tell",
+          objective: "Review everything from weeks 1–8 with a rapid-fire quiz.",
+          intro: `Midpoint check-in. Let's see what stuck.`,
+          sections: [
+            {
+              h: "What to bring to your presentation",
+              html: `<ul>
+                <li>One-sentence pitch of your game</li>
+                <li>Playable build (even if only one mechanic works)</li>
+                <li>One screenshot of the <em>best</em> moment</li>
+                <li>One thing that broke this week — and how you fixed it</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "rapid-quiz" },
+          quiz: [
+            {
+              q: "Which runs at a FIXED timestep, ideal for physics?",
+              choices: ["Update()", "FixedUpdate()", "LateUpdate()", "OnGUI()"],
+              correct: 1,
+              why: "FixedUpdate runs on a fixed timestep (default 0.02s) so physics is deterministic."
+            }
+          ]
+        },
+
+        {
+          id: "w10", week: 10, tag: "3D",
+          title: "Unity 3D Environments",
+          objective: "Assemble a 3D scene with Terrain, lighting, and a camera.",
+          intro: `In 3D, the three kingdoms are <b>geometry</b>, <b>lighting</b>, and the <b>camera</b>.
+                  Unity 6 ships with <b>URP</b> (Universal Render Pipeline) by default, featuring the
+                  new <b>Render Graph</b> system for better GPU efficiency.`,
+          sections: [
+            {
+              h: "Lighting that doesn't suck",
+              html: `<ul>
+                <li><b>Directional Light</b> — your sun.</li>
+                <li><b>Skybox</b> — ambient color and mood.</li>
+                <li><b>Adaptive Probe Volumes (APV)</b> — Unity 6's replacement for Light Probe groups; auto-placed, higher quality.</li>
+                <li><b>GPU Resident Drawer</b> — new in Unity 6; batches static meshes automatically on GPU.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "scene-build" },
+          quiz: [
+            {
+              q: "Which Unity 6 feature replaces manually placed Light Probe groups with automatic volume sampling?",
+              choices: [
+                "Adaptive Probe Volumes",
+                "Enlighten",
+                "Lightmap Static",
+                "Reflection Probes"
+              ],
+              correct: 0,
+              why: "APVs are Unity 6's modern GI sampling system — drop a volume and it auto-populates probes."
+            }
+          ]
+        },
+
+        {
+          id: "w11", week: 11, tag: "3D",
+          title: "3D Character Movement",
+          objective: "Move a capsule player through a 3D world with WASD.",
+          intro: `A classic first-person or third-person controller combines a <b>CharacterController</b>
+                  component (no physics glitches) with input and camera code.`,
+          sections: [
+            {
+              h: "CharacterController vs Rigidbody",
+              html: `<p><b>CharacterController</b> gives predictable movement with no angular velocity
+                     surprises. Use it for most humanoid characters. Use <b>Rigidbody</b> when you want
+                     full physics interaction (ragdolls, carts, physics puzzles).</p>`
+            }
+          ],
+          challenge: { type: "wasd3d" },
+          quiz: [
+            {
+              q: "In Unity 6 the modern way to read WASD is through which package?",
+              choices: ["Legacy Input Manager", "Input System", "Touch Samples", "OpenXR"],
+              correct: 1,
+              why: "The Input System package is the default in Unity 6 project templates; the legacy manager still works but is deprecated."
+            }
+          ]
+        },
+
+        {
+          id: "w12", week: 12, tag: "Systems",
+          title: "Custom Systems: Inventory",
+          objective: "Read a short inventory script and predict its output.",
+          intro: `Bigger games need <b>systems</b> — inventory, health, quests. Keep them as
+                  plain C# classes (<b>not</b> MonoBehaviours) when possible — easier to test and reuse.`,
+          sections: [
+            {
+              h: "A minimal inventory",
+              html: `<pre>public class Inventory
+{
+    private readonly List&lt;string&gt; items = new();
+    public IReadOnlyList&lt;string&gt; Items =&gt; items;
+
+    public void Add(string item) =&gt; items.Add(item);
+    public bool Remove(string item) =&gt; items.Remove(item);
+    public bool Has(string item) =&gt; items.Contains(item);
+}</pre>`
+            }
+          ],
+          challenge: { type: "inventory-predict" },
+          quiz: [
+            {
+              q: "Why expose Items as IReadOnlyList&lt;string&gt; instead of List&lt;string&gt;?",
+              choices: [
+                "It's faster",
+                "To prevent outside code from mutating the inventory directly",
+                "Unity requires it",
+                "It auto-saves to disk"
+              ],
+              correct: 1,
+              why: "Encapsulation: callers can read, but must go through Add/Remove to change state."
+            }
+          ]
+        },
+
+        {
+          id: "w13", week: 13, tag: "VFX",
+          title: "Particles & Visual Effects",
+          objective: "Tune a particle system and understand Shuriken vs VFX Graph.",
+          intro: `Unity 6 has two particle systems: the CPU-based <b>Shuriken</b> (easy, flexible) and
+                  the GPU-based <b>VFX Graph</b> (millions of particles, requires Shader Graph).`,
+          sections: [
+            {
+              h: "Quick knobs that matter",
+              html: `<ul>
+                <li><b>Emission Rate</b> — particles per second.</li>
+                <li><b>Start Lifetime</b> — how long each particle lives.</li>
+                <li><b>Start Speed</b> — initial velocity.</li>
+                <li><b>Color over Lifetime</b> — fade tail.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "particles" },
+          quiz: [
+            {
+              q: "Which system should you pick for a rain effect with 500,000 particles?",
+              choices: ["Shuriken", "VFX Graph", "Animator", "Terrain Details"],
+              correct: 1,
+              why: "VFX Graph runs on the GPU and handles massive particle counts; Shuriken caps out much lower."
+            }
+          ]
+        },
+
+        {
+          id: "w14", week: 14, tag: "Polish",
+          title: "Optimization & Accessibility",
+          objective: "Identify common perf wins and WCAG-minded game design choices.",
+          intro: `Ship fast, ship accessible. Unity 6's <b>Profiler</b> and <b>Frame Debugger</b>
+                  tell you where time is lost; the <b>Accessibility</b> package provides a screen
+                  reader bridge for UI.`,
+          sections: [
+            {
+              h: "Low-hanging perf fruit",
+              html: `<ul>
+                <li>Batch static geometry (GPU Resident Drawer does this automatically in Unity 6).</li>
+                <li>Use <b>Object Pooling</b> for bullets, particles, enemies.</li>
+                <li>Bake lighting when possible.</li>
+                <li>Avoid calling <code class="inline">GetComponent</code> every frame — cache it.</li>
+              </ul>`
+            },
+            {
+              h: "Accessibility essentials",
+              html: `<ul>
+                <li>Rebindable controls (easy with the Input System).</li>
+                <li>Colorblind-safe palettes (use shape + color).</li>
+                <li>Subtitles for all spoken audio.</li>
+                <li>Adjustable text size.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "optimize" },
+          quiz: [
+            {
+              q: "Which is NOT a valid accessibility improvement?",
+              choices: [
+                "Adding subtitles",
+                "Colorblind-safe palette",
+                "Locking the framerate to 12 fps",
+                "Rebindable controls"
+              ],
+              correct: 2,
+              why: "Low framerates hurt everyone; the others improve access without reducing quality."
+            }
+          ]
+        },
+
+        {
+          id: "w15", week: 15, tag: "Build",
+          title: "Build Pipelines & Version Control",
+          objective: "Pick the correct build target and commit your work.",
+          intro: `You ship software, not projects. Unity 6's <b>Build Profiles</b> window (new!) replaces
+                  the old Build Settings; it stores per-target scripting defines, scenes, and
+                  player settings in reusable profiles.`,
+          sections: [
+            {
+              h: "Common targets",
+              html: `<ul>
+                <li><b>WebGL</b> — itch.io, Simmer.io, classroom demos.</li>
+                <li><b>Windows / macOS / Linux Standalone</b> — Steam, itch.io.</li>
+                <li><b>Android</b> — Google Play.</li>
+                <li><b>iOS</b> — Apple App Store (requires Xcode on macOS).</li>
+              </ul>`
+            },
+            {
+              h: "Version control",
+              html: `<p>Use <b>Git</b> with a proper <code class="inline">.gitignore</code> (generate one for Unity);
+                     or <b>Unity Version Control</b> (formerly Plastic SCM) which is bundled and handles
+                     binary assets well. Never commit <code class="inline">Library/</code>, <code class="inline">Temp/</code>,
+                     or <code class="inline">Build/</code>.</p>`
+            }
+          ],
+          challenge: { type: "build-target" },
+          quiz: [
+            {
+              q: "Which folders should NEVER be committed to Git?",
+              choices: [
+                "Assets/ and ProjectSettings/",
+                "Library/, Temp/, Build/",
+                "Packages/manifest.json",
+                "README.md"
+              ],
+              correct: 1,
+              why: "Library/Temp/Build are regenerated by Unity and bloat your repo. Always keep Assets/ and ProjectSettings/."
+            }
+          ]
+        },
+
+        {
+          id: "w16", week: 16, tag: "Ship",
+          title: "Ship It: Final Project",
+          objective: "Publish to a platform and reflect on what you built.",
+          intro: `You've made it. Time to ship. <b>itch.io</b> is the easiest public home for a student
+                  game — you can upload a WebGL build and share a URL in minutes.`,
+          sections: [
+            {
+              h: "Shipping checklist",
+              html: `<ul>
+                <li>Game boots cleanly in a 5-minute session with no fatal errors.</li>
+                <li>Controls screen or in-game prompt.</li>
+                <li>Credits — yourself, your team, third-party assets, AI tools used.</li>
+                <li>Itch.io page with a screenshot, a gif, and a one-paragraph pitch.</li>
+                <li>Reflective report (2–3 pages) covering process, lessons learned, future work.</li>
+              </ul>`
+            }
+          ],
+          challenge: { type: "finale" },
+          quiz: [
+            {
+              q: "What should your reflective report include?",
+              choices: [
+                "Only the things that went right",
+                "Process, lessons learned, and future work",
+                "Source code printed out",
+                "A grade you'd like to receive"
+              ],
+              correct: 1,
+              why: "A reflective report is about learning — name what worked, what didn't, and what you'd do next time."
+            }
+          ]
+        }
+      ]
+    };
+  </script>
+  <script id="engine-script">
+    /* ================= ENGINE ================= */
+    const data = window.GAME_DATA;
+    const stage = document.getElementById('stage');
+    const levelList = document.getElementById('level-list');
+    const toastEl = document.getElementById('toast');
+    const hudXp = document.getElementById('hud-xp');
+    const hudBadges = document.getElementById('hud-badges');
+    const hudLives = document.getElementById('hud-lives');
+    const progressFill = document.getElementById('progress-fill');
+    const progressPct = document.getElementById('progress-pct');
+
+    const STORAGE_KEY = 'unity6quest_v1';
+
+    const defaultState = {
+      current: 0,
+      completed: {},   // id -> true
+      xp: 0,
+      lives: 3,
+      badges: [],
+      answered: {}     // levelId -> [correctCount, totalCount]
+    };
+
+    let state = loadState();
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(defaultState);
+        return { ...structuredClone(defaultState), ...JSON.parse(raw) };
+      } catch { return structuredClone(defaultState); }
+    }
+    function saveState() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+    }
+    function resetState() {
+      state = structuredClone(defaultState);
+      saveState();
+      render();
+      toast('Progress reset');
+    }
+
+    function toast(msg, ms = 2200) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    function updateHud() {
+      hudXp.textContent = state.xp;
+      hudBadges.textContent = state.badges.length;
+      hudLives.textContent = state.lives;
+      const total = data.levels.length;
+      const done = Object.keys(state.completed).length;
+      const pct = Math.round((done / total) * 100);
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+    }
+
+    function renderLevelList() {
+      levelList.innerHTML = '';
+      data.levels.forEach((lvl, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'level-btn';
+        const isCompleted = !!state.completed[lvl.id];
+        const isLocked = i > 0 && !state.completed[data.levels[i - 1].id] && !isCompleted;
+        if (isCompleted) btn.classList.add('completed');
+        if (isLocked) btn.classList.add('locked');
+        if (i === state.current) btn.setAttribute('aria-current', 'true');
+        btn.innerHTML = `
+          <span class="level-badge" aria-hidden="true">${lvl.week}</span>
+          <span>
+            <div style="font-weight:700;">${lvl.title}</div>
+            <div style="font-size:11px; color:var(--ink-dim);">${lvl.tag}</div>
+          </span>
+          <span aria-hidden="true">${isCompleted ? '<span class="check">✓</span>' : (isLocked ? '<span class="lock">🔒</span>' : '')}</span>
+        `;
+        btn.setAttribute('aria-label',
+          `Week ${lvl.week}: ${lvl.title}${isCompleted ? ', completed' : ''}${isLocked ? ', locked' : ''}`);
+        btn.disabled = isLocked;
+        btn.addEventListener('click', () => {
+          if (isLocked) { toast('Complete the previous mission first'); return; }
+          state.current = i;
+          saveState();
+          render();
+          stage.focus();
+        });
+        levelList.appendChild(btn);
+      });
+    }
+
+    /* ----------- Level rendering ----------- */
+    function render() {
+      renderLevelList();
+      updateHud();
+      const lvl = data.levels[state.current];
+      if (!lvl) return;
+
+      const sectionsHtml = lvl.sections.map(s => `
+        <div class="card">
+          <h3>${s.h}</h3>
+          ${s.html}
+        </div>
+      `).join('');
+
+      stage.innerHTML = `
+        <div class="level-header">
+          <span class="level-tag">Week ${lvl.week} · ${lvl.tag}</span>
+          <h2>${lvl.title}</h2>
+          <p class="sub"><b>Objective:</b> ${lvl.objective}</p>
+        </div>
+        <div class="card"><p>${lvl.intro}</p></div>
+        ${sectionsHtml}
+        <div class="card" id="challenge-card">
+          <h3>🎮 Mission Challenge</h3>
+          <div id="challenge-host"></div>
+        </div>
+        <div class="card" id="quiz-card">
+          <h3>🧠 Check Your Understanding</h3>
+          <div id="quiz-host"></div>
+        </div>
+        <div class="controls">
+          <button class="btn secondary" id="btn-prev" ${state.current === 0 ? 'disabled' : ''}>← Previous</button>
+          <button class="btn" id="btn-next">
+            ${state.current === data.levels.length - 1 ? 'Finish course 🎓' : 'Next mission →'}
+          </button>
+        </div>
+      `;
+
+      renderChallenge(lvl);
+      renderQuiz(lvl);
+
+      document.getElementById('btn-prev').addEventListener('click', () => {
+        if (state.current > 0) { state.current--; saveState(); render(); }
+      });
+      document.getElementById('btn-next').addEventListener('click', () => {
+        if (!state.completed[lvl.id]) {
+          toast('Complete the challenge and quiz to continue');
+          return;
+        }
+        if (state.current < data.levels.length - 1) {
+          state.current++; saveState(); render();
+        } else {
+          renderFinale();
+        }
+      });
+    }
+
+    /* ----------- QUIZ ----------- */
+    function renderQuiz(lvl) {
+      const host = document.getElementById('quiz-host');
+      host.innerHTML = '';
+      const stateKey = lvl.id + '_quiz';
+      state.answered[stateKey] = state.answered[stateKey] || { idx: 0, correct: 0 };
+      const qs = lvl.quiz;
+
+      function drawQuestion() {
+        const i = state.answered[stateKey].idx;
+        if (i >= qs.length) {
+          host.innerHTML = `<p class="feedback good">✅ Quiz complete — ${state.answered[stateKey].correct}/${qs.length} correct.</p>`;
+          checkLevelComplete(lvl);
+          return;
+        }
+        const q = qs[i];
+        const wrap = document.createElement('div');
+        wrap.className = 'quiz';
+        wrap.innerHTML = `
+          <div class="q">Q${i + 1}. ${q.q}</div>
+          <div class="choices" role="list"></div>
+          <div class="feedback" id="fb" style="display:none;"></div>
+        `;
+        const choicesEl = wrap.querySelector('.choices');
+        q.choices.forEach((c, idx) => {
+          const b = document.createElement('button');
+          b.className = 'choice';
+          b.setAttribute('role', 'listitem');
+          b.textContent = c;
+          b.addEventListener('click', () => handleChoice(b, idx));
+          choicesEl.appendChild(b);
+        });
+
+        function handleChoice(btn, idx) {
+          [...choicesEl.children].forEach(c => c.disabled = true);
+          const fb = wrap.querySelector('#fb');
+          fb.style.display = 'block';
+          if (idx === q.correct) {
+            btn.classList.add('correct');
+            fb.className = 'feedback good';
+            fb.textContent = '✔ ' + q.why;
+            state.answered[stateKey].correct++;
+            state.xp += 10;
+          } else {
+            btn.classList.add('wrong');
+            choicesEl.children[q.correct].classList.add('correct');
+            fb.className = 'feedback bad';
+            fb.textContent = '✘ ' + q.why;
+            state.lives = Math.max(0, state.lives - 1);
+          }
+          saveState(); updateHud();
+          const nb = document.createElement('button');
+          nb.className = 'btn secondary';
+          nb.style.marginTop = '10px';
+          nb.textContent = i + 1 === qs.length ? 'Finish quiz' : 'Next question →';
+          nb.addEventListener('click', () => {
+            state.answered[stateKey].idx++;
+            saveState();
+            drawQuestion();
+          });
+          wrap.appendChild(nb);
+        }
+
+        host.innerHTML = '';
+        host.appendChild(wrap);
+      }
+      drawQuestion();
+    }
+
+    /* ----------- Completion gate ----------- */
+    function checkLevelComplete(lvl) {
+      const quizKey = lvl.id + '_quiz';
+      const quizDone = state.answered[quizKey] && state.answered[quizKey].idx >= lvl.quiz.length;
+      const chalDone = !!state.answered[lvl.id + '_challenge'];
+      if (quizDone && chalDone && !state.completed[lvl.id]) {
+        state.completed[lvl.id] = true;
+        state.xp += 25;
+        state.badges.push({ week: lvl.week, title: lvl.title });
+        saveState();
+        updateHud();
+        renderLevelList();
+        toast(`🏆 Week ${lvl.week} badge earned: ${lvl.title}`);
+      }
+    }
+
+    function markChallengeDone(lvl) {
+      state.answered[lvl.id + '_challenge'] = true;
+      state.xp += 15;
+      saveState();
+      updateHud();
+      checkLevelComplete(lvl);
+    }
+
+    /* ----------- CHALLENGES ----------- */
+    function renderChallenge(lvl) {
+      const host = document.getElementById('challenge-host');
+      host.innerHTML = '';
+      const type = lvl.challenge.type;
+      const fns = {
+        'match-panels': matchPanels,
+        'classify-mechanics': classifyMechanics,
+        'fill-csharp': fillCSharp,
+        'sort-gdd': sortGDD,
+        'platformer': platformerMini,
+        'bug-hunt': bugHunt,
+        'dialogue': dialogueTree,
+        'keyframe-order': keyframeOrder,
+        'rapid-quiz': rapidQuiz,
+        'scene-build': sceneBuild,
+        'wasd3d': wasd3dMini,
+        'inventory-predict': inventoryPredict,
+        'particles': particlesMini,
+        'optimize': optimizeGame,
+        'build-target': buildTarget,
+        'finale': finaleChallenge
+      };
+      (fns[type] || notReady)(host, lvl);
+    }
+
+    function notReady(host) {
+      host.innerHTML = '<p>Challenge coming soon — press "Next" when ready.</p>';
+    }
+
+    /* ========== Week 1: Match Panels ========== */
+    function matchPanels(host, lvl) {
+      const pairs = [
+        { panel: 'Hierarchy', desc: 'Lists every GameObject in the open scene' },
+        { panel: 'Inspector', desc: 'Shows components of the selected object' },
+        { panel: 'Project',   desc: 'Browses assets on disk under /Assets' },
+        { panel: 'Console',   desc: 'Displays Debug.Log output, warnings, errors' }
+      ];
+      const shuffled = shuffle(pairs.map(p => p.desc));
+      host.innerHTML = `
+        <p>Match each Unity 6 Editor panel to what it shows.</p>
+        <div class="hierarchy-grid" style="margin-top:10px;">
+          <div class="drop-zone">
+            <h4>Panels</h4>
+            ${pairs.map(p => `
+              <div class="drag-item" data-panel="${p.panel}">
+                <b>${p.panel}</b>
+                <select aria-label="What does ${p.panel} show?">
+                  <option value="">—</option>
+                  ${shuffled.map(d => `<option value="${escapeAttr(d)}">${d}</option>`).join('')}
+                </select>
+              </div>
+            `).join('')}
+          </div>
+          <div class="drop-zone">
+            <h4>How to win</h4>
+            <p style="font-size:13px; color: var(--ink-dim);">Pick the description that fits each panel.
+            When all four are right, press Check.</p>
+          </div>
+        </div>
+        <button class="btn" id="mp-check" style="margin-top:10px;">Check answers</button>
+        <div id="mp-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      host.querySelector('#mp-check').addEventListener('click', () => {
+        let correct = 0;
+        host.querySelectorAll('[data-panel]').forEach(el => {
+          const wanted = pairs.find(p => p.panel === el.dataset.panel).desc;
+          const got = el.querySelector('select').value;
+          el.classList.remove('correct', 'wrong');
+          if (got === wanted) { el.classList.add('correct'); correct++; }
+          else el.classList.add('wrong');
+        });
+        const fb = host.querySelector('#mp-fb');
+        fb.style.display = 'block';
+        if (correct === pairs.length) {
+          fb.className = 'feedback good'; fb.textContent = '✔ All four panels matched!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = `${correct}/${pairs.length} correct — try again.`;
+        }
+      });
+    }
+
+    /* ========== Week 2: Classify MDA ========== */
+    function classifyMechanics(host, lvl) {
+      const items = [
+        { t: 'Press Space to jump', cat: 'M' },
+        { t: 'Collecting 100 coins gives an extra life', cat: 'M' },
+        { t: 'Players form teams to tackle bosses', cat: 'D' },
+        { t: 'A thrilling sense of peril', cat: 'A' },
+        { t: 'WASD moves the character', cat: 'M' },
+        { t: 'Speedrunners skip intended paths', cat: 'D' },
+        { t: 'Warm nostalgic feeling', cat: 'A' }
+      ];
+      host.innerHTML = `
+        <p>Drop each item into <b>M</b>echanic, <b>D</b>ynamic, or <b>A</b>esthetic.</p>
+        <div class="hierarchy-grid">
+          <div class="drag-pool">
+            <h4>Items</h4>
+            <div id="pool"></div>
+          </div>
+          <div>
+            <div class="drop-zone" data-cat="M"><h4>Mechanic</h4></div>
+            <div class="drop-zone" data-cat="D" style="margin-top:8px;"><h4>Dynamic</h4></div>
+            <div class="drop-zone" data-cat="A" style="margin-top:8px;"><h4>Aesthetic</h4></div>
+          </div>
+        </div>
+        <button class="btn" id="mda-check" style="margin-top:10px;">Check</button>
+        <div id="mda-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const pool = host.querySelector('#pool');
+      shuffle(items).forEach((it, i) => {
+        const div = document.createElement('div');
+        div.className = 'drag-item';
+        div.draggable = true;
+        div.textContent = it.t;
+        div.dataset.cat = it.cat;
+        div.id = 'mdai-' + i;
+        div.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', div.id));
+        // Keyboard: click to cycle through zones
+        div.tabIndex = 0;
+        div.setAttribute('role', 'button');
+        div.setAttribute('aria-label', `${it.t}. Press Enter to move to next category.`);
+        div.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const zones = ['pool', 'M', 'D', 'A'];
+            const curParent = div.parentElement;
+            const curKey = curParent.id === 'pool' ? 'pool' : curParent.dataset.cat;
+            const next = zones[(zones.indexOf(curKey) + 1) % zones.length];
+            const nextEl = next === 'pool' ? pool : host.querySelector(`[data-cat="${next}"]`);
+            nextEl.appendChild(div);
+          }
+        });
+        pool.appendChild(div);
+      });
+      host.querySelectorAll('.drop-zone, .drag-pool').forEach(z => {
+        z.addEventListener('dragover', e => e.preventDefault());
+        z.addEventListener('drop', e => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData('text/plain');
+          const el = document.getElementById(id);
+          if (el) z.appendChild(el);
+        });
+      });
+      host.querySelector('#mda-check').addEventListener('click', () => {
+        let ok = 0, total = items.length;
+        host.querySelectorAll('.drag-item').forEach(d => {
+          const parent = d.parentElement;
+          const cat = parent.dataset ? parent.dataset.cat : null;
+          d.classList.remove('correct', 'wrong');
+          if (cat === d.dataset.cat) { d.classList.add('correct'); ok++; }
+          else d.classList.add('wrong');
+        });
+        const fb = host.querySelector('#mda-fb');
+        fb.style.display = 'block';
+        if (ok === total) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Perfectly sorted!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = `${ok}/${total} correct — keep sorting.`;
+        }
+      });
+    }
+
+    /* ========== Week 3: Fill C# ========== */
+    function fillCSharp(host, lvl) {
+      host.innerHTML = `
+        <p>Complete the <code class="inline">Mover</code> script so it prints a message once, then
+        moves the object right every frame.</p>
+        <pre style="line-height:1.8;">using UnityEngine;
+
+public class Mover : MonoBehaviour
+{
+    public float speed = 5f;
+
+    void <span class="blank"><select data-a="Start">
+      <option value="">?</option>
+      <option value="Start">Start</option>
+      <option value="Update">Update</option>
+      <option value="OnGUI">OnGUI</option>
+    </select></span>()
+    {
+        <span class="blank"><select data-a="Debug.Log">
+          <option value="">?</option>
+          <option value="Debug.Log">Debug.Log</option>
+          <option value="print.now">print.now</option>
+          <option value="Console.Write">Console.Write</option>
+        </select></span>("Hello, Unity 6!");
+    }
+
+    void <span class="blank"><select data-a="Update">
+      <option value="">?</option>
+      <option value="Start">Start</option>
+      <option value="Update">Update</option>
+      <option value="OnGUI">OnGUI</option>
+    </select></span>()
+    {
+        transform.Translate(Vector3.right * speed * <span class="blank"><select data-a="Time.deltaTime">
+          <option value="">?</option>
+          <option value="Time.time">Time.time</option>
+          <option value="Time.deltaTime">Time.deltaTime</option>
+          <option value="Time.frameCount">Time.frameCount</option>
+        </select></span>);
+    }
+}</pre>
+        <button class="btn" id="cs-check">Compile</button>
+        <div id="cs-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      host.querySelector('#cs-check').addEventListener('click', () => {
+        let ok = 0, total = 0;
+        host.querySelectorAll('select[data-a]').forEach(s => {
+          total++;
+          if (s.value === s.dataset.a) ok++;
+        });
+        const fb = host.querySelector('#cs-fb');
+        fb.style.display = 'block';
+        if (ok === total) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Script compiles and runs!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = `${ok}/${total} blanks correct.`;
+        }
+      });
+    }
+
+    /* ========== Week 4: Sort GDD ========== */
+    function sortGDD(host, lvl) {
+      const items = [
+        { t: 'A roguelike where you play a librarian', cat: 'High Concept' },
+        { t: 'Explore → fight → loot → level up loop', cat: 'Core Loop' },
+        { t: 'Dash, shoot, pick up, revive', cat: 'Mechanics' },
+        { t: 'Pixel art, lofi soundtrack, muted palette', cat: 'Art & Audio' },
+        { t: 'Vertical slice by Week 8, alpha by Week 12', cat: 'Scope & Milestones' }
+      ];
+      host.innerHTML = `
+        <p>Drop each snippet into the right GDD section.</p>
+        <div class="hierarchy-grid">
+          <div class="drag-pool">
+            <h4>Snippets</h4>
+            <div id="gdd-pool"></div>
+          </div>
+          <div>
+            ${['High Concept', 'Core Loop', 'Mechanics', 'Art & Audio', 'Scope & Milestones']
+              .map(c => `<div class="drop-zone" data-cat="${c}" style="margin-bottom:6px;"><h4>${c}</h4></div>`).join('')}
+          </div>
+        </div>
+        <button class="btn" id="gdd-check" style="margin-top:10px;">Check</button>
+        <div id="gdd-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const pool = host.querySelector('#gdd-pool');
+      shuffle(items).forEach((it, i) => {
+        const div = document.createElement('div');
+        div.className = 'drag-item';
+        div.draggable = true;
+        div.textContent = it.t;
+        div.dataset.cat = it.cat;
+        div.id = 'gddi-' + i;
+        div.tabIndex = 0;
+        div.addEventListener('dragstart', e => e.dataTransfer.setData('text/plain', div.id));
+        div.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const zones = [pool, ...host.querySelectorAll('.drop-zone')];
+            const idx = zones.indexOf(div.parentElement);
+            zones[(idx + 1) % zones.length].appendChild(div);
+          }
+        });
+        pool.appendChild(div);
+      });
+      host.querySelectorAll('.drop-zone, .drag-pool').forEach(z => {
+        z.addEventListener('dragover', e => e.preventDefault());
+        z.addEventListener('drop', e => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData('text/plain');
+          const el = document.getElementById(id);
+          if (el) z.appendChild(el);
+        });
+      });
+      host.querySelector('#gdd-check').addEventListener('click', () => {
+        let ok = 0;
+        host.querySelectorAll('.drag-item').forEach(d => {
+          const p = d.parentElement;
+          const cat = p.dataset ? p.dataset.cat : null;
+          d.classList.remove('correct', 'wrong');
+          if (cat === d.dataset.cat) { d.classList.add('correct'); ok++; }
+          else d.classList.add('wrong');
+        });
+        const fb = host.querySelector('#gdd-fb');
+        fb.style.display = 'block';
+        if (ok === items.length) {
+          fb.className = 'feedback good'; fb.textContent = '✔ GDD organized!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = `${ok}/${items.length} correct.`;
+        }
+      });
+    }
+
+    /* ========== Week 5: 2D Platformer ========== */
+    function platformerMini(host, lvl) {
+      host.innerHTML = `
+        <div class="minigame">
+          <canvas id="pfc" width="640" height="320" aria-label="Platformer: reach the flag"></canvas>
+          <div class="help">Arrow keys / WASD to move, Space to jump. Reach the flag 🏁.</div>
+        </div>
+        <div id="pf-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const c = host.querySelector('#pfc');
+      const g = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const player = { x: 30, y: H - 60, w: 20, h: 28, vx: 0, vy: 0, grounded: false };
+      const tiles = [
+        { x: 0, y: H - 20, w: 180, h: 20 },
+        { x: 220, y: H - 60, w: 80, h: 20 },
+        { x: 340, y: H - 110, w: 80, h: 20 },
+        { x: 460, y: H - 160, w: 80, h: 20 },
+        { x: 560, y: H - 200, w: 80, h: 20 }
+      ];
+      const goal = { x: 590, y: H - 240, w: 30, h: 40 };
+      const keys = {};
+      let won = false;
+      window.addEventListener('keydown', e => {
+        if (['ArrowLeft','ArrowRight','ArrowUp',' ','w','a','d','Space'].includes(e.key)) e.preventDefault();
+        keys[e.key.toLowerCase()] = true;
+      }, { passive: false });
+      window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+      function loop() {
+        // input
+        player.vx = 0;
+        if (keys['arrowleft'] || keys['a']) player.vx = -3;
+        if (keys['arrowright'] || keys['d']) player.vx = 3;
+        if ((keys[' '] || keys['arrowup'] || keys['w']) && player.grounded) { player.vy = -9; player.grounded = false; }
+        // physics
+        player.vy += 0.5;
+        player.x += player.vx;
+        player.y += player.vy;
+        player.grounded = false;
+        tiles.forEach(t => {
+          if (player.x + player.w > t.x && player.x < t.x + t.w &&
+              player.y + player.h > t.y && player.y + player.h < t.y + t.h + 10 && player.vy >= 0) {
+            player.y = t.y - player.h; player.vy = 0; player.grounded = true;
+          }
+        });
+        if (player.y > H) { player.x = 30; player.y = H - 60; player.vy = 0; }
+        if (player.x + player.w > goal.x && player.x < goal.x + goal.w &&
+            player.y + player.h > goal.y && player.y < goal.y + goal.h && !won) {
+          won = true;
+          const fb = host.querySelector('#pf-fb');
+          fb.className = 'feedback good';
+          fb.textContent = '✔ You reached the flag! Physics and Input System working.';
+          fb.style.display = 'block';
+          markChallengeDone(lvl);
+        }
+        // draw
+        g.fillStyle = '#0a1230'; g.fillRect(0, 0, W, H);
+        // tiles
+        g.fillStyle = '#334d99';
+        tiles.forEach(t => g.fillRect(t.x, t.y, t.w, t.h));
+        // goal
+        g.fillStyle = '#fbbf24'; g.fillRect(goal.x + 10, goal.y, 4, goal.h);
+        g.fillStyle = '#ef4444'; g.fillRect(goal.x + 14, goal.y, 16, 12);
+        // player
+        g.fillStyle = '#7dd3fc';
+        g.fillRect(player.x, player.y, player.w, player.h);
+        g.fillStyle = '#0b1020';
+        g.fillRect(player.x + 4, player.y + 6, 3, 3);
+        g.fillRect(player.x + 13, player.y + 6, 3, 3);
+        if (!won) requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    /* ========== Week 6: Bug hunt ========== */
+    function bugHunt(host, lvl) {
+      const lines = [
+        { t: 'void Start()', bug: false },
+        { t: '{', bug: false },
+        { t: '    health = 100;', bug: false },
+        { t: '    if (health = 0) Die();', bug: true, why: "Assignment (=) instead of equality (==)." },
+        { t: '    for (int i = 0; i < enemies.Length; i--)', bug: true, why: "i-- makes the loop run forever; should be i++." },
+        { t: '    Debug.Log("Ready");', bug: false },
+        { t: '}', bug: false }
+      ];
+      host.innerHTML = `
+        <p>Click the lines that contain bugs. Find all bugs to pass.</p>
+        <pre id="bh" style="line-height:1.8;">${lines.map((l, i) =>
+          `<div data-idx="${i}" class="bh-line" style="cursor:pointer; padding:2px 4px; border-radius:4px;">${escapeHtml(l.t)}</div>`
+        ).join('')}</pre>
+        <button class="btn" id="bh-check" style="margin-top:10px;">Submit</button>
+        <div id="bh-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const picked = new Set();
+      host.querySelectorAll('.bh-line').forEach(el => {
+        el.addEventListener('click', () => {
+          const i = +el.dataset.idx;
+          if (picked.has(i)) { picked.delete(i); el.style.background = ''; }
+          else { picked.add(i); el.style.background = 'rgba(248,113,113,0.25)'; }
+        });
+      });
+      host.querySelector('#bh-check').addEventListener('click', () => {
+        const bugs = lines.map((l, i) => l.bug ? i : -1).filter(x => x >= 0);
+        const allFound = bugs.every(b => picked.has(b)) && [...picked].every(p => bugs.includes(p));
+        const fb = host.querySelector('#bh-fb');
+        fb.style.display = 'block';
+        if (allFound) {
+          fb.className = 'feedback good';
+          fb.innerHTML = '✔ Both bugs spotted!<br>' +
+            lines.filter(l => l.bug).map(l => '• ' + l.why).join('<br>');
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad';
+          fb.textContent = 'Not quite — keep hunting.';
+        }
+      });
+    }
+
+    /* ========== Week 7: Dialogue tree ========== */
+    function dialogueTree(host, lvl) {
+      const tree = {
+        root: {
+          npc: 'Villager: "Traveler! Our well has been poisoned. Will you help?"',
+          choices: [
+            { t: 'Yes, I will help.', next: 'accept', best: true },
+            { t: 'Only if you pay me 50 gold.', next: 'paid' },
+            { t: 'Not my problem.', next: 'refuse' }
+          ]
+        },
+        accept: {
+          npc: 'Villager: "Bless you. Take this torch."',
+          end: true, success: true
+        },
+        paid: {
+          npc: 'Villager: "Fine, mercenary. Here is the gold — fix it."',
+          end: true, success: true
+        },
+        refuse: {
+          npc: 'Villager: "Then be gone, stranger." (quest failed)',
+          end: true, success: false
+        }
+      };
+      let node = 'root';
+      host.innerHTML = `
+        <div id="dlg" class="card" style="background:#0a1230;"></div>
+        <div id="dlg-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const dlg = host.querySelector('#dlg');
+      const fb = host.querySelector('#dlg-fb');
+      function draw() {
+        const n = tree[node];
+        dlg.innerHTML = `<p style="margin-bottom:10px;"><em>${n.npc}</em></p>`;
+        if (n.end) {
+          fb.style.display = 'block';
+          if (n.success) {
+            fb.className = 'feedback good'; fb.textContent = '✔ Quest accepted — dialogue tree complete.';
+            markChallengeDone(lvl);
+          } else {
+            fb.className = 'feedback bad'; fb.textContent = '✘ Quest failed. Try another branch.';
+            const b = document.createElement('button');
+            b.className = 'btn secondary'; b.textContent = 'Restart dialogue';
+            b.addEventListener('click', () => { node = 'root'; fb.style.display='none'; draw(); });
+            dlg.appendChild(b);
+          }
+          return;
+        }
+        n.choices.forEach(c => {
+          const b = document.createElement('button');
+          b.className = 'choice'; b.textContent = c.t;
+          b.style.display = 'block'; b.style.width = '100%'; b.style.marginBottom = '6px';
+          b.addEventListener('click', () => { node = c.next; draw(); });
+          dlg.appendChild(b);
+        });
+      }
+      draw();
+    }
+
+    /* ========== Week 8: Keyframe order ========== */
+    function keyframeOrder(host, lvl) {
+      const frames = ['Stand', 'Lift Left Foot', 'Pass Through', 'Lift Right Foot', 'Pass Through'];
+      const shuffled = shuffle(frames.map((t, i) => ({ t, i })));
+      host.innerHTML = `
+        <p>Order these walk cycle keyframes from first to last (click to move up).</p>
+        <div id="kf-list"></div>
+        <button class="btn" id="kf-check" style="margin-top:10px;">Check sequence</button>
+        <div id="kf-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const list = host.querySelector('#kf-list');
+      function draw(arr) {
+        list.innerHTML = '';
+        arr.forEach((f, i) => {
+          const d = document.createElement('div');
+          d.className = 'drag-item';
+          d.style.display = 'flex'; d.style.justifyContent = 'space-between';
+          d.innerHTML = `<span>Frame ${i + 1}: ${f.t}</span>`;
+          const up = document.createElement('button');
+          up.className = 'btn ghost'; up.textContent = '↑';
+          up.setAttribute('aria-label', `Move ${f.t} up`);
+          up.disabled = i === 0;
+          up.addEventListener('click', () => {
+            [arr[i - 1], arr[i]] = [arr[i], arr[i - 1]];
+            draw(arr);
+          });
+          d.appendChild(up);
+          list.appendChild(d);
+        });
+        list._state = arr;
+      }
+      draw(shuffled);
+      host.querySelector('#kf-check').addEventListener('click', () => {
+        const current = list._state.map(x => x.i);
+        const correct = current.every((v, i) => v === i);
+        const fb = host.querySelector('#kf-fb');
+        fb.style.display = 'block';
+        if (correct) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Walk cycle in order!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = 'Not quite — remember: stand → lift → pass → lift → pass.';
+        }
+      });
+    }
+
+    /* ========== Week 9: Rapid-fire quiz ========== */
+    function rapidQuiz(host, lvl) {
+      const qs = [
+        { q: 'What C# class must every Unity script inherit from to attach to a GameObject?', a: 'MonoBehaviour', options: ['GameObject', 'MonoBehaviour', 'Transform', 'ScriptableObject'] },
+        { q: 'Which method runs BEFORE Start?', a: 'Awake', options: ['OnDestroy', 'Update', 'Awake', 'OnGUI'] },
+        { q: 'Which component is required for physics gravity in 3D?', a: 'Rigidbody', options: ['Transform', 'Collider', 'Rigidbody', 'Animator'] },
+        { q: 'Default 2D physics body component?', a: 'Rigidbody2D', options: ['Rigidbody', 'Rigidbody2D', 'BoxCollider2D', 'Physics2D'] },
+        { q: 'Unity 6 render pipeline that is the default in new projects?', a: 'URP', options: ['Built-in', 'URP', 'HDRP', 'Custom SRP'] }
+      ];
+      host.innerHTML = `
+        <p>5 quick questions. Answer all correctly to pass.</p>
+        <div id="rq-wrap"></div>
+        <div id="rq-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const wrap = host.querySelector('#rq-wrap');
+      let i = 0, correct = 0;
+      function next() {
+        if (i >= qs.length) {
+          const fb = host.querySelector('#rq-fb');
+          fb.style.display = 'block';
+          if (correct === qs.length) {
+            fb.className = 'feedback good'; fb.textContent = `✔ ${correct}/${qs.length} — midterm material mastered.`;
+            markChallengeDone(lvl);
+          } else {
+            fb.className = 'feedback bad'; fb.textContent = `${correct}/${qs.length}. Retry for full credit.`;
+            const b = document.createElement('button');
+            b.className = 'btn secondary'; b.textContent = 'Retry';
+            b.addEventListener('click', () => { i = 0; correct = 0; fb.style.display='none'; wrap.innerHTML=''; next(); });
+            fb.appendChild(document.createElement('br'));
+            fb.appendChild(b);
+          }
+          return;
+        }
+        const q = qs[i];
+        wrap.innerHTML = `<div class="q">Q${i + 1}. ${q.q}</div><div class="choices" id="rq-ch"></div>`;
+        const ch = wrap.querySelector('#rq-ch');
+        shuffle([...q.options]).forEach(opt => {
+          const b = document.createElement('button');
+          b.className = 'choice'; b.textContent = opt;
+          b.addEventListener('click', () => {
+            if (opt === q.a) correct++;
+            i++; next();
+          });
+          ch.appendChild(b);
+        });
+      }
+      next();
+    }
+
+    /* ========== Week 10: Scene build ========== */
+    function sceneBuild(host, lvl) {
+      const items = [
+        { id: 'terrain', t: 'Terrain', need: true },
+        { id: 'sun', t: 'Directional Light (Sun)', need: true },
+        { id: 'cam', t: 'Main Camera', need: true },
+        { id: 'apv', t: 'Adaptive Probe Volume', need: true },
+        { id: 'ui', t: 'Canvas (UI)', need: false },
+        { id: 'rain', t: 'Particle System: Rain', need: false }
+      ];
+      host.innerHTML = `
+        <p>Toggle the components needed to create a functional 3D outdoor scene in Unity 6.
+        Some are optional — pick only what you NEED.</p>
+        <div id="sb-list" style="display:grid; gap:6px;"></div>
+        <button class="btn" id="sb-check" style="margin-top:10px;">Bake scene</button>
+        <div id="sb-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const list = host.querySelector('#sb-list');
+      items.forEach(it => {
+        const d = document.createElement('label');
+        d.className = 'drag-item';
+        d.style.cursor = 'pointer';
+        d.innerHTML = `<input type="checkbox" data-id="${it.id}" style="margin-right:8px;"> ${it.t}`;
+        list.appendChild(d);
+      });
+      host.querySelector('#sb-check').addEventListener('click', () => {
+        const checked = new Set([...host.querySelectorAll('input:checked')].map(x => x.dataset.id));
+        const need = items.filter(i => i.need).map(i => i.id);
+        const extra = [...checked].filter(c => !need.includes(c));
+        const missing = need.filter(n => !checked.has(n));
+        const fb = host.querySelector('#sb-fb');
+        fb.style.display = 'block';
+        if (missing.length === 0 && extra.length === 0) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Clean, efficient outdoor scene.';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad';
+          fb.textContent = `Missing: ${missing.length}, unnecessary: ${extra.length}.`;
+        }
+      });
+    }
+
+    /* ========== Week 11: WASD 3D ========== */
+    function wasd3dMini(host, lvl) {
+      host.innerHTML = `
+        <div class="minigame">
+          <canvas id="w3" width="640" height="320" aria-label="Top-down arena — collect all 3 crystals"></canvas>
+          <div class="help">WASD / arrow keys to move. Collect all 3 cyan crystals.</div>
+        </div>
+        <div id="w3-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const c = host.querySelector('#w3');
+      const g = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const p = { x: W / 2, y: H / 2, r: 12 };
+      const crystals = [
+        { x: 80,  y: 80,  got: false },
+        { x: 540, y: 80,  got: false },
+        { x: 540, y: 240, got: false }
+      ];
+      const keys = {};
+      window.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; });
+      window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+      let done = false;
+
+      function loop() {
+        if (keys['w'] || keys['arrowup']) p.y -= 3;
+        if (keys['s'] || keys['arrowdown']) p.y += 3;
+        if (keys['a'] || keys['arrowleft']) p.x -= 3;
+        if (keys['d'] || keys['arrowright']) p.x += 3;
+        p.x = Math.max(p.r, Math.min(W - p.r, p.x));
+        p.y = Math.max(p.r, Math.min(H - p.r, p.y));
+        crystals.forEach(cr => {
+          if (!cr.got) {
+            const dx = p.x - cr.x, dy = p.y - cr.y;
+            if (dx * dx + dy * dy < 400) cr.got = true;
+          }
+        });
+        g.fillStyle = '#0a1230'; g.fillRect(0, 0, W, H);
+        // grid
+        g.strokeStyle = '#1a2658'; g.lineWidth = 1;
+        for (let i = 0; i < W; i += 40) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, H); g.stroke(); }
+        for (let i = 0; i < H; i += 40) { g.beginPath(); g.moveTo(0, i); g.lineTo(W, i); g.stroke(); }
+        // crystals
+        crystals.forEach(cr => {
+          if (cr.got) return;
+          g.fillStyle = '#7dd3fc';
+          g.beginPath();
+          g.moveTo(cr.x, cr.y - 10);
+          g.lineTo(cr.x + 8, cr.y); g.lineTo(cr.x, cr.y + 10);
+          g.lineTo(cr.x - 8, cr.y); g.closePath(); g.fill();
+        });
+        // player
+        g.fillStyle = '#a78bfa';
+        g.beginPath(); g.arc(p.x, p.y, p.r, 0, Math.PI * 2); g.fill();
+        if (crystals.every(cr => cr.got) && !done) {
+          done = true;
+          const fb = host.querySelector('#w3-fb');
+          fb.className = 'feedback good'; fb.textContent = '✔ All 3 crystals collected — CharacterController simulated.';
+          fb.style.display = 'block';
+          markChallengeDone(lvl);
+        }
+        if (!done) requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    /* ========== Week 12: Inventory predict ========== */
+    function inventoryPredict(host, lvl) {
+      host.innerHTML = `
+        <p>Given this code, what does the final Debug.Log print?</p>
+        <pre>var inv = new Inventory();
+inv.Add("Sword");
+inv.Add("Potion");
+inv.Remove("Sword");
+inv.Add("Shield");
+Debug.Log(string.Join(",", inv.Items));</pre>
+        <div class="choices" id="inv-ch"></div>
+        <div id="inv-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const options = [
+        'Sword,Potion,Shield',
+        'Potion,Shield',
+        'Shield',
+        'Potion,Sword,Shield'
+      ];
+      const correct = 'Potion,Shield';
+      const ch = host.querySelector('#inv-ch');
+      options.forEach(o => {
+        const b = document.createElement('button');
+        b.className = 'choice'; b.textContent = o;
+        b.addEventListener('click', () => {
+          [...ch.children].forEach(c => c.disabled = true);
+          const fb = host.querySelector('#inv-fb');
+          fb.style.display = 'block';
+          if (o === correct) {
+            b.classList.add('correct');
+            fb.className = 'feedback good';
+            fb.textContent = '✔ "Sword" was removed before "Shield" was added — result: Potion,Shield.';
+            markChallengeDone(lvl);
+          } else {
+            b.classList.add('wrong');
+            fb.className = 'feedback bad';
+            fb.textContent = 'Not quite — trace it line by line, noting each Add/Remove.';
+          }
+        });
+        ch.appendChild(b);
+      });
+    }
+
+    /* ========== Week 13: Particles tune ========== */
+    function particlesMini(host, lvl) {
+      host.innerHTML = `
+        <p>Tune the fire particle effect. Match the target: <em>warm colors, short-lived, fast upward.</em></p>
+        <div style="display:grid; gap:8px; margin-top:10px; grid-template-columns: 1fr 1fr;">
+          <label>Start color
+            <select id="p-color" style="display:block;width:100%;margin-top:4px;">
+              <option value="blue">Cool blue</option>
+              <option value="green">Forest green</option>
+              <option value="orange">Warm orange</option>
+              <option value="gray">Smoky gray</option>
+            </select>
+          </label>
+          <label>Lifetime (seconds)
+            <input id="p-life" type="range" min="0.1" max="5" step="0.1" value="3" style="width:100%;">
+            <span id="p-life-v">3</span>s
+          </label>
+          <label>Start speed (up)
+            <input id="p-speed" type="range" min="0" max="10" step="0.5" value="1" style="width:100%;">
+            <span id="p-speed-v">1</span>
+          </label>
+          <label>Emission rate
+            <input id="p-em" type="range" min="1" max="200" step="1" value="30" style="width:100%;">
+            <span id="p-em-v">30</span>/s
+          </label>
+        </div>
+        <div class="minigame" style="margin-top:10px;">
+          <canvas id="p-cvs" width="640" height="200"></canvas>
+        </div>
+        <button class="btn" id="p-check" style="margin-top:10px;">Check tuning</button>
+        <div id="p-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const c = host.querySelector('#p-cvs');
+      const g = c.getContext('2d');
+      const W = c.width, H = c.height;
+      const parts = [];
+      function getCfg() {
+        return {
+          color: host.querySelector('#p-color').value,
+          life: +host.querySelector('#p-life').value,
+          speed: +host.querySelector('#p-speed').value,
+          em: +host.querySelector('#p-em').value
+        };
+      }
+      ['p-life', 'p-speed', 'p-em'].forEach(id => {
+        host.querySelector('#' + id).addEventListener('input', e => {
+          host.querySelector('#' + id + '-v').textContent = e.target.value;
+        });
+      });
+      function colorHex(c) {
+        return { blue: '#60a5fa', green: '#4ade80', orange: '#fb923c', gray: '#9ca3af' }[c];
+      }
+      let last = performance.now();
+      let acc = 0;
+      let running = true;
+      function frame(t) {
+        const cfg = getCfg();
+        const dt = (t - last) / 1000; last = t;
+        acc += dt * cfg.em;
+        while (acc >= 1) { parts.push({ x: W/2 + (Math.random()-0.5)*30, y: H-10, vy: -cfg.speed*20, life: cfg.life, age: 0 }); acc -= 1; }
+        g.fillStyle = 'rgba(10,18,48,0.3)'; g.fillRect(0,0,W,H);
+        for (let i = parts.length-1; i >= 0; i--) {
+          const p = parts[i];
+          p.y += p.vy * dt; p.age += dt;
+          if (p.age > p.life) { parts.splice(i, 1); continue; }
+          const alpha = 1 - (p.age / p.life);
+          g.globalAlpha = alpha;
+          g.fillStyle = colorHex(cfg.color);
+          g.beginPath(); g.arc(p.x, p.y, 4, 0, Math.PI*2); g.fill();
+        }
+        g.globalAlpha = 1;
+        if (running) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+      host.querySelector('#p-check').addEventListener('click', () => {
+        const cfg = getCfg();
+        const warm = cfg.color === 'orange';
+        const shortLife = cfg.life <= 1.5;
+        const fast = cfg.speed >= 4;
+        const fb = host.querySelector('#p-fb');
+        fb.style.display = 'block';
+        if (warm && shortLife && fast) {
+          fb.className = 'feedback good'; fb.textContent = '✔ That looks like fire now.';
+          markChallengeDone(lvl);
+        } else {
+          const hints = [];
+          if (!warm) hints.push('warmer color');
+          if (!shortLife) hints.push('shorter lifetime (≤1.5s)');
+          if (!fast) hints.push('faster upward speed (≥4)');
+          fb.className = 'feedback bad'; fb.textContent = 'Try: ' + hints.join(', ');
+        }
+      });
+    }
+
+    /* ========== Week 14: Optimize ========== */
+    function optimizeGame(host, lvl) {
+      const tips = [
+        { t: 'Cache GetComponent calls in Start, not Update', good: true },
+        { t: 'Call GameObject.Find every frame', good: false },
+        { t: 'Use Object Pooling for bullets', good: true },
+        { t: 'Bake lighting when scenes are static', good: true },
+        { t: 'Add a thousand Directional Lights for "richer lighting"', good: false },
+        { t: 'Load uncompressed 8K textures on mobile', good: false },
+        { t: 'Offer rebindable controls', good: true },
+        { t: 'Ignore screen-reader compatibility', good: false }
+      ];
+      host.innerHTML = `
+        <p>Select ONLY the practices that help performance or accessibility.</p>
+        <div id="opt-list" style="display:grid;gap:6px;"></div>
+        <button class="btn" id="opt-check" style="margin-top:10px;">Submit</button>
+        <div id="opt-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const list = host.querySelector('#opt-list');
+      tips.forEach((t, i) => {
+        const d = document.createElement('label');
+        d.className = 'drag-item';
+        d.style.cursor = 'pointer';
+        d.innerHTML = `<input type="checkbox" data-i="${i}" style="margin-right:8px;"> ${t.t}`;
+        list.appendChild(d);
+      });
+      host.querySelector('#opt-check').addEventListener('click', () => {
+        let ok = true;
+        list.querySelectorAll('input').forEach(inp => {
+          const tip = tips[+inp.dataset.i];
+          if (inp.checked !== tip.good) ok = false;
+        });
+        const fb = host.querySelector('#opt-fb');
+        fb.style.display = 'block';
+        if (ok) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Perfect selection — lean and accessible.';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = 'Some choices help performance, others hurt. Re-read each.';
+        }
+      });
+    }
+
+    /* ========== Week 15: Build target ========== */
+    function buildTarget(host, lvl) {
+      const scenarios = [
+        { s: 'Share a playable classroom demo via a browser link', a: 'WebGL' },
+        { s: 'Publish to Google Play', a: 'Android' },
+        { s: 'Publish to the Apple App Store', a: 'iOS' },
+        { s: 'Publish to Steam on Windows', a: 'Windows Standalone' }
+      ];
+      const targets = ['WebGL', 'Android', 'iOS', 'Windows Standalone'];
+      host.innerHTML = `
+        <p>Pick the correct Unity 6 Build Profile for each scenario.</p>
+        <div id="bt-list" style="display:grid;gap:8px;"></div>
+        <button class="btn" id="bt-check" style="margin-top:10px;">Check</button>
+        <div id="bt-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const list = host.querySelector('#bt-list');
+      scenarios.forEach((sc, i) => {
+        const row = document.createElement('div');
+        row.className = 'drag-item';
+        row.style.display = 'grid';
+        row.style.gridTemplateColumns = '1fr auto';
+        row.innerHTML = `
+          <span>${sc.s}</span>
+          <select data-i="${i}">
+            <option value="">— select —</option>
+            ${targets.map(t => `<option>${t}</option>`).join('')}
+          </select>
+        `;
+        list.appendChild(row);
+      });
+      host.querySelector('#bt-check').addEventListener('click', () => {
+        let ok = 0;
+        list.querySelectorAll('select').forEach(sel => {
+          const idx = +sel.dataset.i;
+          sel.parentElement.classList.remove('correct', 'wrong');
+          if (sel.value === scenarios[idx].a) {
+            sel.parentElement.classList.add('correct'); ok++;
+          } else {
+            sel.parentElement.classList.add('wrong');
+          }
+        });
+        const fb = host.querySelector('#bt-fb');
+        fb.style.display = 'block';
+        if (ok === scenarios.length) {
+          fb.className = 'feedback good'; fb.textContent = '✔ Build Profiles mastered.';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad'; fb.textContent = `${ok}/${scenarios.length} correct.`;
+        }
+      });
+    }
+
+    /* ========== Week 16: Finale ========== */
+    function finaleChallenge(host, lvl) {
+      const steps = [
+        { t: 'Open Build Profiles and select WebGL', done: false },
+        { t: 'Click Build and choose an output folder', done: false },
+        { t: 'Create an itch.io page', done: false },
+        { t: 'Upload the zipped WebGL build', done: false },
+        { t: 'Paste the link in Canvas + write reflection', done: false }
+      ];
+      host.innerHTML = `
+        <p>Click each step to mark it as done. Then press Ship.</p>
+        <div id="sh-list" style="display:grid;gap:6px;"></div>
+        <button class="btn" id="sh-ship" style="margin-top:10px;">🚀 Ship it</button>
+        <div id="sh-fb" class="feedback" style="display:none; margin-top:10px;"></div>
+      `;
+      const list = host.querySelector('#sh-list');
+      steps.forEach((st, i) => {
+        const d = document.createElement('button');
+        d.className = 'drag-item'; d.style.textAlign = 'left'; d.style.background = 'var(--panel-2)';
+        d.style.width = '100%'; d.style.cursor = 'pointer';
+        d.innerHTML = `<span class="box" style="display:inline-block;width:18px;">☐</span> ${st.t}`;
+        d.addEventListener('click', () => {
+          st.done = !st.done;
+          d.querySelector('.box').textContent = st.done ? '✅' : '☐';
+        });
+        list.appendChild(d);
+      });
+      host.querySelector('#sh-ship').addEventListener('click', () => {
+        const allDone = steps.every(s => s.done);
+        const fb = host.querySelector('#sh-fb');
+        fb.style.display = 'block';
+        if (allDone) {
+          fb.className = 'feedback good';
+          fb.textContent = '🚀 Build uploaded. Course complete — great work!';
+          markChallengeDone(lvl);
+        } else {
+          fb.className = 'feedback bad';
+          fb.textContent = 'Check off every step before you ship.';
+        }
+      });
+    }
+
+    /* ========== Finale screen ========== */
+    function renderFinale() {
+      const total = data.levels.length;
+      const done = Object.keys(state.completed).length;
+      stage.innerHTML = `
+        <div class="finale">
+          <h2>🎓 Unity 6 Quest: Complete</h2>
+          <div class="stars" aria-hidden="true">${'⭐'.repeat(Math.max(1, Math.min(5, Math.round(state.xp / 100))))}</div>
+          <p style="color:var(--ink-dim);">You earned <b>${state.xp} XP</b> and <b>${state.badges.length}</b> badges
+          across <b>${done}/${total}</b> missions.</p>
+          <div class="badges" style="justify-content:center;">
+            ${state.badges.map(b => `<span class="badge"><span class="dot">★</span>W${b.week} · ${b.title}</span>`).join('')}
+          </div>
+          <p style="margin-top:16px;">Next stops in MART 460:</p>
+          <ul style="display:inline-block; text-align:left; margin-top:8px;">
+            <li>Ship your Final Project to itch.io</li>
+            <li>Write the 2–3 page reflective report</li>
+            <li>Submit via Canvas by <b>Dec 12, 2025, 11:59 PM</b></li>
+          </ul>
+          <div class="controls" style="justify-content:center;">
+            <button class="btn secondary" onclick="location.reload()">Play again</button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ----------- utilities ----------- */
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
+    /* ----------- Options & reset ----------- */
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      if (confirm('Reset all Unity 6 Quest progress?')) resetState();
+    });
+    document.getElementById('opt-hi-contrast').addEventListener('change', e => {
+      document.body.style.background = e.target.checked ? '#000' : '';
+      document.body.style.color = e.target.checked ? '#fff' : '';
+    });
+    document.getElementById('opt-reduce-motion').addEventListener('change', e => {
+      document.documentElement.style.setProperty('scroll-behavior', e.target.checked ? 'auto' : 'smooth');
+      if (e.target.checked) {
+        const style = document.createElement('style');
+        style.id = 'rm-style';
+        style.textContent = '* { animation: none !important; transition: none !important; }';
+        document.head.appendChild(style);
+      } else {
+        document.getElementById('rm-style')?.remove();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
