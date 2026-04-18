@@ -1,0 +1,3774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>between</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #030309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+canvas { display: block; }
+</style>
+</head>
+<body>
+<script>
+// =============================================================
+//  between — an interactive story of belonging
+// =============================================================
+
+const W = 900, H = 510;
+const FADE_PER_MS    = 0.132;
+const SELF_BASE_HUE  = 204;
+const SELF_BASE_SAT  = 58;
+const SELF_BASE_BRI  = 80;
+const SELF_R         = 7.5;
+
+const REP_R          = 52;
+const REP_FORCE      = 14;
+const REP_MULT_BASE  = 0.06;
+
+const PROXIMITY_R        = 75;
+const MOMENT_TRIGGER_MS  = 2600;
+const ESCAPE_TIME_MS     = 38000;
+
+const BARRIER_REPEL_R  = 70;
+const BARRIER_REPEL_F  = 26;
+const BARRIER_CHASE_R  = 190;
+
+const TASK_COLLECT_R   = 38;
+const TASKS_REQUIRED   = 5;
+
+const FAN_CHASE_SPEED  = 0.028;
+const FAN_REPEL_R      = 58;
+const FAN_REPEL_F      = 18;
+
+const STUN_RADIUS      = 26;
+const STUN_DURATION_MS = 2500;
+const STUN_COOLDOWN_MS = 1600;
+
+const MOMENT_ACTIVE_MS   = 4200;
+const MOMENT_EXPELLED_MS = 2800;
+
+// Ability — per chapter type
+const ABILITY_NAMES    = ['surge','steady','persist','resolve','blend','embrace'];
+const ABILITY_DURATION = [800, 1500, 1200, 1000, 2000, 1500];
+const ABILITY_COOLDOWN = [3000, 4000, 3500, 3500, 5000, 4000];
+
+// Resilience
+const RESILIENCE_MAX     = 100;
+const RESILIENCE_REGEN   = 2.0;
+const BARRIER_DRAIN_RATE = 0.45;
+const STUN_DRAIN         = 22;
+const TASK_RESTORE       = 12;
+
+// --- Hold-to-complete & decay ---
+const TASK_HOLD_MS         = 2500;
+const TASK_DECAY_MS        = 14000;
+const RANCH_TOTAL_NEEDED = 12;
+
+// --- Carry tasks ---
+const CARRY_PICKUP_MS      = 1600;
+const CARRY_DELIVER_MS     = 1600;
+const CARRY_COLLECT_R      = 42;
+
+// --- Frost zone (ranch) ---
+const FROST_RADIUS         = 135;
+const FROST_SPEED           = 0.018;
+const FROST_DECAY_MULT     = 2.8;
+const FROST_DRAIN_RATE     = 0.08;
+
+// --- Social group rejection ---
+const SOCIAL_APPROACH_R          = 68;
+const SOCIAL_HOLD_MS             = 3200;
+const SOCIAL_REJECT_AT           = 0.68;
+const SOCIAL_REJECTIONS_NEEDED   = 4;
+const SOCIAL_REJECT_BURST        = 26;
+const SOCIAL_REJECT_COOLDOWN_MS  = 2200;
+
+// --- Gravity waypoints ---
+const WAYPOINT_HOLD_MS     = 1800;
+const WAYPOINT_COLLECT_R   = 44;
+const GRAVITY_MULT_PER_WP  = 0.45;
+
+// --- Memory surges (periodic gravity spikes) ---
+const SURGE_CYCLE_MS       = 5500;   // time between surges
+const SURGE_DURATION_MS    = 1800;   // how long each surge lasts
+const SURGE_PULL_MULT      = 2.8;    // extra pull multiplier during surge
+const SURGE_DRAIN           = 0.12;  // resilience drain during surge
+
+// --- Shy tasks (Home) ---
+const SHY_FLEE_DIST   = 70;
+const SHY_FLEE_FORCE  = 0.75;
+const SHY_SPEED_LIMIT = 1.6;
+const SHY_RETURN_RATE = 0.005;
+
+// --- Mash tasks (Ranch extended) ---
+const MASH_PRESSES_NEEDED   = 12;
+const MASH_DECAY_RATE       = 0.0008;
+const MASH_COLLECT_R        = 48;
+
+// --- Social timing windows ---
+const SOCIAL_WINDOW_OPEN_MS    = 1800;
+const SOCIAL_WINDOW_CLOSED_MS  = 2800;
+const SOCIAL_WINDOW_PRESS_MS   = 600;
+
+// --- Gravity obstacles ---
+
+// --- Click tasks (Ranch) ---
+const CLICK_TASK_R         = 42;
+const CLICK_FLASH_MS       = 600;
+
+// --- Bassinet search (Arrival) ---
+const BASSINET_HOLD_MS     = 1500;
+const BASSINET_CHECK_R     = 38;
+const CARRY_SPEED_PENALTY  = 0.65;
+const ESCAPE_REPEL_CLOSED  = 4.0;
+const ESCAPE_REPEL_OPEN    = 0.12;
+
+const WRONG_BABY_TEXTS = [
+  "wrong bracelet — keep looking",
+  "not this one",
+  "the smoke stings your eyes",
+  "different chart — hurry",
+  "already tagged — move on",
+  "wrong ward number",
+  "you can hear the fire above",
+  "not the right name",
+  "the walls are getting hot",
+  "wrong bassinet — don't stop",
+  "another nurse took this one",
+  "paperwork doesn't match",
+  "a beam cracks overhead",
+  "keep searching"
+];
+
+// Helper — current chapter type
+function cType() { return CHAPTERS[chapterIndex]?.type || ''; }
+
+// --- Global state ---
+let state      = 'title';
+let fadeAlpha  = 100;
+let transStart = 0;
+
+let chapterIndex = 0;
+let orbsA = [], orbsB = [];
+let noiseOffA = [], noiseOffB = [];
+let chapterMs = 0;
+let ccA = { x: 280, y: 235 };
+let ccB = { x: 620, y: 235 };
+
+let barriers = [];
+
+let escapeTimer   = 0;
+let escapeExpired = false;
+
+let taskOrbs       = [];
+let tasksCollected = 0;
+
+let fanOrbs        = [];
+let isStunned      = false;
+let stunTimer      = 0;
+let stunCooldown   = 0;
+let ch3Phase       = 1;
+let safespotOrb    = null;
+let friendhouseOrb = null;
+let ch3SafeFlash   = false;
+let ch3SafeFlashTimer = 0;
+const CH3_SAFE_FLASH_MS = 2800;
+
+let lines = [], lineIdx = 0, lineAlpha = 0;
+let linePhase = 'fadein', lineTimer = 0;
+let allLinesShown = false, continueAlpha = 0;
+
+let mTextLine = null, mTextAlpha = 0, mTextTarget = 0;
+
+let sx, sy, svx = 0, svy = 0;
+let selfHue = SELF_BASE_HUE;
+
+let repulsionHeat = 0;
+let selfState     = 0;
+
+let momentState   = 'none';
+let momentTimer   = 0;
+let momentFired   = false;
+let momentHomes   = [];
+let momentRepMult = 1.0;
+let chosenCluster = null;
+
+let proximityTimerA = 0;
+let proximityTimerB = 0;
+
+let stars = [];
+let actx, masterGain, droneOsc, proximityOsc, proximityGain;
+let audioReady = false;
+
+// New systems
+let resilience      = RESILIENCE_MAX;
+let abilityActive   = false;
+let abilityTimer    = 0;
+let abilityCooldown = 0;
+let particles       = [];
+let screenShake     = 0;
+
+let introTimer   = 0;
+let reflectTimer = 0;
+let failTimer    = 0;
+let endTimer     = 0;
+let endOrbs      = [];
+
+let stats = { chapterTimes: [], stunCount: 0, abilityUses: 0 };
+
+// --- Hold / decay / social / waypoint state ---
+let taskTotalDone     = 0;
+let carryingTask      = null;   // index of task being carried, or null
+let frostZone         = null;   // { x, y, vx, vy }
+
+let socialGroupData   = [];
+let socialRejections  = 0;
+let socialAccepted    = false;
+let socialRejectCool  = 0;
+let socialRejectFlash = null;
+
+let waypoints         = [];
+let waypointsClaimed  = 0;
+let gravityPullScale  = 1.0;
+
+// --- New interactive mechanics state ---
+let gravObstacles     = [];       // moving obstacles in gravity chapter
+let surgeTimer        = 0;        // tracks surge cycle
+let surgeActive       = false;    // is a memory surge happening
+let surgePhase        = 0;        // 0-1 intensity within a surge
+const SURGE_MEMORIES  = [
+  'mom\'s voice calling you for dinner',
+  'the creak of the screen door',
+  'the smell of fresh-cut hay',
+  'your bedroom ceiling in the dark',
+  'the dog waiting by the gate',
+  'laughter from the kitchen',
+  'the view from the porch at dusk'
+];
+let currentSurgeMemory = '';
+let socialWindows     = [];       // timed windows for social groups
+let mashCount         = 0;        // current mash presses for active mash task
+let mashActiveTask    = -1;       // index of task being mashed
+let clickFlashTimer   = 0;        // flash feedback for click tasks
+let clickFlashPos     = null;     // position of click flash
+
+let bassinetOrbs       = [];
+let babyFound          = false;
+let carryingBaby       = false;
+let checkedCount       = 0;
+let keyBassinetIdx     = -1;
+let checkFeedbackText  = null;
+let checkFeedbackTimer = 0;
+
+// --- Baby found celebration ---
+let babyFoundCelebration = false;   // true = paused in celebration state
+let babyCelebrationTimer = 0;
+const BABY_CELEBRATION_MS = 3500;   // how long the big celebration plays
+let babyCanContinue      = false;   // true = player can press key to advance
+
+// --- Chapter 1 fire/darkness system ---
+let fireParticles      = [];
+let smokeParticles     = [];
+let ch1Darkness        = 0.15;      // 0 = bright, 1 = pitch black
+let ch1TargetDarkness  = 0.15;
+let ch1FireIntensity   = 0;         // grows with timer
+let ch1HeartbeatPhase  = 0;
+let ch1HopeFlash       = 0;         // flash when baby found
+let ch1HopeGlow        = 0;         // sustained glow after baby found
+let ch1EmberTimer      = 0;
+
+// =============================================================
+//  CONTENT — Educational / Reflective
+// =============================================================
+const INTRO_TEXTS = [
+  { context: "In April 1975, as Saigon fell,\nthe orphanage was burning.\n\nSmoke filled the hallways.\nSomewhere in the ward, one baby\nwas waiting to be found.\n\nYou are a nurse.\nThe fire is spreading.\nFind the baby before it's too late.",
+    controls: "WASD keys or hold mouse to move your character\nSPACE = speed boost  \u00b7  move to a crib and stay near it to search" },
+  { context: "Growing up as a transracial adoptee\nin a rural mountainous state meant learning to belong\nthrough labor \u2014 through proving yourself useful\nin a place where no one looked like you.",
+    controls: "WASD keys or hold mouse to move  \u00b7  SPACE = steady yourself\nE = interact with nearby tasks  \u00b7  mash SPACE on some tasks\nsome items must be carried between locations" },
+  { context: "School had its own geography.\nFriend groups formed like small countries\nwith borders you couldn't always see.\n\nBeing the only one who looked different\nmade every cafeteria a minefield.",
+    controls: "WASD keys or hold mouse to move  \u00b7  SPACE = hold your ground\nmove near a group and wait  \u00b7  press SPACE when a gap opens" },
+  { context: "Leaving home meant leaving\nthe only world that made sense \u2014\neven when it didn't.\n\nThe pull of family is gravity.\nEvery step away is harder than the last.\nYou don't escape it. You learn to carry it.",
+    controls: "WASD keys or hold mouse to move  \u00b7  SPACE = resist the pull\nreach each milestone on the path away from home\nthe further you go, the stronger home pulls you back" },
+  { context: "Visiting an Asian country was supposed to feel\nlike coming home \u2014 a place where\neveryone looked like you.\n\nInstead, the attention was overwhelming.\nThey followed you with cameras.",
+    controls: "WASD keys or hold mouse to move  \u00b7  SPACE = blend in (become less visible)\navoid the followers  \u00b7  find safe places" },
+  { context: "Home was never something you were given.\nIt was something you built \u2014\npatiently, piece by piece,\nfrom trust and vulnerability and love.",
+    controls: "WASD keys or hold mouse to move  \u00b7  SPACE = reach out gently\napproach slowly \u2014 rushing scares them away" }
+];
+
+const REFLECT_TEXTS = [
+  "Over 3,000 children were airlifted\nfrom Vietnam in April 1975.\n\nPulled from burning buildings,\nfrom a world collapsing around them.\n\nMany were placed with families\nwho looked nothing like them.\nThe journey between worlds had begun.",
+  "For transracial adoptees,\nbelonging is not just about being accepted.\n\nIt is about being seen.\nThe work never quite ends.",
+  "Studies show that transracial adoptees\noften navigate between cultures daily \u2014\nnever fully part of one world\nor the other.\n\nThe cafeteria never really ends.",
+  "Many adoptees describe leaving home\nas a second departure \u2014\nleaving the family that chose you\nto find the self they couldn't give you.\n\nThe pull never stops.\nIt lives in a phone call, a holiday,\nthe smell of a kitchen that isn't yours anymore.",
+  "Identity is not a single place.\nIt lives in the space between\nwhere you came from\nand where you are.",
+  "For those who grew up between worlds,\nbuilding a family of your own\nis an act of quiet revolution \u2014\n\ncreating the belonging\nyou were never quite given."
+];
+
+const FAILURE_TEXTS = [
+  "the smoke was too thick\nand the fire too fast",
+  "the work was never enough\nto make you one of them",
+  "every circle you tried\nclosed before you could enter",
+  "the pull was too strong\nand you couldn't keep walking",
+  "the crowd pressed in\nand you lost your way",
+  "some things take longer\nthan a single try"
+];
+
+const END_TEXT = "This story is based on a real experience.\n\nTransracial adoption touches thousands of families,\nraising questions about identity, belonging,\nand what it means to be seen.\n\nFor many adoptees, the space between\nis not a problem to be solved\nbut a reality to be lived.";
+
+// =============================================================
+//  MOMENT TEXTS
+// =============================================================
+const MOMENT_TEXTS = {
+  0: {
+    A: { active: "you pulled them\nfrom the smoke and the heat",
+         expelled: "the fire reached the ward\nbut you were already gone" },
+    B: { active: "the light outside\nwas blinding and beautiful",
+         expelled: "the plane doors closed\nand the fire couldn't follow" },
+    X: { active: "the ceiling collapsed\nbehind you",
+         expelled: "you made it\nwith seconds left" }
+  },
+  1: {
+    B: { active: "for a moment\nthe pattern held you",
+         expelled: "then the pattern\ncontinued without you" }
+  },
+  2: {
+    A: { active: "they shifted aside\nbut something felt wrong",
+         expelled: "the circle closed\nand you were outside again" },
+    B: { active: "someone made room\nand you slipped inside",
+         expelled: "the warmth faded\nbut the memory stayed" }
+  },
+  3: {
+    A: { active: "you stopped moving\nand let the pull take you back",
+         expelled: "home wrapped around you\nwarm and heavy" },
+    B: { active: "you reached the far edge\nand the pull became a thread\ninstead of a chain",
+         expelled: "the distance hurt\nbut it was yours" }
+  },
+  4: {
+    A: { active: "you found your way\nback to them",
+         expelled: "the city moved around you\nbut they were there" }
+  },
+  5: {
+    B: { active: "you held them close\nand they stayed",
+         expelled: "home was always this\nyou just didn't know" }
+  }
+};
+
+// =============================================================
+//  CHAPTER DEFINITIONS
+// =============================================================
+function mkOrb(x, y, hue, sat, bri, r) {
+  return { x, y, homeX:x, homeY:y, hue, sat, bri, r,
+           phase:random(TWO_PI), speed:random(0.014,0.028) };
+}
+
+const CHAPTERS = [
+  // ---- 0. Arrival 1975 ----
+  {
+    type: 'escape',
+    label: 'I.  arrival', sublabel: '1975',
+    clusterA: () => {
+      let out=[], cx=268, cy=212;
+      for (let i=0; i<5; i++) {
+        let a=random(TWO_PI), r=random(10,40);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.70,
+                       random(26,40), random(55,72), random(76,90), random(4,7)));
+      }
+      return out;
+    },
+    clusterB: () => {
+      let out=[], cx=648, cy=238;
+      for (let i=0; i<11; i++) {
+        let a=random(TWO_PI), r=random(12,76);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.68,
+                       random(28,42), random(62,78), random(78,92), random(4,8)));
+      }
+      return out;
+    },
+    barriers: [ { hx:420, hy:180 }, { hx:430, hy:290 }, { hx:340, hy:420 } ],
+    bassinets: [
+      { x:110, y:105, hue:38 }, { x:230, y:95,  hue:34 }, { x:350, y:110, hue:40 },
+      { x:470, y:100, hue:36 }, { x:580, y:115, hue:42 },
+      { x:125, y:220, hue:40 }, { x:250, y:230, hue:36 }, { x:375, y:215, hue:38 },
+      { x:500, y:225, hue:34 }, { x:610, y:210, hue:42 },
+      { x:115, y:340, hue:36 }, { x:240, y:350, hue:42 }, { x:365, y:335, hue:34 },
+      { x:490, y:345, hue:40 }, { x:600, y:330, hue:38 }
+    ],
+    selfStart: { x:68, y:238 },
+    naturalPath: s => ({
+      x: 350 + sin(s*0.0088)*220,
+      y: 235 + cos(s*0.0088 + 0.8)*90
+    }),
+    texts: [
+      "the smoke is thickening",
+      "you can barely see\nthe cribs through the haze",
+      "somewhere in here\na baby is waiting",
+      "the ceiling groans\nthe fire is close",
+      "hurry"
+    ],
+    droneFreq: 110, proximityFreq: 220
+  },
+
+  // ---- 1. The ranch — mountainous state ----
+  {
+    type: 'tasks',
+    label: 'II.  the ranch', sublabel: 'a mountainous state',
+    clusterA: () => {
+      let out=[], cx=148, cy=240;
+      for (let i=0; i<4; i++) {
+        let a=random(TWO_PI), r=random(8,32);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.72,
+                       random(22,34), random(55,70), random(74,88), random(4.5,7.5)));
+      }
+      return out;
+    },
+    clusterB: () => {
+      let grid = [
+        {x:468,y:150},{x:534,y:146},{x:600,y:153},{x:666,y:148},{x:732,y:155},
+        {x:468,y:220},{x:534,y:216},{x:600,y:223},{x:666,y:218},{x:732,y:224},
+        {x:468,y:292},{x:534,y:288},{x:600,y:295},{x:666,y:290},{x:732,y:296}
+      ];
+      return grid.map(p => mkOrb(
+        p.x+random(-14,14), p.y+random(-10,10),
+        random(22,36), random(58,72), random(72,88), random(5,10)
+      ));
+    },
+    barriers: [],
+    tasks: [
+      // Simple hold tasks (quick ranch chores)
+      { type:'simple', x:160, y:105, hue:38, label:'feed chickens' },
+      // Click tasks — move near, then press E to complete (no hovering)
+      { type:'click', x:730, y:395, hue:42, label:'latch gate' },
+      { type:'click', x:340, y:110, hue:46, label:'ring bell' },
+      // Carry tasks (pick up at source, deliver to destination)
+      { type:'carry', srcX:110, srcY:355, dstX:690, dstY:130, hue:32, label:'haul water',  srcLabel:'well',  dstLabel:'trough' },
+      { type:'carry', srcX:720, srcY:85,  dstX:180, dstY:260, hue:36, label:'carry feed',  srcLabel:'barn',  dstLabel:'pasture' },
+      { type:'carry', srcX:440, srcY:395, dstX:710, dstY:250, hue:40, label:'move hay',    srcLabel:'field', dstLabel:'loft' },
+      // Mash tasks — get near, then mash SPACE rapidly to complete
+      { type:'mash', x:195, y:400, hue:34, label:'split wood',   mashNeeded:14 },
+      { type:'mash', x:550, y:85,  hue:44, label:'pump water',   mashNeeded:12 },
+      // Extended hold tasks (harder, longer work)
+      { type:'extended', x:420, y:195, hue:30, label:'mend fence',   holdMs:3000 }
+    ],
+    selfStart: { x:68, y:240 },
+    naturalPath: s => ({
+      x: 420 + sin(s*0.0082)*264,
+      y: 232 + cos(s*0.0082 + 0.9)*95
+    }),
+    texts: [
+      "you learned the language\nof work",
+      "fences built\nhay put up",
+      "you could do\neverything they did",
+      "but the work\nkept undoing itself",
+      "and still\nyou were the one\nwho looked different"
+    ],
+    droneFreq: 82, proximityFreq: 164
+  },
+
+  // ---- 2. School — the only one ----
+  {
+    type: 'social',
+    label: 'III.  school', sublabel: 'the only one',
+    clusterA: () => {
+      let out = [];
+      let groups = [{cx:180,cy:140},{cx:710,cy:150},{cx:160,cy:370},{cx:440,cy:130}];
+      for (let g of groups) {
+        for (let i=0; i<5; i++) {
+          let a=random(TWO_PI), r=random(8,30);
+          out.push(mkOrb(g.cx+cos(a)*r, g.cy+sin(a)*r*0.72,
+                         random(18,34), random(58,72), random(74,88), random(4,7)));
+        }
+      }
+      return out;
+    },
+    clusterB: () => {
+      let out=[], cx=700, cy=360;
+      for (let i=0; i<5; i++) {
+        let a=random(TWO_PI), r=random(8,30);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.72,
+                       random(26,40), random(55,68), random(78,90), random(4,7)));
+      }
+      return out;
+    },
+    barriers: [],
+    socialGroups: [
+      { cx:180, cy:140 },
+      { cx:710, cy:150 },
+      { cx:160, cy:370 },
+      { cx:440, cy:130 }
+    ],
+    selfStart: { x:450, y:250 },
+    naturalPath: s => ({
+      x: 420 + sin(s*0.0078)*260,
+      y: 240 + cos(s*0.0078 + 0.7)*95
+    }),
+    texts: [
+      "the classroom had\nits own unspoken rules",
+      "groups formed\naround shared faces",
+      "you circled the edges\ntrying to find a way in",
+      "the door kept closing\nbefore you could reach it",
+      "but you kept trying"
+    ],
+    droneFreq: 98, proximityFreq: 196
+  },
+
+  // ---- 3. Leaving home ----
+  {
+    type: 'gravity',
+    label: 'IV.  leaving', sublabel: 'the departure',
+    clusterA: () => {
+      let out=[], cx=135, cy=240;
+      for (let i=0; i<14; i++) {
+        let a=random(TWO_PI), r=random(10,72);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.68,
+                       random(26,42), random(60,76), random(78,92), random(4,8)));
+      }
+      return out;
+    },
+    clusterB: () => {
+      let out=[], cx=790, cy=245;
+      for (let i=0; i<4; i++) {
+        let a=random(TWO_PI), r=random(8,24);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.7,
+                       random(180,212), random(45,62), random(72,86), random(3.5,6)));
+      }
+      return out;
+    },
+    barriers: [],
+    obstacleDefs: [],
+    waypointDefs: [
+      { x:280, y:280, label:'packing' },
+      { x:410, y:180, label:'the doorway' },
+      { x:540, y:300, label:'the road' },
+      { x:670, y:200, label:'the city' },
+      { x:790, y:255, label:'your own place' }
+    ],
+    selfStart: { x:135, y:240 },
+    naturalPath: s => ({
+      x: 420 + sin(s*0.009)*260,
+      y: 240 + cos(s*0.009 + 0.85)*80
+    }),
+    texts: [
+      "you packed a bag\nwhile the house was quiet",
+      "the doorframe felt heavier\nthan you expected",
+      "the road stretched out\nbut home kept whispering",
+      "every mile added weight\nyou didn't know you carried",
+      "the pull doesn't fade\nyou just learn to walk with it",
+      "somewhere ahead\na life is waiting to be built"
+    ],
+    droneFreq: 72, proximityFreq: 144
+  },
+
+  // ---- 4. An Asian country — the first mirror ----
+  {
+    type: 'fans',
+    label: 'V.  the visit', sublabel: 'the first mirror',
+    clusterA: () => {
+      let out=[], cx=232, cy=235;
+      for (let i=0; i<6; i++) {
+        let a=random(TWO_PI), r=random(10,48);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.72,
+                       random(26,42), random(55,70), random(74,88), random(4,7.5)));
+      }
+      return out;
+    },
+    clusterB: () => {
+      let out=[], cx=520, cy=232;
+      for (let i=0; i<22; i++) {
+        let a=random(TWO_PI), r=random(8,88);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.70,
+                       random(198,214), random(48,66), random(72,88), random(4,9)));
+      }
+      return out;
+    },
+    barriers: [],
+    fans: [
+      { ix:340, iy:140, fx:820, fy:40  },
+      { ix:500, iy:180, fx:820, fy:460 },
+      { ix:600, iy:310, fx:40,  fy:460 },
+      { ix:400, iy:355, fx:40,  fy:40  },
+      { ix:560, iy:235, fx:450, fy:500 }
+    ],
+    refugePos: { x:72, y:68 },
+    friendhousePos: { x:800, y:255 },
+    selfStart: { x:68, y:240 },
+    naturalPath: s => ({
+      x: 420 + sin(s*0.0092)*256,
+      y: 232 + cos(s*0.0092 + 0.8)*88
+    }),
+    texts: [
+      "for the first time\nyou looked like everyone",
+      "they wanted\nto photograph you",
+      "they followed in groups\ncalling out",
+      "find somewhere\nto hide",
+      "then find your way\nback to your friend"
+    ],
+    droneFreq: 146, proximityFreq: 293
+  },
+
+  // ---- 5. Home — yours ----
+  {
+    type: 'gather',
+    label: 'VI.  home', sublabel: 'yours',
+    clusterA: () => {
+      let out=[];
+      for (let i=0; i<8; i++) {
+        let x=random(100,W-100), y=random(90,H-90);
+        out.push(mkOrb(x, y, random(180,220), random(40,58), random(70,86), random(3,5.5)));
+      }
+      return out;
+    },
+    clusterB: () => {
+      let out=[], cx=450, cy=255;
+      for (let i=0; i<3; i++) {
+        let a=random(TWO_PI), r=random(6,18);
+        out.push(mkOrb(cx+cos(a)*r, cy+sin(a)*r*0.7,
+                       random(28,44), random(60,75), random(80,92), random(4,7)));
+      }
+      return out;
+    },
+    barriers: [],
+    tasks: [
+      { x:120, y:100, hue:205, label:'trust'         },
+      { x:760, y:130, hue:35,  label:'patience'      },
+      { x:140, y:400, hue:165, label:'vulnerability'  },
+      { x:750, y:380, hue:45,  label:'acceptance'     },
+      { x:450, y:80,  hue:200, label:'love'           }
+    ],
+    selfStart: { x:450, y:255 },
+    naturalPath: s => ({
+      x: 450 + sin(s*0.0075)*220,
+      y: 255 + cos(s*0.0075 + 0.6)*85
+    }),
+    texts: [
+      "you did not expect\nto find it here",
+      "home was never a place\nit was a choice",
+      "each piece gathered\nslowly, carefully",
+      "rush and it scatters\npatience and it stays",
+      "build what was never\ngiven to you"
+    ],
+    droneFreq: 130, proximityFreq: 260
+  }
+];
+
+// =============================================================
+//  OBJECTIVES
+// =============================================================
+function getObjectiveText() {
+  if (momentFired) return null;
+  let ct = cType();
+  if (ct === 'escape') {
+    if (escapeExpired) return null;
+    let secs = Math.ceil((ESCAPE_TIME_MS - escapeTimer) / 1000);
+    let urgency = escapeTimer / ESCAPE_TIME_MS;
+    if (!babyFound) {
+      let prefix = urgency > 0.7 ? 'HURRY — ' : urgency > 0.4 ? 'the fire is spreading — ' : '';
+      return prefix + 'search the cribs  ' + checkedCount + '/' + bassinetOrbs.length + '  [' + secs + 's]';
+    }
+    return 'get out now  [' + secs + 's]';
+  }
+  if (ct === 'tasks') {
+    return 'keep working  ' + taskTotalDone + '/' + RANCH_TOTAL_NEEDED;
+  }
+  if (ct === 'gather') {
+    return 'gather what you need  ' + tasksCollected + '/' + TASKS_REQUIRED;
+  }
+  if (ct === 'social') {
+    if (socialAccepted) return 'one door stayed open';
+    if (socialRejections > 0) return 'find where you belong  (rejected ' + socialRejections + ' time' + (socialRejections===1?'':'s') + ')';
+    return 'find where you belong';
+  }
+  if (ct === 'gravity') {
+    return 'find your horizon  ' + waypointsClaimed + '/' + waypoints.length;
+  }
+  if (ct === 'fans') {
+    if (ch3Phase === 1) return 'find somewhere safe';
+    if (ch3Phase === 2) return "find your friend's house";
+  }
+  return null;
+}
+
+// =============================================================
+//  SETUP / DRAW
+// =============================================================
+function setup() {
+  createCanvas(W, H);
+  colorMode(HSB, 360, 100, 100, 100);
+  textFont('Georgia');
+  for (let i=0; i<68; i++)
+    stars.push({ x:random(W), y:random(H*0.72), r:random(0.4,1.5),
+                 base:random(8,32), fl:random(TWO_PI), sp:random(0.008,0.022) });
+  sx = W/2; sy = H/2;
+  stats.chapterTimes = new Array(CHAPTERS.length).fill(0);
+}
+
+function draw() {
+  let dt = min(deltaTime, 50);
+  noStroke();
+
+  if (state === 'intro' || state === 'reflect' || state === 'end') {
+    fill(0, 0, 0, 100); rect(0, 0, W, H);
+  } else if (state !== 'failed') {
+    // Escape chapter: darker, warmer background shifting with hope
+    if (cType() === 'escape') {
+      let warmth = ch1HopeGlow * 0.5;
+      let bgHue = lerp(15, 42, warmth);
+      let bgBri = lerp(2, 6, ch1HopeGlow);
+      fill(bgHue, 40, bgBri, 22); rect(0, 0, W, H);
+    } else {
+      fill(238, 28, 4, 18); rect(0, 0, W, H);
+    }
+  }
+
+  push();
+  if (screenShake > 0.1) {
+    translate(random(-screenShake, screenShake), random(-screenShake, screenShake));
+    screenShake *= pow(0.9, dt / 16.67);
+  }
+
+  if      (state==='title')   drawTitle(dt);
+  else if (state==='intro')   drawIntro(dt);
+  else if (state==='chapter') drawChapter(dt);
+  else if (state==='fadeout') drawFadeout(dt);
+  else if (state==='fadein')  drawFadein(dt);
+  else if (state==='reflect') drawReflect(dt);
+  else if (state==='failed')  drawFailed(dt);
+  else if (state==='end')     drawEnd(dt);
+
+  updateParticles(dt);
+  paintParticles();
+  pop();
+
+  if (fadeAlpha > 0.1) {
+    noStroke(); fill(0,0,0,min(fadeAlpha,100)); rect(0,0,W,H);
+  }
+  if (state==='fadein') drawTransLabel();
+}
+
+// =============================================================
+//  TITLE
+// =============================================================
+function drawTitle(dt) {
+  for (let s of stars) {
+    let a = s.base + sin(millis()*s.sp*0.001+s.fl)*10;
+    fill(215,18,100,a); noStroke(); ellipse(s.x,s.y,s.r*2);
+  }
+  let nx = W/2 + sin(millis()*0.00011)*55;
+  let ny = H/2-38 + sin(millis()*0.000017)*32;
+  paintSelfOrb(nx, ny, SELF_BASE_HUE, 0);
+  let ta = map(sin(millis()*0.000015),-1,1,52,72);
+  noStroke();
+  fill(210,10,97,ta); textAlign(CENTER,CENTER); textSize(28);
+  text('between', W/2, H/2+42);
+  fill(210,10,72,ta*0.62); textSize(11);
+  text('a meditation on belonging', W/2, H/2+75);
+  let ca = map(sin(millis()*0.000024+0.8),-1,1,28,58);
+  fill(210,10,80,ca); textSize(10);
+  text('click or press any key to begin', W/2, H/2+108);
+  fadeAlpha = max(fadeAlpha - dt*FADE_PER_MS*0.6, 0);
+}
+
+// =============================================================
+//  INTRO
+// =============================================================
+function drawIntro(dt) {
+  introTimer += dt;
+  let ch = CHAPTERS[chapterIndex];
+  let intro = INTRO_TEXTS[chapterIndex];
+
+  for (let s of stars) {
+    let a = (s.base*0.35) + sin(millis()*s.sp*0.001+s.fl)*4;
+    fill(215,18,100,a); noStroke(); ellipse(s.x,s.y,s.r*2);
+  }
+
+  let nx = W/2 + sin(millis()*0.00013)*35;
+  let ny = 80 + sin(millis()*0.000019)*18;
+  paintSelfOrb(nx, ny, SELF_BASE_HUE, 0);
+
+  let titleAlpha = min(introTimer / 600, 1) * 72;
+  fill(210,10,97,titleAlpha); noStroke();
+  textAlign(CENTER,CENTER); textSize(22);
+  text(ch.label, W/2, 130);
+  fill(210,10,72,titleAlpha*0.6); textSize(11);
+  text(ch.sublabel, W/2, 156);
+
+  // Measure context text height to position dynamically
+  let ctxAlpha = constrain(map(introTimer, 600, 1400, 0, 1), 0, 1) * 55;
+  textSize(12); textLeading(22);
+  let ctxLines = intro.context.split('\n').length;
+  let ctxH = ctxLines * 22;
+  // Controls panel sizing
+  let ctrlLines = intro.controls.split('\n').length;
+  let panelH = 35 + ctrlLines * 20;
+  let panelY = H - panelH - 38;
+  // Place context text centered between sublabel and controls panel
+  let ctxTop = 170;
+  let ctxBot = panelY - 14;
+  let ctxCenterY = (ctxTop + ctxBot) / 2;
+  fill(210,10,90,ctxAlpha);
+  text(intro.context, W/2, ctxCenterY);
+
+  // Controls panel — boxed, larger, more visible
+  let ctrlAlpha = constrain(map(introTimer, 1200, 1800, 0, 1), 0, 1) * 72;
+  if (ctrlAlpha > 0.5) {
+    // Dark panel background
+    fill(220, 20, 8, ctrlAlpha * 0.55);
+    rect(W/2 - 220, panelY - 8, 440, panelH, 6);
+    // Border
+    noFill(); stroke(140, 30, 65, ctrlAlpha * 0.4); strokeWeight(0.8);
+    rect(W/2 - 220, panelY - 8, 440, panelH, 6); noStroke();
+    // "CONTROLS" header
+    fill(140, 35, 85, ctrlAlpha * 0.7);
+    textAlign(CENTER, TOP); textSize(8);
+    text('CONTROLS', W/2, panelY - 2);
+    // Controls text — larger and brighter
+    fill(140, 25, 92, ctrlAlpha);
+    textSize(12); textLeading(20);
+    text(intro.controls, W/2, panelY + 30);
+  }
+
+  if (introTimer > 1800) {
+    let pa = map(sin(millis()*0.0028),-1,1,24,52);
+    fill(210,10,85,pa); textSize(10.5);
+    text('press any key to continue', W/2, H - 22);
+  }
+  fadeAlpha = max(fadeAlpha - dt * FADE_PER_MS * 0.7, 0);
+}
+
+// =============================================================
+//  CHAPTER STATES
+// =============================================================
+function drawChapter(dt) {
+  chapterMs += dt;
+  let ct = cType();
+
+  if (ct === 'escape')  { updateEscapeMechanic(dt); updateFireSystem(dt); }
+  if (ct === 'tasks' || ct === 'gather') updateTaskMechanic(dt);
+  if (ct === 'social')  updateSocialMechanic(dt);
+  if (ct === 'fans')    updateFanMechanic(dt);
+  if (ct === 'gravity') updateGravityMechanic(dt);
+
+  updateAbility(dt);
+  updateResilience(dt);
+
+  let nat = getActivePath();
+  updateSelf(nat.x, nat.y, dt);
+  updateBarriers(dt);
+
+  let buildProx = ct === 'escape' || ct === 'social';
+  updateCluster(sx, sy, dt, buildProx);
+
+  // Fire system renders in layers around the scene
+  if (ct === 'escape') paintFireSystem();
+  paintScene();
+  if (ct === 'escape') { paintDarknessOverlay(); paintHopeTransition(); }
+
+  paintText(dt);
+  paintContinuePrompt(dt);
+  paintMomentText(dt);
+  paintHUD(dt);
+
+  if (resilience <= 0 && momentState === 'none') {
+    state = 'failed'; failTimer = 0; screenShake = 6;
+  }
+}
+
+function drawFadeout(dt) {
+  chapterMs += dt;
+  let ct = cType();
+  let nat = CHAPTERS[chapterIndex].naturalPath(chapterMs*0.001);
+  if (ct === 'fans') updateFanMechanic(dt);
+  updateSelf(nat.x, nat.y, dt);
+  updateBarriers(dt);
+  updateCluster(sx, sy, dt, false);
+  updateAbility(dt);
+  paintScene();
+  fadeAlpha = min(fadeAlpha + dt*FADE_PER_MS, 100);
+  if (fadeAlpha >= 100) {
+    stats.chapterTimes[chapterIndex] = chapterMs;
+    state = 'reflect'; reflectTimer = 0;
+  }
+}
+
+function drawFadein(dt) {
+  chapterMs += dt;
+  let ct = cType();
+  let nat = CHAPTERS[chapterIndex].naturalPath(chapterMs*0.001);
+  if (ct === 'fans') updateFanMechanic(dt);
+  updateSelf(nat.x, nat.y, dt);
+  updateBarriers(dt);
+  updateCluster(sx, sy, dt, false);
+  updateAbility(dt);
+  paintScene();
+  let elapsed = millis() - transStart;
+  if (elapsed > 1400) fadeAlpha = max(fadeAlpha - dt*FADE_PER_MS*0.8, 0);
+  if (elapsed > 1400 && fadeAlpha <= 0) state = 'chapter';
+}
+
+function drawTransLabel() {
+  if (chapterIndex >= CHAPTERS.length) return;
+  let ch = CHAPTERS[chapterIndex];
+  let elapsed = millis() - transStart;
+  let la = elapsed < 500 ? map(elapsed,0,500,0,68)
+         : elapsed < 1400 ? 68
+         : map(elapsed,1400,2000,68,0);
+  if (la <= 0) return;
+  noStroke();
+  fill(210,10,97,la); textAlign(CENTER,CENTER); textSize(22);
+  text(ch.label, W/2, H/2-14);
+  fill(210,10,72,la*0.58); textSize(11);
+  text(ch.sublabel, W/2, H/2+18);
+}
+
+// =============================================================
+//  REFLECT
+// =============================================================
+function drawReflect(dt) {
+  reflectTimer += dt;
+  for (let s of stars) {
+    let a = (s.base*0.3) + sin(millis()*s.sp*0.001+s.fl)*4;
+    fill(215,18,100,a); noStroke(); ellipse(s.x,s.y,s.r*2);
+  }
+  let nx = W/2 + sin(millis()*0.00012)*40;
+  let ny = H/3 - 30 + sin(millis()*0.000018)*20;
+  paintSelfOrb(nx, ny, SELF_BASE_HUE, 0);
+
+  let ta2 = min(reflectTimer / 1200, 1) * 62;
+  fill(210,10,95,ta2); noStroke();
+  textAlign(CENTER,CENTER); textSize(12.5); textLeading(23);
+  text(REFLECT_TEXTS[chapterIndex], W/2, H/2 + 20);
+
+  if (reflectTimer > 2200) {
+    let ca = map(sin(millis()*0.0026),-1,1,18,38);
+    fill(210,10,78,ca); textSize(9.5);
+    text('press any key to continue', W/2, H - 30);
+  }
+  fadeAlpha = max(fadeAlpha - dt * FADE_PER_MS * 0.55, 0);
+}
+
+// =============================================================
+//  FAILED
+// =============================================================
+function drawFailed(dt) {
+  failTimer += dt;
+  paintConnections();
+  paintBarriers();
+  let ct = cType();
+  if (ct === 'tasks' || ct === 'gather') paintTaskOrbs();
+  if (ct === 'fans') { paintDestinationOrbs(); paintFanOrbs(); }
+  if (ct === 'gravity') { paintGravityWaypoints(); paintGravityObstacles(); }
+  paintClusterOrbs();
+  paintSelfOrb(sx, sy, selfHue, repulsionHeat);
+
+  let overlayAlpha = min(failTimer * 0.022, 55);
+  fill(350, 50, 8, overlayAlpha); rect(0, 0, W, H);
+
+  let ta2 = min(failTimer / 900, 1) * 70;
+  fill(210, 10, 97, ta2);
+  noStroke(); textAlign(CENTER, CENTER);
+  textStyle(ITALIC); textSize(13.5); textLeading(24);
+  text(FAILURE_TEXTS[chapterIndex], W/2, H/2 - 10);
+  textStyle(NORMAL);
+
+  if (failTimer > 2800) {
+    let ca = map(sin(millis()*0.0026), -1, 1, 20, 42);
+    fill(210, 10, 80, ca); textSize(9.5);
+    text('press any key to try again', W/2, H/2 + 50);
+  }
+}
+
+// =============================================================
+//  END
+// =============================================================
+function drawEnd(dt) {
+  endTimer += dt;
+  fadeAlpha = max(fadeAlpha - dt*FADE_PER_MS*0.4, 0);
+
+  for (let s of stars) {
+    let a = s.base*0.4 + sin(millis()*s.sp*0.001+s.fl)*6;
+    fill(215,18,100,a); noStroke(); ellipse(s.x,s.y,s.r*2);
+  }
+  for (let o of endOrbs) {
+    o.x += sin(millis()*o.speed+o.phase)*0.12;
+    o.y += cos(millis()*o.speed*0.7+o.phase+1)*0.08;
+    let pulse = sin(millis()*o.speed*0.5+o.phase)*0.5+0.5;
+    fill(o.hue, o.sat*0.5, o.bri, 18*pulse); ellipse(o.x, o.y, o.r*3.5);
+    fill(o.hue, o.sat, o.bri, 45); ellipse(o.x, o.y, o.r*2);
+  }
+
+  let nx = W/2 + sin(millis()*0.00010)*48;
+  let ny = 100 + sin(millis()*0.000016)*22;
+  paintSelfOrb(nx, ny, SELF_BASE_HUE, 0);
+
+  let ta = min(endTimer / 1200, 1) * 62;
+  fill(210,10,97,ta); noStroke(); textAlign(CENTER,CENTER);
+  textSize(24); text('between', W/2, 152);
+
+  let sha = min(endTimer / 1800, 1) * 48;
+  fill(210,10,80,sha); textSize(12); textStyle(ITALIC);
+  text('still here', W/2, 182); textStyle(NORMAL);
+
+  if (endTimer > 2500) {
+    let sa = min((endTimer-2500)/1200, 1) * 32;
+    fill(210,10,65,sa); textSize(8.5); textLeading(14);
+    let st = '';
+    for (let i=0; i<CHAPTERS.length; i++) {
+      if (i>0) st += '   \u00b7   ';
+      let name = CHAPTERS[i].sublabel;
+      let t = Math.round(stats.chapterTimes[i]/1000);
+      st += name + ': ' + t + 's';
+    }
+    text(st, W/2, 218);
+  }
+
+  if (endTimer > 4500) {
+    let ea = min((endTimer-4500)/1800, 1) * 48;
+    fill(210,10,90,ea); textSize(11); textLeading(20);
+    text(END_TEXT, W/2, 330);
+  }
+
+  if (endTimer > 8000) {
+    let ra = map(sin(millis()*0.0025),-1,1,16,34);
+    fill(210,10,78,ra); textSize(9.5);
+    text('press any key to begin again', W/2, H - 25);
+  }
+}
+
+function initEndScreen() {
+  endOrbs = []; endTimer = 0;
+  let hues = [{h:34,s:65,b:85},{h:206,s:55,b:82},{h:160,s:45,b:78}];
+  for (let i=0; i<18; i++) {
+    let theme = hues[i%3];
+    let ang = random(TWO_PI), rad = random(80,200);
+    endOrbs.push({
+      x: W/2+cos(ang)*rad, y: 140+sin(ang)*rad*0.5,
+      hue: theme.h+random(-12,12), sat: theme.s+random(-10,10),
+      bri: theme.b+random(-8,8), r: random(3,6),
+      phase: random(TWO_PI), speed: random(0.0008,0.0018)
+    });
+  }
+}
+
+// =============================================================
+//  PATH
+// =============================================================
+function getActivePath() {
+  if (momentState === 'active') {
+    if (cType() === 'fans' && friendhouseOrb && ch3Phase === 2) {
+      return { x: friendhouseOrb.x, y: friendhouseOrb.y };
+    }
+    let cc = (chosenCluster === 'A') ? ccA : ccB;
+    return { x: cc.x, y: cc.y };
+  }
+  return CHAPTERS[chapterIndex].naturalPath(chapterMs * 0.001);
+}
+
+// =============================================================
+//  SCENE
+// =============================================================
+function paintScene() {
+  let ct = cType();
+
+  // Stars in escape chapters
+  if (ct === 'escape') {
+    for (let s of stars) {
+      let a = (s.base + sin(millis()*s.sp*0.001+s.fl)*10) * 0.55;
+      fill(215,18,100,a); noStroke(); ellipse(s.x,s.y,s.r*2);
+    }
+    if (!momentFired) {
+      // Only show plane beacon/arrow/trail after baby is found
+      if (babyFound) {
+        paintGoalBeacon(ccB.x, ccB.y, orbsB.length ? orbsB[0].hue : 36);
+        paintGoalArrow();
+        paintGoalTrail();
+      }
+      // Show arrow toward nearest unchecked bassinet
+      if (!babyFound) paintBassinetGuide();
+    }
+  }
+
+  // Goal beacon for gravity chapters too
+  if (ct === 'gravity') {
+    if (!momentFired) paintGoalBeacon(ccB.x, ccB.y, orbsB.length ? orbsB[0].hue : 206);
+    if (!momentFired) paintGravityLines();
+  }
+
+  // Bridge line for escape
+  if (ct === 'escape') {
+    noFill(); stroke(210,12,45,7); strokeWeight(0.4);
+    drawingContext.setLineDash([4,14]);
+    line(ccA.x, ccA.y, ccB.x, ccB.y);
+    drawingContext.setLineDash([]); noStroke();
+  }
+
+  paintConnections();
+  paintBarriers();
+  if (ct === 'escape') paintBassinetOrbs();
+  if (ct === 'tasks' || ct === 'gather') paintTaskOrbs();
+  if (ct === 'social') paintSocialGroupProgress();
+  if (ct === 'gravity') { paintGravityWaypoints(); paintGravityObstacles(); }
+  if (ct === 'fans') { paintDestinationOrbs(); paintFanOrbs(); }
+  paintClusterOrbs();
+  paintSelfOrb(sx, sy, selfHue, repulsionHeat);
+  updateAudio(sx, sy);
+}
+
+// --- Ch0 directional arrow ---
+function paintGoalArrow() {
+  let ang = atan2(ccB.y - sy, ccB.x - sx);
+  let ax = sx + cos(ang) * 42;
+  let ay = sy + sin(ang) * 42;
+  let pulse = sin(millis()*0.003)*0.5+0.5;
+  let alpha = 22 + pulse*18;
+  stroke(36, 50, 88, alpha); strokeWeight(1.4);
+  let bodyLen = 14;
+  line(ax-cos(ang)*bodyLen, ay-sin(ang)*bodyLen, ax, ay);
+  let hs = 6;
+  line(ax, ay, ax+cos(ang+PI*0.75)*hs, ay+sin(ang+PI*0.75)*hs);
+  line(ax, ay, ax+cos(ang-PI*0.75)*hs, ay+sin(ang-PI*0.75)*hs);
+  noStroke();
+}
+
+// --- Ch0 dotted trail ---
+function paintGoalTrail() {
+  let dx = ccB.x - sx, dy = ccB.y - sy;
+  let d = sqrt(dx*dx + dy*dy);
+  let steps = floor(d / 22);
+  let pulse = sin(millis()*0.0025)*0.5+0.5;
+  noStroke();
+  for (let i=3; i<steps; i++) {
+    let t = i/steps;
+    let px = sx + dx*t, py = sy + dy*t;
+    let a = map(t,0,1,14,5)*(0.7+pulse*0.3);
+    fill(36,40,82,a); ellipse(px,py,2.2,2.2);
+  }
+}
+
+// --- Bassinet guide arrow (points to nearest unchecked crib) ---
+function paintBassinetGuide() {
+  let nearest = null, nearDist = Infinity;
+  for (let b of bassinetOrbs) {
+    if (b.checked) continue;
+    let d = dist(sx, sy, b.x, b.y);
+    if (d < nearDist) { nearDist = d; nearest = b; }
+  }
+  if (!nearest || nearDist < BASSINET_CHECK_R) return;
+  let ang = atan2(nearest.y - sy, nearest.x - sx);
+  let pulse = sin(millis()*0.004)*0.5+0.5;
+  let alpha = 35 + pulse*25;
+
+  // Bright dotted trail to nearest crib
+  let steps = floor(nearDist / 14);
+  noStroke();
+  for (let i=2; i<min(steps,16); i++) {
+    let t = i/steps;
+    let px = sx + (nearest.x-sx)*t, py = sy + (nearest.y-sy)*t;
+    let a = map(t,0,1,22,6)*(0.6+pulse*0.4);
+    let sz = map(t,0,1,3.5,1.5);
+    fill(nearest.hue,45,88,a); ellipse(px,py,sz,sz);
+  }
+  // Larger, more visible arrow
+  let ax = sx + cos(ang) * 42;
+  let ay = sy + sin(ang) * 42;
+  stroke(nearest.hue, 50, 95, alpha); strokeWeight(2.2);
+  let bodyLen = 16;
+  line(ax-cos(ang)*bodyLen, ay-sin(ang)*bodyLen, ax, ay);
+  let hs = 8;
+  line(ax, ay, ax+cos(ang+PI*0.75)*hs, ay+sin(ang+PI*0.75)*hs);
+  line(ax, ay, ax+cos(ang-PI*0.75)*hs, ay+sin(ang-PI*0.75)*hs);
+  noStroke();
+
+  // "nearest crib" label near arrow
+  let lx = sx + cos(ang) * 62;
+  let ly = sy + sin(ang) * 62;
+  fill(nearest.hue, 30, 95, alpha * 0.6);
+  textAlign(CENTER, CENTER); textSize(8);
+  text('\u2192 nearest crib', lx, ly);
+}
+
+// --- Stronger beacon ---
+function paintGoalBeacon(cx, cy, hue) {
+  let t = millis()*0.001;
+  let pulse = sin(t*0.8)*0.5+0.5;
+  noFill();
+  stroke(hue,55,85,22*pulse); strokeWeight(1.2);
+  ellipse(cx,cy,155+pulse*18,105+pulse*12);
+  stroke(hue,45,90,14*pulse); strokeWeight(0.8);
+  ellipse(cx,cy,210+pulse*24,140+pulse*16);
+  stroke(hue,35,95,8*pulse); strokeWeight(0.5);
+  ellipse(cx,cy,270+pulse*28,180+pulse*18);
+  noStroke();
+}
+
+// --- Gravity chapter pull visualization ---
+function paintGravityLines() {
+  let d = dist(sx,sy,ccA.x,ccA.y);
+  if (d > 400) return;
+  let alpha = map(d, 0, 400, 18, 0) * gravityPullScale;
+  let ang = atan2(ccA.y-sy, ccA.x-sx);
+  noFill();
+  for (let i=0; i<4; i++) {
+    let spread = (i-1.5)*0.3;
+    let la = alpha*(1-abs(i-1.5)*0.3);
+    stroke(30, 40, 70, min(la, 30)); strokeWeight(0.5);
+    let startD = 30;
+    let endD = min(d*0.6, 120);
+    let sx2 = sx+cos(ang+spread)*startD;
+    let sy2 = sy+sin(ang+spread)*startD;
+    let ex2 = sx+cos(ang)*endD;
+    let ey2 = sy+sin(ang)*endD;
+    line(sx2,sy2,ex2,ey2);
+  }
+  noStroke();
+}
+
+function paintConnections() {
+  noFill();
+  for (let i=0; i<orbsA.length; i++) for (let j=i+1; j<orbsA.length; j++) {
+    let d = dist(orbsA[i].x,orbsA[i].y,orbsA[j].x,orbsA[j].y);
+    if (d<66) { stroke(orbsA[i].hue,50,76,map(d,0,66,20,0)); strokeWeight(0.38); line(orbsA[i].x,orbsA[i].y,orbsA[j].x,orbsA[j].y); }
+  }
+  for (let i=0; i<orbsB.length; i++) for (let j=i+1; j<orbsB.length; j++) {
+    let d = dist(orbsB[i].x,orbsB[i].y,orbsB[j].x,orbsB[j].y);
+    if (d<66) { stroke(orbsB[i].hue,50,76,map(d,0,66,20,0)); strokeWeight(0.38); line(orbsB[i].x,orbsB[i].y,orbsB[j].x,orbsB[j].y); }
+  }
+  for (let o of [...orbsA,...orbsB]) {
+    let d = dist(sx,sy,o.x,o.y);
+    if (d<54) { stroke(selfHue,32,68,map(d,0,54,8,0)); strokeWeight(0.28); line(sx,sy,o.x,o.y); }
+  }
+  noStroke();
+}
+
+function paintBarriers() {
+  for (let b of barriers) {
+    let pulse = sin(millis()*0.0018+b.phase)*0.5;
+    let r = 6.5+pulse;
+    for (let gr=r*4; gr>0; gr-=1.0) {
+      fill(245,52,36, map(gr,r*4,0,0,8)*(b.active?1.4:0.8)); ellipse(b.x,b.y,gr*2);
+    }
+    fill(240,48,50, b.active?88:65); ellipse(b.x,b.y,r*2);
+    noFill(); stroke(240,38,68, b.active?40:16); strokeWeight(0.6);
+    ellipse(b.x,b.y,r*5.8); noStroke();
+  }
+}
+
+function paintTaskOrbs() {
+  let ct = cType();
+
+  // === Frost zone visual (Ranch) ===
+  if (ct === 'tasks' && frostZone) {
+    let pulse = sin(millis()*0.0012)*0.5+0.5;
+    noStroke();
+    // Outer frost haze
+    for (let gr=FROST_RADIUS; gr>0; gr-=8) {
+      let a = map(gr, FROST_RADIUS, 0, 0, 3.5)*(0.6+pulse*0.4);
+      fill(210, 28, 65, a); ellipse(frostZone.x, frostZone.y, gr*2);
+    }
+    // Frost boundary ring
+    noFill(); stroke(210, 20, 70, 8+pulse*6); strokeWeight(0.5);
+    ellipse(frostZone.x, frostZone.y, FROST_RADIUS*2);
+    noStroke();
+    // Scattered frost particles
+    for (let i=0; i<6; i++) {
+      let a2 = millis()*0.0004+i*1.05;
+      let fr = FROST_RADIUS*(0.3+sin(a2*0.7+i)*0.35);
+      let fx = frostZone.x + cos(a2)*fr;
+      let fy = frostZone.y + sin(a2)*fr;
+      fill(210, 18, 85, 8+pulse*5); ellipse(fx, fy, 2.5);
+    }
+  }
+
+  // === Carrying indicator ===
+  if (carryingTask !== null && carryingTask < taskOrbs.length) {
+    let ct2 = taskOrbs[carryingTask];
+    let pulse = sin(millis()*0.004)*0.5+0.5;
+    // Small orb trailing the player
+    let trailAng = atan2(svy, svx) + PI;
+    let trailR = 14 + pulse*3;
+    let tx = sx + cos(trailAng)*trailR;
+    let ty = sy + sin(trailAng)*trailR;
+    fill(ct2.hue, 55, 88, 55); ellipse(tx, ty, 6);
+    fill(ct2.hue, 35, 95, 22); ellipse(tx, ty, 12);
+    // Dotted line to destination
+    let ddx = ct2.dstX - sx, ddy = ct2.dstY - sy;
+    let dd = sqrt(ddx*ddx+ddy*ddy);
+    let steps = floor(dd/18);
+    noStroke();
+    for (let i=2; i<steps; i++) {
+      let tt = i/steps;
+      let px = sx + ddx*tt, py = sy + ddy*tt;
+      let a3 = map(tt,0,1,16,5)*(0.6+pulse*0.4);
+      fill(ct2.hue, 40, 82, a3); ellipse(px,py,2,2);
+    }
+  }
+
+  for (let idx=0; idx<taskOrbs.length; idx++) {
+    let t = taskOrbs[idx];
+
+    // --- COLLECTED state ---
+    if (t.collected) {
+      if (ct === 'tasks' && t.decayTimer !== undefined) {
+        // Decay visual for Ranch
+        let decayProg = t.decayTimer / TASK_DECAY_MS;
+        let fadeA = map(decayProg, 0, 1, 72, 8);
+        let pulse = sin(millis()*0.0018+t.phase)*0.5+0.5;
+        let r = 8 + pulse*1.5;
+        let ringR = map(decayProg, 0, 1, TASK_COLLECT_R*2, 8);
+        noFill(); stroke(t.hue, 35, 75, fadeA*0.4); strokeWeight(0.5);
+        ellipse(t.x, t.y, ringR); noStroke();
+        fill(t.hue, 70*max(1-decayProg,0.2), 90, fadeA);
+        ellipse(t.x, t.y, r*2*max(1-decayProg*0.5,0.3));
+        // Frost-accelerated decay shows icy tint
+        if (frostZone && dist(t.x,t.y,frostZone.x,frostZone.y) < FROST_RADIUS) {
+          fill(210, 30, 80, 12+sin(millis()*0.008)*8); ellipse(t.x,t.y,r*3);
+        }
+        if (decayProg > 0.7) {
+          let flicker = sin(millis()*0.015)*0.5+0.5;
+          fill(8, 60, 80, flicker*22); ellipse(t.x, t.y, r*3);
+        }
+      } else {
+        // Non-decaying completed (Home chapter)
+        t.flashAlpha = max((t.flashAlpha||0)-3.5, 0);
+        if (t.flashAlpha > 0) { fill(t.hue,55,100,t.flashAlpha); ellipse(t.x,t.y,46); }
+        let orbAngle = millis()*0.001 + t.phase;
+        let orbR = 22 + sin(millis()*0.0008+t.phase)*6;
+        let ox = sx + cos(orbAngle)*orbR;
+        let oy = sy + sin(orbAngle)*orbR;
+        fill(t.hue, 55, 88, 42); ellipse(ox, oy, 5);
+        fill(t.hue, 35, 95, 18); ellipse(ox, oy, 10);
+      }
+      continue;
+    }
+
+    // --- CARRY TASK rendering ---
+    if (t.taskType === 'carry') {
+      let pulse = sin(millis()*0.0022+t.phase)*0.5+0.5;
+
+      if (t.carryPhase === 'pickup') {
+        // Source point (where to pick up)
+        let r = 9 + pulse*2.5;
+        // Dashed line connecting source to destination
+        noFill(); stroke(t.hue, 25, 65, 10); strokeWeight(0.4);
+        drawingContext.setLineDash([3,10]);
+        line(t.srcX, t.srcY, t.dstX, t.dstY);
+        drawingContext.setLineDash([]); noStroke();
+        // Destination ghost (dim)
+        fill(t.hue, 25, 55, 14+pulse*6); ellipse(t.dstX, t.dstY, 8);
+        fill(t.hue, 15, 75, 8); textAlign(CENTER,CENTER); textSize(7);
+        text(t.dstLabel, t.dstX, t.dstY+14);
+        // Source orb (active)
+        let prog = t.holdProgress || 0;
+        if (prog > 0.01) {
+          noFill(); stroke(t.hue, 60, 95, 55*prog); strokeWeight(2.2);
+          arc(t.srcX, t.srcY, CARRY_COLLECT_R*2, CARRY_COLLECT_R*2, -HALF_PI, -HALF_PI+prog*TWO_PI);
+          noStroke(); fill(t.hue, 40, 100, 12*prog);
+          ellipse(t.srcX, t.srcY, CARRY_COLLECT_R*2*prog);
+        }
+        for (let gr=r*3.5; gr>0; gr-=1.0) {
+          fill(t.hue,62,82, map(gr,r*3.5,0,0,14)*pulse); ellipse(t.srcX,t.srcY,gr*2);
+        }
+        fill(t.hue,70,90,90); ellipse(t.srcX,t.srcY,r*2);
+        noFill(); stroke(t.hue,35,75,18); strokeWeight(0.5);
+        ellipse(t.srcX,t.srcY,CARRY_COLLECT_R*2); noStroke();
+        // Labels
+        let d = dist(sx,sy,t.srcX,t.srcY);
+        let la = constrain(map(d,0,200,52,10),8,52);
+        fill(t.hue,20,95,la); textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+        text(t.srcLabel + ' \u2192 ' + t.dstLabel, t.srcX, t.srcY+r+12); textStyle(NORMAL);
+
+      } else {
+        // Deliver phase — destination is active
+        let r = 9 + pulse*2.5;
+        // Source ghost (dim, already picked up)
+        fill(t.hue, 20, 50, 10); ellipse(t.srcX, t.srcY, 6);
+        // Destination orb (active)
+        let prog = t.holdProgress || 0;
+        if (prog > 0.01) {
+          noFill(); stroke(t.hue, 60, 95, 55*prog); strokeWeight(2.2);
+          arc(t.dstX, t.dstY, CARRY_COLLECT_R*2, CARRY_COLLECT_R*2, -HALF_PI, -HALF_PI+prog*TWO_PI);
+          noStroke(); fill(t.hue, 40, 100, 12*prog);
+          ellipse(t.dstX, t.dstY, CARRY_COLLECT_R*2*prog);
+        }
+        for (let gr=r*3.5; gr>0; gr-=1.0) {
+          fill(t.hue,65,85, map(gr,r*3.5,0,0,16)*pulse); ellipse(t.dstX,t.dstY,gr*2);
+        }
+        fill(t.hue,72,92,90); ellipse(t.dstX,t.dstY,r*2);
+        noFill(); stroke(t.hue,40,80,22); strokeWeight(0.5);
+        ellipse(t.dstX,t.dstY,CARRY_COLLECT_R*2); noStroke();
+        let d = dist(sx,sy,t.dstX,t.dstY);
+        let la = constrain(map(d,0,200,52,10),8,52);
+        fill(t.hue,20,95,la); textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+        text('deliver \u2192 ' + t.dstLabel, t.dstX, t.dstY+r+12); textStyle(NORMAL);
+      }
+      continue;
+    }
+
+    // --- MASH TASK rendering ---
+    if (t.taskType === 'mash') {
+      let pulse = sin(millis()*0.003+t.phase)*0.5+0.5;
+      let r = 11 + pulse*3;
+      let prog = t.holdProgress || 0;
+      let d = dist(sx,sy,t.x,t.y);
+      let isNear = d < MASH_COLLECT_R;
+
+      // Mash progress — segmented ring
+      if (prog > 0.01) {
+        let segs = t.mashNeeded || MASH_PRESSES_NEEDED;
+        let filled = Math.floor(prog * segs);
+        for (let s=0; s<segs; s++) {
+          let a1 = -HALF_PI + (s/segs)*TWO_PI + 0.06;
+          let a2 = -HALF_PI + ((s+1)/segs)*TWO_PI - 0.06;
+          noFill();
+          if (s < filled) {
+            stroke(t.hue, 65, 95, 70); strokeWeight(3);
+          } else {
+            stroke(t.hue, 20, 50, 18); strokeWeight(1.5);
+          }
+          arc(t.x, t.y, MASH_COLLECT_R*2, MASH_COLLECT_R*2, a1, a2);
+        }
+        noStroke();
+      }
+
+      // Bouncing orb effect when mashing
+      let mashBounce = isNear ? sin(millis()*0.012)*2 : 0;
+      for (let gr=r*3.5; gr>0; gr-=1.0) {
+        fill(t.hue,62,82, map(gr,r*3.5,0,0,14)*pulse); ellipse(t.x,t.y+mashBounce,gr*2);
+      }
+      fill(t.hue,70,90,90); ellipse(t.x,t.y+mashBounce,r*2);
+      noFill(); stroke(t.hue,35,75,18); strokeWeight(0.5);
+      ellipse(t.x,t.y,MASH_COLLECT_R*2); noStroke();
+
+      // Label with [SPACE] hint
+      let la = map(d,0,210,52,10); la = constrain(la,8,52);
+      fill(t.hue,20,95,la);
+      textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+      let hint = isNear ? '\u2191 mash SPACE' : t.label;
+      text(hint, t.x, t.y + r + 14); textStyle(NORMAL);
+      continue;
+    }
+
+    // --- CLICK TASK rendering ---
+    if (t.taskType === 'click') {
+      let pulse = sin(millis()*0.0025+t.phase)*0.5+0.5;
+      let r = 10 + pulse*2.5;
+      let d = dist(sx,sy,t.x,t.y);
+      let isNear = t.clickReady;
+
+      // Diamond shape instead of circle
+      push(); translate(t.x, t.y); rotate(PI/4);
+      noStroke();
+      for (let gr=r*3; gr>0; gr-=1.0) {
+        fill(t.hue,58,82, map(gr,r*3,0,0,12)*(isNear?1.4:0.8)*pulse);
+        rect(-gr,-gr,gr*2,gr*2,2);
+      }
+      fill(t.hue,70,isNear?95:85,isNear?95:80);
+      rect(-r,-r,r*2,r*2,2);
+      pop();
+
+      // Ready indicator ring
+      if (isNear) {
+        let readyPulse = sin(millis()*0.006)*0.5+0.5;
+        noFill(); stroke(t.hue,55,95,40+readyPulse*30); strokeWeight(1.5);
+        ellipse(t.x, t.y, CLICK_TASK_R*2); noStroke();
+      } else {
+        noFill(); stroke(t.hue,25,65,14); strokeWeight(0.5);
+        ellipse(t.x, t.y, CLICK_TASK_R*2); noStroke();
+      }
+
+      // Label with [E] hint
+      let la = map(d,0,210,52,10); la = constrain(la,8,52);
+      fill(t.hue,20,95,la);
+      textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+      let hint = isNear ? '[E] ' + t.label : t.label;
+      text(hint, t.x, t.y + r + 14); textStyle(NORMAL);
+      continue;
+    }
+
+    // --- SIMPLE / EXTENDED task rendering ---
+    let pulse = sin(millis()*0.0022+t.phase)*0.5+0.5;
+    let r = (t.taskType === 'extended') ? 12 + pulse*3.5 : 10 + pulse*3;
+
+    // Hold progress ring
+    let prog = t.holdProgress || 0;
+    if (prog > 0.01) {
+      noFill();
+      let ringHue = (t.taskType === 'extended') ? 30 : t.hue;
+      stroke(ringHue, 60, 95, 55*prog); strokeWeight(t.taskType === 'extended' ? 2.8 : 2.2);
+      arc(t.x, t.y, TASK_COLLECT_R*2, TASK_COLLECT_R*2, -HALF_PI, -HALF_PI + prog*TWO_PI);
+      noStroke(); fill(t.hue, 40, 100, 12*prog);
+      ellipse(t.x, t.y, TASK_COLLECT_R*2*prog);
+    }
+
+    // Shy behavior visual for Home chapter
+    if (ct === 'gather') {
+      let playerSpeed = sqrt(svx*svx + svy*svy);
+      let d2 = dist(sx, sy, t.x, t.y);
+      if (d2 < SHY_FLEE_DIST*1.5 && playerSpeed > SHY_SPEED_LIMIT) {
+        let flicker = sin(millis()*0.02+t.phase)*0.5+0.5;
+        noFill(); stroke(t.hue, 25, 90, 12*flicker); strokeWeight(0.4);
+        let jx = random(-2,2), jy = random(-2,2);
+        ellipse(t.x+jx, t.y+jy, r*5); noStroke();
+      }
+    }
+
+    // Extended tasks have a double-ring look
+    if (t.taskType === 'extended') {
+      noFill(); stroke(t.hue, 30, 65, 10+pulse*5); strokeWeight(0.4);
+      ellipse(t.x, t.y, TASK_COLLECT_R*2.6); noStroke();
+    }
+
+    for (let gr=r*3.5; gr>0; gr-=1.0) {
+      fill(t.hue,62,82, map(gr,r*3.5,0,0,14)*pulse); ellipse(t.x,t.y,gr*2);
+    }
+    fill(t.hue,70,90,90); ellipse(t.x,t.y,r*2);
+    noFill(); stroke(t.hue,35,75,18); strokeWeight(0.5);
+    ellipse(t.x,t.y,TASK_COLLECT_R*2); noStroke();
+
+    let d = dist(sx,sy,t.x,t.y);
+    let la = map(d,0,210,52,10); la = constrain(la,8,52);
+    fill(t.hue,20,95,la);
+    textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+    let lbl = t.label;
+    if (t.taskType === 'extended') lbl = '\u25c9 ' + lbl; // ring symbol for extended
+    text(lbl, t.x, t.y + r + 12); textStyle(NORMAL);
+  }
+
+  // Click flash feedback
+  if (clickFlashTimer > 0 && clickFlashPos) {
+    clickFlashTimer -= deltaTime;
+    let a = (clickFlashTimer / CLICK_FLASH_MS) * 75;
+    let r2 = (1 - clickFlashTimer / CLICK_FLASH_MS) * 50;
+    noFill(); stroke(140, 55, 95, a); strokeWeight(2);
+    ellipse(clickFlashPos.x, clickFlashPos.y, r2); noStroke();
+  }
+}
+
+// --- Fragment orbs (Arrival/Escape) ---
+function paintBassinetOrbs() {
+  let t = millis()*0.001;
+
+  for (let b of bassinetOrbs) {
+    let pulse = sin(t*0.8 + b.phase)*0.5+0.5;
+
+    // --- Checked wrong: dim with X mark ---
+    if (b.checked && !b.isKey) {
+      // Flash on recent check
+      if (b.flashAlpha > 0) {
+        noStroke();
+        for (let gr=28; gr>0; gr-=2) {
+          fill(8, 55, 80, map(gr,28,0,0,b.flashAlpha*0.08));
+          ellipse(b.x, b.y, gr*2);
+        }
+      }
+      // Dim oval bassinet
+      noStroke();
+      fill(b.hue, 12, 28, 18); ellipse(b.x, b.y, 18, 12);
+      // X mark
+      stroke(8, 40, 60, 22); strokeWeight(1.2);
+      line(b.x-4, b.y-4, b.x+4, b.y+4);
+      line(b.x+4, b.y-4, b.x-4, b.y+4);
+      noStroke();
+      continue;
+    }
+
+    // --- Key baby found: disappears (carried by nurse) ---
+    if (b.checked && b.isKey) {
+      if (b.flashAlpha > 0) {
+        noStroke();
+        for (let gr=40; gr>0; gr-=1.5) {
+          fill(42, 55, 95, map(gr,40,0,0,b.flashAlpha*0.16));
+          ellipse(b.x, b.y, gr*2);
+        }
+      }
+      continue;
+    }
+
+    // --- Unchecked bassinet ---
+    let r = 14 + pulse*2.5;
+
+    // Large bright outer glow so cribs are easy to spot
+    noStroke();
+    for (let gr=r*6; gr>r*2; gr-=2) {
+      fill(b.hue, 35, 82, map(gr,r*6,r*2,0,8)*(0.6+pulse*0.4));
+      ellipse(b.x, b.y, gr*2, gr*1.5);
+    }
+
+    // Collect radius ring — always visible so player knows the interaction zone
+    noFill(); stroke(b.hue, 30, 80, 18+pulse*10); strokeWeight(0.7);
+    ellipse(b.x, b.y, BASSINET_CHECK_R*2);
+    noStroke();
+
+    // Bassinet shape — larger warm oval
+    fill(b.hue, 42, 80, 78); noStroke();
+    ellipse(b.x, b.y, r*2.6, r*1.8);
+    // Inner rim
+    fill(b.hue, 30, 90, 40);
+    ellipse(b.x, b.y, r*2, r*1.3);
+
+    // Inner baby dot — larger
+    let babyPulse = sin(t*1.5 + b.phase + 1)*0.5+0.5;
+    fill(b.hue, 55, 92, 78+babyPulse*20);
+    ellipse(b.x, b.y-1, 7+babyPulse*1.5, 5.5+babyPulse);
+
+    // Hold progress ring — thicker and brighter
+    if (b.holdProgress > 0.01) {
+      noFill(); stroke(b.hue, 70, 98, 78); strokeWeight(3.5);
+      arc(b.x, b.y, r*4.5, r*4.5, -HALF_PI, -HALF_PI + b.holdProgress*TWO_PI);
+      noStroke();
+      // Filling glow
+      fill(b.hue, 40, 100, 18*b.holdProgress);
+      ellipse(b.x, b.y, r*4*b.holdProgress, r*3*b.holdProgress);
+    }
+
+    // Label — always visible, bright
+    let d = dist(sx, sy, b.x, b.y);
+    let la = constrain(map(d, 0, 300, 72, 28), 28, 72);
+    fill(210, 10, 100, la);
+    textAlign(CENTER,CENTER); textSize(9.5); textStyle(NORMAL);
+    text('crib ' + (bassinetOrbs.indexOf(b)+1), b.x, b.y + r + 16);
+    // "move here" hint when nearby
+    if (d < BASSINET_CHECK_R * 3 && d > BASSINET_CHECK_R) {
+      let hintA = map(d, BASSINET_CHECK_R, BASSINET_CHECK_R*3, 45, 8);
+      fill(b.hue, 25, 95, hintA);
+      textSize(8); textStyle(ITALIC);
+      text('move closer to check', b.x, b.y + r + 28);
+      textStyle(NORMAL);
+    }
+    if (d < BASSINET_CHECK_R && b.holdProgress < 0.5) {
+      let hintA = 35 + sin(millis()*0.005)*12;
+      fill(b.hue, 30, 98, hintA);
+      textSize(8.5); textStyle(ITALIC);
+      text('hold position...', b.x, b.y + r + 28);
+      textStyle(NORMAL);
+    }
+  }
+
+  // --- Feedback text near nurse ---
+  if (checkFeedbackText && checkFeedbackTimer > 0) {
+    let fa = min(checkFeedbackTimer / 400, 1.0) * 55;
+    let fy = sy - 28 - (1 - min(checkFeedbackTimer/600,1)) * 12;
+    if (babyFound) {
+      // Hope text — warm gold
+      fill(42, 50, 95, fa * 1.3); noStroke();
+      textAlign(CENTER,CENTER); textSize(12); textStyle(BOLD);
+    } else {
+      fill(8, 45, 90, fa); noStroke();
+      textAlign(CENTER,CENTER); textSize(10); textStyle(ITALIC);
+    }
+    text(checkFeedbackText, sx, fy); textStyle(NORMAL);
+  }
+}
+
+// --- Social group approach progress ---
+function paintSocialGroupProgress() {
+  for (let i=0; i<socialGroupData.length; i++) {
+    let g = socialGroupData[i];
+    let w = socialWindows[i];
+
+    // Timed window indicator — ring that opens/closes
+    if (w && !socialAccepted) {
+      let windowPulse = sin(millis()*0.005+w.phase)*0.5+0.5;
+      if (w.open) {
+        // Open window — bright green-ish gap indicator
+        let openProg = w.timer / SOCIAL_WINDOW_OPEN_MS;
+        let remaining = 1 - openProg;
+        noFill();
+        stroke(140, 55, 88, 35+windowPulse*25); strokeWeight(2.2);
+        // Draw an arc showing the "gap" — a welcoming opening
+        let gapSize = 0.6 + remaining * 0.3;
+        let gapAngle = millis()*0.001 + w.phase;
+        arc(g.cx, g.cy, SOCIAL_APPROACH_R*2.8, SOCIAL_APPROACH_R*2.8,
+            gapAngle+gapSize, gapAngle+TWO_PI-gapSize);
+        noStroke();
+        // "gap open" flash dots at gap edges
+        let dotA = 14+windowPulse*12;
+        let r2 = SOCIAL_APPROACH_R*1.4;
+        fill(140, 50, 92, dotA);
+        ellipse(g.cx+cos(gapAngle+gapSize)*r2, g.cy+sin(gapAngle+gapSize)*r2, 4);
+        ellipse(g.cx+cos(gapAngle-gapSize+TWO_PI)*r2, g.cy+sin(gapAngle-gapSize+TWO_PI)*r2, 4);
+        // Hint text
+        let d = dist(sx, sy, g.cx, g.cy);
+        if (d < SOCIAL_APPROACH_R * 1.5) {
+          fill(140, 30, 92, 28+windowPulse*18);
+          textAlign(CENTER,CENTER); textSize(7.5);
+          text('[SPACE]', g.cx, g.cy + SOCIAL_APPROACH_R + 18);
+        }
+      } else {
+        // Closed window — dim barrier ring
+        noFill();
+        stroke(240, 20, 50, 10+windowPulse*5); strokeWeight(0.6);
+        ellipse(g.cx, g.cy, SOCIAL_APPROACH_R*2.8);
+        noStroke();
+      }
+    }
+
+    if (g.progress < 0.01) continue;
+    let pulse = sin(millis()*0.003)*0.5+0.5;
+    // Progress ring around group
+    noFill();
+    stroke(210, 35, 85, 35*g.progress); strokeWeight(1.8);
+    arc(g.cx, g.cy, SOCIAL_APPROACH_R*2.4, SOCIAL_APPROACH_R*2.4,
+        -HALF_PI, -HALF_PI + g.progress * TWO_PI / SOCIAL_REJECT_AT);
+    // Warming glow
+    noStroke();
+    fill(36, 35, 85, 8*g.progress); ellipse(g.cx, g.cy, SOCIAL_APPROACH_R*2*g.progress);
+  }
+
+  // Social rejection flash
+  if (socialRejectFlash) {
+    socialRejectFlash.timer += deltaTime;
+    let a = max(1 - socialRejectFlash.timer/1800, 0) * 65;
+    if (a > 0.5) {
+      fill(240, 30, 90, a); noStroke();
+      textAlign(CENTER, CENTER); textSize(11); textStyle(ITALIC);
+      text(socialRejectFlash.text, W/2, H/2 + 60);
+      textStyle(NORMAL);
+    }
+    if (socialRejectFlash.timer > 1800) socialRejectFlash = null;
+  }
+
+  // Accepted glow on cluster B
+  if (socialAccepted && !momentFired) {
+    let pulse = sin(millis()*0.0016)*0.5+0.5;
+    noFill();
+    stroke(36, 50, 88, 22+pulse*18); strokeWeight(1.2);
+    ellipse(ccB.x, ccB.y, 100+pulse*14, 80+pulse*10);
+    stroke(36, 35, 92, 12+pulse*10); strokeWeight(0.6);
+    ellipse(ccB.x, ccB.y, 145+pulse*18, 120+pulse*14);
+    noStroke();
+    let la = 28+pulse*16;
+    fill(36, 18, 95, la); textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+    text('one door stayed open', ccB.x, ccB.y + 55); textStyle(NORMAL);
+  }
+}
+
+// --- Gravity waypoint beacons ---
+function paintGravityWaypoints() {
+  for (let i=0; i<waypoints.length; i++) {
+    let wp = waypoints[i];
+    let isCurrent = (i === waypointsClaimed && !wp.claimed);
+    let isNext = (i > waypointsClaimed);
+    let pulse = sin(millis()*0.0018+i*1.5)*0.5+0.5;
+
+    if (wp.claimed) {
+      // Claimed: bright steady glow
+      let r = 7;
+      fill(180, 55, 88, 62); noStroke(); ellipse(wp.x, wp.y, r*2);
+      fill(180, 30, 95, 22); ellipse(wp.x, wp.y, r*5);
+      // Connect to previous with line
+      if (i > 0) {
+        let prev = waypoints[i-1];
+        stroke(180, 35, 80, 18); strokeWeight(0.5);
+        drawingContext.setLineDash([3,8]);
+        line(prev.x, prev.y, wp.x, wp.y);
+        drawingContext.setLineDash([]); noStroke();
+      }
+    } else if (isCurrent) {
+      // Current target: pulsing beacon
+      let r = 8 + pulse*3;
+      for (let gr=r*4; gr>0; gr-=1.0) {
+        fill(180, 50, 82, map(gr,r*4,0,0,12)*pulse); ellipse(wp.x,wp.y,gr*2);
+      }
+      fill(180, 62, 90, 85); ellipse(wp.x, wp.y, r*2);
+      noFill(); stroke(180, 40, 88, 20+pulse*18); strokeWeight(0.7);
+      ellipse(wp.x, wp.y, WAYPOINT_COLLECT_R*2); noStroke();
+      // Progress ring
+      let prog = wp.progress || 0;
+      if (prog > 0.01) {
+        noFill(); stroke(140, 60, 95, 55*prog); strokeWeight(2.5);
+        arc(wp.x, wp.y, WAYPOINT_COLLECT_R*2+8, WAYPOINT_COLLECT_R*2+8,
+            -HALF_PI, -HALF_PI + prog*TWO_PI);
+        noStroke();
+      }
+      // Label — show milestone name if available, otherwise number
+      fill(180, 20, 92, 32+pulse*18); textAlign(CENTER,CENTER); textSize(8);
+      let wpLabel = wp.label || ((i+1) + '/' + waypoints.length);
+      text(wpLabel, wp.x, wp.y + r + 14);
+      // Connect to previous
+      if (i > 0) {
+        let prev = waypoints[i-1];
+        stroke(180, 35, 80, 18); strokeWeight(0.5);
+        drawingContext.setLineDash([3,8]);
+        line(prev.x, prev.y, wp.x, wp.y);
+        drawingContext.setLineDash([]); noStroke();
+      }
+      // Arrow from player
+      let ang = atan2(wp.y-sy, wp.x-sx);
+      let d = dist(sx,sy,wp.x,wp.y);
+      if (d > 60) {
+        let ax = sx + cos(ang)*38;
+        let ay = sy + sin(ang)*38;
+        stroke(180, 40, 85, 18+pulse*12); strokeWeight(1.0);
+        let bl = 10;
+        line(ax-cos(ang)*bl, ay-sin(ang)*bl, ax, ay);
+        let hs = 5;
+        line(ax, ay, ax+cos(ang+PI*0.8)*hs, ay+sin(ang+PI*0.8)*hs);
+        line(ax, ay, ax+cos(ang-PI*0.8)*hs, ay+sin(ang-PI*0.8)*hs);
+        noStroke();
+      }
+    } else if (isNext) {
+      // Future: dim, barely visible
+      let r = 5;
+      fill(180, 25, 60, 12+pulse*6); noStroke(); ellipse(wp.x, wp.y, r*2);
+      noFill(); stroke(180, 18, 50, 8); strokeWeight(0.4);
+      ellipse(wp.x, wp.y, WAYPOINT_COLLECT_R*2); noStroke();
+    }
+  }
+
+  // Gravity intensity indicator
+  if (gravityPullScale > 1.05) {
+    let intensity = map(gravityPullScale, 1, 3, 0, 1);
+    let pulse = sin(millis()*0.004)*0.5+0.5;
+    let lineCount = floor(intensity*6)+2;
+    let ang = atan2(ccA.y-sy, ccA.x-sx);
+    for (let i=0; i<lineCount; i++) {
+      let spread = (i - (lineCount-1)/2) * 0.2;
+      let la = 8+intensity*12+pulse*6;
+      stroke(30, 50, 70, la); strokeWeight(0.4+intensity*0.3);
+      let sd = 24+i*3;
+      let ed = sd+18+intensity*16;
+      let px1 = sx+cos(ang+spread)*sd, py1 = sy+sin(ang+spread)*sd;
+      let px2 = sx+cos(ang+spread*0.5)*ed, py2 = sy+sin(ang+spread*0.5)*ed;
+      line(px1,py1,px2,py2);
+    }
+    noStroke();
+  }
+}
+
+function paintGravityObstacles() {
+  // Memory surge visual — warm glow pulling toward home with memory text
+  if (!surgeActive || surgePhase < 0.01) return;
+  let alpha = surgePhase * 45;
+
+  // Warm radial glow emanating from home cluster toward player
+  let homeX = ccA.x, homeY = ccA.y;
+  let ang = atan2(sy - homeY, sx - homeX);
+  let pullDist = dist(sx, sy, homeX, homeY);
+
+  // Pulsing rings expanding from home toward player
+  let ringCount = 4;
+  let t = (millis() * 0.001) % 1.0;
+  for (let i = 0; i < ringCount; i++) {
+    let phase = (t + i / ringCount) % 1.0;
+    let ringR = phase * pullDist * 0.8;
+    let ringAlpha = (1 - phase) * alpha * 0.4;
+    noFill(); stroke(32, 45, 75, ringAlpha); strokeWeight(1.2);
+    ellipse(homeX, homeY, ringR * 2);
+  }
+  noStroke();
+
+  // Warm haze around home
+  for (let gr = 120; gr > 0; gr -= 3) {
+    fill(35, 40, 65, map(gr, 120, 0, 0, alpha * 0.15));
+    ellipse(homeX, homeY, gr * 2);
+  }
+
+  // Streaks pulling from player toward home
+  let streakCount = 5 + floor(surgePhase * 4);
+  for (let i = 0; i < streakCount; i++) {
+    let spread = (i - (streakCount-1)/2) * 0.15;
+    let sa = alpha * (0.3 + surgePhase * 0.4);
+    stroke(35, 40, 70, sa); strokeWeight(0.6 + surgePhase * 0.4);
+    let sd = 20 + i * 5;
+    let ed = sd + 25 + surgePhase * 20;
+    let px1 = sx + cos(ang + PI + spread) * sd;
+    let py1 = sy + sin(ang + PI + spread) * sd;
+    let px2 = sx + cos(ang + PI + spread * 0.5) * ed;
+    let py2 = sy + sin(ang + PI + spread * 0.5) * ed;
+    line(px1, py1, px2, py2);
+  }
+  noStroke();
+
+  // Memory text floating near the player
+  if (currentSurgeMemory) {
+    let textAlpha = surgePhase * 52;
+    let textY = sy - 38 + sin(millis() * 0.002) * 4;
+    fill(35, 30, 90, textAlpha);
+    textAlign(CENTER, CENTER); textSize(10); textStyle(ITALIC);
+    text(currentSurgeMemory, sx, textY);
+    textStyle(NORMAL);
+  }
+
+  // Screen edge warmth during surge
+  let edgeAlpha = surgePhase * 18;
+  noStroke();
+  // Left edge warm glow (toward home)
+  for (let x = 0; x < 60; x++) {
+    fill(30, 45, 55, edgeAlpha * (1 - x / 60));
+    rect(x, 0, 1, H);
+  }
+}
+
+function paintDestinationOrbs() {
+  if (safespotOrb && ch3Phase === 1) {
+    let pulse = sin(millis()*0.0014+1.2)*0.5+0.5;
+    let r = 8+pulse*2.5;
+    for (let gr=r*4.2; gr>0; gr-=1.0) {
+      fill(215,28,48, map(gr,r*4.2,0,0,9)*pulse); ellipse(safespotOrb.x,safespotOrb.y,gr*2);
+    }
+    fill(215,25,60,72); ellipse(safespotOrb.x,safespotOrb.y,r*2);
+    noFill(); stroke(215,18,70,20+pulse*14); strokeWeight(0.6);
+    ellipse(safespotOrb.x,safespotOrb.y,52); noStroke();
+    let d = dist(sx,sy,safespotOrb.x,safespotOrb.y);
+    let la = constrain(map(d,0,250,55,10),8,55);
+    fill(215,15,90,la); textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+    text('safe place', safespotOrb.x, safespotOrb.y + r + 12); textStyle(NORMAL);
+  }
+  if (friendhouseOrb && ch3Phase === 2) {
+    let pulse = sin(millis()*0.0019+0.5)*0.5+0.5;
+    let r = 9+pulse*3;
+    for (let gr=r*4.5; gr>0; gr-=1.0) {
+      fill(38,65,72, map(gr,r*4.5,0,0,12)*pulse); ellipse(friendhouseOrb.x,friendhouseOrb.y,gr*2);
+    }
+    fill(40,70,82,85); ellipse(friendhouseOrb.x,friendhouseOrb.y,r*2);
+    noFill(); stroke(40,50,85,22+pulse*18); strokeWeight(0.8);
+    ellipse(friendhouseOrb.x,friendhouseOrb.y,58); noStroke();
+    let d = dist(sx,sy,friendhouseOrb.x,friendhouseOrb.y);
+    let la = constrain(map(d,0,300,58,10),8,58);
+    fill(38,20,96,la); textAlign(CENTER,CENTER); textSize(8.5); textStyle(ITALIC);
+    text("friend's house", friendhouseOrb.x, friendhouseOrb.y + r + 12); textStyle(NORMAL);
+  }
+}
+
+function paintFanOrbs() {
+  for (let f of fanOrbs) {
+    let scatter = ch3SafeFlash || (momentState==='active');
+    let pulse = sin(millis()*0.0038+f.phase)*0.5;
+    let r = f.r + pulse*2;
+    let d = dist(f.x,f.y,sx,sy);
+    let intensity = scatter ? 0.28 : map(d,0,200,1.4,0.65);
+    for (let gr=r*3.8; gr>0; gr-=1.0) {
+      fill(f.hue,72,82, map(gr,r*3.8,0,0,13)*intensity*(0.8+pulse*0.2));
+      ellipse(f.x,f.y,gr*2);
+    }
+    fill(f.hue,78,90, scatter?32:88); ellipse(f.x,f.y,r*2);
+  }
+}
+
+function paintClusterOrbs() {
+  let clusterRingAlpha = 0;
+  if (cType()==='fans' && chosenCluster==='B' && momentState!=='none') {
+    clusterRingAlpha = momentState==='active' ? min(momentTimer/900,1)*38 : max(1-momentTimer/1400,0)*38;
+  }
+  for (let o of [...orbsA,...orbsB]) {
+    let pulse = sin(millis()*o.speed*0.001*60+o.phase);
+    let r = o.r+pulse*1.5;
+    for (let gr=r*3.8; gr>0; gr-=1.0) {
+      fill(o.hue,o.sat*0.64,o.bri, map(gr,r*3.8,0,0,11)*(0.82+pulse*0.18));
+      ellipse(o.x,o.y,gr*2);
+    }
+    fill(o.hue,o.sat,o.bri,90); ellipse(o.x,o.y,r*2);
+    if (clusterRingAlpha > 0) {
+      noFill();
+      stroke(o.hue,o.sat*0.4,100,clusterRingAlpha); strokeWeight(0.65); ellipse(o.x,o.y,r*5.5);
+      stroke(o.hue,o.sat*0.2,90,clusterRingAlpha*0.45); strokeWeight(0.35); ellipse(o.x,o.y,r*9.2);
+      noStroke();
+    }
+  }
+}
+
+function paintSelfOrb(x, y, hue, heat) {
+  let t = millis()*0.001;
+  let pulseSpeed = 0.72 + selfState*1.4;
+  let pulse = sin(t*pulseSpeed+1.1);
+  let r = SELF_R+pulse*1.2;
+  let ct = cType();
+
+  let stunFlicker = isStunned ? (sin(millis()*0.045)>0?1.0:0.18) : 1.0;
+  let blendMult = (abilityActive && ct==='fans') ? 0.3 : 1.0;
+
+  // Surge trail
+  if (abilityActive && ct==='escape' && (state==='chapter'||state==='fadein')) {
+    for (let i=1; i<=4; i++) {
+      fill(30,60,92,map(i,1,4,22,4));
+      ellipse(x-svx*i*3.5, y-svy*i*3.5, r*(2-i*0.3));
+    }
+  }
+  // Steady/persist ring
+  if (abilityActive && (ct==='tasks'||ct==='social'||ct==='gather') && (state==='chapter'||state==='fadein')) {
+    noFill(); stroke(140,50,85,28); strokeWeight(1.2);
+    let rr = 48+sin(t*3.5)*4; ellipse(x,y,rr);
+    stroke(140,35,90,14); strokeWeight(0.6); ellipse(x,y,rr+16); noStroke();
+  }
+  // Resolve shimmer
+  if (abilityActive && ct==='gravity' && (state==='chapter'||state==='fadein')) {
+    noFill(); stroke(180,45,88,25); strokeWeight(1.0);
+    ellipse(x,y,44+sin(t*4)*3); noStroke();
+  }
+
+  // Carrying baby glow (Arrival chapter)
+  if (ct === 'escape' && carryingBaby) {
+    let warmPulse = sin(t*0.6)*0.5+0.5;
+    noStroke();
+    for (let gr=r*8; gr>0; gr-=1.5) {
+      fill(42, 50, 94, map(gr,r*8,0,0,4.5)*(0.6+warmPulse*0.4));
+      ellipse(x,y,gr*2);
+    }
+    // Small baby dot riding with nurse
+    fill(42, 55, 92, 75+warmPulse*20);
+    ellipse(x+3, y-3, 5, 4);
+  }
+
+  let orbAlpha = 92 * stunFlicker * blendMult;
+  for (let gr=r*4.5; gr>0; gr-=1.0) {
+    fill(hue,SELF_BASE_SAT*0.60,SELF_BASE_BRI,
+         map(gr,r*4.5,0,0,9)*(0.78+pulse*0.22)*stunFlicker*blendMult);
+    ellipse(x,y,gr*2);
+  }
+  fill(hue,SELF_BASE_SAT,SELF_BASE_BRI,orbAlpha); ellipse(x,y,r*2);
+
+  let ringAlpha = (40+heat*55+selfState*18)*stunFlicker*blendMult;
+  let ringWeight = 0.7+heat*0.9;
+  let ringScale = isStunned?(3.5+sin(t*18)*1.8):(5.5+heat*sin(t*8)*0.6);
+  noFill();
+  stroke(hue,SELF_BASE_SAT*0.44,100,ringAlpha); strokeWeight(ringWeight);
+  ellipse(x,y,r*ringScale);
+  stroke(hue,SELF_BASE_SAT*0.22,90,ringAlpha*0.42); strokeWeight(0.38);
+  ellipse(x,y,r*9.2); noStroke();
+}
+
+// =============================================================
+//  HUD
+// =============================================================
+function paintHUD(dt) {
+  let ct = cType();
+  if (ct === 'escape') { paintEscapeBar(); paintBassinetDots(); }
+  if (ct === 'tasks') paintRanchDots();
+  if (ct === 'gather') paintTaskDots();
+  if (ct === 'social') paintSocialHUD();
+  if (ct === 'gravity') paintWaypointHUD();
+  if (ct === 'fans') paintStunIndicator();
+  paintObjective();
+  paintResilienceBar();
+  paintAbilityCooldown();
+  paintControlsHint();
+}
+
+function paintObjective() {
+  let obj = getObjectiveText();
+  if (!obj) return;
+  let ct = cType();
+  // Position below escape bar (y=18) and resilience bar (y=14)
+  let objY = (ct === 'escape') ? 38 : 30;
+  // Dark background strip for readability
+  fill(220, 15, 6, 32);
+  textSize(11);
+  let objW = textWidth(obj) + 30;
+  rectMode(CENTER);
+  rect(W/2, objY, max(objW, 200), 22, 4);
+  rectMode(CORNER);
+  // Text — larger and brighter
+  fill(210,10,95,55); noStroke();
+  textAlign(CENTER,CENTER); textSize(11);
+  text(obj, W/2, objY);
+}
+
+function paintResilienceBar() {
+  let barW=100, barH=2.5, bx=W-36-barW, by=14;
+  let prog = resilience / RESILIENCE_MAX;
+  noFill(); stroke(210,8,22,20); strokeWeight(barH);
+  line(bx,by,bx+barW,by);
+  let hue = map(prog,0,1,8,204);
+  stroke(hue,55,85,40*prog+18); strokeWeight(barH);
+  line(bx,by,bx+barW*prog,by);
+  if (prog < 0.28) {
+    let urgPulse = sin(millis()*0.01)*0.5+0.5;
+    stroke(8,72,92,28*urgPulse); strokeWeight(barH+1.2);
+    line(bx,by,bx+barW*prog,by);
+  }
+  noStroke();
+  fill(210,10,65,20); textAlign(RIGHT,CENTER); textSize(7);
+  text('resilience', bx-5, by);
+}
+
+function paintAbilityCooldown() {
+  if (abilityActive) {
+    let prog = 1-(abilityTimer/ABILITY_DURATION[chapterIndex]);
+    noFill(); stroke(140,60,88,40*prog); strokeWeight(1.5);
+    arc(sx,sy,40,40,-HALF_PI,-HALF_PI+prog*TWO_PI); noStroke();
+  } else if (abilityCooldown > 0) {
+    let prog = abilityCooldown/ABILITY_COOLDOWN[chapterIndex];
+    noFill(); stroke(210,18,45,18); strokeWeight(1);
+    arc(sx,sy,44,44,-HALF_PI,-HALF_PI+prog*TWO_PI); noStroke();
+  }
+}
+
+// Plain-English ability descriptions per chapter
+const ABILITY_DESCRIPTIONS = [
+  'speed boost',        // escape
+  'steady yourself',    // tasks
+  'hold your ground',   // social
+  'resist the pull',    // gravity
+  'become less visible',// fans
+  'reach out gently'    // gather
+];
+
+function paintControlsHint() {
+  let ct = cType();
+  let desc = ABILITY_DESCRIPTIONS[chapterIndex] || 'ability';
+  let ready = !abilityActive && abilityCooldown <= 0 && !isStunned;
+
+  // --- Fade-in overlay at chapter start (first 8 seconds) ---
+  let overlayFade = constrain(1 - chapterMs / 8000, 0, 1);
+  if (overlayFade > 0.01) {
+    let oa = overlayFade * 68;
+    // Centered panel below top HUD elements (escape bar ~y18, objective ~y38)
+    let ctrlY = (ct === 'escape') ? 58 : 50;
+    let panelW = 460, panelH2 = 48;
+    fill(220, 18, 6, oa * 0.7);
+    rect(W/2 - panelW/2, ctrlY, panelW, panelH2, 5);
+
+    // Two-line controls inside panel
+    fill(210, 15, 95, oa);
+    textAlign(CENTER, CENTER); textSize(12);
+    text('WASD keys or hold mouse = move', W/2, ctrlY + 14);
+
+    fill(140, 30, 95, oa);
+    textSize(11);
+    let actionHint = 'SPACE = ' + desc;
+    if (ct === 'tasks') actionHint += '  \u00b7  E = interact with nearby tasks';
+    if (ct === 'escape') actionHint += '  \u00b7  stay near cribs to search them';
+    if (ct === 'social') actionHint += '  \u00b7  press SPACE when a gap opens in a group';
+    if (ct === 'gravity') actionHint += '  \u00b7  push through the memory surges';
+    text(actionHint, W/2, ctrlY + 34);
+  }
+
+  // --- Persistent bottom-edge hints (tiny, below all other UI) ---
+  let baseAlpha = 28 + sin(millis()*0.002)*3;
+  let readyPulse = ready ? 32+sin(millis()*0.004)*6 : 16;
+
+  // Single line at very bottom edge
+  fill(140, 25, 78, readyPulse); textAlign(LEFT, BOTTOM); textSize(8);
+  let spaceHint = '[SPACE] ' + desc;
+  if (ct === 'tasks' && mashActiveTask >= 0) spaceHint = '[SPACE] mash!';
+  text(spaceHint, 8, H - 1);
+
+  fill(210, 10, 68, baseAlpha); textAlign(RIGHT, BOTTOM); textSize(8);
+  text('WASD / mouse to move', W - 8, H - 1);
+}
+
+function paintEscapeBar() {
+  if (momentFired || escapeExpired) return;
+  let progress = constrain(1-(escapeTimer/ESCAPE_TIME_MS), 0, 1);
+  let urgency = 1 - progress;
+  let hue = babyFound ? lerp(42, 52, sin(millis()*0.002)*0.5+0.5) : map(progress,0,1,5,204);
+  let barW = W-80, y = 18;
+  noFill(); stroke(210,8,22,25); strokeWeight(1.8); line(40,y,W-40,y);
+
+  // Bar color shifts to warm gold when baby is found
+  let barAlpha = babyFound ? 60 : 48*(0.7+progress*0.3);
+  stroke(hue,62,88,barAlpha); strokeWeight(babyFound ? 2.5 : 1.8);
+  line(40,y,40+progress*barW,y);
+
+  // Urgent pulsing when low on time
+  if (progress < 0.35 && !babyFound) {
+    let u = sin(millis()*0.015)*0.5+0.5;
+    stroke(5,90,98,45*u); strokeWeight(3); line(40,y,40+progress*barW,y);
+    // Flicker text warning
+    if (progress < 0.2) {
+      noStroke();
+      let wa = sin(millis()*0.01)*0.5+0.5;
+      fill(5,85,95,35*wa); textAlign(CENTER,CENTER); textSize(8);
+      text('THE FIRE IS CLOSE', W/2, y+14);
+    }
+  }
+  noStroke();
+}
+
+// Bassinet dots (Arrival — nurse search)
+function paintBassinetDots() {
+  if (bassinetOrbs.length === 0) return;
+  let total = bassinetOrbs.length;
+  let dotSpacing = 11;
+  let startX = W/2 - ((total-1)*dotSpacing)*0.5;
+  let y = H-22;
+  for (let i=0; i<total; i++) {
+    let b = bassinetOrbs[i];
+    noStroke();
+    if (b.checked && b.isKey) {
+      // Key baby — bright gold
+      fill(42, 60, 95, 82);
+    } else if (b.checked) {
+      // Wrong — dim red
+      fill(8, 40, 55, 30);
+    } else if (b.holdProgress > 0.01) {
+      let pulse = sin(millis()*0.008+i)*0.5+0.5;
+      fill(b.hue, 45, 85, 25+pulse*35);
+    } else {
+      // Unchecked — dim gray
+      fill(210, 10, 45, 20);
+    }
+    ellipse(startX+i*dotSpacing, y, 4.5, 4.5);
+  }
+  // Status label
+  let msgAlpha = babyFound ? 45 : 22;
+  let msgHue = babyFound ? 42 : 210;
+  fill(msgHue,babyFound?35:10,babyFound?95:70,msgAlpha); textAlign(CENTER,CENTER); textSize(7);
+  let msg = babyFound ? 'carry them out — run' : checkedCount + '/' + total + ' searched';
+  text(msg, W/2, y+10);
+}
+
+// Ranch: show active completed count as dots, plus total counter
+function paintRanchDots() {
+  let total = taskOrbs.length;
+  let dotSpacing = 12;
+  let startX = W/2 - ((total-1)*dotSpacing)*0.5;
+  for (let i=0; i<total; i++) {
+    let t = taskOrbs[i];
+    let filled = t && t.collected;
+    let isCarry = t && t.taskType === 'carry';
+    let isExtended = t && t.taskType === 'extended';
+    let decaying = filled && t.decayTimer !== undefined && t.decayTimer > TASK_DECAY_MS * 0.65;
+    let inFrost = filled && frostZone && dist(t.x,t.y,frostZone.x,frostZone.y) < FROST_RADIUS;
+    noStroke();
+    if (decaying || inFrost) {
+      let flicker = sin(millis()*0.012+i)*0.5+0.5;
+      fill(inFrost ? 210 : 8, 60, 85, 30+flicker*35);
+    } else {
+      fill(36, filled?62:18, filled?88:40, filled?65:28);
+    }
+    let isMash = t && t.taskType === 'mash';
+    let isClick = t && t.taskType === 'click';
+    // Carry tasks shown as diamond, mash as star-burst, click as square, extended as larger dot
+    if (isCarry) {
+      push(); translate(startX+i*dotSpacing, H-22); rotate(PI/4);
+      rect(-2.5,-2.5,5,5); pop();
+    } else if (isMash) {
+      // Star shape for mash
+      push(); translate(startX+i*dotSpacing, H-22);
+      for (let s2=0; s2<4; s2++) {
+        let a=s2*PI/2;
+        ellipse(cos(a)*2.5, sin(a)*2.5, 2, 2);
+      }
+      ellipse(0, 0, 3, 3);
+      pop();
+    } else if (isClick) {
+      // Small square for click
+      rectMode(CENTER);
+      rect(startX+i*dotSpacing, H-22, 5, 5);
+      rectMode(CORNER);
+    } else {
+      let sz = isExtended ? 6.5 : 5.5;
+      ellipse(startX+i*dotSpacing, H-22, sz, sz);
+    }
+    if (filled && !decaying && !inFrost) {
+      noFill(); stroke(36,45,80,25); strokeWeight(0.5);
+      ellipse(startX+i*dotSpacing, H-22, 10, 10); noStroke();
+    }
+  }
+  // Total completions counter + carrying status
+  let msg = taskTotalDone + '/' + RANCH_TOTAL_NEEDED + ' done';
+  if (carryingTask !== null) msg += '  \u00b7  carrying';
+  fill(210,10,65,22); textAlign(CENTER,BOTTOM); textSize(7);
+  text(msg, W/2, H-28);
+}
+
+function paintTaskDots() {
+  let total = TASKS_REQUIRED;
+  let dotSpacing = 14;
+  let startX = W/2 - ((total-1)*dotSpacing)*0.5;
+  for (let i=0; i<total; i++) {
+    let filled = i < tasksCollected;
+    noStroke();
+    fill(36, filled?62:18, filled?88:40, filled?65:28);
+    ellipse(startX+i*dotSpacing, H-22, 5.5, 5.5);
+    if (filled) {
+      noFill(); stroke(36,45,80,25); strokeWeight(0.5);
+      ellipse(startX+i*dotSpacing, H-22, 10, 10); noStroke();
+    }
+  }
+}
+
+// Social HUD: rejection counter
+function paintSocialHUD() {
+  if (socialRejections <= 0) return;
+  let dotSpacing = 14;
+  let total = SOCIAL_REJECTIONS_NEEDED;
+  let startX = W/2 - ((total-1)*dotSpacing)*0.5;
+  for (let i=0; i<total; i++) {
+    let filled = i < socialRejections;
+    noStroke();
+    fill(240, filled?50:15, filled?75:35, filled?55:22);
+    ellipse(startX+i*dotSpacing, H-22, 5.5, 5.5);
+    if (filled) {
+      noFill(); stroke(240,35,70,20); strokeWeight(0.5);
+      ellipse(startX+i*dotSpacing, H-22, 10, 10); noStroke();
+    }
+  }
+  fill(210,10,65,18); textAlign(CENTER,BOTTOM); textSize(7);
+  let msg = socialAccepted ? 'one door remains' : 'doors closed';
+  text(msg, W/2, H-28);
+}
+
+// Gravity HUD: waypoint progress
+function paintWaypointHUD() {
+  let dotSpacing = 18;
+  let total = waypoints.length;
+  if (total === 0) return;
+  let startX = W/2 - ((total-1)*dotSpacing)*0.5;
+  for (let i=0; i<total; i++) {
+    let wp = waypoints[i];
+    let claimed = wp.claimed;
+    let isCurrent = (i === waypointsClaimed && !wp.claimed);
+    noStroke();
+    if (claimed) {
+      fill(180, 55, 88, 60);
+    } else if (isCurrent) {
+      let pulse = sin(millis()*0.003)*0.5+0.5;
+      fill(180, 40, 75, 25+pulse*25);
+    } else {
+      fill(210, 15, 40, 20);
+    }
+    ellipse(startX+i*dotSpacing, H-22, 6, 6);
+    if (claimed) {
+      noFill(); stroke(180,40,85,25); strokeWeight(0.5);
+      ellipse(startX+i*dotSpacing, H-22, 11, 11); noStroke();
+    }
+  }
+  if (gravityPullScale > 1.05) {
+    let pullLabel = gravityPullScale < 1.5 ? 'home tugs gently' :
+                    gravityPullScale < 2.0 ? 'the pull grows stronger' :
+                    gravityPullScale < 2.5 ? 'home won\'t let go easily' :
+                                             'every step is a fight';
+    fill(30,35,65,18); textAlign(CENTER,BOTTOM); textSize(7);
+    text(pullLabel, W/2, H-28);
+  }
+}
+
+function paintStunIndicator() {
+  if (!isStunned) return;
+  let prog = stunTimer/STUN_DURATION_MS;
+  noFill(); stroke(220,48,82,42*(1-prog)); strokeWeight(1.2);
+  arc(sx,sy,34,34,-HALF_PI,-HALF_PI+(1-prog)*TWO_PI);
+  let fl = sin(millis()*0.04)*0.5+0.5;
+  fill(220,30,96,32*fl*(1-prog));
+  textAlign(CENTER,CENTER); textSize(9); textStyle(ITALIC);
+  text('stunned', sx, sy+28); textStyle(NORMAL); noStroke();
+}
+
+// =============================================================
+//  ABILITY SYSTEM
+// =============================================================
+function activateAbility() {
+  abilityActive = true; abilityTimer = 0;
+  stats.abilityUses++;
+  spawnParticles(sx, sy, 140, 14);
+}
+
+function updateAbility(dt) {
+  if (abilityActive) {
+    abilityTimer += dt;
+    if (abilityTimer >= ABILITY_DURATION[chapterIndex]) {
+      abilityActive = false;
+      abilityCooldown = ABILITY_COOLDOWN[chapterIndex];
+    }
+  } else if (abilityCooldown > 0) {
+    abilityCooldown = max(abilityCooldown - dt, 0);
+  }
+}
+
+// =============================================================
+//  RESILIENCE SYSTEM
+// =============================================================
+function updateResilience(dt) {
+  if (momentState !== 'none') return;
+  resilience += RESILIENCE_REGEN * dt / 1000;
+  resilience = constrain(resilience, 0, RESILIENCE_MAX);
+}
+function drainResilience(amount) {
+  if (momentState !== 'none') return;
+  resilience -= amount;
+  if (amount > 5) screenShake = max(screenShake, amount*0.2);
+  resilience = max(resilience, 0);
+}
+function restoreResilience(amount) {
+  resilience = min(resilience+amount, RESILIENCE_MAX);
+}
+
+// =============================================================
+//  PARTICLES
+// =============================================================
+function spawnParticles(x, y, hue, count) {
+  for (let i=0; i<count; i++) {
+    let ang=random(TWO_PI), spd=random(1.5,4.5);
+    particles.push({ x, y, vx:cos(ang)*spd, vy:sin(ang)*spd,
+      hue:hue+random(-15,15), life:1.0, decay:random(0.016,0.038), r:random(2,4.5) });
+  }
+}
+function updateParticles(dt) {
+  let dtF = dt/16.67;
+  for (let i=particles.length-1; i>=0; i--) {
+    let p=particles[i];
+    p.x+=p.vx*dtF; p.y+=p.vy*dtF; p.vx*=0.96; p.vy*=0.96;
+    p.life-=p.decay*dtF;
+    if (p.life<=0) particles.splice(i,1);
+  }
+}
+function paintParticles() {
+  noStroke();
+  for (let p of particles) {
+    fill(p.hue,55,92,p.life*60); ellipse(p.x,p.y,p.r*2*p.life);
+  }
+}
+
+// =============================================================
+//  Ch1 FIRE / DARKNESS SYSTEM
+// =============================================================
+function spawnFireParticles(dt) {
+  let timeRatio = escapeTimer / ESCAPE_TIME_MS; // 0..1
+  let spawnRate = 0.3 + timeRatio * 1.8; // more fire as time runs out
+  if (babyFound) spawnRate *= 0.15; // fire fades when baby found
+
+  ch1EmberTimer += dt * spawnRate;
+  while (ch1EmberTimer > 40) {
+    ch1EmberTimer -= 40;
+    // Fire from edges
+    let edge = floor(random(4));
+    let fx, fy, fvx, fvy;
+    if (edge === 0) { fx=random(W); fy=H+10; fvx=random(-0.4,0.4); fvy=random(-2.5,-0.8); }
+    else if (edge === 1) { fx=-10; fy=random(H*0.3,H); fvx=random(0.5,1.8); fvy=random(-1.5,-0.3); }
+    else if (edge === 2) { fx=W+10; fy=random(H*0.3,H); fvx=random(-1.8,-0.5); fvy=random(-1.5,-0.3); }
+    else { fx=random(W); fy=H+10; fvx=random(-0.6,0.6); fvy=random(-2.0,-0.6); }
+    fireParticles.push({
+      x:fx, y:fy, vx:fvx, vy:fvy,
+      hue: random(5,30), sat: random(70,100), bri: random(80,100),
+      life:1.0, decay:random(0.008,0.022), r:random(3,8+timeRatio*6)
+    });
+    // Smoke
+    if (random() < 0.4 + timeRatio * 0.3) {
+      smokeParticles.push({
+        x: random(W), y: H + random(20,60),
+        vx: random(-0.3,0.3), vy: random(-1.2,-0.3),
+        alpha: random(15,35) + timeRatio * 20,
+        life: 1.0, decay: random(0.004,0.012), r: random(30,80)
+      });
+    }
+  }
+}
+
+function updateFireSystem(dt) {
+  let dtF = dt / 16.67;
+  // Fire particles
+  for (let i=fireParticles.length-1; i>=0; i--) {
+    let p = fireParticles[i];
+    p.x += p.vx * dtF; p.y += p.vy * dtF;
+    p.vx += random(-0.05,0.05) * dtF; // flicker
+    p.vy -= 0.015 * dtF; // rise
+    p.life -= p.decay * dtF;
+    if (p.life <= 0 || p.y < -20) fireParticles.splice(i,1);
+  }
+  // Smoke particles
+  for (let i=smokeParticles.length-1; i>=0; i--) {
+    let p = smokeParticles[i];
+    p.x += p.vx * dtF; p.y += p.vy * dtF;
+    p.vx += random(-0.02,0.02) * dtF;
+    p.life -= p.decay * dtF;
+    if (p.life <= 0 || p.y < -40) smokeParticles.splice(i,1);
+  }
+
+  // Heartbeat phase (speeds up as timer runs out)
+  let urgency = escapeTimer / ESCAPE_TIME_MS;
+  let heartRate = 1.5 + urgency * 4.5;
+  ch1HeartbeatPhase += dt * 0.001 * heartRate;
+
+  // Fire intensity ramps up
+  let targetFire = babyFound ? max(ch1FireIntensity * 0.92, 0) : urgency;
+  ch1FireIntensity += (targetFire - ch1FireIntensity) * 0.008 * dtF;
+
+  // Darkness: starts low, grows slowly as fire spreads, lifts when baby found
+  if (babyFound) {
+    ch1TargetDarkness = max(0.03, ch1TargetDarkness - 0.004 * dtF);
+    ch1HopeGlow = min(ch1HopeGlow + 0.004 * dtF, 1.0);
+  } else {
+    ch1TargetDarkness = 0.12 + urgency * 0.35;
+  }
+  ch1Darkness += (ch1TargetDarkness - ch1Darkness) * 0.012 * dtF;
+
+  // Hope flash decay
+  if (ch1HopeFlash > 0) ch1HopeFlash = max(ch1HopeFlash - dt * 0.0006, 0);
+
+  // Urgency screen shake
+  if (!babyFound && urgency > 0.6) {
+    let shakeAmt = (urgency - 0.6) * 4.0 * (sin(ch1HeartbeatPhase * TWO_PI) * 0.5 + 0.5);
+    screenShake = max(screenShake, shakeAmt);
+  }
+
+  spawnFireParticles(dt);
+}
+
+function paintFireSystem() {
+  // --- Smoke layer (behind everything) ---
+  noStroke();
+  for (let p of smokeParticles) {
+    let a = p.alpha * p.life * (1 - ch1HopeGlow * 0.7);
+    fill(0, 0, 12, a);
+    ellipse(p.x, p.y, p.r * 2, p.r * 1.4);
+  }
+
+  // --- Fire glow on edges ---
+  let fireA = ch1FireIntensity * 45 * (1 - ch1HopeGlow * 0.8);
+  let pulse = sin(ch1HeartbeatPhase * TWO_PI) * 0.5 + 0.5;
+  // Bottom fire glow
+  for (let y=H; y>H-120*ch1FireIntensity; y-=4) {
+    let a = map(y, H, H-120*ch1FireIntensity, fireA, 0) * (0.7 + pulse*0.3);
+    fill(12, 85, 90, a); rect(0, y, W, 4);
+  }
+  // Left fire glow
+  for (let x=0; x<60*ch1FireIntensity; x+=4) {
+    let a = map(x, 0, 60*ch1FireIntensity, fireA*0.6, 0) * (0.6 + pulse*0.4);
+    fill(18, 80, 85, a); rect(x, H*0.3, 4, H*0.7);
+  }
+  // Right fire glow
+  for (let x=W; x>W-60*ch1FireIntensity; x-=4) {
+    let a = map(x, W, W-60*ch1FireIntensity, fireA*0.6, 0) * (0.6 + pulse*0.4);
+    fill(15, 80, 85, a); rect(x, H*0.3, 4, H*0.7);
+  }
+
+  // --- Fire particles ---
+  for (let p of fireParticles) {
+    let a = p.life * 55 * (1 - ch1HopeGlow * 0.5);
+    fill(p.hue, p.sat, p.bri, a);
+    ellipse(p.x, p.y, p.r*2*p.life, p.r*1.6*p.life);
+    // Inner bright core
+    fill(40, 50, 100, a * 0.4);
+    ellipse(p.x, p.y, p.r*0.8*p.life);
+  }
+}
+
+function paintDarknessOverlay() {
+  // Main darkness vignette
+  let darkAlpha = ch1Darkness * 70;
+  noStroke();
+
+  // Vignette from edges — generous radius so player can see nearby cribs
+  let vigRadius = map(ch1Darkness, 0, 1, W*1.5, W*0.42);
+  if (babyFound) vigRadius = lerp(vigRadius, W*2.0, ch1HopeGlow);
+
+  // Draw concentric dark rings for vignette
+  let steps = 24;
+  for (let i=steps; i>0; i--) {
+    let r = vigRadius + (W*0.9 - vigRadius) * (i / steps);
+    let a = map(i, steps, 0, darkAlpha, 0);
+    fill(0, 0, 2, a);
+    ellipse(sx, sy, r*2, r*1.6);
+  }
+
+  // Extra darkness in corners — grows with urgency
+  if (ch1Darkness > 0.35) {
+    let ca = (ch1Darkness - 0.35) * 55;
+    fill(0, 0, 2, ca);
+    rect(0, 0, 60, 60); rect(W-60, 0, 60, 60);
+    rect(0, H-60, 60, 60); rect(W-60, H-60, 60, 60);
+  }
+
+  // Heartbeat pulse overlay (red throb)
+  if (!babyFound) {
+    let heartPulse = pow(max(sin(ch1HeartbeatPhase * TWO_PI), 0), 3);
+    let urgency = escapeTimer / ESCAPE_TIME_MS;
+    let heartA = heartPulse * urgency * 18;
+    fill(5, 80, 50, heartA);
+    rect(0, 0, W, H);
+  }
+}
+
+function paintHopeTransition() {
+  if (ch1HopeFlash <= 0 && ch1HopeGlow <= 0 && !babyFoundCelebration) return;
+
+  // Bright white-gold flash on finding baby
+  if (ch1HopeFlash > 0) {
+    let a = ch1HopeFlash * 85;
+    fill(42, 20, 100, a);
+    rect(0, 0, W, H);
+    // Radial light burst from player — bigger
+    for (let r=300; r>0; r-=4) {
+      fill(45, 15, 100, ch1HopeFlash * map(r, 300, 0, 0, 30));
+      ellipse(sx, sy, r*2);
+    }
+  }
+
+  // Sustained warm glow
+  if (ch1HopeGlow > 0.05) {
+    for (let r=220; r>0; r-=4) {
+      let a = ch1HopeGlow * map(r, 220, 0, 0, 14);
+      fill(42, 35, 95, a);
+      ellipse(sx, sy, r*2);
+    }
+    fill(38, 25, 90, ch1HopeGlow * 6);
+    rect(0, 0, W, H);
+  }
+
+  // === BABY FOUND CELEBRATION OVERLAY ===
+  if (babyFoundCelebration) {
+    let prog = min(babyCelebrationTimer / BABY_CELEBRATION_MS, 1);
+
+    // Warm golden overlay — pulses gently
+    let pulse = sin(babyCelebrationTimer * 0.003)*0.5+0.5;
+    fill(42, 25, 95, 12 + pulse*8);
+    rect(0, 0, W, H);
+
+    // Expanding rings of light from player
+    let ringCount = 4;
+    for (let i=0; i<ringCount; i++) {
+      let ringProg = constrain((babyCelebrationTimer - i*300) / 1200, 0, 1);
+      if (ringProg <= 0) continue;
+      let ringR = ringProg * 350;
+      let ringA = (1-ringProg) * 35;
+      noFill(); stroke(42, 40, 95, ringA); strokeWeight(2.5 - ringProg*2);
+      ellipse(sx, sy, ringR*2);
+    }
+    noStroke();
+
+    // Big central text — "YOU FOUND THEM"
+    let textFade = constrain(map(babyCelebrationTimer, 400, 1200, 0, 1), 0, 1);
+    let textSize1 = 28;
+
+    fill(42, 35, 100, textFade * 85);
+    textAlign(CENTER, CENTER); textSize(textSize1);
+    textStyle(BOLD);
+    text('YOU FOUND THEM', W/2, H/2 - 30);
+    textStyle(NORMAL);
+
+    // Subtitle
+    let subFade = constrain(map(babyCelebrationTimer, 1000, 1800, 0, 1), 0, 1);
+    fill(42, 20, 98, subFade * 60);
+    textSize(14); textStyle(ITALIC);
+    text('the baby is safe', W/2, H/2 + 10);
+    textStyle(NORMAL);
+
+    // Sparkle particles around player
+    if (babyCelebrationTimer < 2000 && random() < 0.4) {
+      let sparkAng = random(TWO_PI);
+      let sparkR = random(30, 120);
+      spawnParticles(
+        sx + cos(sparkAng)*sparkR,
+        sy + sin(sparkAng)*sparkR,
+        random(36, 52), 2
+      );
+    }
+
+    // "Press any key to continue" prompt
+    if (babyCanContinue) {
+      let promptPulse = map(sin(millis()*0.004), -1, 1, 0.5, 1.0);
+      fill(210, 10, 98, 62 * promptPulse);
+      textSize(13);
+      text('press any key to continue', W/2, H/2 + 55);
+    }
+  }
+}
+
+// =============================================================
+//  Ch ESCAPE MECHANIC
+// =============================================================
+function updateEscapeMechanic(dt) {
+  if (momentFired || escapeExpired) return;
+
+  // --- Baby found celebration pause ---
+  if (babyFoundCelebration) {
+    babyCelebrationTimer += dt;
+    // Don't advance the escape timer during celebration
+    if (babyCelebrationTimer >= BABY_CELEBRATION_MS) {
+      babyCanContinue = true;
+    }
+    return; // skip all other escape logic while celebrating
+  }
+
+  escapeTimer += dt;
+
+  // --- Feedback text decay ---
+  if (checkFeedbackTimer > 0) checkFeedbackTimer = max(checkFeedbackTimer - dt, 0);
+  if (checkFeedbackTimer <= 0) checkFeedbackText = null;
+
+  // --- Flash decay for all bassinets ---
+  for (let b of bassinetOrbs) {
+    if (b.flashAlpha > 0) b.flashAlpha = max(b.flashAlpha - dt*0.06, 0);
+  }
+
+  // --- Phase 1: Search bassinets ---
+  if (!babyFound) {
+    let checkR = BASSINET_CHECK_R;
+    if (abilityActive) checkR *= 1.3;
+    for (let i=0; i<bassinetOrbs.length; i++) {
+      let b = bassinetOrbs[i];
+      if (b.checked) continue;
+      let d = dist(sx, sy, b.x, b.y);
+      if (d < checkR) {
+        b.holdProgress = min((b.holdProgress||0) + dt/BASSINET_HOLD_MS, 1.0);
+        if (b.holdProgress >= 1.0) {
+          b.checked = true;
+          b.flashAlpha = 100;
+          checkedCount++;
+          if (b.isKey) {
+            // Found the right baby! — BIG celebration
+            babyFound = true;
+            carryingBaby = true;
+            babyFoundCelebration = true;
+            babyCelebrationTimer = 0;
+            babyCanContinue = false;
+            spawnParticles(b.x, b.y, 42, 55);
+            spawnParticles(b.x, b.y, 36, 30);
+            spawnParticles(b.x, b.y, 52, 25);
+            restoreResilience(RESILIENCE_MAX);
+            ch1HopeFlash = 1.0;
+            screenShake = 5;
+            checkFeedbackText = "";
+            checkFeedbackTimer = 0;
+          } else {
+            // Wrong baby — the desperation grows
+            spawnParticles(b.x, b.y, 8, 5);
+            drainResilience(3.5);
+            screenShake = max(screenShake, 1.5);
+            checkFeedbackText = WRONG_BABY_TEXTS[i % WRONG_BABY_TEXTS.length];
+            checkFeedbackTimer = 1600;
+          }
+        }
+      } else {
+        b.holdProgress = max((b.holdProgress||0) - dt*0.001, 0);
+      }
+    }
+  }
+
+  // --- Timer expiry ---
+  if (escapeTimer >= ESCAPE_TIME_MS) {
+    escapeExpired = true;
+    let dA=dist(sx,sy,ccA.x,ccA.y), dB=dist(sx,sy,ccB.x,ccB.y);
+    chosenCluster = (dA<dB)?'A':'X';
+    momentFired=true; momentState='active'; momentTimer=0; momentHomes=[];
+    let cc=dA<dB?ccA:ccB, target=dA<dB?orbsA:orbsB;
+    for (let o of target) {
+      let ang=atan2(o.homeY-cc.y,o.homeX-cc.x);
+      let d=max(dist(o.homeX,o.homeY,cc.x,cc.y),20);
+      momentHomes.push({x:cc.x+cos(ang)*(d+58),y:cc.y+sin(ang)*(d+48)});
+    }
+    momentRepMult = 0.05;
+  }
+}
+
+// =============================================================
+//  Ch TASK MECHANIC — hold-to-complete + decay + carry (Ranch)
+//                     + shy/patience (Home/gather)
+// =============================================================
+function updateTaskMechanic(dt) {
+  if (momentFired) return;
+  let ct = cType();
+  let dtF = dt / 16.67;
+
+  let collectR = TASK_COLLECT_R;
+  if (abilityActive && ct === 'gather') collectR *= 1.5;
+  if (abilityActive && ct === 'tasks') collectR *= 1.3;
+
+  // === Frost zone drift (Ranch) ===
+  if (ct === 'tasks' && frostZone) {
+    frostZone.x += frostZone.vx * dtF;
+    frostZone.y += frostZone.vy * dtF;
+    // Bounce off edges
+    if (frostZone.x < FROST_RADIUS*0.5 || frostZone.x > W-FROST_RADIUS*0.5) frostZone.vx *= -1;
+    if (frostZone.y < FROST_RADIUS*0.5 || frostZone.y > H-FROST_RADIUS*0.5) frostZone.vy *= -1;
+    frostZone.x = constrain(frostZone.x, 40, W-40);
+    frostZone.y = constrain(frostZone.y, 40, H-40);
+    // Drain resilience if player is in frost
+    let fd = dist(sx, sy, frostZone.x, frostZone.y);
+    if (fd < FROST_RADIUS && !abilityActive) {
+      drainResilience(FROST_DRAIN_RATE * map(fd, 0, FROST_RADIUS, 1.2, 0.1) * dtF);
+    }
+  }
+
+  // === Shy behavior for Home chapter ===
+  if (ct === 'gather') {
+    let playerSpeed = sqrt(svx*svx + svy*svy);
+    for (let i=0; i<taskOrbs.length; i++) {
+      let t = taskOrbs[i];
+      if (t.collected) continue;
+      let d = dist(sx, sy, t.x, t.y);
+      if (d < SHY_FLEE_DIST && playerSpeed > SHY_SPEED_LIMIT) {
+        let ang = atan2(t.y - sy, t.x - sx);
+        let fleeForce = SHY_FLEE_FORCE * map(d, 0, SHY_FLEE_DIST, 1.5, 0.3);
+        t.x += cos(ang) * fleeForce * dtF;
+        t.y += sin(ang) * fleeForce * dtF;
+        t.x = constrain(t.x, 45, W-45);
+        t.y = constrain(t.y, 45, H-45);
+        t.holdProgress = max((t.holdProgress||0) - dt*0.002, 0);
+      } else {
+        t.x += (t.homeX - t.x) * SHY_RETURN_RATE * dtF;
+        t.y += (t.homeY - t.y) * SHY_RETURN_RATE * dtF;
+      }
+    }
+  }
+
+  // === Hold-to-complete + carry + decay ===
+  for (let i=0; i<taskOrbs.length; i++) {
+    let t = taskOrbs[i];
+
+    // --- Completed task decay (Ranch) ---
+    if (t.collected) {
+      if (ct === 'tasks') {
+        // Frost zone accelerates decay
+        let decayMult = 1.0;
+        if (frostZone) {
+          let fd = dist(t.x, t.y, frostZone.x, frostZone.y);
+          if (fd < FROST_RADIUS) decayMult = FROST_DECAY_MULT;
+        }
+        t.decayTimer = (t.decayTimer||0) + dt * decayMult;
+        if (t.decayTimer >= TASK_DECAY_MS) {
+          t.collected = false;
+          t.holdProgress = 0;
+          t.decayTimer = 0;
+          tasksCollected = max(tasksCollected - 1, 0);
+          // Carry tasks reset to pickup phase
+          if (t.taskType === 'carry') {
+            t.carryPhase = 'pickup';
+            t.x = t.srcX; t.y = t.srcY;
+            if (carryingTask === i) carryingTask = null;
+          }
+          // Mash tasks reset count
+          if (t.taskType === 'mash') { t.mashCount = 0; }
+          // Click tasks reset readiness
+          if (t.taskType === 'click') { t.clickReady = false; }
+          spawnParticles(t.x, t.y, 8, 6);
+          screenShake = 1.5;
+        }
+      }
+      continue;
+    }
+
+    // --- CARRY TASK logic ---
+    if (t.taskType === 'carry') {
+      if (t.carryPhase === 'pickup') {
+        // Player needs to be near the source
+        let d = dist(sx, sy, t.srcX, t.srcY);
+        if (d < CARRY_COLLECT_R) {
+          t.holdProgress = (t.holdProgress||0) + dt / CARRY_PICKUP_MS;
+          if (t.holdProgress >= 1.0) {
+            // Picked up! Now carrying
+            t.carryPhase = 'deliver';
+            t.holdProgress = 0;
+            carryingTask = i;
+            spawnParticles(t.srcX, t.srcY, t.hue, 8);
+            // Move the task orb visuals to destination
+            t.x = t.dstX; t.y = t.dstY;
+          }
+        } else {
+          t.holdProgress = max((t.holdProgress||0) - dt*0.0006, 0);
+        }
+      } else if (t.carryPhase === 'deliver') {
+        // Player needs to reach the destination
+        let d = dist(sx, sy, t.dstX, t.dstY);
+        if (d < CARRY_COLLECT_R) {
+          t.holdProgress = (t.holdProgress||0) + dt / CARRY_DELIVER_MS;
+          if (t.holdProgress >= 1.0) {
+            // Delivered! Task complete
+            t.collected = true;
+            t.flashAlpha = 88;
+            t.holdProgress = 0;
+            t.decayTimer = 0;
+            tasksCollected++;
+            carryingTask = null;
+            taskTotalDone++;
+            restoreResilience(TASK_RESTORE * 0.8);
+            spawnParticles(t.dstX, t.dstY, t.hue, 12);
+            if (taskTotalDone >= RANCH_TOTAL_NEEDED) triggerMoment('B');
+          }
+        } else {
+          t.holdProgress = max((t.holdProgress||0) - dt*0.0006, 0);
+        }
+      }
+      continue; // skip normal hold logic
+    }
+
+    // --- MASH TASK logic ---
+    if (t.taskType === 'mash') {
+      let d = dist(sx, sy, t.x, t.y);
+      if (d < MASH_COLLECT_R) {
+        mashActiveTask = i;
+        // Mash progress decays slowly
+        t.mashCount = max((t.mashCount||0) - MASH_DECAY_RATE * dt, 0);
+        t.holdProgress = t.mashCount / t.mashNeeded;
+        if (t.mashCount >= t.mashNeeded) {
+          t.collected = true; t.flashAlpha = 88;
+          t.holdProgress = 0; t.mashCount = 0; t.decayTimer = 0;
+          tasksCollected++; taskTotalDone++;
+          mashActiveTask = -1;
+          restoreResilience(TASK_RESTORE * 0.7);
+          spawnParticles(t.x, t.y, t.hue, 14);
+          screenShake = 2;
+          if (taskTotalDone >= RANCH_TOTAL_NEEDED) triggerMoment('B');
+        }
+      } else {
+        if (mashActiveTask === i) mashActiveTask = -1;
+        t.mashCount = max((t.mashCount||0) - MASH_DECAY_RATE * dt * 3, 0);
+        t.holdProgress = t.mashCount / t.mashNeeded;
+      }
+      continue;
+    }
+
+    // --- CLICK TASK logic ---
+    if (t.taskType === 'click') {
+      let d = dist(sx, sy, t.x, t.y);
+      t.clickReady = (d < CLICK_TASK_R);
+      // Click tasks are completed via keyPressed('E'), handled in input
+      continue;
+    }
+
+    // --- SIMPLE / EXTENDED hold tasks ---
+    let holdTime = t.holdMs || TASK_HOLD_MS;
+    let d = dist(sx, sy, t.x, t.y);
+    if (d < collectR) {
+      t.holdProgress = (t.holdProgress||0) + dt / holdTime;
+      if (t.holdProgress >= 1.0) {
+        t.collected = true;
+        t.flashAlpha = 88;
+        t.holdProgress = 0;
+        t.decayTimer = 0;
+        tasksCollected++;
+
+        if (ct === 'tasks') {
+          taskTotalDone++;
+          let restore = (t.taskType === 'extended') ? TASK_RESTORE * 0.9 : TASK_RESTORE * 0.5;
+          restoreResilience(restore);
+          spawnParticles(t.x, t.y, t.hue, t.taskType === 'extended' ? 14 : 8);
+          if (taskTotalDone >= RANCH_TOTAL_NEEDED) triggerMoment('B');
+        } else {
+          restoreResilience(TASK_RESTORE);
+          spawnParticles(t.x, t.y, t.hue, 12);
+          if (tasksCollected >= TASKS_REQUIRED) triggerMoment('B');
+        }
+      }
+    } else {
+      t.holdProgress = max((t.holdProgress||0) - dt * 0.0005, 0);
+    }
+  }
+}
+
+// =============================================================
+//  Ch SOCIAL MECHANIC — approach groups, get rejected
+// =============================================================
+function updateSocialMechanic(dt) {
+  if (momentFired) return;
+  let dtF = dt / 16.67;
+
+  socialRejectCool = max(socialRejectCool - dt, 0);
+
+  // Update timed windows for each group
+  for (let i=0; i<socialWindows.length; i++) {
+    let w = socialWindows[i];
+    w.timer += dt;
+    if (w.open) {
+      // Window is open — player can press SPACE to attempt entry
+      if (w.timer >= SOCIAL_WINDOW_OPEN_MS) {
+        w.open = false; w.timer = 0;
+      }
+    } else {
+      // Window is closed — cycling toward next opening
+      let closedTime = SOCIAL_WINDOW_CLOSED_MS + sin(w.phase + millis()*0.0003) * 800;
+      if (w.timer >= closedTime) {
+        w.open = true; w.timer = 0;
+      }
+    }
+  }
+
+  if (!socialAccepted) {
+    // Check proximity to each clusterA group center
+    for (let i=0; i<socialGroupData.length; i++) {
+      let g = socialGroupData[i];
+      let w = socialWindows[i];
+      let d = dist(sx, sy, g.cx, g.cy);
+
+      if (d < SOCIAL_APPROACH_R && socialRejectCool <= 0) {
+        // Build progress toward this group (slower now, window-dependent)
+        let progressRate = w.open ? 1.8 : 0.4;
+        g.progress += dt / SOCIAL_HOLD_MS * progressRate;
+
+        if (g.progress >= SOCIAL_REJECT_AT) {
+          // === REJECTION ===
+          socialRejections++;
+          g.progress = 0;
+          socialRejectCool = SOCIAL_REJECT_COOLDOWN_MS;
+
+          // Push player away
+          let ang = atan2(sy - g.cy, sx - g.cx);
+          svx += cos(ang) * SOCIAL_REJECT_BURST;
+          svy += sin(ang) * SOCIAL_REJECT_BURST;
+          screenShake = 5;
+          drainResilience(10);
+          spawnParticles(g.cx, g.cy, 240, 10);
+
+          // Flash text
+          let msgs = [
+            'the circle closed',
+            'not quite one of them',
+            'the door shut',
+            'no room for you'
+          ];
+          socialRejectFlash = {
+            text: msgs[min(socialRejections-1, msgs.length-1)],
+            timer: 0
+          };
+
+          if (socialRejections >= SOCIAL_REJECTIONS_NEEDED) {
+            socialAccepted = true;
+            for (let gg of socialGroupData) gg.progress = 0;
+            spawnParticles(ccB.x, ccB.y, 36, 18);
+          }
+        }
+      } else {
+        g.progress = max(g.progress - dt * 0.0003, 0);
+      }
+    }
+  }
+}
+
+// =============================================================
+//  Ch FAN MECHANIC
+// =============================================================
+function updateFanMechanic(dt) {
+  let dtF = dt/16.67;
+  if (ch3SafeFlash) {
+    ch3SafeFlashTimer += dt;
+    if (ch3SafeFlashTimer >= CH3_SAFE_FLASH_MS) {
+      ch3SafeFlash=false; ch3Phase=2;
+      let ch=CHAPTERS[chapterIndex];
+      friendhouseOrb={x:ch.friendhousePos.x,y:ch.friendhousePos.y};
+    }
+    for (let f of fanOrbs) { f.x+=(f.fx-f.x)*0.022*dtF; f.y+=(f.fy-f.y)*0.022*dtF; }
+    return;
+  }
+  let blending = abilityActive && cType()==='fans';
+  let chasing = (momentState!=='active') && !blending;
+
+  if (ch3Phase===1 && safespotOrb && !ch3SafeFlash && !momentFired) {
+    if (dist(sx,sy,safespotOrb.x,safespotOrb.y)<45) {
+      ch3SafeFlash=true; ch3SafeFlashTimer=0;
+      restoreResilience(15); spawnParticles(safespotOrb.x,safespotOrb.y,215,12);
+    }
+  }
+  if (ch3Phase===2 && friendhouseOrb && !momentFired) {
+    if (dist(sx,sy,friendhouseOrb.x,friendhouseOrb.y)<48) {
+      triggerMoment('A');
+      restoreResilience(20); spawnParticles(friendhouseOrb.x,friendhouseOrb.y,38,14);
+    }
+  }
+
+  if (!isStunned && stunCooldown<=0 && chasing) {
+    for (let f of fanOrbs) {
+      if (dist(f.x,f.y,sx,sy)<STUN_RADIUS) {
+        isStunned=true; stunTimer=0; stats.stunCount++;
+        drainResilience(STUN_DRAIN); screenShake=4;
+        spawnParticles(sx,sy,220,8); break;
+      }
+    }
+  }
+  if (isStunned) { stunTimer+=dt; if (stunTimer>=STUN_DURATION_MS){isStunned=false;stunCooldown=STUN_COOLDOWN_MS;} }
+  else { stunCooldown=max(stunCooldown-dt,0); }
+
+  for (let f of fanOrbs) {
+    let tx,ty;
+    if (chasing) { tx=sx+f.jx; ty=sy+f.jy; f.jx=lerp(f.jx,random(-24,24),0.014*dtF); f.jy=lerp(f.jy,random(-18,18),0.014*dtF); }
+    else { tx=f.fx; ty=f.fy; }
+    f.x+=(tx-f.x)*FAN_CHASE_SPEED*dtF; f.y+=(ty-f.y)*FAN_CHASE_SPEED*dtF;
+    if (!isStunned && chasing) {
+      let d=dist(f.x,f.y,sx,sy);
+      if (d<FAN_REPEL_R && d>0.1) {
+        let force=map(d,0,FAN_REPEL_R,FAN_REPEL_F,0);
+        let ang=atan2(sy-f.y,sx-f.x);
+        svx+=cos(ang)*force*0.065*dtF; svy+=sin(ang)*force*0.065*dtF;
+        repulsionHeat=max(repulsionHeat,map(d,0,FAN_REPEL_R,1,0));
+      }
+    }
+  }
+}
+
+// =============================================================
+//  Ch GRAVITY MECHANIC — waypoints + increasing pull
+// =============================================================
+function updateGravityMechanic(dt) {
+  if (momentFired) return;
+  let dtF = dt/16.67;
+
+  // Gravity pull from home cluster
+  let pullDist = dist(sx, sy, ccA.x, ccA.y);
+  if (pullDist > 20) {
+    let pullForce = map(pullDist, 20, 500, 3.2, 0.3) * gravityPullScale;
+    if (abilityActive) pullForce *= 0.1; // Resolve negates most pull
+    let pullAng = atan2(ccA.y-sy, ccA.x-sx);
+    svx += cos(pullAng)*pullForce*0.032*dtF;
+    svy += sin(pullAng)*pullForce*0.032*dtF;
+  }
+
+  // Emotional toll of proximity to home
+  if (pullDist < 220 && !abilityActive) {
+    drainResilience(map(pullDist, 20, 220, 0.25, 0) * dtF);
+  }
+
+  // === Waypoint progress ===
+  if (waypointsClaimed < waypoints.length) {
+    let wp = waypoints[waypointsClaimed];
+    let d = dist(sx, sy, wp.x, wp.y);
+
+    if (d < WAYPOINT_COLLECT_R) {
+      wp.progress = (wp.progress||0) + dt / WAYPOINT_HOLD_MS;
+      if (wp.progress >= 1.0) {
+        // Claimed!
+        wp.claimed = true;
+        wp.progress = 1.0;
+        waypointsClaimed++;
+        gravityPullScale += GRAVITY_MULT_PER_WP;
+        restoreResilience(12);
+        spawnParticles(wp.x, wp.y, 180, 14);
+        screenShake = 2;
+
+        if (waypointsClaimed >= waypoints.length) {
+          // All waypoints claimed — trigger moment
+          triggerMoment('B');
+        }
+      }
+    } else {
+      // Lose progress when away (faster than task decay)
+      wp.progress = max((wp.progress||0) - dt * 0.0008, 0);
+    }
+  }
+
+  // === Memory surges — periodic waves of intensified pull ===
+  surgeTimer += dt;
+  let cyclePos = surgeTimer % SURGE_CYCLE_MS;
+  let wasSurge = surgeActive;
+  surgeActive = cyclePos < SURGE_DURATION_MS;
+
+  // Pick a new memory when a surge starts
+  if (surgeActive && !wasSurge) {
+    currentSurgeMemory = SURGE_MEMORIES[floor(random(SURGE_MEMORIES.length))];
+  }
+
+  if (surgeActive) {
+    // Ramp up then down within the surge
+    surgePhase = sin(map(cyclePos, 0, SURGE_DURATION_MS, 0, PI));
+    let surgePull = surgePhase * SURGE_PULL_MULT * gravityPullScale;
+    if (!abilityActive) {
+      let pullAng = atan2(ccA.y-sy, ccA.x-sx);
+      svx += cos(pullAng) * surgePull * 0.025 * dtF;
+      svy += sin(pullAng) * surgePull * 0.025 * dtF;
+      drainResilience(SURGE_DRAIN * surgePhase * dtF);
+    }
+  } else {
+    surgePhase = 0;
+  }
+}
+
+// =============================================================
+//  SELF ORB PHYSICS
+// =============================================================
+function updateSelf(natX, natY, dt) {
+  let dtF = dt/16.67;
+  let ct = cType();
+
+  if (isStunned) {
+    svx*=pow(0.72,dtF); svy*=pow(0.72,dtF);
+    sx+=svx; sy+=svy;
+    sx=constrain(sx,8,W-8); sy=constrain(sy,8,H-8);
+    return;
+  }
+
+  let kx=0, ky=0, usingKeys=false;
+  if (keyIsDown(87)||keyIsDown(UP_ARROW))   {ky-=1;usingKeys=true;}
+  if (keyIsDown(83)||keyIsDown(DOWN_ARROW)) {ky+=1;usingKeys=true;}
+  if (keyIsDown(65)||keyIsDown(LEFT_ARROW)) {kx-=1;usingKeys=true;}
+  if (keyIsDown(68)||keyIsDown(RIGHT_ARROW)){kx+=1;usingKeys=true;}
+
+  if (usingKeys) {
+    if (kx!==0 && ky!==0) {kx*=0.707;ky*=0.707;}
+    let keySpeed = 3.5;
+    if (abilityActive && ct==='escape') keySpeed=7.5;
+    if (carryingBaby && ct==='escape') keySpeed *= CARRY_SPEED_PENALTY;
+    svx+=kx*keySpeed*0.14*dtF; svy+=ky*keySpeed*0.14*dtF;
+    svx*=pow(0.82,dtF); svy*=pow(0.82,dtF);
+  } else {
+    let tx,ty,spring,damp;
+    if (mouseIsPressed && mouseX>0 && mouseX<W && mouseY>0 && mouseY<H) {
+      tx=mouseX; ty=mouseY; spring=0.044; damp=0.80;
+      if (abilityActive && ct==='escape') spring=0.088;
+      if (carryingBaby && ct==='escape') spring *= CARRY_SPEED_PENALTY;
+    } else {
+      tx=natX; ty=natY; spring=0.023; damp=0.86;
+    }
+    svx=svx*pow(damp,dtF)+(tx-sx)*spring*dtF;
+    svy=svy*pow(damp,dtF)+(ty-sy)*spring*dtF;
+  }
+
+  if (selfState > 0.08) {
+    let jitter = selfState*2.8;
+    let jitterMult = (abilityActive && (ct==='tasks'||ct==='social'||ct==='gather')) ? 0.2 : 1.0;
+    svx+=random(-jitter,jitter)*0.22*dtF*jitterMult;
+    svy+=random(-jitter,jitter)*0.22*dtF*jitterMult;
+  }
+  sx+=svx; sy+=svy;
+  sx=constrain(sx,8,W-8); sy=constrain(sy,8,H-8);
+}
+
+// =============================================================
+//  BARRIER PHYSICS
+// =============================================================
+function updateBarriers(dt) {
+  if (barriers.length===0) return;
+  let dtF=dt/16.67;
+  if (momentFired) {
+    for (let b of barriers){b.active=false;b.x+=(b.hx-b.x)*0.015*dtF;b.y+=(b.hy-b.y)*0.015*dtF;}
+    return;
+  }
+  let distToB=dist(sx,sy,ccB.x,ccB.y);
+  let chasing=distToB<BARRIER_CHASE_R;
+  for (let b of barriers) {
+    b.active=chasing;
+    let tx=chasing?(sx+ccB.x)*0.5:b.hx;
+    let ty=chasing?(sy+ccB.y)*0.5:b.hy;
+    b.x+=(tx-b.x)*(chasing?0.028:0.018)*dtF;
+    b.y+=(ty-b.y)*(chasing?0.028:0.018)*dtF;
+    let d=dist(b.x,b.y,sx,sy);
+    if (d<BARRIER_REPEL_R&&d>0.1) {
+      let force=map(d,0,BARRIER_REPEL_R,BARRIER_REPEL_F,0);
+      let ang=atan2(sy-b.y,sx-b.x);
+      svx+=cos(ang)*force*0.07*dtF; svy+=sin(ang)*force*0.07*dtF;
+      drainResilience(map(d,0,BARRIER_REPEL_R,BARRIER_DRAIN_RATE,0)*dtF);
+    }
+  }
+}
+
+// =============================================================
+//  CLUSTER PHYSICS + MOMENT MACHINE
+// =============================================================
+function initChapter(idx) {
+  let ch = CHAPTERS[idx];
+  orbsA=ch.clusterA(); orbsB=ch.clusterB();
+  noiseOffA=orbsA.map(()=>random(1000));
+  noiseOffB=orbsB.map(()=>random(1000));
+  chapterMs=0;
+
+  barriers=ch.barriers.map(b=>({x:b.hx,y:b.hy,hx:b.hx,hy:b.hy,phase:random(TWO_PI),active:false}));
+  ccA=computeGroupCenter(orbsA); ccB=computeGroupCenter(orbsB);
+
+  lines=ch.texts; lineIdx=0; lineAlpha=0;
+  linePhase='fadein'; lineTimer=0;
+  allLinesShown=false; continueAlpha=0;
+
+  sx=ch.selfStart.x; sy=ch.selfStart.y; svx=0; svy=0;
+  selfHue = (ch.type==='fans') ? 206 : SELF_BASE_HUE;
+
+  repulsionHeat=0; selfState=0;
+  momentState='none'; momentTimer=0; momentFired=false;
+  momentHomes=[]; momentRepMult=1.0; chosenCluster=null;
+  proximityTimerA=0; proximityTimerB=0;
+  mTextLine=null; mTextAlpha=0; mTextTarget=0;
+
+  escapeTimer=0; escapeExpired=false;
+
+  // Bassinet orbs (Arrival — nurse search)
+  bassinetOrbs=[]; babyFound=false; carryingBaby=false;
+  babyFoundCelebration=false; babyCelebrationTimer=0; babyCanContinue=false;
+  checkedCount=0; keyBassinetIdx=-1;
+  checkFeedbackText=null; checkFeedbackTimer=0;
+
+  // Fire/darkness system reset
+  fireParticles=[]; smokeParticles=[];
+  ch1Darkness=0.15; ch1TargetDarkness=0.15;
+  ch1FireIntensity=0; ch1HeartbeatPhase=0;
+  ch1HopeFlash=0; ch1HopeGlow=0; ch1EmberTimer=0;
+  if (ch.bassinets) {
+    keyBassinetIdx = floor(random(ch.bassinets.length));
+    for (let i=0; i<ch.bassinets.length; i++) {
+      let b = ch.bassinets[i];
+      bassinetOrbs.push({
+        x:b.x, y:b.y, homeX:b.x, homeY:b.y,
+        hue:b.hue, isKey:(i === keyBassinetIdx),
+        checked:false, holdProgress:0,
+        phase:random(TWO_PI), flashAlpha:0
+      });
+    }
+  }
+
+  // Task orbs (Ranch + Home)
+  taskOrbs=[]; tasksCollected=0; taskTotalDone=0;
+  carryingTask=null;
+  if (ch.tasks) {
+    for (let t of ch.tasks) {
+      let taskType = t.type || 'simple';
+      if (taskType === 'carry') {
+        taskOrbs.push({
+          taskType:'carry',
+          x:t.srcX, y:t.srcY, homeX:t.srcX, homeY:t.srcY,
+          srcX:t.srcX, srcY:t.srcY, dstX:t.dstX, dstY:t.dstY,
+          hue:t.hue, label:t.label, srcLabel:t.srcLabel, dstLabel:t.dstLabel,
+          carryPhase:'pickup', // 'pickup' or 'deliver'
+          collected:false, flashAlpha:0, phase:random(TWO_PI),
+          holdProgress:0, decayTimer:0
+        });
+      } else if (taskType === 'mash') {
+        taskOrbs.push({
+          taskType:'mash',
+          x:t.x, y:t.y, homeX:t.x, homeY:t.y,
+          hue:t.hue, label:t.label,
+          mashNeeded: t.mashNeeded || MASH_PRESSES_NEEDED,
+          mashCount:0,
+          collected:false, flashAlpha:0, phase:random(TWO_PI),
+          holdProgress:0, decayTimer:0
+        });
+      } else if (taskType === 'click') {
+        taskOrbs.push({
+          taskType:'click',
+          x:t.x, y:t.y, homeX:t.x, homeY:t.y,
+          hue:t.hue, label:t.label,
+          clickReady:false,
+          collected:false, flashAlpha:0, phase:random(TWO_PI),
+          holdProgress:0, decayTimer:0
+        });
+      } else {
+        taskOrbs.push({
+          taskType:taskType,
+          x:t.x, y:t.y, homeX:t.x, homeY:t.y,
+          hue:t.hue, label:t.label,
+          holdMs: t.holdMs || TASK_HOLD_MS,
+          collected:false, flashAlpha:0, phase:random(TWO_PI),
+          holdProgress:0, decayTimer:0
+        });
+      }
+    }
+  }
+
+  // Frost zone (Ranch only)
+  frostZone = null;
+  if (ch.type === 'tasks') {
+    let angle = random(TWO_PI);
+    frostZone = {
+      x: W/2 + cos(angle)*180,
+      y: H/2 + sin(angle)*100,
+      vx: cos(angle+HALF_PI)*FROST_SPEED,
+      vy: sin(angle+HALF_PI)*FROST_SPEED*0.6
+    };
+  }
+
+  // Social groups (School)
+  socialGroupData = [];
+  socialRejections = 0;
+  socialAccepted = false;
+  socialRejectCool = 0;
+  socialRejectFlash = null;
+  socialWindows = [];
+  if (ch.socialGroups) {
+    for (let i=0; i<ch.socialGroups.length; i++) {
+      let g = ch.socialGroups[i];
+      socialGroupData.push({ cx:g.cx, cy:g.cy, progress:0 });
+      socialWindows.push({
+        timer: random(SOCIAL_WINDOW_CLOSED_MS * 0.3, SOCIAL_WINDOW_CLOSED_MS),
+        open: false,
+        pressTimer: 0,
+        phase: random(TWO_PI)
+      });
+    }
+  }
+
+  // Gravity waypoints (Leaving)
+  waypoints = [];
+  waypointsClaimed = 0;
+  gravityPullScale = 1.0;
+  gravObstacles = [];
+  surgeTimer = 0;
+  surgeActive = false;
+  surgePhase = 0;
+  currentSurgeMemory = '';
+  if (ch.waypointDefs) {
+    for (let w of ch.waypointDefs) {
+      waypoints.push({ x:w.x, y:w.y, claimed:false, progress:0, label:w.label||'' });
+    }
+  }
+  if (ch.obstacleDefs) {
+    for (let o of ch.obstacleDefs) {
+      gravObstacles.push({
+        x:o.x, y:o.y, vx:o.vx, vy:o.vy,
+        homeX:o.x, homeY:o.y,
+        phase: random(TWO_PI), r: 28
+      });
+    }
+  }
+
+  // Mash/click state
+  mashCount = 0; mashActiveTask = -1;
+  clickFlashTimer = 0; clickFlashPos = null;
+
+  // Fan orbs (Asian country)
+  fanOrbs=[]; isStunned=false; stunTimer=0; stunCooldown=0;
+  ch3Phase=1; safespotOrb=null; friendhouseOrb=null;
+  ch3SafeFlash=false; ch3SafeFlashTimer=0;
+  if (ch.fans) {
+    for (let f of ch.fans)
+      fanOrbs.push({x:f.ix,y:f.iy,fx:f.fx,fy:f.fy,hue:random(38,52),r:random(6,9.5),phase:random(TWO_PI),jx:0,jy:0});
+  }
+  if (ch.refugePos) safespotOrb={x:ch.refugePos.x,y:ch.refugePos.y};
+
+  abilityActive=false; abilityTimer=0; abilityCooldown=0;
+  resilience=RESILIENCE_MAX; particles=[]; screenShake=0;
+
+  if (audioReady) {
+    droneOsc.frequency.linearRampToValueAtTime(ch.droneFreq,actx.currentTime+1.6);
+    proximityOsc.frequency.linearRampToValueAtTime(ch.proximityFreq,actx.currentTime+1.6);
+  }
+}
+
+function computeGroupCenter(grp) {
+  if(!grp||grp.length===0) return {x:450,y:235};
+  let cx=0,cy=0;
+  for(let o of grp){cx+=o.homeX;cy+=o.homeY;}
+  return {x:cx/grp.length,y:cy/grp.length};
+}
+
+function triggerMoment(cluster) {
+  chosenCluster=cluster; momentFired=true; momentState='active';
+  momentTimer=0; momentHomes=[];
+  let ct=cType();
+  let cc=(cluster==='A'||cluster==='X')?ccA:ccB;
+  let targetOrbs=(cluster==='A'||cluster==='X')?orbsA:orbsB;
+
+  if (ct==='escape') {
+    for (let o of targetOrbs) {
+      let ang=atan2(o.homeY-cc.y,o.homeX-cc.x);
+      let d=max(dist(o.homeX,o.homeY,cc.x,cc.y),20);
+      momentHomes.push({x:cc.x+cos(ang)*(d+58),y:cc.y+sin(ang)*(d+48)});
+    }
+    momentRepMult=0.05;
+  } else if (ct==='tasks'||ct==='gather') {
+    let ringR=98;
+    for (let i=0;i<targetOrbs.length;i++) {
+      let ang=(TWO_PI*i)/targetOrbs.length;
+      momentHomes.push({x:sx+cos(ang)*ringR,y:sy+sin(ang)*ringR*0.65});
+    }
+    momentRepMult=0.05;
+  } else if (ct==='fans') {
+    for (let o of targetOrbs) momentHomes.push({x:o.homeX,y:o.homeY});
+    momentRepMult=(cluster==='B')?1.35:0.12;
+  } else {
+    // social, gravity — scatter outward
+    for (let o of targetOrbs) {
+      let ang=atan2(o.homeY-cc.y,o.homeX-cc.x);
+      let d=max(dist(o.homeX,o.homeY,cc.x,cc.y),20);
+      momentHomes.push({x:cc.x+cos(ang)*(d+45),y:cc.y+sin(ang)*(d+35)});
+    }
+    momentRepMult=0.08;
+  }
+}
+
+function updateCluster(selfX, selfY, dt, buildProximity) {
+  repulsionHeat=0;
+  ccA=computeGroupCenter(orbsA); ccB=computeGroupCenter(orbsB);
+  let distA=dist(selfX,selfY,ccA.x,ccA.y);
+  let distB=dist(selfX,selfY,ccB.x,ccB.y);
+  let ct=cType();
+
+  if (!momentFired && momentState==='none') {
+    if (buildProximity) {
+      let canTriggerA = ct !== 'social';
+      // Social chapter: block proximity trigger until accepted
+      if (ct === 'social' && !socialAccepted) {
+        proximityTimerA = 0;
+        proximityTimerB = 0;
+      } else {
+        if (canTriggerA && distA<PROXIMITY_R) {
+          proximityTimerA+=dt; proximityTimerB=max(proximityTimerB-dt*0.5,0);
+        } else if (distB<PROXIMITY_R) {
+          proximityTimerB+=dt; proximityTimerA=max(proximityTimerA-dt*0.5,0);
+        } else {
+          proximityTimerA=max(proximityTimerA-dt*0.6,0);
+          proximityTimerB=max(proximityTimerB-dt*0.6,0);
+        }
+        if (canTriggerA && proximityTimerA>=MOMENT_TRIGGER_MS) triggerMoment('A');
+        else if (proximityTimerB>=MOMENT_TRIGGER_MS) triggerMoment('B');
+      }
+    }
+  } else if (momentState==='active') {
+    momentTimer+=dt;
+    if (momentTimer>=MOMENT_ACTIVE_MS) {
+      momentState='expelled'; momentTimer=0;
+      momentRepMult=(ct==='fans')?1.0:1.8;
+    }
+  } else if (momentState==='expelled') {
+    momentTimer+=dt;
+    if (ct!=='fans') momentRepMult=max(1.0+0.8*max(1-momentTimer/900,0),1.0);
+    if (momentTimer>=MOMENT_EXPELLED_MS){momentState='none';momentRepMult=1.0;}
+  }
+
+  updateOrbGroup(orbsA, noiseOffA, 'A', selfX, selfY);
+  updateOrbGroup(orbsB, noiseOffB, 'B', selfX, selfY);
+
+  let minDist=min(distA,distB);
+  let targetSt=repulsionHeat*0.85;
+  if (ct==='fans') {
+    let nearestFan=Infinity;
+    for (let f of fanOrbs) nearestFan=min(nearestFan,dist(selfX,selfY,f.x,f.y));
+    targetSt=max(targetSt,map(nearestFan,0,120,0.95,0));
+  }
+  if (minDist>200 && fanOrbs.length===0) targetSt=0;
+  selfState+=(targetSt-selfState)*dt*0.0018;
+  selfState=constrain(selfState,0,1);
+
+  if (ct==='fans' && selfState>0.35) {
+    selfHue=lerp(selfHue,SELF_BASE_HUE,selfState*0.00018*dt);
+  }
+}
+
+function updateOrbGroup(group, offsets, label, selfX, selfY) {
+  let isChosen=(chosenCluster===label||(label==='A'&&chosenCluster==='X'));
+  let inMoment=(momentState==='active'||momentState==='expelled');
+  let useHomes=inMoment && isChosen && momentHomes.length===group.length;
+  let ct=cType();
+
+  // Steady/persist/embrace reduces repulsion
+  let steadyMult = (abilityActive && (ct==='tasks'||ct==='social'||ct==='gather')) ? 0.12 : 1.0;
+
+  // Social chapter repulsion
+  let socialMult = 1.0;
+  if (ct === 'social') {
+    if (label === 'A') {
+      socialMult = 2.8;
+    } else {
+      socialMult = socialAccepted ? 0.08 : 3.2;
+    }
+  }
+
+  // Escape chapter: plane repulsion drops when baby is found
+  if (ct === 'escape' && label === 'B') {
+    socialMult = babyFound ? ESCAPE_REPEL_OPEN : ESCAPE_REPEL_CLOSED;
+  }
+
+  for (let i=0; i<group.length; i++) {
+    let o=group[i];
+    let homeX=o.homeX, homeY=o.homeY;
+    if (useHomes) {
+      let prog;
+      if (momentState==='active'){let t=min(momentTimer/900,1);t=t*t*(3-2*t);prog=t;}
+      else{let t=min(momentTimer/1400,1);t=t*t*(3-2*t);prog=1-t;}
+      homeX=lerp(o.homeX,momentHomes[i].x,prog);
+      homeY=lerp(o.homeY,momentHomes[i].y,prog);
+    }
+    let noiseAmt=(momentState==='active'&&isChosen)?6:30;
+    let nx=(noise(offsets[i],millis()*0.0000032*1000)-0.5)*noiseAmt;
+    let ny=(noise(offsets[i]+90,millis()*0.0000032*1000)-0.5)*noiseAmt*0.75;
+    o.x+=(homeX+nx-o.x)*0.021;
+    o.y+=(homeY+ny-o.y)*0.021;
+
+    let d=dist(o.x,o.y,selfX,selfY);
+    if (d<REP_R&&d>0.1) {
+      repulsionHeat=max(repulsionHeat,map(d,0,REP_R,1,0));
+      let force=map(d,0,REP_R,REP_FORCE,0)*momentRepMult*steadyMult*socialMult;
+      let ang=atan2(o.y-selfY,o.x-selfX);
+      o.x+=cos(ang)*force*REP_MULT_BASE;
+      o.y+=sin(ang)*force*REP_MULT_BASE;
+    }
+  }
+}
+
+// =============================================================
+//  TEXT
+// =============================================================
+function paintText(dt) {
+  let suppress=(momentState!=='none'&&mTextAlpha>30);
+  lineTimer+=dt;
+  let holdMs=lines[lineIdx].split('\n').length>2?3600:2900;
+  if (!suppress) {
+    if (linePhase==='fadein') {
+      lineAlpha=min(lineAlpha+dt*0.055,75);
+      if (lineAlpha>=75){linePhase='hold';lineTimer=0;}
+    } else if (linePhase==='hold') {
+      if (lineTimer>holdMs) linePhase='fadeout';
+    } else {
+      lineAlpha=max(lineAlpha-dt*0.038,0);
+      if (lineAlpha<=0){lineIdx++;if(lineIdx>=lines.length){allLinesShown=true;lineIdx=0;}linePhase='fadein';}
+    }
+  } else { lineAlpha=max(lineAlpha-dt*0.06,0); }
+
+  noStroke(); fill(210,10,97,lineAlpha);
+  textAlign(CENTER,CENTER); textSize(13.5); textLeading(24);
+  text(lines[lineIdx%lines.length], W/2, H-72);
+  fill(selfHue,32,70,lineAlpha*0.36); ellipse(W/2,H-44,2.5,2.5);
+}
+
+function paintMomentText(dt) {
+  let key=chosenCluster;
+  if (!key){mTextTarget=0;}
+  else if (momentState==='active') {
+    let nl=MOMENT_TEXTS[chapterIndex]?.[key]?.active;
+    if (nl&&mTextLine!==nl) mTextLine=nl;
+    mTextTarget=78;
+  } else if (momentState==='expelled') {
+    let nl=MOMENT_TEXTS[chapterIndex]?.[key]?.expelled;
+    if (nl&&mTextLine!==nl){mTextLine=nl;mTextAlpha=0;}
+    mTextTarget=78;
+  } else { mTextTarget=0; }
+  mTextAlpha+=(mTextTarget-mTextAlpha)*dt*0.0045;
+  if (mTextAlpha<0.5||!mTextLine) return;
+  noStroke(); fill(210,10,97,mTextAlpha);
+  textAlign(CENTER,CENTER); textStyle(ITALIC); textSize(14); textLeading(25);
+  text(mTextLine, W/2, H-72); textStyle(NORMAL);
+  fill(selfHue,32,70,mTextAlpha*0.36); ellipse(W/2,H-44,2.5,2.5);
+}
+
+function paintContinuePrompt(dt) {
+  if (!allLinesShown||!momentFired||momentState!=='none') return;
+  continueAlpha=min(continueAlpha+dt*0.03,52);
+  let pulse=map(sin(millis()*0.038*0.001*60),-1,1,0.55,1.0);
+  fill(210,10,90,continueAlpha*pulse); noStroke();
+  textAlign(CENTER,CENTER); textSize(10);
+  text('click or press any key to continue', W/2, H-42);
+}
+
+// =============================================================
+//  AUDIO
+// =============================================================
+function initAudio() {
+  actx=new(window.AudioContext||window.webkitAudioContext)();
+  masterGain=actx.createGain();
+  masterGain.gain.setValueAtTime(0,actx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.09,actx.currentTime+2.5);
+  masterGain.connect(actx.destination);
+  let filt=actx.createBiquadFilter();
+  filt.type='lowpass';filt.frequency.value=700;filt.connect(masterGain);
+  droneOsc=actx.createOscillator();droneOsc.type='sine';
+  droneOsc.frequency.value=CHAPTERS[0].droneFreq;
+  let dg=actx.createGain();dg.gain.value=0.55;
+  droneOsc.connect(dg);dg.connect(filt);droneOsc.start();
+  proximityOsc=actx.createOscillator();proximityOsc.type='sine';
+  proximityOsc.frequency.value=CHAPTERS[0].proximityFreq;
+  proximityGain=actx.createGain();proximityGain.gain.value=0;
+  proximityOsc.connect(proximityGain);proximityGain.connect(masterGain);
+  proximityOsc.start();
+  audioReady=true;
+}
+
+function updateAudio(selfX, selfY) {
+  if (!audioReady) return;
+  let minD=Infinity;
+  for (let o of [...orbsA,...orbsB]){let d=dist(selfX,selfY,o.x,o.y);if(d<minD)minD=d;}
+  let vol=minD<130?map(minD,0,130,0.07,0):0;
+  proximityGain.gain.linearRampToValueAtTime(vol,actx.currentTime+0.12);
+}
+
+// =============================================================
+//  INPUT
+// =============================================================
+function handleAdvance() {
+  if (!audioReady) initAudio();
+  if (state==='title') { state='intro'; introTimer=0; fadeAlpha=80; return true; }
+  if (state==='intro' && introTimer>1800) {
+    initChapter(chapterIndex); state='fadein'; fadeAlpha=100; transStart=millis(); return true;
+  }
+  // Baby found celebration — press key to skip to next chapter
+  if (state==='chapter' && babyFoundCelebration && babyCanContinue) {
+    babyFoundCelebration = false;
+    // Trigger the moment and immediately go to fadeout -> reflect
+    momentFired = true; momentState = 'none';
+    allLinesShown = true;
+    state='fadeout'; fadeAlpha=0;
+    return true;
+  }
+  if (state==='chapter' && allLinesShown && momentFired && momentState==='none') {
+    state='fadeout'; fadeAlpha=0; return true;
+  }
+  if (state==='failed' && failTimer>2800) {
+    initChapter(chapterIndex); state='fadein'; fadeAlpha=100; transStart=millis(); return true;
+  }
+  if (state==='reflect' && reflectTimer>2200) {
+    chapterIndex++;
+    if (chapterIndex>=CHAPTERS.length){initEndScreen();state='end';fadeAlpha=100;}
+    else{state='intro';introTimer=0;fadeAlpha=100;}
+    return true;
+  }
+  if (state==='end' && endTimer>8000) { restartGame(); return true; }
+  return false;
+}
+
+function restartGame() {
+  state='title'; chapterIndex=0; fadeAlpha=100;
+  resilience=RESILIENCE_MAX;
+  stats={chapterTimes:new Array(CHAPTERS.length).fill(0),stunCount:0,abilityUses:0};
+  particles=[]; endOrbs=[]; carryingTask=null; frostZone=null;
+  abilityActive=false; abilityTimer=0; abilityCooldown=0; screenShake=0;
+  gravObstacles=[]; socialWindows=[]; mashCount=0; mashActiveTask=-1;
+  surgeTimer=0; surgeActive=false; surgePhase=0; currentSurgeMemory='';
+  clickFlashTimer=0; clickFlashPos=null;
+  babyFoundCelebration=false; babyCelebrationTimer=0; babyCanContinue=false;
+}
+
+function mousePressed() { handleAdvance(); return false; }
+
+function keyPressed() {
+  if (!audioReady) initAudio();
+
+  if (state==='chapter') {
+    // During baby celebration, any key advances
+    if (babyFoundCelebration && babyCanContinue) {
+      handleAdvance();
+      return false;
+    }
+
+    let ct = cType();
+
+    // SPACE key — ability, mash tasks, or social window press
+    if (keyCode===32) {
+      // Mash task: increment mash count when near a mash task
+      if (ct === 'tasks' && mashActiveTask >= 0 && mashActiveTask < taskOrbs.length) {
+        let t = taskOrbs[mashActiveTask];
+        if (t.taskType === 'mash' && !t.collected) {
+          t.mashCount = (t.mashCount||0) + 1;
+          spawnParticles(t.x, t.y, t.hue, 2);
+          screenShake = max(screenShake, 0.5);
+          return false;
+        }
+      }
+      // Social window: pressing SPACE near an open window boosts progress
+      if (ct === 'social' && !socialAccepted) {
+        for (let i=0; i<socialGroupData.length; i++) {
+          let g = socialGroupData[i];
+          let w = socialWindows[i];
+          let d = dist(sx, sy, g.cx, g.cy);
+          if (d < SOCIAL_APPROACH_R * 1.3 && w.open) {
+            g.progress += 0.18;
+            spawnParticles(g.cx, g.cy, 140, 4);
+            w.pressTimer = SOCIAL_WINDOW_PRESS_MS;
+            return false;
+          }
+        }
+      }
+      // Default: activate ability
+      if (!abilityActive && abilityCooldown<=0 && !isStunned && momentState==='none') activateAbility();
+      return false;
+    }
+
+    // E key — click tasks
+    if (keyCode===69 && ct === 'tasks') {
+      for (let i=0; i<taskOrbs.length; i++) {
+        let t = taskOrbs[i];
+        if (t.taskType === 'click' && t.clickReady && !t.collected) {
+          t.collected = true; t.flashAlpha = 88;
+          t.holdProgress = 0; t.decayTimer = 0;
+          tasksCollected++; taskTotalDone++;
+          restoreResilience(TASK_RESTORE * 0.6);
+          spawnParticles(t.x, t.y, t.hue, 10);
+          screenShake = 1.5;
+          clickFlashTimer = CLICK_FLASH_MS;
+          clickFlashPos = { x:t.x, y:t.y };
+          if (taskTotalDone >= RANCH_TOTAL_NEEDED) triggerMoment('B');
+          return false;
+        }
+      }
+    }
+  }
+
+  if (keyCode===87||keyCode===65||keyCode===83||keyCode===68||keyCode===69||
+      keyCode===UP_ARROW||keyCode===DOWN_ARROW||keyCode===LEFT_ARROW||keyCode===RIGHT_ARROW) return false;
+  handleAdvance();
+  return false;
+}
+</script>
+</body>
+</html>
