@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Hackathon — Build With Intelligence</title>
+  <style>
+    :root {
+      --blue:    #3776ab;
+      --accent:  #ffd43b;
+      --dark:    #1a2332;
+      --dark2:   #2d3f55;
+      --bg:      #f0f4f8;
+      --card:    #ffffff;
+      --border:  #e1e8ed;
+      --text:    #1a2332;
+      --muted:   #5a6a7a;
+      --shadow:  0 4px 18px rgba(0,0,0,.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%);
+      color: #fff;
+      padding: 64px 24px 72px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(55,118,171,.35), transparent 45%),
+        radial-gradient(circle at 80% 70%, rgba(255,212,59,.18), transparent 45%);
+    }
+    .hero-inner { position: relative; max-width: 900px; margin: 0 auto; }
+    .pill {
+      display: inline-block; padding: 6px 14px; border-radius: 99px;
+      background: rgba(255,212,59,.15); color: var(--accent);
+      font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 800; line-height: 1.15; margin-bottom: 14px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p {
+      font-size: 17px; color: #b8c7d6; max-width: 640px; margin: 0 auto;
+    }
+    .meta-row {
+      display: flex; gap: 28px; justify-content: center; flex-wrap: wrap;
+      margin-top: 28px; font-size: 14px; color: #b8c7d6;
+    }
+    .meta-row strong { color: #fff; }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1080px; margin: -40px auto 0; padding: 0 24px 64px;
+      position: relative;
+    }
+
+    .section {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 32px 36px;
+      margin-bottom: 22px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .section h2 {
+      font-size: 22px;
+      color: var(--dark);
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .section h2 .icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: var(--blue); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800;
+    }
+    .section p { color: var(--text); margin-bottom: 12px; }
+    .section p.lead { font-size: 17px; color: var(--muted); }
+
+    ul.list { list-style: none; margin-top: 8px; }
+    ul.list li {
+      position: relative; padding: 10px 0 10px 30px;
+      border-bottom: 1px dashed var(--border);
+      color: var(--text);
+    }
+    ul.list li:last-child { border-bottom: none; }
+    ul.list li::before {
+      content: "▸";
+      position: absolute; left: 6px; top: 10px;
+      color: var(--blue); font-weight: 900;
+    }
+    ul.list li strong { color: var(--dark); }
+
+    /* ── GRID CARDS ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px; margin-top: 14px;
+    }
+    .card {
+      background: #f7fafc;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--blue);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    .card h3 {
+      font-size: 15px; color: var(--dark);
+      margin-bottom: 6px;
+    }
+    .card p { font-size: 14px; color: var(--muted); margin: 0; }
+    .card.yellow { border-left-color: var(--accent); }
+    .card.green  { border-left-color: #2e7d32; }
+    .card.purple { border-left-color: #7b1fa2; }
+
+    /* ── SCHEDULE ── */
+    .timeline { margin-top: 10px; }
+    .timeline .row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 18px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline .row:last-child { border-bottom: none; }
+    .timeline .time {
+      font-weight: 700; color: var(--blue); font-size: 14px;
+    }
+    .timeline .what strong { color: var(--dark); display: block; margin-bottom: 2px; }
+    .timeline .what span { color: var(--muted); font-size: 14px; }
+
+    footer {
+      text-align: center; padding: 24px; color: var(--muted); font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      .section { padding: 22px 20px; }
+      .timeline .row { grid-template-columns: 90px 1fr; gap: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="hero">
+    <div class="hero-inner">
+      <span class="pill">★ Hackathon Brief</span>
+      <h1>The <span>AI</span> Hackathon</h1>
+      <p>A short, hands-on sprint where teams design, build, and demo a working prototype powered by artificial intelligence.</p>
+      <div class="meta-row">
+        <div><strong>Duration:</strong> 24–48 hours</div>
+        <div><strong>Team size:</strong> 2–5 people</div>
+        <div><strong>Theme:</strong> AI for Good</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- WHAT IS IT -->
+    <section class="section">
+      <h2><span class="icon">?</span> What Is It</h2>
+      <p class="lead">An AI hackathon is a time-boxed event where small teams turn an idea into a working AI-powered prototype — from blank screen to live demo — in a single weekend.</p>
+      <p>Participants use modern AI tools (large language models, computer-vision APIs, speech models, agent frameworks) to solve a real problem. The emphasis is on <strong>shipping something that runs</strong>, not on polished production code.</p>
+    </section>
+
+    <!-- WHAT IT MEANS -->
+    <section class="section">
+      <h2><span class="icon">✦</span> What It Means</h2>
+      <p>More than a coding contest, the hackathon is a <strong>creative pressure-cooker</strong>. It means:</p>
+      <ul class="list">
+        <li><strong>Learning by doing</strong> — you pick up new AI tools faster under a deadline than from any tutorial.</li>
+        <li><strong>Collaboration</strong> — designers, developers, and domain experts work shoulder-to-shoulder.</li>
+        <li><strong>Experimentation</strong> — bold ideas are rewarded; "boring but safe" is the real risk.</li>
+        <li><strong>Responsibility</strong> — every team must consider bias, privacy, and the human impact of their build.</li>
+      </ul>
+    </section>
+
+    <!-- OBJECTIVES -->
+    <section class="section">
+      <h2><span class="icon">◎</span> Objectives</h2>
+      <p>By the end of the hackathon, each team should have:</p>
+      <div class="grid">
+        <div class="card">
+          <h3>1. Explored a real problem</h3>
+          <p>Identify a concrete pain point where AI adds clear value.</p>
+        </div>
+        <div class="card yellow">
+          <h3>2. Built a working prototype</h3>
+          <p>Ship a demo-able MVP — web app, bot, script, or hardware mock.</p>
+        </div>
+        <div class="card green">
+          <h3>3. Applied AI responsibly</h3>
+          <p>Document the model used, data sources, and known limitations.</p>
+        </div>
+        <div class="card purple">
+          <h3>4. Communicated the idea</h3>
+          <p>Deliver a crisp 3-minute pitch that a non-technical judge understands.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DELIVERABLES -->
+    <section class="section">
+      <h2><span class="icon">▤</span> Deliverables</h2>
+      <p>Every team submits the following by the final deadline:</p>
+      <ul class="list">
+        <li><strong>Working prototype</strong> — a running demo (hosted URL, local app, or recorded walkthrough).</li>
+        <li><strong>Source code</strong> — a public or shared Git repository with a README explaining how to run it.</li>
+        <li><strong>3-minute pitch</strong> — live or pre-recorded video covering the problem, solution, and demo.</li>
+        <li><strong>Slide deck</strong> — 5–7 slides: problem, users, solution, AI approach, impact, next steps.</li>
+        <li><strong>Ethics note</strong> — one short paragraph: what data you used, what the model can get wrong, and who could be harmed.</li>
+      </ul>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="section">
+      <h2><span class="icon">⏱</span> Sample Schedule (24h)</h2>
+      <div class="timeline">
+        <div class="row">
+          <div class="time">Hour 0</div>
+          <div class="what"><strong>Kickoff & team formation</strong><span>Theme reveal, pitch ideas, form teams, pick a problem.</span></div>
+        </div>
+        <div class="row">
+          <div class="time">Hour 1–4</div>
+          <div class="what"><strong>Scope & prototype</strong><span>Decide the MVP, sketch UX, set up repo and AI keys.</span></div>
+        </div>
+        <div class="row">
+          <div class="time">Hour 4–18</div>
+          <div class="what"><strong>Build</strong><span>Core build, integrate AI, test early and often.</span></div>
+        </div>
+        <div class="row">
+          <div class="time">Hour 18–22</div>
+          <div class="what"><strong>Polish & rehearse</strong><span>Fix blockers, write the README, rehearse the pitch.</span></div>
+        </div>
+        <div class="row">
+          <div class="time">Hour 22–24</div>
+          <div class="what"><strong>Demos & judging</strong><span>Each team pitches; judges score on impact, craft, and creativity.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JUDGING -->
+    <section class="section">
+      <h2><span class="icon">★</span> Judging Criteria</h2>
+      <ul class="list">
+        <li><strong>Impact (30%)</strong> — does it solve a real problem for real people?</li>
+        <li><strong>Technical execution (25%)</strong> — does the AI actually work?</li>
+        <li><strong>Creativity (20%)</strong> — novel use of AI, unexpected angle.</li>
+        <li><strong>Design & usability (15%)</strong> — is the demo clear and easy to follow?</li>
+        <li><strong>Responsibility (10%)</strong> — honest about limits, data, and risks.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    Build fast. Build thoughtfully. Ship something that matters.
+  </footer>
+
+</body>
+</html>
