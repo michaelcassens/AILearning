@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Learning Hub — Visual Index</title>
+<meta name="description" content="Icon-based visual index of all pages in the AILearning repository." />
+
+<!-- Font Awesome 6 (free) for category + brand icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:          #0d0d1a;
+    --bg-elev:     #12122a;
+    --border:      #252550;
+    --border-hi:   #444464;
+    --text:        #e8e8f4;
+    --text-dim:    #8a8ab4;
+    --text-muted:  #6a6a9a;
+
+    --games:   #ff4757;
+    --games-2: #ff6b81;
+    --learn:   #74b9ff;
+    --learn-2: #4d8eff;
+    --debug:   #00c8a8;
+    --debug-2: #00e0c0;
+    --res:     #ffa502;
+    --res-2:   #ffc14f;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 64px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Skip link for keyboard users */
+  .skip-link {
+    position: absolute; left: -9999px; top: auto;
+    padding: 8px 12px; background: var(--text); color: var(--bg);
+    font-weight: 700; z-index: 1000; border-radius: 4px;
+  }
+  .skip-link:focus { left: 12px; top: 12px; }
+
+  header.site {
+    background: linear-gradient(135deg, #12122a 0%, #1a1a3e 50%, #12122a 100%);
+    border-bottom: 2px solid var(--debug);
+    padding: 40px 20px 28px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  header.site h1 {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--debug), #7c4dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+  header.site p { color: var(--text-dim); font-size: 0.95rem; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  /* Controls: search + category filter */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding: 14px 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .search {
+    flex: 1 1 260px;
+    position: relative;
+    min-width: 200px;
+  }
+  .search i {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .search input {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.92rem;
+  }
+  .search input:focus {
+    outline: 2px solid var(--debug);
+    outline-offset: 1px;
+    border-color: transparent;
+  }
+
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .chip {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .chip:hover { border-color: var(--border-hi); color: var(--text); }
+  .chip:focus-visible { outline: 2px solid var(--debug); outline-offset: 2px; }
+  .chip[aria-pressed="true"] {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  /* Section headers */
+  section.cat { margin-bottom: 36px; scroll-margin-top: 20px; }
+  section.cat > h2 {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  section.cat > h2 .count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    margin-left: auto;
+  }
+  .cat-games > h2   { color: var(--games); }
+  .cat-learn > h2   { color: var(--learn); }
+  .cat-debug > h2   { color: var(--debug); }
+  .cat-res > h2     { color: var(--res); }
+
+  /* Grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  /* Card */
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 18px 18px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.16s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-hi);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+  .card:focus-visible {
+    outline: 2px solid var(--debug);
+    outline-offset: 2px;
+  }
+
+  .card-icon {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.55rem;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35) inset, 0 4px 12px rgba(0,0,0,0.25);
+  }
+
+  .card.games  .card-icon { background: linear-gradient(135deg, var(--games), var(--games-2)); }
+  .card.learn  .card-icon { background: linear-gradient(135deg, var(--learn-2), var(--learn)); }
+  .card.debug  .card-icon { background: linear-gradient(135deg, var(--debug), var(--debug-2)); color: #0d0d1a; }
+  .card.res    .card-icon { background: linear-gradient(135deg, var(--res), var(--res-2)); color: #0d0d1a; }
+
+  .card.games:hover { border-color: var(--games); }
+  .card.learn:hover { border-color: var(--learn); }
+  .card.debug:hover { border-color: var(--debug); }
+  .card.res:hover   { border-color: var(--res); }
+
+  .card-tag {
+    position: absolute;
+    top: 14px; right: 14px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .card.games .card-tag { background: rgba(255,71,87,0.18);  color: var(--games); }
+  .card.learn .card-tag { background: rgba(116,185,255,0.18); color: var(--learn); }
+  .card.debug .card-tag { background: rgba(0,200,168,0.18);   color: var(--debug); }
+  .card.res   .card-tag { background: rgba(255,165,2,0.18);   color: var(--res); }
+
+  .card-name {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .card-file {
+    margin-top: auto;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  footer.site {
+    max-width: 1200px;
+    margin: 40px auto 0;
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+  }
+  footer.site a { color: var(--learn); text-decoration: none; }
+  footer.site a:hover { text-decoration: underline; }
+
+  /* Hidden-by-filter */
+  .card[hidden], section.cat[hidden] { display: none !important; }
+
+  /* Respect reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .card { transition: none; }
+    .card:hover { transform: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site" role="banner">
+  <h1>AI Learning Hub</h1>
+  <p>Visual index &middot; games, courses, tools, and resources at a glance</p>
+</header>
+
+<div class="container">
+
+  <!-- Controls -->
+  <div class="controls" role="search">
+    <label class="search" aria-label="Search pages">
+      <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+      <input id="q" type="search" placeholder="Search by name, topic, or file&hellip;" autocomplete="off" />
+    </label>
+    <div class="filters" role="group" aria-label="Filter by category">
+      <button class="chip" type="button" data-filter="all"   aria-pressed="true">All</button>
+      <button class="chip" type="button" data-filter="games" aria-pressed="false">Games</button>
+      <button class="chip" type="button" data-filter="learn" aria-pressed="false">Courses</button>
+      <button class="chip" type="button" data-filter="debug" aria-pressed="false">Code Checkers</button>
+      <button class="chip" type="button" data-filter="res"   aria-pressed="false">Resources</button>
+    </div>
+  </div>
+
+  <main id="main">
+
+    <!-- GAMES -->
+    <section class="cat cat-games" data-cat="games" aria-labelledby="h-games">
+      <h2 id="h-games">
+        <i class="fa-solid fa-gamepad" aria-hidden="true"></i> Games &amp; Interactive
+        <span class="count" data-count="games"></span>
+      </h2>
+      <div class="grid">
+
+        <a class="card games" href="dog_defense.html" data-keywords="dog tower defense strategy">
+          <div class="card-icon"><i class="fa-solid fa-shield-dog" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Dog Tower Defense</div>
+          <div class="card-desc">Defend your territory with a tower-defense strategy game.</div>
+          <div class="card-file">dog_defense.html</div>
+        </a>
+
+        <a class="card games" href="dog_pacman.html" data-keywords="dog pacman ghost arcade">
+          <div class="card-icon"><i class="fa-solid fa-ghost" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Dog Pac-Man</div>
+          <div class="card-desc">Classic Pac-Man gameplay with a canine twist.</div>
+          <div class="card-file">dog_pacman.html</div>
+        </a>
+
+        <a class="card games" href="health_math_game.html" data-keywords="health math wellness arithmetic">
+          <div class="card-icon"><i class="fa-solid fa-heart-pulse" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Health Math Game</div>
+          <div class="card-desc">Practice math skills with a health and wellness theme.</div>
+          <div class="card-file">health_math_game.html</div>
+        </a>
+
+        <a class="card games" href="endangered_clicker.html" data-keywords="endangered species clicker conservation animals">
+          <div class="card-icon"><i class="fa-solid fa-paw" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Endangered Clicker</div>
+          <div class="card-desc">Clicker game raising awareness of endangered species.</div>
+          <div class="card-file">endangered_clicker.html</div>
+        </a>
+
+        <a class="card games" href="ecosystem_cascade.html" data-keywords="ecosystem cascade biology environment nature">
+          <div class="card-icon"><i class="fa-solid fa-seedling" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Ecosystem Cascade</div>
+          <div class="card-desc">Explore ecological chain reactions and ecosystem dynamics.</div>
+          <div class="card-file">ecosystem_cascade.html</div>
+        </a>
+
+        <a class="card games" href="writers_quest.html" data-keywords="writing writer composition english language arts">
+          <div class="card-icon"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Writer&rsquo;s Quest</div>
+          <div class="card-desc">Improve writing skills through an interactive quest.</div>
+          <div class="card-file">writers_quest.html</div>
+        </a>
+
+        <a class="card games" href="p5_code_quest.html" data-keywords="p5.js creative coding pixel art javascript">
+          <div class="card-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">p5.js Code Quest</div>
+          <div class="card-desc">Learn p5.js through 10 levels of pixel-art adventure.</div>
+          <div class="card-file">p5_code_quest.html</div>
+        </a>
+
+        <a class="card games" href="ninja_quest.html" data-keywords="ninja vehicle action adventure">
+          <div class="card-icon"><i class="fa-solid fa-user-ninja" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Ninja Vehicle Quest</div>
+          <div class="card-desc">Navigate a ninja through vehicle-filled levels.</div>
+          <div class="card-file">ninja_quest.html</div>
+        </a>
+
+        <a class="card games" href="wellness_staff.html" data-keywords="wellness faculty staff health habits">
+          <div class="card-icon"><i class="fa-solid fa-spa" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Wellness Journey &mdash; Staff</div>
+          <div class="card-desc">Faculty and staff wellness game exploring healthy habits.</div>
+          <div class="card-file">wellness_staff.html</div>
+        </a>
+
+        <a class="card games" href="wellness_student.html" data-keywords="wellness student health habits">
+          <div class="card-icon"><i class="fa-solid fa-heart" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Wellness Journey &mdash; Student</div>
+          <div class="card-desc">Student edition of the wellness game exploring healthy habits.</div>
+          <div class="card-file">wellness_student.html</div>
+        </a>
+
+        <a class="card games" href="wellness_student_mobile.html" data-keywords="wellness mobile student phone">
+          <div class="card-icon"><i class="fa-solid fa-mobile-screen" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Wellness Journey &mdash; Mobile</div>
+          <div class="card-desc">Mobile-friendly student wellness game for on-the-go play.</div>
+          <div class="card-file">wellness_student_mobile.html</div>
+        </a>
+
+        <a class="card games" href="Unity6_Quest.html" data-keywords="unity 6 mart460 game dev academy">
+          <div class="card-icon"><i class="fa-brands fa-unity" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Unity 6 Quest</div>
+          <div class="card-desc">Interactive MART 460 learning game for Unity 6 development.</div>
+          <div class="card-file">Unity6_Quest.html</div>
+        </a>
+
+        <a class="card games" href="icwa_game.html" data-keywords="icwa indian child welfare act tribal native">
+          <div class="card-icon"><i class="fa-solid fa-feather-pointed" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">ICWA Game</div>
+          <div class="card-desc">Interactive game tied to the ICWA research project.</div>
+          <div class="card-file">icwa_game.html</div>
+        </a>
+
+        <a class="card games" href="esports_coc_game.html" data-keywords="esports clash competition tournament">
+          <div class="card-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Esports COC Game</div>
+          <div class="card-desc">Competitive esports-themed code-of-conduct game.</div>
+          <div class="card-file">esports_coc_game.html</div>
+        </a>
+
+        <a class="card games" href="journey_game.html" data-keywords="journey adventure exploration narrative">
+          <div class="card-icon"><i class="fa-solid fa-compass" aria-hidden="true"></i></div>
+          <span class="card-tag">Game</span>
+          <div class="card-name">Journey Game</div>
+          <div class="card-desc">Narrative exploration game built with the AI hub toolset.</div>
+          <div class="card-file">journey_game.html</div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- LEARNING MODULES -->
+    <section class="cat cat-learn" data-cat="learn" aria-labelledby="h-learn">
+      <h2 id="h-learn">
+        <i class="fa-solid fa-book-open-reader" aria-hidden="true"></i> Courses &amp; Modules
+        <span class="count" data-count="learn"></span>
+      </h2>
+      <div class="grid">
+
+        <a class="card learn" href="AI_learning.html" data-keywords="generative ai artificial intelligence course module">
+          <div class="card-icon"><i class="fa-solid fa-robot" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Generative AI</div>
+          <div class="card-desc">College learning module on generative-AI concepts and applications.</div>
+          <div class="card-file">AI_learning.html</div>
+        </a>
+
+        <a class="card learn" href="AI_Hackathon.html" data-keywords="ai hackathon sprint event workshop">
+          <div class="card-icon"><i class="fa-solid fa-bolt" aria-hidden="true"></i></div>
+          <span class="card-tag">Event</span>
+          <div class="card-name">AI Hackathon</div>
+          <div class="card-desc">Landing and materials for the AI Hackathon event.</div>
+          <div class="card-file">AI_Hackathon.html</div>
+        </a>
+
+        <a class="card learn" href="godot-course.html" data-keywords="godot game engine course 16 week">
+          <div class="card-icon"><i class="fa-solid fa-gamepad" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Godot Game Dev</div>
+          <div class="card-desc">16-week college course on game development with Godot.</div>
+          <div class="card-file">godot-course.html</div>
+        </a>
+
+        <a class="card learn" href="CSharp_Unity_Course.html" data-keywords="csharp c# unity course 16 week">
+          <div class="card-icon"><i class="fa-brands fa-unity" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">C# in Unity</div>
+          <div class="card-desc">16-week course on C# programming for Unity.</div>
+          <div class="card-file">CSharp_Unity_Course.html</div>
+        </a>
+
+        <a class="card learn" href="Beginning_Python_Course.html" data-keywords="python beginner intro basics">
+          <div class="card-icon"><i class="fa-brands fa-python" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Beginning Python</div>
+          <div class="card-desc">Learn Python fundamentals from scratch.</div>
+          <div class="card-file">Beginning_Python_Course.html</div>
+        </a>
+
+        <a class="card learn" href="Intermediate_Python_Course.html" data-keywords="python intermediate oop file io">
+          <div class="card-icon"><i class="fa-brands fa-python" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Intermediate Python</div>
+          <div class="card-desc">Level up with OOP, file I/O, and more.</div>
+          <div class="card-file">Intermediate_Python_Course.html</div>
+        </a>
+
+        <a class="card learn" href="DSA_Python_Course.html" data-keywords="dsa data structures algorithms python">
+          <div class="card-icon"><i class="fa-solid fa-diagram-project" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Data Structures &amp; Algorithms</div>
+          <div class="card-desc">Master DSA concepts with Python implementations.</div>
+          <div class="card-file">DSA_Python_Course.html</div>
+        </a>
+
+        <a class="card learn" href="Research_Methodology_Course.html" data-keywords="research methodology method science gamified">
+          <div class="card-icon"><i class="fa-solid fa-flask" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Research Methodology</div>
+          <div class="card-desc">Gamified course covering the full research process.</div>
+          <div class="card-file">Research_Methodology_Course.html</div>
+        </a>
+
+        <a class="card learn" href="Banking_Basics_Course.html" data-keywords="banking finance money basics 16 week">
+          <div class="card-icon"><i class="fa-solid fa-building-columns" aria-hidden="true"></i></div>
+          <span class="card-tag">Course</span>
+          <div class="card-name">Banking Basics</div>
+          <div class="card-desc">16-week course covering banking fundamentals and financial literacy.</div>
+          <div class="card-file">Banking_Basics_Course.html</div>
+        </a>
+
+        <a class="card learn" href="Literature_Review_Module.html" data-keywords="literature review research writing academic">
+          <div class="card-icon"><i class="fa-solid fa-book-open" aria-hidden="true"></i></div>
+          <span class="card-tag">Module</span>
+          <div class="card-name">Literature Reviews</div>
+          <div class="card-desc">Research foundations module on understanding literature reviews.</div>
+          <div class="card-file">Literature_Review_Module.html</div>
+        </a>
+
+        <a class="card learn" href="Financial_Literacy_Module.html" data-keywords="financial literacy money budget savings">
+          <div class="card-icon"><i class="fa-solid fa-piggy-bank" aria-hidden="true"></i></div>
+          <span class="card-tag">Module</span>
+          <div class="card-name">Financial Literacy</div>
+          <div class="card-desc">Module covering core financial-literacy concepts and skills.</div>
+          <div class="card-file">Financial_Literacy_Module.html</div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- DEBUGGING TOOLS -->
+    <section class="cat cat-debug" data-cat="debug" aria-labelledby="h-debug">
+      <h2 id="h-debug">
+        <i class="fa-solid fa-bug" aria-hidden="true"></i> Code Checkers &amp; Tools
+        <span class="count" data-count="debug"></span>
+      </h2>
+      <div class="grid">
+
+        <a class="card debug" href="js_error_checker.html" data-keywords="javascript js jquery error checker debug">
+          <div class="card-icon"><i class="fa-brands fa-js" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">JS &amp; jQuery Checker</div>
+          <div class="card-desc">Find syntax, runtime, and logical errors in JavaScript.</div>
+          <div class="card-file">js_error_checker.html</div>
+        </a>
+
+        <a class="card debug" href="csharp_checker.html" data-keywords="csharp c# unity error checker">
+          <div class="card-icon"><i class="fa-solid fa-hashtag" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">C# Game-Dev Checker</div>
+          <div class="card-desc">Unity-focused C# checker for syntax, runtime, and game-dev issues.</div>
+          <div class="card-file">csharp_checker.html</div>
+        </a>
+
+        <a class="card debug" href="p5_checker.html" data-keywords="p5 p5.js creative coding checker">
+          <div class="card-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">p5.js Error Checker</div>
+          <div class="card-desc">Catch common p5.js mistakes and creative-coding pitfalls.</div>
+          <div class="card-file">p5_checker.html</div>
+        </a>
+
+        <a class="card debug" href="html_css_checker.html" data-keywords="html css markup style accessibility checker">
+          <div class="card-icon"><i class="fa-brands fa-html5" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">HTML &amp; CSS Checker</div>
+          <div class="card-desc">Syntax, accessibility, best practices, and performance checks.</div>
+          <div class="card-file">html_css_checker.html</div>
+        </a>
+
+        <a class="card debug" href="java_checker.html" data-keywords="java error checker debug">
+          <div class="card-icon"><i class="fa-brands fa-java" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">Java Error Checker</div>
+          <div class="card-desc">Detect syntax, runtime, and logical errors in Java code.</div>
+          <div class="card-file">java_checker.html</div>
+        </a>
+
+        <a class="card debug" href="lua_checker.html" data-keywords="lua script error checker debug roblox">
+          <div class="card-icon"><i class="fa-solid fa-moon" aria-hidden="true"></i></div>
+          <span class="card-tag">Tool</span>
+          <div class="card-name">Lua Script Checker</div>
+          <div class="card-desc">Find syntax, runtime, logical, and style issues in Lua.</div>
+          <div class="card-file">lua_checker.html</div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- RESOURCES -->
+    <section class="cat cat-res" data-cat="res" aria-labelledby="h-res">
+      <h2 id="h-res">
+        <i class="fa-solid fa-bookmark" aria-hidden="true"></i> Resources
+        <span class="count" data-count="res"></span>
+      </h2>
+      <div class="grid">
+
+        <a class="card res" href="umt_student_resources.html" data-keywords="umt university of montana student resources help">
+          <div class="card-icon"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></div>
+          <span class="card-tag">Resource</span>
+          <div class="card-name">UM Student Resources</div>
+          <div class="card-desc">University of Montana student resources and support services.</div>
+          <div class="card-file">umt_student_resources.html</div>
+        </a>
+
+      </div>
+    </section>
+
+    <div class="empty-state" id="empty-state" hidden>
+      No pages match your search. Try another term or click <strong>All</strong>.
+    </div>
+
+  </main>
+
+  <footer class="site">
+    <p>
+      Alternative visual index &middot;
+      <a href="index.html">Back to original index</a> &middot;
+      <a href="https://github.com/michaelcassens/AILearning">Repository on GitHub</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const q        = document.getElementById('q');
+  const chips    = document.querySelectorAll('.chip');
+  const cards    = document.querySelectorAll('.card');
+  const sections = document.querySelectorAll('section.cat');
+  const counts   = document.querySelectorAll('[data-count]');
+  const empty    = document.getElementById('empty-state');
+
+  let activeFilter = 'all';
+
+  function updateCounts() {
+    counts.forEach(el => {
+      const cat = el.getAttribute('data-count');
+      const visible = document.querySelectorAll(
+        `section[data-cat="${cat}"] .card:not([hidden])`
+      ).length;
+      const total = document.querySelectorAll(
+        `section[data-cat="${cat}"] .card`
+      ).length;
+      el.textContent = visible === total ? `${total} pages` : `${visible} of ${total}`;
+    });
+  }
+
+  function apply() {
+    const term = q.value.trim().toLowerCase();
+    let anyVisible = false;
+
+    cards.forEach(card => {
+      const parentCat = card.closest('section.cat').getAttribute('data-cat');
+      const matchesCat = activeFilter === 'all' || activeFilter === parentCat;
+
+      const haystack = (
+        card.getAttribute('data-keywords') + ' ' +
+        card.querySelector('.card-name').textContent + ' ' +
+        card.querySelector('.card-desc').textContent + ' ' +
+        card.querySelector('.card-file').textContent
+      ).toLowerCase();
+      const matchesTerm = !term || haystack.includes(term);
+
+      const show = matchesCat && matchesTerm;
+      card.hidden = !show;
+      if (show) anyVisible = true;
+    });
+
+    // Hide empty sections
+    sections.forEach(sec => {
+      const cat = sec.getAttribute('data-cat');
+      const hideByFilter = activeFilter !== 'all' && activeFilter !== cat;
+      const hasVisibleCard = sec.querySelector('.card:not([hidden])') !== null;
+      sec.hidden = hideByFilter || !hasVisibleCard;
+    });
+
+    empty.hidden = anyVisible;
+    updateCounts();
+  }
+
+  // Live search
+  q.addEventListener('input', apply);
+
+  // Category filters
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.setAttribute('aria-pressed', 'false'));
+      chip.setAttribute('aria-pressed', 'true');
+      activeFilter = chip.getAttribute('data-filter');
+      apply();
+    });
+  });
+
+  // Keyboard: "/" focuses search, "Esc" clears it
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '/' && document.activeElement !== q) {
+      e.preventDefault(); q.focus();
+    } else if (e.key === 'Escape' && document.activeElement === q) {
+      q.value = ''; apply();
+    }
+  });
+
+  updateCounts();
+})();
+</script>
+
+</body>
+</html>
