@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cardboard Rocket League — Outdoor Camp Activity</title>
+  <style>
+    :root {
+      --brown:       #8b4513;
+      --brown2:      #a0522d;
+      --tan:         #d4a574;
+      --blue:        #1976d2;
+      --blue2:       #0d47a1;
+      --dark:        #2c1810;
+      --dark2:       #4a2c1a;
+      --sidebar-w:   270px;
+      --bg:          #faf3ea;
+      --border:      #e8dccd;
+      --text:        #2c1810;
+      --muted:       #6b5b4d;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-safety:    #c62828;
+      --c-materials: #6a1b9a;
+      --c-build:     #c2410c;
+      --c-play:      #2e7d32;
+      --bg-safety:    #ffebee;
+      --bg-materials: #f3e5f5;
+      --bg-build:     #ffe9d6;
+      --bg-play:      #e8f5e9;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #2c1810, #4a2c1a);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--tan); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 18px; color: var(--dark); flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #d4a574; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #8b6f5a;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #c5a98e; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(212,165,116,.18); border-left-color: var(--tan); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #c5a98e;
+    }
+    .nav-item.active .nav-num { background: var(--tan); color: var(--dark); }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    .hero {
+      background: linear-gradient(135deg, var(--brown), #5d2e08);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '📦'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .18; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .92; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.18); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
+
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '✓'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--brown);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--brown); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--brown); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.safety    { background: var(--bg-safety);    border-color: var(--c-safety); }
+    .sec.materials { background: var(--bg-materials); border-color: var(--c-materials); }
+    .sec.build     { background: var(--bg-build);     border-color: var(--c-build); }
+    .sec.play      { background: var(--bg-play);      border-color: var(--c-play); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .safety    .sec-icon { background: rgba(198,40,40,.13); }
+    .materials .sec-icon { background: rgba(106,27,154,.13); }
+    .build     .sec-icon { background: rgba(194,65,12,.15); }
+    .play      .sec-icon { background: rgba(46,125,50,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .safety    .sec-hdr h3 { color: #b71c1c; }
+    .materials .sec-hdr h3 { color: #4a148c; }
+    .build     .sec-hdr h3 { color: #9a3412; }
+    .play      .sec-hdr h3 { color: #1b5e20; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .build .due-tag { background: rgba(194,65,12,.15); color: #9a3412; }
+    .play  .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .safety .due-tag { background: rgba(198,40,40,.15); color: #b71c1c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .safety    ul li::before { content: '⚠️'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .materials ul li::before { content: '📦'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .build     ul li::before { content: '🔧'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .play      ul li::before { content: '🏆'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+    .step-block {
+      background: #fff; border-radius: 9px; padding: 14px 16px; margin-top: 12px;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .step-block h5 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--c-build); margin-bottom: 8px;
+    }
+    .step-block ol { padding-left: 20px; }
+    .step-block ol li {
+      font-size: 13px; color: var(--text); padding: 4px 0; line-height: 1.55;
+    }
+    .step-block ol li::before { content: ''; }
+
+    .teacher-note {
+      background: #fffbe6; border-left: 3px solid #f9a825; border-radius: 8px;
+      padding: 12px 14px; margin-top: 12px; font-size: 13px; color: #5d4e00; line-height: 1.55;
+    }
+    .teacher-note strong { color: #8b6f00; }
+
+    .materials-grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 12px; margin-top: 12px;
+    }
+    .mat-card {
+      background: #fff; border-radius: 9px; padding: 12px 14px;
+      border: 1px solid var(--border); display: flex; gap: 10px; align-items: flex-start;
+    }
+    .mat-card .mat-icon { font-size: 22px; flex-shrink: 0; }
+    .mat-card .mat-name { font-size: 13px; font-weight: 700; color: var(--text); }
+    .mat-card .mat-qty  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .timing-bar {
+      display: flex; gap: 4px; margin: 14px 0 6px;
+      border-radius: 8px; overflow: hidden; height: 32px;
+      background: rgba(0,0,0,.05); border: 1px solid var(--border);
+    }
+    .timing-seg {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff;
+      padding: 0 6px; min-width: 0; overflow: hidden; white-space: nowrap;
+    }
+    .timing-legend {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      font-size: 11.5px; color: var(--muted); margin-bottom: 14px;
+    }
+    .timing-legend span { display: flex; align-items: center; gap: 5px; }
+    .timing-legend i {
+      width: 11px; height: 11px; border-radius: 3px; display: inline-block;
+    }
+
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--brown); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #fdf6ec; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--brown); white-space: nowrap; }
+
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--brown); color: var(--brown); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    .rules-block {
+      background: #fff; border-radius: 9px; padding: 14px 16px; margin-top: 12px;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .rules-block h5 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--c-play); margin-bottom: 8px;
+    }
+    .rules-block ol { padding-left: 20px; }
+    .rules-block ol li {
+      font-size: 13px; color: var(--text); padding: 4px 0; line-height: 1.55;
+    }
+
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">📦</div>
+      <div>
+        <h1>Cardboard Rocket League</h1>
+        <div class="sub">Outdoor Build · 3-Day Camp</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Camp Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">3-Day Schedule</span>
+    </div>
+    <div class="nav-item" id="nav-materials" onclick="go('materials')">
+      <div class="nav-num">📦</div>
+      <span class="nav-label">Materials List</span>
+    </div>
+    <div class="nav-item" id="nav-safety" onclick="go('safety')">
+      <div class="nav-num">⚠️</div>
+      <span class="nav-label">Safety Rules</span>
+    </div>
+    <div class="nav-group-label">Days</div>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Camp Overview</h2>
+    <span class="chip" id="topChip">3 Days · 1.5 hours/day · Outdoor</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+const data = {
+  goals: [
+    "Design and build a wearable cardboard car you can drive in",
+    "Use teamwork to plan, measure, cut, and assemble your build",
+    "Test, reinforce, and improve based on what breaks",
+    "Decorate and personalize your car with paint, markers, and stickers",
+    "Compete in a team Rocket League tournament with a giant cage ball",
+    "Practice good sportsmanship and creative problem-solving"
+  ],
+  whatYoullNeed: [
+    "Comfortable clothes and closed-toe shoes (no sandals!)",
+    "A water bottle — it gets hot working outside",
+    "Sunscreen and a hat if it's sunny",
+    "A pencil and willingness to get a little dirty"
+  ],
+  materials: [
+    { icon: "📦", name: "Large cardboard boxes",  qty: "1–2 per student (appliance/moving size)" },
+    { icon: "📦", name: "Smaller cardboard sheets", qty: "Plenty of scraps for bumpers and wheels" },
+    { icon: "🔵", name: "Giant inflatable cage ball", qty: "1 per match (4–6 ft diameter)" },
+    { icon: "🔧", name: "Box cutters / safety knives", qty: "Adult-use only" },
+    { icon: "✂️", name: "Heavy-duty scissors",     qty: "1 pair per pair of students" },
+    { icon: "🩹", name: "Duct tape (multi-color)", qty: "8–10 rolls" },
+    { icon: "🩹", name: "Packing tape (clear)",    qty: "4–6 rolls" },
+    { icon: "🪢", name: "Webbing or thick rope",   qty: "20+ ft for shoulder straps" },
+    { icon: "🎨", name: "Acrylic paint + brushes", qty: "Primary colors at minimum" },
+    { icon: "🖍️", name: "Permanent markers",      qty: "Class set, multiple colors" },
+    { icon: "📏", name: "Yardsticks / measuring tape", qty: "4–6 of each" },
+    { icon: "✏️", name: "Pencils + sketch paper",  qty: "1 sheet per student for designs" },
+    { icon: "🚧", name: "Pylons / cones for goals", qty: "4 minimum (2 per goal)" },
+    { icon: "🦺", name: "Bike or skate helmets",   qty: "1 per student (safety)" },
+    { icon: "🧤", name: "Garden gloves",           qty: "Optional, for handling tape edges" }
+  ],
+  safety: [
+    "Adults handle ALL box cutters and utility knives. Students never cut alone.",
+    "Wear a helmet anytime you're in your car during testing or play.",
+    "No running with cars on. No tackling. No grabbing other players' cars.",
+    "If your car falls off, stop immediately and step out — don't drag it.",
+    "If you're sweating or dizzy, take a water break. The cardboard gets hot!",
+    "Tape over every sharp cardboard edge before testing — duct-tape rule.",
+    "Stay inside the marked playing field. No charging the spectators.",
+    "Listen for the whistle: one whistle = pause, two whistles = stop NOW."
+  ],
+  days: [
+    {
+      n: 1,
+      title: "Design and Build the Chassis",
+      tagline: "Sketch your car and build the basic frame",
+      objectives: [
+        "Sketch a design of your dream Rocket League car",
+        "Measure your shoulders and waist for fit",
+        "Cut and tape together a wearable cardboard chassis",
+        "Add shoulder straps so you can drive hands-free"
+      ],
+      topics: [
+        "Measuring and planning before you cut",
+        "Box-folding techniques: how to make a strong shape",
+        "Reinforcing weak corners with extra tape",
+        "Making shoulder straps with rope or webbing",
+        "Working in pairs to hold and tape"
+      ],
+      activity: {
+        title: "Design + Chassis Build",
+        desc: "Day 1 is all about getting your chassis built. By the end of class you should be able to wear your car and walk around without it falling apart.",
+        steps: [
+          "Pick up a sketch sheet. Spend 10 minutes sketching your car — front, side, and top view. Decide on a theme: muscle car, monster truck, race car, animal, or something wild.",
+          "Pair up. Measure each other from shoulder to mid-thigh — that's how tall your car body should be (don't make it longer or you can't walk).",
+          "Pick a big box. Cut out the bottom AND top so you can step into it like a barrel. Adults handle the cutting!",
+          "Cut leg holes in the bottom and arm/shoulder holes near the top. Use a pencil to mark first, then ask an adult to cut.",
+          "Step into your chassis and have a partner check the fit. Adjust holes if too tight.",
+          "Cut two long strips of webbing or thick rope. Tape them firmly to the front and back inside walls to make shoulder straps. Test that they hold weight.",
+          "Reinforce every corner with duct tape — at least 3 layers. This is what keeps your car alive in the tournament.",
+          "Walk around in your car. Bend down. Turn quickly. Anything that flexes too much needs more tape."
+        ]
+      },
+      teacherNote: "The biggest pitfall on Day 1 is students trying to build a car that's too tall, too heavy, or too tight to step out of quickly. Set a max-size rule (no taller than the student's chest) and require an 'eject test' — they must be able to lift the car off in under 5 seconds without help. Also keep box-cutters in a single 'cutting station' run by an adult.",
+      checkpoint: [
+        "I have a sketch of my final design",
+        "My chassis fits — I can walk in it",
+        "Shoulder straps hold the weight without falling",
+        "All corners are taped at least 3 layers thick",
+        "I can take my car off in under 5 seconds"
+      ]
+    },
+    {
+      n: 2,
+      title: "Wheels, Bumpers, and Decoration",
+      tagline: "Add features and make it yours",
+      objectives: [
+        "Add fake wheels, bumpers, and racing details",
+        "Test push-and-pull strength against a partner",
+        "Reinforce any weak spots from Day 1",
+        "Paint, color, and personalize your car",
+        "Pick a team name, color, and number"
+      ],
+      topics: [
+        "Adding non-structural details vs. structural reinforcement",
+        "Using packing tape for stiffness, duct tape for strength",
+        "Paint and marker techniques on cardboard",
+        "Designing a logo or team flag",
+        "Working as a team / picking team names and colors"
+      ],
+      activity: {
+        title: "Customize and Stress-Test",
+        desc: "Today you turn your plain cardboard chassis into a real Rocket League ride. Half the class is decoration; the other half is making sure it survives tomorrow's tournament.",
+        steps: [
+          "Cut 4 cardboard circles (or rectangles) to be wheels. Tape them on the sides — they're for looks, but also act as bumpers.",
+          "Build a front bumper: a folded triangle of cardboard taped across the front. This protects you when you hit the ball.",
+          "Add any extras you want: a spoiler, fins, exhaust pipes, headlights drawn on, a steering wheel inside, etc.",
+          "STRESS TEST: pair up. Push gently against your partner's car for 10 seconds. Anything that flexes or pops off goes back to the tape station.",
+          "Pick your team! Teams of 2–3. Decide on a team name, two team colors, and a team number.",
+          "Paint your car your team color. Acrylic paint will dry in about 20 minutes if it's a thin coat.",
+          "While paint dries, draw your team logo on a small cardboard flag and tape it to the back like an antenna flag.",
+          "Add your number, your driver name, and any sponsor logos you want. Get creative!"
+        ]
+      },
+      teacherNote: "Day 2 is the most fun for the kids but also the most chaotic. Pre-station the supplies: paint at one table, tape at another, design materials at a third. Rotate students through. Watch for paint-on-clothes incidents — have aprons or old t-shirts ready. Run the stress test BEFORE painting — wet paint + repairs is a mess.",
+      checkpoint: [
+        "My car has wheels, a bumper, and at least one extra detail",
+        "It survived the partner stress test",
+        "I have a team name, team colors, and a number",
+        "My car is painted and decorated",
+        "Our team has a flag with our logo"
+      ]
+    },
+    {
+      n: 3,
+      title: "Tournament Day with the Cage Ball",
+      tagline: "Final touches, then PLAY",
+      objectives: [
+        "Do final repairs and safety checks",
+        "Walk through the rules and field setup",
+        "Compete in a round-robin tournament",
+        "Practice good sportsmanship — cheer for everyone",
+        "Take team photos and celebrate"
+      ],
+      topics: [
+        "Setting up an outdoor field with cones",
+        "Round-robin vs. single-elimination tournament formats",
+        "Rules for a safe cardboard sport",
+        "Refereeing and respecting calls",
+        "Celebrating wins AND great effort"
+      ],
+      activity: {
+        title: "Repair, Warm Up, Tournament",
+        desc: "First 20 minutes: repairs and helmets on. Next 10: rules + warmup. Then the rest is GAMES with the giant cage ball!",
+        steps: [
+          "Walk-of-shame inspection: every student walks past the tape station for last-minute reinforcement. Any flopping flap or weak corner gets fixed now.",
+          "Helmet check. Strap test. Eject test — 5 seconds or less to take the car off.",
+          "Field walkthrough: 4 cones mark 2 goals. Center circle is where the ball starts. Out-of-bounds is the orange cone perimeter.",
+          "Rules walkthrough (see below). Students ask questions before the first match starts.",
+          "Warmup: each team gets 2 minutes to push the cage ball around without opponents.",
+          "Round-robin: every team plays every other team for 5 minutes per match. Most goals wins. Tie = both teams get a point.",
+          "Championship: top two teams play a 7-minute final.",
+          "Cool-down: water break, team photos, ribbon ceremony, awards (best design, best teamwork, best name, etc. — everyone gets a ribbon)."
+        ]
+      },
+      rules: [
+        "Two teams of 2–3 players. One giant cage ball. Two goals (cones).",
+        "Push the ball into the other team's goal — body or car contact only. NO hands, NO kicking the ball with feet hard.",
+        "Body checks are NOT allowed. Light contact between cars is OK; tackling is NOT.",
+        "If a player falls or their car breaks, all play stops until they're up.",
+        "If the ball goes out of bounds, restart from the closest sideline.",
+        "Goals = 1 point. After a goal, reset to center circle.",
+        "5-minute matches in round-robin; 7 minutes in the final.",
+        "The ref's whistle is the law. One whistle = pause. Two = stop NOW."
+      ],
+      teacherNote: "Reserve at least 60 of the 90 minutes for actual play — repairs and rules eat time fast. Have a 'pit crew' adult with extra tape near the field. Run matches simultaneously if you have space (two fields = twice the play time per kid). Save 10 minutes at the end for awards — give EVERY team an award (Best Design, Loudest Cheers, Most Improved Car, etc.) so no one walks away empty-handed.",
+      checkpoint: [
+        "I passed the safety check (helmet + eject test)",
+        "I played in at least 2 matches",
+        "I cheered for at least one other team",
+        "My team got a ribbon or award",
+        "I had FUN and I'm proud of what I built"
+      ]
+    }
+  ]
+};
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Camp Overview';
+  document.getElementById('topChip').textContent  = '3 Days · 1.5 hours/day · Outdoor';
+
+  const goals = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const need  = data.whatYoullNeed.map(g => `<li>${esc(g)}</li>`).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Cardboard Rocket League 📦⚽</h1>
+      <div class="tagline">Build a wearable cardboard car, then play soccer with a giant cage ball — outdoor camp companion to our Scratch coding activity.</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">3</div><div class="lbl">Days</div></div>
+        <div class="stat-box"><div class="val">90</div><div class="lbl">Min/Day</div></div>
+        <div class="stat-box"><div class="val">1</div><div class="lbl">Big Tournament</div></div>
+        <div class="stat-box"><div class="val">∞</div><div class="lbl">Fun</div></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#ffe9d6">🎯</span> What You'll Learn</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e3f2fd">👕</span> What to Wear / Bring</div>
+        <ul class="check-list">${need}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">🏆</span> The Big Goal</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55">
+          Over 3 days you'll go from a flat box to a fully-decorated wearable Rocket League car —
+          and on Day 3 you'll compete in a tournament using a <strong>giant inflatable cage ball</strong>.
+          Day 1: design and chassis. Day 2: wheels, bumpers, and paint. Day 3: tournament!
+        </p>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card" onclick="go('materials')" style="cursor:pointer">
+        <div class="card-title"><span class="card-icon" style="background:#f3e5f5">📦</span> Materials List →</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55">
+          Full list of cardboard, tape, paint, tools, and the giant cage ball. Click to see everything you need to run the activity.
+        </p>
+      </div>
+      <div class="card" onclick="go('safety')" style="cursor:pointer">
+        <div class="card-title"><span class="card-icon" style="background:#ffebee">⚠️</span> Safety Rules →</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55">
+          Quick safety rules everyone follows on Day 3. Adult tool use, helmets, ejection test, and field rules.
+        </p>
+      </div>
+      <div class="card" onclick="go('schedule')" style="cursor:pointer">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">📅</span> 3-Day Schedule →</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55">
+          See the full 3-day plan at a glance, then dive into each day's instructions.
+        </p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = '3-Day Schedule';
+  document.getElementById('topChip').textContent  = 'All 3 Days at a glance';
+
+  const rows = data.days.map(d =>
+    `<tr onclick="go('day-${d.n}')">
+      <td class="wk-col">Day ${d.n}</td>
+      <td>${esc(d.title)}</td>
+      <td>${esc(d.tagline)}</td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Day</th><th>Title</th><th>Focus</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that day.</p>
+  </div>`;
+}
+
+function renderMaterials() {
+  document.getElementById('topTitle').textContent = 'Materials List';
+  document.getElementById('topChip').textContent  = 'Everything you need for 3 days';
+
+  const grid = data.materials.map(m =>
+    `<div class="mat-card">
+      <div class="mat-icon">${m.icon}</div>
+      <div>
+        <div class="mat-name">${esc(m.name)}</div>
+        <div class="mat-qty">${esc(m.qty)}</div>
+      </div>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#f3e5f5">📦</span> Full Materials List</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:6px">
+        Quantities are sized for a class of about 12 students. Scale up or down as needed. Most materials can be sourced from local moving stores, hardware stores, or donated cardboard from a local appliance store.
+      </p>
+      <div class="materials-grid">${grid}</div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <div class="card-title"><span class="card-icon" style="background:#fff3e0">💡</span> Sourcing Tips</div>
+      <ul class="check-list">
+        <li>Ask local appliance stores or bike shops for free big boxes — fridge, washer, and bike boxes are perfect</li>
+        <li>Costco and Sam's Club throw out giant boxes on most weekday mornings</li>
+        <li>Buy duct tape in bulk — you'll go through 8–10 rolls easily for 12 kids</li>
+        <li>Order the cage ball at least 2 weeks in advance — they're not in most local stores</li>
+        <li>Old bike helmets are perfect — ask families to bring their own from home</li>
+        <li>Keep one supply of pre-cut "patch tape" strips ready for fast on-field repairs Day 3</li>
+      </ul>
+    </div>
+  </div>`;
+}
+
+function renderSafety() {
+  document.getElementById('topTitle').textContent = 'Safety Rules';
+  document.getElementById('topChip').textContent  = 'Read these before Day 3';
+
+  const items = data.safety.map(s => `<li>${esc(s)}</li>`).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sec safety">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚠️</div>
+        <h3>Required Safety Rules</h3>
+        <span class="due-tag">Read every day</span>
+      </div>
+      <p>These rules are reviewed at the start of every day. Breaking a safety rule = you sit out the next match. Three strikes = you sit out the rest of the day.</p>
+      <ul>${items}</ul>
+    </div>
+
+    <div class="sec safety">
+      <div class="sec-hdr">
+        <div class="sec-icon">🚑</div>
+        <h3>Adult Supervision</h3>
+      </div>
+      <p>This activity needs at least <strong>2 adults</strong> for a class of 12. Roles:</p>
+      <ul>
+        <li>One adult runs the "cutting station" — the only place where utility knives are used</li>
+        <li>One adult patrols the build area and answers questions</li>
+        <li>On Day 3, one adult is the referee, one is the pit crew (tape repairs)</li>
+        <li>A first-aid kit must be on-site with bandages, antiseptic wipes, and ice packs</li>
+      </ul>
+    </div>
+  </div>`;
+}
+
+function renderDay(num) {
+  const d = data.days.find(x => x.n === num);
+  if (!d) return;
+
+  document.getElementById('topTitle').textContent = `Day ${d.n}: ${d.title}`;
+  document.getElementById('topChip').textContent  = `Day ${d.n} of 3 · 1.5 hours`;
+
+  let html = '<div class="fade-in">';
+
+  const objs   = d.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = d.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Day ${d.n} · ${esc(d.tagline)}</div>
+    <h2>${esc(d.title)}</h2>
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Today's Goals</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Skills You'll Use</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  if (d.activity) {
+    const steps = d.activity.steps.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec build">
+      <div class="sec-hdr">
+        <div class="sec-icon">🔧</div>
+        <h3>Today's Build: ${esc(d.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(d.activity.desc)}</p>
+      <div class="step-block">
+        <h5>Step-by-Step</h5>
+        <ol>${steps}</ol>
+      </div>
+      ${d.teacherNote ? `<div class="teacher-note"><strong>👨‍🏫 Teacher note:</strong> ${esc(d.teacherNote)}</div>` : ''}
+    </div>`;
+  }
+
+  if (d.rules) {
+    const items = d.rules.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec play">
+      <div class="sec-hdr">
+        <div class="sec-icon">🏆</div>
+        <h3>Tournament Rules</h3>
+      </div>
+      <div class="rules-block">
+        <h5>How to Play</h5>
+        <ol>${items}</ol>
+      </div>
+    </div>`;
+  }
+
+  if (d.checkpoint) {
+    const items = d.checkpoint.map(c => `<li>${esc(c)}</li>`).join('');
+    html += `<div class="sec play">
+      <div class="sec-hdr">
+        <div class="sec-icon">✅</div>
+        <h3>End-of-Day Checkpoint</h3>
+        <span class="due-tag">Last 5 min</span>
+      </div>
+      <p class="desc">Make sure you can check off each of these before you leave today.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  const prev = num > 1 ? num - 1 : null;
+  const next = num < 3 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('day-${prev}')">
+      &#8592; Day ${prev ?? ''}
+    </button>
+    <span style="font-size:12px;color:var(--muted)">Day ${num} of 3</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('day-${next}')">
+      Day ${next ?? ''} &#8594;
+    </button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+function go(view) {
+  setActive(view);
+  if (view === 'overview')          renderOverview();
+  else if (view === 'schedule')     renderSchedule();
+  else if (view === 'materials')    renderMaterials();
+  else if (view === 'safety')       renderSafety();
+  else if (view.startsWith('day-')) renderDay(+view.replace('day-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.days.forEach(d => {
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-day-${d.n}`;
+    item.onclick = () => go(`day-${d.n}`);
+    item.innerHTML = `<div class="nav-num">${d.n}</div><span class="nav-label">${esc(d.title)}</span>`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rocket Soccer — Scratch Game Camp Activity</title>
+  <style>
+    :root {
+      --orange:      #ff6f00;
+      --orange2:     #ff8f00;
+      --yellow:      #ffd54f;
+      --dark:        #1f1733;
+      --dark2:       #36254f;
+      --sidebar-w:   270px;
+      --bg:          #f6f1ea;
+      --border:      #e8ddd0;
+      --text:        #1f1733;
+      --muted:       #6a5e72;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-setup:     #7b1fa2;
+      --c-activity:  #1565c0;
+      --c-build:     #c2410c;
+      --c-extend:    #2e7d32;
+      --bg-setup:    #f3e5f5;
+      --bg-activity: #e3f2fd;
+      --bg-build:    #ffe9d6;
+      --bg-extend:   #e8f5e9;
+      --code-bg:     #1e2d3d;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #1f1733, #36254f);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .py-badge {
+      width: 38px; height: 38px; background: var(--orange); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #c1a3da; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #6a5188;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #b9a4d2; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(255,111,0,.18); border-left-color: var(--orange); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #b9a4d2;
+    }
+    .nav-item.active .nav-num { background: var(--orange); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    .hero {
+      background: linear-gradient(135deg, var(--orange), #b71c1c);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '🚗'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .18; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .9; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.18); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .85; text-transform: uppercase; letter-spacing: .5px; }
+
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(180px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '✓'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--orange);
+      box-shadow: 0 4px 12px rgba(255,111,0,.18);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--orange);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--orange); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--orange); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.setup    { background: var(--bg-setup);    border-color: var(--c-setup); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.build    { background: var(--bg-build);    border-color: var(--c-build); }
+    .sec.extend   { background: var(--bg-extend);   border-color: var(--c-extend); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .setup    .sec-icon { background: rgba(123,31,162,.13); }
+    .activity .sec-icon { background: rgba(55,118,171,.13); }
+    .build    .sec-icon { background: rgba(194,65,12,.15); }
+    .extend   .sec-icon { background: rgba(46,125,50,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .setup    .sec-hdr h3 { color: #6a0d91; }
+    .activity .sec-hdr h3 { color: #1a4a7a; }
+    .build    .sec-hdr h3 { color: #9a3412; }
+    .extend   .sec-hdr h3 { color: #1b5e20; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .build  .due-tag { background: rgba(194,65,12,.15); color: #9a3412; }
+    .extend .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .setup    ul li::before { content: '☐'; color: var(--c-setup); font-size: 15px; line-height: 1.1; flex-shrink: 0; }
+    .activity ul li::before { content: '▸'; color: var(--c-activity); font-weight: 700; flex-shrink: 0; }
+    .build    ul li::before { content: '🔧'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+    .extend   ul li::before { content: '✨'; font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+    .step-block {
+      background: #fff; border-radius: 9px; padding: 14px 16px; margin-top: 12px;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    .step-block h5 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--c-activity); margin-bottom: 8px;
+    }
+    .step-block ol { padding-left: 20px; }
+    .step-block ol li {
+      font-size: 13px; color: var(--text); padding: 4px 0; line-height: 1.55;
+    }
+    .step-block ol li::before { content: ''; }
+
+    .teacher-note {
+      background: #fffbe6; border-left: 3px solid #f9a825; border-radius: 8px;
+      padding: 12px 14px; margin-top: 12px; font-size: 13px; color: #5d4e00; line-height: 1.55;
+    }
+    .teacher-note strong { color: #8b6f00; }
+
+    .code-block {
+      background: var(--code-bg); border-radius: 9px;
+      padding: 16px; margin-top: 14px; overflow-x: auto;
+    }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 12.5px; line-height: 1.65; color: #cdd9e5; white-space: pre-wrap;
+    }
+    .code-block .label {
+      color: #ffd54f; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; display: block; margin-bottom: 6px;
+    }
+
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--orange); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #fff7ee; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--orange); white-space: nowrap; }
+
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--orange); color: var(--orange); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    .mini-grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 14px; margin-top: 12px;
+    }
+    .mini-card {
+      background: #fff; border-radius: 10px; padding: 14px 16px;
+      border: 1px solid var(--border); border-left: 4px solid var(--c-extend);
+    }
+    .mini-card h5 {
+      font-size: 13.5px; font-weight: 700; margin-bottom: 6px; color: var(--text);
+    }
+    .mini-card p {
+      font-size: 12.5px; color: var(--muted); line-height: 1.5; margin: 0;
+    }
+    .mini-card .tag {
+      display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .4px; padding: 2px 7px; border-radius: 4px;
+      background: rgba(46,125,50,.13); color: var(--c-extend); margin-top: 8px;
+    }
+
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="py-badge">🚗</div>
+      <div>
+        <h1>Rocket Soccer</h1>
+        <div class="sub">Scratch Game · 3-Day Camp</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Camp Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">3-Day Schedule</span>
+    </div>
+    <div class="nav-group-label">Days</div>
+  </nav>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Camp Overview</h2>
+    <span class="chip" id="topChip">3 Days · 1.5 hours/day · No experience needed</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+const data = {
+  goals: [
+    "Use Scratch to build a working two-sprite game from scratch",
+    "Understand events, motion, conditionals, and variables",
+    "Make sprites respond to keys, collisions, and the mouse",
+    "Use variables to track score and game state",
+    "Add sound, costumes, and polish to a finished game",
+    "Share your project online so friends and family can play"
+  ],
+  whatYoullNeed: [
+    "A laptop or Chromebook with internet",
+    "A free Scratch account — scratch.mit.edu",
+    "Headphones (optional, for testing sounds)",
+    "Excitement and willingness to break things"
+  ],
+  resources: [
+    { icon: "🐱", title: "Scratch",            desc: "scratch.mit.edu",                 url: "https://scratch.mit.edu/" },
+    { icon: "📘", title: "Scratch Wiki",       desc: "All blocks explained",            url: "https://en.scratch-wiki.info/" },
+    { icon: "🎓", title: "Scratch Tutorials",  desc: "Official video tutorials",        url: "https://scratch.mit.edu/projects/editor/?tutorial=getStarted" },
+    { icon: "🎨", title: "Sprite Library",     desc: "Free sprites and backgrounds",    url: "https://scratch.mit.edu/projects/editor/" },
+    { icon: "🔊", title: "Free Sound Effects", desc: "freesound.org",                   url: "https://freesound.org/" },
+    { icon: "💡", title: "Project Ideas",      desc: "Browse what others built",        url: "https://scratch.mit.edu/explore/projects/games/" }
+  ],
+  days: [
+    {
+      n: 1,
+      title: "Build Your Rocket Car",
+      tagline: "Driving, arenas, and the basics of Scratch",
+      objectives: [
+        "Create a Scratch account and join the studio",
+        "Add a car sprite and arena backdrop",
+        "Make the car drive with arrow keys",
+        "Make the car turn smoothly and stop at walls"
+      ],
+      topics: [
+        "The Scratch editor: stage, sprites, blocks",
+        "Event blocks (when green flag clicked)",
+        "Motion blocks (move, turn, point)",
+        "Forever loops and if statements",
+        "Costumes and basic sprite editing"
+      ],
+      setup: [
+        "Go to scratch.mit.edu and click 'Join Scratch' to create a free account",
+        "Use a username your teacher approves — no real names",
+        "Have a parent/guardian email handy if asked",
+        "Click 'Create' to open a new project, then rename it 'Rocket Soccer Day 1'",
+        "Save often! Scratch auto-saves but click 'File → Save now' to be safe"
+      ],
+      activity: {
+        title: "Drive Your Car Around the Arena",
+        desc: "Today you build the foundation of Rocket Soccer: a car you can drive around an arena. By the end of class, you should be able to zoom around the field with the arrow keys.",
+        steps: [
+          "Delete the cat sprite (right-click → delete).",
+          "Click 'Choose a Sprite' (cat icon) and pick a car — try the 'Convertible 2' or 'Convertible 3' sprite.",
+          "Resize your car: in the sprite panel, change Size to 60.",
+          "Click 'Choose a Backdrop' (mountain icon) and pick 'Soccer 2' for an arena feel.",
+          "Click your car sprite. In the Code tab, drag in:  when ⚑ clicked → forever → if key (up arrow) pressed → move 5 steps.",
+          "Add three more 'if' blocks inside the forever: down arrow → move -3 steps, left arrow → turn left 4 degrees, right arrow → turn right 4 degrees.",
+          "Click the green flag and test! Tweak the numbers until the driving feels good.",
+          "Bonus: add 'if on edge, bounce' so you can't drive off the field."
+        ]
+      },
+      code: {
+        label: "Driving Script (read this in Scratch's block colors)",
+        snippet:
+`when ⚑ clicked
+go to x: 0  y: -100
+point in direction: 90
+forever
+  if <key (up arrow) pressed?> then
+    move 5 steps
+  end
+  if <key (down arrow) pressed?> then
+    move -3 steps
+  end
+  if <key (left arrow) pressed?> then
+    turn ↺ 4 degrees
+  end
+  if <key (right arrow) pressed?> then
+    turn ↻ 4 degrees
+  end
+  if <touching (edge)?> then
+    move -8 steps
+  end`
+      },
+      teacherNote: "Most students will finish driving in 30–40 minutes. Use the remaining time to (a) help the slow finishers, and (b) challenge fast finishers to add a second car (player 2: WASD keys). Watch for the classic confusion between 'turn' (changes direction) and 'point in direction' (sets direction to a specific angle).",
+      checkpoint: [
+        "My car drives forward with up arrow",
+        "My car turns with left and right arrows",
+        "My car stops or bounces at the edges",
+        "I saved my project and added it to the camp studio"
+      ]
+    },
+    {
+      n: 2,
+      title: "Add the Ball and Score Goals",
+      tagline: "Collisions, physics, and variables",
+      objectives: [
+        "Add a soccer ball sprite and make it move when hit",
+        "Detect when the ball touches the car (collision)",
+        "Create a score variable and update it",
+        "Detect when a goal is scored and reset the ball"
+      ],
+      topics: [
+        "Adding sprites and using 'touching' blocks",
+        "Variables: making them, changing them, showing them",
+        "Broadcasts and messages between sprites",
+        "Random numbers (pick random)",
+        "Sensing: which sprite is touching what"
+      ],
+      activity: {
+        title: "Make the Ball React and Track Score",
+        desc: "Open your Day 1 project (or 'Remix' it as 'Rocket Soccer Day 2'). Today you make a ball that gets pushed by your car, and you keep score when it goes into a goal.",
+        steps: [
+          "Add a 'Soccer Ball' sprite from the library. Resize to 50.",
+          "Click the ball sprite. Add a script:  when ⚑ clicked → go to x: 0 y: 0 → forever → if touching Convertible 2? → point in direction (direction of car) → move 8 steps.",
+          "The ball might fly off — add 'if on edge, bounce' inside the forever to keep it in play.",
+          "Make a variable called 'Score' (Variables → Make a Variable). It should appear on the stage.",
+          "Add a 'goal zone': use the Paint a Sprite tool to draw a thin colored rectangle on the right edge — name it 'Goal'.",
+          "On the ball sprite, add another if block:  if touching Goal? → change Score by 1 → broadcast 'goal scored' → go to x: 0 y: 0.",
+          "When 'goal scored' broadcast happens, play a cheer sound: when I receive 'goal scored' → play sound 'cheer' until done.",
+          "Test! Drive into the ball and try to push it into the goal."
+        ]
+      },
+      code: {
+        label: "Ball Logic",
+        snippet:
+`when ⚑ clicked
+go to x: 0  y: 0
+forever
+  if <touching (Convertible 2)?> then
+    point in direction (direction of [Convertible 2 v])
+    move 8 steps
+  end
+  if <touching (Goal)?> then
+    change [Score v] by 1
+    broadcast (goal scored v)
+    go to x: 0  y: 0
+  end
+  if on edge, bounce
+end`
+      },
+      teacherNote: "The ball physics will feel janky — that's OK and actually funny for middle schoolers. If a student wants 'real physics,' show them how to use a velocity variable (vx, vy) and add friction by multiplying by 0.95 each tick. This is a great stretch goal but only for students who already finished the basics.",
+      checkpoint: [
+        "I have a ball that moves when my car hits it",
+        "I have a Score variable that goes up",
+        "Scoring resets the ball to the center",
+        "A sound plays when I score"
+      ]
+    },
+    {
+      n: 3,
+      title: "Two Players, Power-Ups, and Polish",
+      tagline: "Make it a real game and share it",
+      objectives: [
+        "Add a second player car with different controls",
+        "Add at least one power-up (boost, big ball, freeze, etc.)",
+        "Add a timer and a winning condition",
+        "Polish the look and share the project online"
+      ],
+      topics: [
+        "Cloning sprites or duplicating with new controls",
+        "Multiple variables (Score 1, Score 2, Time)",
+        "Timer block and game-end logic",
+        "Costumes and visual effects (color, ghost)",
+        "Sharing a project so others can play"
+      ],
+      activity: {
+        title: "Tournament-Ready Rocket Soccer",
+        desc: "Add a second player so you can challenge a friend. Build at least one power-up, add a 60-second timer, and announce the winner. Then share your game!",
+        steps: [
+          "Right-click your car sprite and pick 'Duplicate'. Rename it 'Player 2'.",
+          "Change Player 2's controls: W = up, S = down, A = left, D = right. Change its costume color so it's easy to tell apart.",
+          "Make a second variable: 'Score 2'. Add a second goal sprite on the LEFT side. Update the ball to also check 'if touching Goal 2 → change Score 2 by 1'.",
+          "Add a 'Time' variable. Set it to 60 when the flag is clicked. Use:  forever → wait 1 second → change Time by -1 → if Time = 0 → broadcast 'game over'.",
+          "When 'game over' is received, every sprite should 'stop other scripts in sprite' and show a winner: if Score > Score 2, show 'P1 wins!', etc.",
+          "Pick ONE power-up to add. Examples below.",
+          "Click 'Share' at the top of Scratch (you must be logged in). Add a title, instructions ('Arrows / WASD'), and notes-and-credits. Add to the camp studio.",
+          "Grab a partner and play each other's games for the last 15 minutes!"
+        ]
+      },
+      code: {
+        label: "Power-Up Example: Speed Boost",
+        snippet:
+`# On a 'Boost' sprite that randomly appears
+when ⚑ clicked
+forever
+  go to x: (pick random -200 to 200) y: (pick random -100 to 100)
+  show
+  wait until <touching (Convertible 2)?> or <touching (Player 2)?>
+  hide
+  broadcast (boost picked up)
+  wait 8 seconds
+end
+
+# On the car sprite
+when I receive (boost picked up v)
+set [speed v] to 9
+wait 3 seconds
+set [speed v] to 5`
+      },
+      teacherNote: "Day 3 has the widest skill gap. Have a 'minimum viable share' written on the board: 2 players + score + timer + shared. Anyone meeting that has a complete game. Power-ups, sound design, and polish are bonus. Reserve the LAST 15 MINUTES for play-testing each other's games — this is the most fun and rewarding part for the kids.",
+      powerups: [
+        { name: "Speed Boost", desc: "A lightning bolt sprite that gives 3 seconds of double speed when picked up." },
+        { name: "Big Ball",    desc: "Powerup that makes the ball 2x size for 5 seconds — easier to hit." },
+        { name: "Freeze",      desc: "Stops the other player's car for 2 seconds." },
+        { name: "Mini-Me",     desc: "Shrinks your own car so you can fit through tight spots." },
+        { name: "Reverse Day", desc: "Swaps controls (up = down) for the other player for 5 seconds." },
+        { name: "Multi-Ball",  desc: "Spawns a second ball so two goals can happen at once." }
+      ],
+      checkpoint: [
+        "Two players can play with different keys",
+        "There is a timer that ends the game",
+        "A winner is announced when time runs out",
+        "I have at least one power-up working",
+        "My project is shared and added to the studio"
+      ]
+    }
+  ],
+  miniProjects: [
+    { name: "Maze Runner",       desc: "A ball you steer through a hand-drawn maze. Touching walls sends you to the start.", tag: "Easy" },
+    { name: "Pong Remix",        desc: "Classic two-paddle Pong, but the ball changes color and speeds up over time.",         tag: "Easy" },
+    { name: "Catch the Pizza",   desc: "Catch falling pizza slices with a basket. Avoid the broccoli.",                       tag: "Easy" },
+    { name: "Shark Dodge",       desc: "Swim a fish with the mouse. Avoid sharks that get faster as time passes.",            tag: "Medium" },
+    { name: "Clicker Empire",    desc: "Click a button to earn points. Buy upgrades that auto-click for you.",                tag: "Medium" },
+    { name: "Platform Jumper",   desc: "Side-scrolling platformer with gravity, jumping, and pits to avoid.",                 tag: "Hard" },
+    { name: "Asteroid Blaster",  desc: "Top-down spaceship that shoots asteroids. Multiple lives and a high score.",          tag: "Hard" },
+    { name: "Music Maker",       desc: "Click drum pads to make a beat. Add looping and tempo control.",                      tag: "Creative" }
+  ]
+};
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function codeBlock(label, code) {
+  if (!code) return '';
+  return `<div class="code-block">
+    <div class="code-dots">
+      <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+    </div>
+    ${label ? `<span class="label">${esc(label)}</span>` : ''}
+    <pre>${esc(code)}</pre>
+  </div>`;
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Camp Overview';
+  document.getElementById('topChip').textContent  = '3 Days · 1.5 hours/day · No experience needed';
+
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const need    = data.whatYoullNeed.map(g => `<li>${esc(g)}</li>`).join('');
+  const res     = data.resources.map(r =>
+    `<div class="resource-card" onclick="window.open('${r.url}','_blank')">
+      <div class="r-icon">${r.icon}</div>
+      <div class="r-title">${esc(r.title)}</div>
+      <div class="r-desc">${esc(r.desc)}</div>
+    </div>`
+  ).join('');
+
+  const minis = data.miniProjects.map(m =>
+    `<div class="mini-card">
+      <h5>${esc(m.name)}</h5>
+      <p>${esc(m.desc)}</p>
+      <span class="tag">${esc(m.tag)}</span>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Rocket Soccer 🚗⚽</h1>
+      <div class="tagline">Build your own driving + soccer game in Scratch — paired with our outdoor cardboard Rocket League camp!</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">3</div><div class="lbl">Days</div></div>
+        <div class="stat-box"><div class="val">90</div><div class="lbl">Min/Day</div></div>
+        <div class="stat-box"><div class="val">1</div><div class="lbl">Big Game</div></div>
+        <div class="stat-box"><div class="val">8+</div><div class="lbl">Mini Ideas</div></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#ffe9d6">🎯</span> What You'll Learn</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e3f2fd">📦</span> What You'll Need</div>
+        <ul class="check-list">${need}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">🏁</span> The Big Project</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.55">
+          Over 3 days you'll build <strong>Rocket Soccer</strong> — a 2-player driving and soccer game inspired by the
+          cardboard cars you're building outside. Day 1: drive a car. Day 2: hit a ball, score goals.
+          Day 3: 2-player tournament with power-ups. Then share it with friends and family!
+        </p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title"><span class="card-icon" style="background:#f3e5f5">🔗</span> Helpful Links</div>
+      <div class="row3" style="margin-bottom:0; margin-top:4px">${res}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#e8f5e9">🌟</span> Mini-Project Ideas (for fast finishers or take home)</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.55">
+        Done early, or want to keep going at home? Try one of these:
+      </p>
+      <div class="mini-grid">${minis}</div>
+    </div>
+  </div>`;
+}
+
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = '3-Day Schedule';
+  document.getElementById('topChip').textContent  = 'All 3 Days at a glance';
+
+  const rows = data.days.map(d =>
+    `<tr onclick="go('day-${d.n}')">
+      <td class="wk-col">Day ${d.n}</td>
+      <td>${esc(d.title)}</td>
+      <td>${esc(d.tagline)}</td>
+    </tr>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Day</th><th>Title</th><th>Focus</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that day.</p>
+  </div>`;
+}
+
+function renderDay(num) {
+  const d = data.days.find(x => x.n === num);
+  if (!d) return;
+
+  document.getElementById('topTitle').textContent = `Day ${d.n}: ${d.title}`;
+  document.getElementById('topChip').textContent  = `Day ${d.n} of 3 · 1.5 hours`;
+
+  let html = '<div class="fade-in">';
+
+  const objs   = d.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = d.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Day ${d.n} · ${esc(d.tagline)}</div>
+    <h2>${esc(d.title)}</h2>
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Today's Goals</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Skills You'll Use</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  if (d.setup) {
+    const items = d.setup.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec setup">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚙️</div>
+        <h3>Before You Start</h3>
+        <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--c-setup);background:rgba(123,31,162,.1);padding:3px 10px;border-radius:20px">First 10 min</span>
+      </div>
+      <p>Get your account set up and the project open.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  if (d.activity) {
+    const steps = d.activity.steps.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec activity">
+      <div class="sec-hdr">
+        <div class="sec-icon">🎮</div>
+        <h3>Today's Build: ${esc(d.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(d.activity.desc)}</p>
+      <div class="step-block">
+        <h5>Step-by-Step</h5>
+        <ol>${steps}</ol>
+      </div>
+      ${d.code ? codeBlock(d.code.label, d.code.snippet) : ''}
+      ${d.teacherNote ? `<div class="teacher-note"><strong>👨‍🏫 Teacher note:</strong> ${esc(d.teacherNote)}</div>` : ''}
+    </div>`;
+  }
+
+  if (d.powerups) {
+    const items = d.powerups.map(p =>
+      `<li><strong>${esc(p.name)}.</strong> ${esc(p.desc)}</li>`
+    ).join('');
+    html += `<div class="sec extend">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚡</div>
+        <h3>Power-Up Ideas (pick at least one)</h3>
+      </div>
+      <p class="desc">Each power-up only needs ~10 minutes. Add as many as you have time for.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  if (d.checkpoint) {
+    const items = d.checkpoint.map(c => `<li>${esc(c)}</li>`).join('');
+    html += `<div class="sec build">
+      <div class="sec-hdr">
+        <div class="sec-icon">🏁</div>
+        <h3>End-of-Day Checkpoint</h3>
+        <span class="due-tag">Last 5 min</span>
+      </div>
+      <p class="desc">Make sure you can check off each of these before you leave today.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  const prev = num > 1 ? num - 1 : null;
+  const next = num < 3 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('day-${prev}')">
+      &#8592; Day ${prev ?? ''}
+    </button>
+    <span style="font-size:12px;color:var(--muted)">Day ${num} of 3</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('day-${next}')">
+      Day ${next ?? ''} &#8594;
+    </button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+function go(view) {
+  setActive(view);
+  if (view === 'overview')         renderOverview();
+  else if (view === 'schedule')    renderSchedule();
+  else if (view.startsWith('day-')) renderDay(+view.replace('day-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.days.forEach(d => {
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-day-${d.n}`;
+    item.onclick = () => go(`day-${d.n}`);
+    item.innerHTML = `<div class="nav-num">${d.n}</div><span class="nav-label">${esc(d.title)}</span>`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
