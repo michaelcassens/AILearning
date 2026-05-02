@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beginning Rust — 16-Week Course</title>
+  <style>
+    :root {
+      --orange:      #ce422b;
+      --orange-deep: #a33420;
+      --tan:         #f5d6a8;
+      --dark:        #1f1611;
+      --dark2:       #3a2a1f;
+      --sidebar-w:   270px;
+      --bg:          #faf4ec;
+      --border:      #ecdfd0;
+      --text:        #1f1611;
+      --muted:       #6b5a4d;
+      --shadow:      0 2px 10px rgba(0,0,0,.07);
+      --c-setup:     #6a3410;
+      --c-activity:  #1565c0;
+      --c-assign:    #2e7d32;
+      --c-assess:    #b3360c;
+      --bg-setup:    #f7e9d6;
+      --bg-activity: #e3f2fd;
+      --bg-assign:   #e8f5e9;
+      --bg-assess:   #fff3e0;
+      --code-bg:     #1a1410;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w); min-width: var(--sidebar-w);
+      background: var(--dark); display: flex; flex-direction: column; height: 100vh;
+    }
+    .sidebar-head {
+      padding: 18px 14px 14px; flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(150deg, #1f1611, #3a2a1f);
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .rs-badge {
+      width: 38px; height: 38px; background: var(--orange); border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 14px; color: #fff; flex-shrink: 0;
+    }
+    .sidebar-head h1 { color: #fff; font-size: 14px; font-weight: 700; line-height: 1.3; }
+    .sidebar-head .sub { color: #c9a98a; font-size: 11px; margin-top: 2px; }
+    .hamburger {
+      display: none; margin-left: auto;
+      background: none; border: none; color: #aaa; font-size: 22px; cursor: pointer; padding: 2px 4px;
+    }
+    .nav-scroll {
+      flex: 1; overflow-y: auto; padding: 6px 0 16px;
+      scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent;
+    }
+    .nav-scroll::-webkit-scrollbar { width: 4px; }
+    .nav-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+    .nav-group-label {
+      padding: 12px 14px 4px; font-size: 9.5px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; color: #6b5547;
+    }
+    .nav-item {
+      display: flex; align-items: center; padding: 8px 14px; gap: 10px;
+      cursor: pointer; color: #b8a08c; font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: background .12s, color .12s; user-select: none;
+    }
+    .nav-item:hover { background: var(--dark2); color: #fff; }
+    .nav-item.active { background: rgba(206,66,43,.22); border-left-color: var(--orange); color: #fff; }
+    .nav-num {
+      width: 26px; height: 26px; background: rgba(255,255,255,.08); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0; color: #97816e;
+    }
+    .nav-item.active .nav-num { background: var(--orange); color: #fff; }
+    .nav-label { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .pill {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: .4px; flex-shrink: 0;
+    }
+    .pill-quiz    { background: #bf360c; color: #fff; }
+    .pill-midterm { background: #6a0d91; color: #fff; }
+    .pill-final   { background: #b71c1c; color: #fff; }
+
+    /* ── MAIN ── */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+    .topbar {
+      height: 54px; flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 24px; gap: 12px;
+    }
+    .topbar h2 {
+      font-size: 17px; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .topbar .chip {
+      font-size: 12px; color: var(--muted);
+      background: var(--bg); padding: 4px 12px; border-radius: 20px; flex-shrink: 0;
+    }
+    .content {
+      flex: 1; overflow-y: auto; padding: 24px;
+      scrollbar-width: thin; scrollbar-color: #ccc transparent;
+    }
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+    .fade-in { animation: fadeIn .2s ease; }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, var(--orange), #6a2818);
+      border-radius: 14px; padding: 36px; color: #fff;
+      margin-bottom: 22px; position: relative; overflow: hidden;
+    }
+    .hero::after {
+      content: '🦀'; position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+      font-size: 96px; opacity: .18; pointer-events: none;
+    }
+    .hero h1 { font-size: 30px; font-weight: 900; margin-bottom: 6px; }
+    .hero .tagline { font-size: 15px; opacity: .82; margin-bottom: 22px; }
+    .hero-stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat-box { background: rgba(255,255,255,.15); border-radius: 10px; padding: 10px 18px; text-align: center; }
+    .stat-box .val { font-size: 24px; font-weight: 900; }
+    .stat-box .lbl { font-size: 10px; opacity: .75; text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ── CARD GRIDS ── */
+    .row2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(255px,1fr)); gap: 18px; margin-bottom: 20px; }
+    .row3 { display: grid; grid-template-columns: repeat(auto-fill,minmax(170px,1fr)); gap: 14px; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 22px;
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 700; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0;
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      padding: 5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+    }
+    .check-list li::before { content: '✓'; color: #2e7d32; font-weight: 700; flex-shrink: 0; }
+    .grade-table { width: 100%; border-collapse: collapse; }
+    .grade-table tr { border-bottom: 1px solid var(--border); }
+    .grade-table tr:last-child { border-bottom: none; }
+    .grade-table td { padding: 8px 0; font-size: 13px; }
+    .grade-table td:last-child { text-align: right; font-weight: 700; color: var(--orange); }
+    .resource-card {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; cursor: pointer; transition: all .18s;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+    .resource-card:hover {
+      border-color: var(--orange);
+      box-shadow: 0 4px 12px rgba(206,66,43,.18);
+      transform: translateY(-2px);
+    }
+    .resource-card .r-icon { font-size: 20px; }
+    .resource-card .r-title { font-size: 13px; font-weight: 700; }
+    .resource-card .r-desc  { font-size: 11px; color: var(--muted); }
+
+    /* ── WEEK HEADER ── */
+    .week-hdr {
+      background: #fff; border-radius: 12px; padding: 26px;
+      margin-bottom: 18px; box-shadow: var(--shadow);
+      border: 1px solid var(--border); border-left: 5px solid var(--orange);
+    }
+    .week-hdr .wk-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--orange); margin-bottom: 5px;
+    }
+    .week-hdr h2 { font-size: 24px; font-weight: 900; margin-bottom: 14px; }
+    .banner {
+      border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 600;
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .banner-quiz    { background: #fff3e0; border: 1px solid #f57c00; color: #b3360c; }
+    .banner-midterm { background: #f3e5f5; border: 1px solid #7b1fa2; color: #6a0d91; }
+    .banner-final   { background: #ffebee; border: 1px solid #c62828; color: #b71c1c; }
+    .ot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:640px) { .ot-grid { grid-template-columns: 1fr; } }
+    .ot-section h4 {
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .8px; color: var(--muted); margin-bottom: 8px;
+    }
+    .ot-list { list-style: none; }
+    .ot-list li {
+      padding: 3.5px 0; font-size: 13px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+    }
+    .obj-list li::before { content: '🎯'; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+    .top-list li::before { content: '·'; color: var(--orange); font-weight: 900; font-size: 16px; line-height: 1; flex-shrink: 0; }
+
+    /* ── SECTION CARDS ── */
+    .sec {
+      border-radius: 12px; padding: 22px; margin-bottom: 18px;
+      box-shadow: var(--shadow); border: 1px solid;
+    }
+    .sec.setup    { background: var(--bg-setup);    border-color: var(--c-setup); }
+    .sec.activity { background: var(--bg-activity); border-color: var(--c-activity); }
+    .sec.assign   { background: var(--bg-assign);   border-color: var(--c-assign); }
+    .sec.assess   { background: var(--bg-assess);   border-color: var(--c-assess); }
+    .sec-hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .sec-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+    }
+    .setup    .sec-icon { background: rgba(106,52,16,.15); }
+    .activity .sec-icon { background: rgba(55,118,171,.13); }
+    .assign   .sec-icon { background: rgba(46,125,50,.13); }
+    .assess   .sec-icon { background: rgba(245,124,0,.13); }
+    .sec-hdr h3 { font-size: 14.5px; font-weight: 700; flex: 1; line-height: 1.3; }
+    .setup    .sec-hdr h3 { color: #6a3410; }
+    .activity .sec-hdr h3 { color: #1a4a7a; }
+    .assign   .sec-hdr h3 { color: #1b5e20; }
+    .assess   .sec-hdr h3 { color: #b3360c; }
+    .due-tag {
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; flex-shrink: 0;
+    }
+    .assign .due-tag { background: rgba(46,125,50,.15); color: #1b5e20; }
+    .assess .due-tag { background: rgba(245,124,0,.15); color: #b3360c; }
+    .sec p, .sec .desc { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+    .sec ul { list-style: none; }
+    .sec ul li {
+      font-size: 13.5px; color: var(--muted); padding: 4.5px 0;
+      display: flex; align-items: flex-start; gap: 8px; line-height: 1.45;
+    }
+    .setup  ul li::before { content: '☐'; color: var(--c-setup); font-size: 15px; line-height: 1.1; flex-shrink: 0; }
+    .assign ul li::before { content: '→'; color: var(--c-assign); font-weight: 700; flex-shrink: 0; }
+    .assess ul li::before { content: '•'; color: var(--c-assess); font-weight: 700; font-size: 16px; line-height: 1; flex-shrink: 0; }
+    .sample-qs h5 {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; color: #b3360c; margin: 12px 0 6px;
+    }
+    .sample-qs ul li::before { content: '?'; color: var(--c-assess); font-weight: 900; flex-shrink: 0; }
+    .rubric-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .rubric-table tr { border-bottom: 1px solid rgba(0,0,0,.08); }
+    .rubric-table tr:last-child { border-bottom: none; }
+    .rubric-table td { padding: 7px 2px; font-size: 13px; }
+    .rubric-table td:last-child { text-align: right; font-weight: 700; }
+    .assess .rubric-table td:last-child { color: var(--c-assess); }
+    .exam-list { list-style: none; margin-bottom: 14px; }
+    .exam-list li {
+      padding: 4px 0; font-size: 13.5px; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .exam-list li::before { content: '📌'; font-size: 12px; flex-shrink: 0; }
+    .sec-label {
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .6px; margin: 14px 0 6px; color: #b3360c;
+    }
+
+    /* ── CODE BLOCK ── */
+    .code-block {
+      background: var(--code-bg); border-radius: 9px;
+      padding: 16px; margin-top: 14px; overflow-x: auto;
+    }
+    .code-dots { display: flex; gap: 6px; margin-bottom: 10px; }
+    .code-dots span { width: 11px; height: 11px; border-radius: 50%; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c940; }
+    .code-block pre {
+      font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+      font-size: 12.5px; line-height: 1.65; color: #e8d8c5; white-space: pre;
+    }
+
+    /* ── SCHEDULE TABLE ── */
+    .sched-wrap {
+      background: #fff; border-radius: 12px; border: 1px solid var(--border);
+      box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px;
+    }
+    .sched-table { width: 100%; border-collapse: collapse; }
+    .sched-table thead { background: var(--orange); color: #fff; }
+    .sched-table th {
+      padding: 11px 16px; text-align: left;
+      font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .sched-table tbody tr { border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s; }
+    .sched-table tbody tr:last-child { border-bottom: none; }
+    .sched-table tbody tr:hover { background: #fbf3e9; }
+    .sched-table td { padding: 11px 16px; font-size: 13px; vertical-align: middle; }
+    .sched-table .wk-col { font-weight: 700; color: var(--orange); white-space: nowrap; }
+    .tbl-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+    .tbl-quiz    { background: #fff3e0; color: #b3360c; }
+    .tbl-midterm { background: #f3e5f5; color: #6a0d91; }
+    .tbl-final   { background: #ffebee; color: #b71c1c; }
+
+    /* ── WEEK NAV BUTTONS ── */
+    .wk-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--border);
+    }
+    .nav-btn {
+      background: #fff; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all .14s; color: var(--text);
+    }
+    .nav-btn:hover:not(:disabled) { border-color: var(--orange); color: var(--orange); }
+    .nav-btn:disabled { opacity: .35; cursor: default; }
+
+    /* ── MOBILE ── */
+    @media(max-width: 768px) {
+      body { flex-direction: column; overflow: auto; height: auto; }
+      .sidebar { width: 100%; min-width: unset; height: auto; }
+      .nav-scroll { display: none; max-height: 320px; }
+      .nav-scroll.open { display: block; }
+      .hamburger { display: block; }
+      .main { overflow: visible; }
+      .content { overflow: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="logo-row">
+      <div class="rs-badge">Rs</div>
+      <div>
+        <h1>Beginning Rust</h1>
+        <div class="sub">16-Week Intro to Systems Programming</div>
+      </div>
+      <button class="hamburger" onclick="toggleNav()">☰</button>
+    </div>
+  </div>
+  <nav class="nav-scroll" id="navScroll">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" id="nav-overview" onclick="go('overview')">
+      <div class="nav-num">📋</div>
+      <span class="nav-label">Course Overview</span>
+    </div>
+    <div class="nav-item" id="nav-schedule" onclick="go('schedule')">
+      <div class="nav-num">📅</div>
+      <span class="nav-label">Full Schedule</span>
+    </div>
+    <div class="nav-group-label">Weeks</div>
+    <!-- week nav items injected by JS -->
+  </nav>
+</aside>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="topTitle">Course Overview</h2>
+    <span class="chip" id="topChip">16 Weeks · Beginner · No Rust Experience Required</span>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   COURSE DATA
+═══════════════════════════ */
+const data = {
+  goals: [
+    "Install Rust with rustup and use Cargo to build and run projects",
+    "Read and write Rust syntax: variables, types, control flow, functions",
+    "Understand Rust's signature concepts: ownership, borrowing, and lifetimes",
+    "Use core types: structs, enums, Option, Result, Vec, and HashMap",
+    "Handle errors safely with Result and the ? operator instead of exceptions",
+    "Write a small Rust application using traits, modules, and external crates"
+  ],
+  grading: [
+    { c: "Weekly Assignments (14)", w: "35%" },
+    { c: "In-Class Activities",     w: "10%" },
+    { c: "Quizzes (4)",             w: "20%" },
+    { c: "Midterm Project",         w: "15%" },
+    { c: "Final Project",           w: "20%" }
+  ],
+  resources: [
+    { icon: "📖", title: "The Rust Book",       desc: "doc.rust-lang.org/book",     url: "https://doc.rust-lang.org/book/" },
+    { icon: "🦀", title: "Rust by Example",      desc: "Hands-on examples",          url: "https://doc.rust-lang.org/rust-by-example/" },
+    { icon: "🏃", title: "Rustlings",            desc: "Small interactive exercises", url: "https://github.com/rust-lang/rustlings" },
+    { icon: "📦", title: "crates.io",            desc: "Package registry",            url: "https://crates.io/" },
+    { icon: "🛠️", title: "Rust Playground",      desc: "Run Rust in your browser",    url: "https://play.rust-lang.org/" },
+    { icon: "⬇️", title: "rustup",               desc: "rustup.rs — installer",       url: "https://rustup.rs/" }
+  ],
+  weeks: [
+    {
+      n: 1, title: "Setup, Cargo & Your First Program", badge: null,
+      objectives: [
+        "Install the Rust toolchain with rustup",
+        "Use cargo to create, build, and run a project",
+        "Write and run your first Rust program"
+      ],
+      topics: [
+        "What is Rust? Why systems programming?",
+        "Installing Rust via rustup (rustc, cargo, rustup)",
+        "VS Code + the rust-analyzer extension",
+        "cargo new, cargo build, cargo run, cargo check",
+        "Anatomy of a Rust file: fn main(), println! macro",
+        "The compile-then-run model (vs. interpreted languages)"
+      ],
+      setup: [
+        "Install Rust: visit rustup.rs and run the installer (Mac/Linux: curl command; Windows: rustup-init.exe)",
+        "Verify install: open a terminal and run  rustc --version  and  cargo --version",
+        "Install VS Code from code.visualstudio.com",
+        "Install the 'rust-analyzer' extension in VS Code (NOT the deprecated 'Rust' extension)",
+        "Create a workspace folder for the course and open it in VS Code"
+      ],
+      activity: {
+        title: '"Hello, Ferris!" Lap',
+        desc: 'Each student creates a new Cargo project (cargo new hello_ferris), edits main.rs, and runs it. Then change the message and re-run to see the rebuild. Discuss: what did Cargo create for you? What is target/ for?',
+        code: '// src/main.rs\nfn main() {\n    println!("Hello, Ferris!");\n    println!("Rust is compiled, not interpreted.");\n}\n\n// In the terminal:\n//   cargo new hello_ferris\n//   cd hello_ferris\n//   cargo run'
+      },
+      assign: {
+        n: 1, title: "introduction (Cargo project)", due: 2,
+        desc: "Create a Cargo project that introduces yourself.",
+        reqs: [
+          "Run  cargo new introduction  to create the project",
+          "In src/main.rs, print your name, your major, and one fun fact",
+          "Print the result of  2026 - your_birth_year  (hard-code the math inline)",
+          "Submit the entire project folder (we will run  cargo run  to check it)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 2, title: "Variables, Mutability & Constants", badge: null,
+      objectives: [
+        "Declare variables with let and understand immutability by default",
+        "Use mut to opt into mutability",
+        "Understand shadowing vs. mutation, and use const for compile-time values"
+      ],
+      topics: [
+        "let bindings and immutability by default",
+        "let mut for mutable variables",
+        "Shadowing: re-declaring with let",
+        "const NAME: TYPE = value;",
+        "Type annotations vs. type inference",
+        "Naming conventions: snake_case for variables, SCREAMING_SNAKE for const"
+      ],
+      setup: null,
+      activity: {
+        title: '"Why Won\'t It Compile?"',
+        desc: 'Hand students a file that tries to mutate an immutable binding. They must read the compiler error, fix it with mut, and discuss why Rust defaults to immutable. Then try shadowing the same name with a different type.',
+        code: 'fn main() {\n    let x = 5;\n    // x = 6;            // ERROR: cannot assign twice\n    let mut y = 5;\n    y = 6;               // OK\n\n    // Shadowing changes the type:\n    let count = "42";\n    let count: i32 = count.parse().unwrap();\n    println!("y = {}, count = {}", y, count);\n\n    const MAX_USERS: u32 = 100;\n    println!("max = {}", MAX_USERS);\n}'
+      },
+      assign: {
+        n: 2, title: "user_profile", due: 3,
+        desc: "Build a small profile program using let, mut, and const.",
+        reqs: [
+          "Use a const for the current year",
+          "Use let to bind a name (immutable) and an age (mutable)",
+          "Increase the age by 1 using mut and print the 'next year' age",
+          "Use shadowing to convert a string like \"7\" into an i32 and print twice that number"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 3, title: "Data Types & Operators", badge: "Quiz 1",
+      objectives: [
+        "Recognize the scalar types: integers, floats, bool, char",
+        "Use arithmetic, comparison, and logical operators",
+        "Convert between numeric types using  as"
+      ],
+      topics: [
+        "Integers: i8/i16/i32/i64/i128, u8.../usize",
+        "Floats: f32, f64",
+        "bool and char (note: char is 4 bytes, a Unicode scalar)",
+        "Arithmetic: + - * / %  (no implicit widening between types!)",
+        "Comparison and logical operators: == != < > <= >= && || !",
+        "Type casting with  as",
+        "Reading the compiler when types don't match"
+      ],
+      setup: null,
+      activity: {
+        title: '"Type Detective"',
+        desc: 'Students predict what type Rust infers for several let bindings, then add explicit annotations and watch what happens when types disagree (e.g., adding an i32 to an f64 without a cast).',
+        code: 'fn main() {\n    let a = 10;             // inferred i32\n    let b: u8 = 200;\n    let c = 3.14;           // inferred f64\n\n    // let bad = a + c;     // ERROR: mismatched types\n    let good = a as f64 + c;\n    println!("good = {}", good);\n\n    println!("10 / 3 = {}", 10 / 3);       // integer division -> 3\n    println!("10.0 / 3.0 = {}", 10.0 / 3.0); // -> 3.333...\n    println!("10 % 3 = {}", 10 % 3);\n\n    let is_open = true && !false;\n    println!("is_open = {}", is_open);\n}'
+      },
+      assign: {
+        n: 3, title: "calculator", due: 4,
+        desc: "Build a calculator that reads two numbers from stdin and reports several operations.",
+        reqs: [
+          "Use  std::io  to read two lines from the user",
+          "Parse each line into an  f64  using  .trim().parse::<f64>().unwrap()",
+          "Print: addition, subtraction, multiplication, division, and remainder",
+          "Cast both values to  i32  and print integer division and remainder of those"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 1",
+        topics: "Weeks 1-3: Cargo, variables, mutability, scalar types, operators",
+        format: "15 multiple-choice + 2 short-answer questions (20 min)",
+        samples: [
+          "What is the difference between  let x = 5  and  let mut x = 5?",
+          "What does  cargo run  do that  cargo build  does not?",
+          "What is the value of  17_i32 % 5?  And  17.0_f64 / 5.0_f64?"
+        ]
+      }
+    },
+    {
+      n: 4, title: "Control Flow: if, loops & expressions", badge: null,
+      objectives: [
+        "Write if / else if / else expressions",
+        "Use loop, while, and for to iterate",
+        "Understand that nearly everything in Rust is an expression"
+      ],
+      topics: [
+        "if as an expression — both branches must return the same type",
+        "loop, break, continue (and break with a value)",
+        "while loops with conditions",
+        "for x in iter, especially  for i in 0..n  and  for i in 0..=n",
+        "Statements end with  ; ; expressions do not",
+        "No truthy/falsy: conditions must be a real bool"
+      ],
+      setup: null,
+      activity: {
+        title: '"FizzBuzz, Rust Edition"',
+        desc: "Print 1-50, replacing multiples of 3 with Fizz, multiples of 5 with Buzz, both with FizzBuzz. Use a for loop with a range and an if/else if/else chain.",
+        code: 'fn main() {\n    for i in 1..=50 {\n        if i % 15 == 0 {\n            println!("FizzBuzz");\n        } else if i % 3 == 0 {\n            println!("Fizz");\n        } else if i % 5 == 0 {\n            println!("Buzz");\n        } else {\n            println!("{}", i);\n        }\n    }\n}'
+      },
+      assign: {
+        n: 4, title: "grade_classifier", due: 5,
+        desc: "Read a numeric score (0-100) and print a letter grade plus a personalized message.",
+        reqs: [
+          "Read one number from stdin and parse to  i32",
+          "Use  if / else if / else  to map: A (90+), B (80-89), C (70-79), D (60-69), F (<60)",
+          "Print 'Invalid score' if the input is outside 0-100",
+          "Make the if/else chain a single expression that returns a  &str  letter, then print it"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 5, title: "Functions", badge: null,
+      objectives: [
+        "Define functions with fn, parameters, and return types",
+        "Distinguish statements (end with ;) from expressions (no ;)",
+        "Return values from functions, including the unit type ()"
+      ],
+      topics: [
+        "fn name(param: Type) -> ReturnType { ... }",
+        "Implicit return: last expression with no semicolon",
+        "explicit  return  keyword for early returns",
+        "The unit type  ()  — what 'returns nothing' means",
+        "Function ordering: fns can be called before they are defined in the file",
+        "Pass by value: arguments are moved or copied (preview of Week 6)"
+      ],
+      setup: null,
+      activity: {
+        title: '"Function Factory"',
+        desc: "Students write three small functions and call them all from main: area_of_circle(radius), is_even(n), and celsius_to_fahrenheit(c). Discuss: which are pure? which take owned values?",
+        code: 'fn celsius_to_fahrenheit(c: f64) -> f64 {\n    c * 9.0 / 5.0 + 32.0  // no semicolon = return value\n}\n\nfn is_even(n: i32) -> bool {\n    n % 2 == 0\n}\n\nfn main() {\n    let temp_c = 25.0;\n    println!("{} C = {} F", temp_c, celsius_to_fahrenheit(temp_c));\n    println!("4 is even? {}", is_even(4));\n}'
+      },
+      assign: {
+        n: 5, title: "math_toolkit", due: 6,
+        desc: "Build a set of small math helper functions and demonstrate them in main.",
+        reqs: [
+          "is_prime(n: u32) -> bool",
+          "factorial(n: u32) -> u64",
+          "celsius_to_fahrenheit(c: f64) -> f64  and  fahrenheit_to_celsius(f: f64) -> f64",
+          "main() must call all four and print labeled results"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 6, title: "Ownership: Rust's Killer Feature", badge: "Quiz 2",
+      objectives: [
+        "Understand the three rules of ownership",
+        "Distinguish move semantics from Copy semantics",
+        "Read compiler errors about moved or borrowed values"
+      ],
+      topics: [
+        "Stack vs. heap, and why Rust cares",
+        "Three rules: each value has one owner; only one owner at a time; dropped when owner goes out of scope",
+        "Move semantics: assigning or passing a String moves it",
+        "The Copy trait: types like i32, bool, char are copied, not moved",
+        "Borrowing preview: passing  &x  instead of  x  to keep ownership",
+        "Reading 'value moved here' / 'value used after move' errors"
+      ],
+      setup: null,
+      activity: {
+        title: '"Where Did My String Go?"',
+        desc: "Hand students a buggy program that passes a String into a function and then tries to use it again. Watch the compiler error, then fix it two ways: (1) clone before passing, (2) borrow with &.",
+        code: 'fn print_it(s: String) {\n    println!("got: {}", s);\n} // s dropped here\n\nfn main() {\n    let name = String::from("Ferris");\n    print_it(name);\n    // println!("{}", name); // ERROR: value used after move\n\n    let n = 5;\n    let _ = n + 1;\n    println!("n is still {} (i32 is Copy)", n);\n}'
+      },
+      assign: {
+        n: 6, title: "ownership_lab", due: 7,
+        desc: "A small program demonstrating that you understand move vs. Copy.",
+        reqs: [
+          "Create a function  describe(s: String)  that prints the string and its length",
+          "Create a function  square(n: i32) -> i32  that returns n * n",
+          "In main: build a String, pass it to describe, and use the comments to show why you cannot use it again",
+          "Show that an i32 can be passed twice without issue, and explain (in a comment) why"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 2",
+        topics: "Weeks 4-6: control flow, functions, ownership basics",
+        format: "10 multiple-choice + 3 code-writing questions (25 min)",
+        samples: [
+          "Why does this fail to compile?  let s = String::from(\"hi\"); takes(s); takes(s);",
+          "Which types implement Copy: i32, String, bool, &str, Vec<i32>?",
+          "Write a function  double(n: i32) -> i32  that returns 2 * n using an expression."
+        ]
+      }
+    },
+    {
+      n: 7, title: "References, Borrowing & Slices", badge: null,
+      objectives: [
+        "Borrow values with & and &mut without taking ownership",
+        "Apply the borrow checker rules",
+        "Use string and array slices"
+      ],
+      topics: [
+        "Shared references &T (any number, read-only)",
+        "Mutable references &mut T (exactly one at a time, no shared refs alive)",
+        "References must always be valid (no dangling)",
+        "Slices: &v[1..4], &s[0..3], and &str as a slice of String",
+        "Why &str is a 'view' and String is owned",
+        "A first taste of lifetimes (informal: 'borrow lasts as long as the owner')"
+      ],
+      setup: null,
+      activity: {
+        title: '"The Borrow Dance"',
+        desc: "Students try to take both a shared and a mutable reference to the same Vec at the same time. Watch the compiler refuse, then refactor so the mutation happens in its own scope.",
+        code: 'fn longest(a: &str, b: &str) -> usize {\n    if a.len() >= b.len() { a.len() } else { b.len() }\n}\n\nfn main() {\n    let mut nums = vec![1, 2, 3, 4, 5];\n\n    let first = &nums[0];          // shared borrow\n    println!("first = {}", first);\n\n    nums.push(6);                  // OK: borrow ended above\n\n    let slice = &nums[1..4];\n    println!("slice = {:?}", slice);\n    println!("longest len: {}", longest("ferris", "rustacean"));\n}'
+      },
+      assign: {
+        n: 7, title: "borrow_check", due: 8,
+        desc: "Demonstrate references and slices in a small program.",
+        reqs: [
+          "Write  fn first_word(s: &str) -> &str  that returns the first word of a sentence",
+          "Write  fn sum_slice(v: &[i32]) -> i32  that sums a slice without taking ownership",
+          "In main, build a String and a Vec<i32>; call both functions and use the originals afterward",
+          "In comments, explain why each function takes a reference instead of an owned value"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 8, title: "Vectors, Arrays & Tuples", badge: "Midterm",
+      objectives: [
+        "Use Vec<T> to store growable collections",
+        "Use fixed-size arrays and tuples appropriately",
+        "Iterate over collections with for and iterator methods"
+      ],
+      topics: [
+        "Vec<T>: vec![], .push(), .pop(), .len(), indexing, .get()",
+        "Arrays [T; N] — fixed size, stack-allocated",
+        "Tuples: (i32, &str, bool), destructuring with let (a, b, c)",
+        "Iterating: for x in &v, .iter(), .iter_mut()",
+        "A first look at iterator methods: .map(), .filter(), .sum(), .collect()",
+        "Vec is heap-allocated; arrays are stack-allocated"
+      ],
+      setup: null,
+      activity: {
+        title: '"Numbers, Numbers"',
+        desc: "Students fill a Vec<i32> with the numbers 1..=20, then chain iterator methods to compute the sum of squares of even numbers. Compare the iterator chain to a hand-written for loop.",
+        code: 'fn main() {\n    let nums: Vec<i32> = (1..=20).collect();\n\n    let sum_sq_even: i32 = nums.iter()\n        .filter(|n| **n % 2 == 0)\n        .map(|n| n * n)\n        .sum();\n\n    println!("sum of squares of evens: {}", sum_sq_even);\n\n    let pair: (&str, i32) = ("ferris", 10);\n    let (name, score) = pair;\n    println!("{} -> {}", name, score);\n}'
+      },
+      assign: {
+        n: 8, title: "stats", due: 9,
+        desc: "Read 10 integers from the user into a Vec<i32> and report statistics.",
+        reqs: [
+          "Read 10 lines from stdin, parse each to i32, push into a Vec",
+          "Print the min, max, sum, and mean (as f64)",
+          "Print the sorted vector (use .sort()) and the reversed vector",
+          "Use an iterator chain to print only the even numbers in the original order"
+        ]
+      },
+      assess: {
+        type: "midterm", label: "Midterm Project",
+        desc: "Build a command-line guessing game (the classic Rust Book project) that reinforces every concept from Weeks 1-8.",
+        reqs: [
+          "Use  rand  from crates.io to generate a secret number between 1 and 100",
+          "Read user guesses from stdin in a loop",
+          "Use a match expression on  guess.cmp(&secret)  to print Less / Greater / Equal",
+          "Track the number of guesses and print it at the end",
+          "Limit to 10 guesses; reveal the answer if the player runs out",
+          "Handle non-numeric input gracefully (skip and prompt again)"
+        ],
+        rubric: [
+          { c: "Functionality (compiles and runs)",      p: 25 },
+          { c: "Correct use of Cargo + external crate",  p: 15 },
+          { c: "Use of match, ownership, and references", p: 25 },
+          { c: "Input validation and loop control",       p: 20 },
+          { c: "Code readability and comments",           p: 15 }
+        ]
+      }
+    },
+    {
+      n: 9, title: "Strings: &str vs String", badge: null,
+      objectives: [
+        "Choose between &str and String for the right job",
+        "Mutate Strings safely and convert between types",
+        "Understand that Rust strings are UTF-8 — not byte-indexable"
+      ],
+      topics: [
+        "&str: a borrowed view, often a string literal in the binary",
+        "String: an owned, growable, heap-allocated UTF-8 buffer",
+        "Conversions:  .to_string() , String::from , .as_str()",
+        "Mutating: .push_str(), .push(c), + operator, format! macro",
+        "Why  s[0]  is illegal — UTF-8 chars vary in byte width",
+        "Iterating: .chars(), .bytes(), .split_whitespace()"
+      ],
+      setup: null,
+      activity: {
+        title: '"String Surgeon"',
+        desc: 'Take a messy string like "  Hello, RUST world!  " and clean it: trim, lowercase, split into words, and count characters and words. Compare the &str returned by .trim() to an owned String built with .to_string().',
+        code: 'fn main() {\n    let raw = String::from("  Hello, RUST world!  ");\n    let cleaned: String = raw.trim().to_lowercase();\n\n    let word_count = cleaned.split_whitespace().count();\n    let char_count = cleaned.chars().count();\n\n    println!("cleaned: {:?}", cleaned);\n    println!("words: {}, chars: {}", word_count, char_count);\n\n    let mut greeting = String::from("Hello");\n    greeting.push_str(", world!");\n    println!("{}", greeting);\n}'
+      },
+      assign: {
+        n: 9, title: "text_analyzer", due: 10,
+        desc: "Read a sentence from stdin and report several statistics.",
+        reqs: [
+          "Word count and char count (excluding whitespace)",
+          "The longest word in the sentence",
+          "Total number of vowels (a/e/i/o/u, case-insensitive)",
+          "Whether the sentence is a palindrome (ignore spaces, punctuation, and case)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 10, title: "Structs & Methods", badge: "Quiz 3",
+      objectives: [
+        "Define structs with named fields and tuple structs",
+        "Add methods and associated functions in impl blocks",
+        "Use #[derive] for common traits like Debug and Clone"
+      ],
+      topics: [
+        "struct definition with named fields",
+        "impl blocks: methods take &self, &mut self, or self",
+        "Associated functions (no self) — e.g., String::new(), Vec::new()",
+        "#[derive(Debug, Clone, PartialEq)]",
+        "Printing with {:?} and {:#?}",
+        "Tuple structs and unit structs"
+      ],
+      setup: null,
+      activity: {
+        title: '"BankAccount"',
+        desc: "Students implement a BankAccount struct with deposit and withdraw methods. Add #[derive(Debug)] and print the account state. Then add an associated function open(name) that returns a new BankAccount.",
+        code: '#[derive(Debug)]\nstruct BankAccount {\n    owner: String,\n    balance: f64,\n}\n\nimpl BankAccount {\n    fn open(owner: &str) -> Self {\n        BankAccount { owner: owner.to_string(), balance: 0.0 }\n    }\n    fn deposit(&mut self, amount: f64) { self.balance += amount; }\n    fn withdraw(&mut self, amount: f64) -> bool {\n        if amount > self.balance { false }\n        else { self.balance -= amount; true }\n    }\n}\n\nfn main() {\n    let mut acct = BankAccount::open("Ferris");\n    acct.deposit(100.0);\n    acct.withdraw(30.0);\n    println!("{:#?}", acct);\n}'
+      },
+      assign: {
+        n: 10, title: "student_record", due: 11,
+        desc: "Build a Student struct and a small program that uses it.",
+        reqs: [
+          "Fields: name (String), id (u32), grades (Vec<f64>)",
+          "Methods: add_grade(&mut self, score: f64), average(&self) -> f64, letter(&self) -> char",
+          "Associated function:  Student::new(name: &str, id: u32) -> Self",
+          "Create at least 3 Student instances, add grades, and print them with {:#?}"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 3",
+        topics: "Weeks 7-10: borrowing, slices, vectors, strings, structs",
+        format: "10 multiple-choice + 4 code-writing questions (30 min)",
+        samples: [
+          "What is the difference between &self and &mut self in an impl block?",
+          "Why does  s.chars().nth(2)  exist instead of  s[2]?",
+          "Define a struct Point with fields x: f64, y: f64 and a method  distance_from_origin(&self) -> f64."
+        ]
+      }
+    },
+    {
+      n: 11, title: "Enums & Pattern Matching", badge: null,
+      objectives: [
+        "Define enums with and without data",
+        "Use match expressions for exhaustive pattern matching",
+        "Use Option<T> and  if let  for the common cases"
+      ],
+      topics: [
+        "enum syntax — variants can carry data of any shape",
+        "match: exhaustive, every variant must be handled",
+        "Option<T>: Some(T) and None — Rust's null-safe alternative",
+        "Common patterns:  if let Some(x) = ...,  while let",
+        "Match guards and  _  catch-all",
+        "Methods on enums in impl blocks"
+      ],
+      setup: null,
+      activity: {
+        title: '"Traffic Light"',
+        desc: "Define an enum Light { Red, Yellow, Green } and a function next(light: Light) -> Light. Then build a Shape enum with variants Circle(f64) and Rectangle(f64, f64), and write area(&shape) using match.",
+        code: 'enum Shape {\n    Circle(f64),\n    Rectangle(f64, f64),\n    Square(f64),\n}\n\nfn area(s: &Shape) -> f64 {\n    match s {\n        Shape::Circle(r)        => std::f64::consts::PI * r * r,\n        Shape::Rectangle(w, h)  => w * h,\n        Shape::Square(side)     => side * side,\n    }\n}\n\nfn main() {\n    let shapes = vec![Shape::Circle(2.0), Shape::Rectangle(3.0, 4.0)];\n    for s in &shapes {\n        println!("area = {:.2}", area(s));\n    }\n\n    let maybe: Option<i32> = Some(7);\n    if let Some(n) = maybe {\n        println!("got {}", n);\n    }\n}'
+      },
+      assign: {
+        n: 11, title: "shape_calculator", due: 12,
+        desc: "Build a Shape enum and a small interactive program.",
+        reqs: [
+          "Define  enum Shape  with at least 3 variants carrying data (Circle, Rectangle, Triangle)",
+          "Implement  fn area(&self) -> f64  on Shape using a match",
+          "Implement  fn describe(&self) -> String  that returns a friendly description",
+          "Build a Vec<Shape>, iterate, and print each one's area and description"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 12, title: "Error Handling: Result & ?", badge: null,
+      objectives: [
+        "Distinguish recoverable errors (Result) from unrecoverable ones (panic!)",
+        "Handle errors with match, .unwrap_or, and the ? operator",
+        "Propagate errors out of functions cleanly"
+      ],
+      topics: [
+        "panic! and when it fires (out-of-bounds index, .unwrap() on None, integer overflow in debug)",
+        "Result<T, E> with Ok(T) and Err(E)",
+        "Common helpers:  .unwrap(), .expect(\"msg\"), .unwrap_or(default), .ok()",
+        "The  ?  operator: early-return on Err",
+        "Box<dyn std::error::Error> as a one-size-fits-all return type",
+        "Reading a file safely with  std::fs::read_to_string"
+      ],
+      setup: null,
+      activity: {
+        title: '"Crash-Proof Calculator"',
+        desc: "Take the Week 3 calculator and make it bulletproof: parse user input safely, return a Result from every helper, and use  ?  to propagate errors. Test by entering letters, blanks, and zero divisors.",
+        code: 'use std::io;\nuse std::num::ParseFloatError;\n\nfn read_number() -> Result<f64, ParseFloatError> {\n    let mut buf = String::new();\n    io::stdin().read_line(&mut buf).expect("read failed");\n    buf.trim().parse::<f64>()\n}\n\nfn run() -> Result<(), Box<dyn std::error::Error>> {\n    let a = read_number()?;\n    let b = read_number()?;\n    if b == 0.0 {\n        return Err("division by zero".into());\n    }\n    println!("{} / {} = {}", a, b, a / b);\n    Ok(())\n}\n\nfn main() {\n    if let Err(e) = run() {\n        eprintln!("error: {}", e);\n    }\n}'
+      },
+      assign: {
+        n: 12, title: "safe_calc", due: 13,
+        desc: "Rebuild the calculator from Week 3 with proper error handling.",
+        reqs: [
+          "Functions  add, sub, mul, div  return  Result<f64, String>",
+          "div  must return  Err  on division by zero (do not panic)",
+          "main reads two numbers from stdin and uses the  ?  operator to propagate errors",
+          "On any error, print a friendly message to stderr and exit with a non-zero code (use  std::process::exit)"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 13, title: "Modules, Crates & Cargo Dependencies", badge: null,
+      objectives: [
+        "Split a project into multiple modules with mod and pub",
+        "Add and use third-party crates from crates.io",
+        "Read a Cargo.toml and understand semver in dependencies"
+      ],
+      topics: [
+        "mod foo; — files vs. inline modules",
+        "pub: making items visible outside their module",
+        "use paths: bringing items into scope, including aliases",
+        "Cargo.toml: [dependencies], crate versions, semver basics",
+        "Adding a crate:  cargo add rand  (or hand-edit Cargo.toml)",
+        "The standard library prelude vs. importing yourself"
+      ],
+      setup: null,
+      activity: {
+        title: '"Split the Toolkit"',
+        desc: "Take the math_toolkit from Week 5 and split it into a math/ module folder with mod.rs (or math.rs in newer style). Then add the rand crate and roll a random dice value in main.",
+        code: '// src/main.rs\nmod math;\nuse math::is_prime;\nuse rand::Rng;\n\nfn main() {\n    let n = rand::thread_rng().gen_range(2..50);\n    println!("{} is prime? {}", n, is_prime(n));\n}\n\n// src/math.rs\npub fn is_prime(n: u32) -> bool {\n    if n < 2 { return false; }\n    (2..=((n as f64).sqrt() as u32)).all(|d| n % d != 0)\n}'
+      },
+      assign: {
+        n: 13, title: "utilities_module", due: 14,
+        desc: "Restructure your math_toolkit (Week 5) into a multi-file project with an external crate.",
+        reqs: [
+          "Move helpers into  src/utilities.rs  with  pub  on each function",
+          "Add at least one new function that uses the  rand  crate",
+          "main.rs uses  mod utilities;  and calls every function",
+          "Submit Cargo.toml so we can verify the dependency was added correctly"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 14, title: "Traits & Generics", badge: "Quiz 4",
+      objectives: [
+        "Define and implement traits to share behavior across types",
+        "Use generic functions and types with trait bounds",
+        "Use common derived traits: Debug, Clone, PartialEq, Default"
+      ],
+      topics: [
+        "trait Foo { fn method(&self); }",
+        "impl Foo for SomeType { ... }",
+        "Default method implementations in trait bodies",
+        "Generic functions: fn largest<T: PartialOrd>(list: &[T]) -> &T",
+        "impl Trait in argument and return position",
+        "Common derives:  #[derive(Debug, Clone, PartialEq, Default)]"
+      ],
+      setup: null,
+      activity: {
+        title: '"Animal Trait"',
+        desc: "Define a trait Animal with method speak(&self) -> String. Implement it for Dog, Cat, and Cow. Put them in a Vec<Box<dyn Animal>> and call speak() on each — a tour of trait objects and dynamic dispatch.",
+        code: 'trait Animal {\n    fn speak(&self) -> String;\n    fn introduce(&self) -> String {\n        format!("I say: {}", self.speak())\n    }\n}\n\nstruct Dog;\nstruct Cat;\n\nimpl Animal for Dog { fn speak(&self) -> String { "Woof!".into() } }\nimpl Animal for Cat { fn speak(&self) -> String { "Meow.".into() } }\n\nfn main() {\n    let zoo: Vec<Box<dyn Animal>> = vec![Box::new(Dog), Box::new(Cat)];\n    for a in &zoo {\n        println!("{}", a.introduce());\n    }\n}'
+      },
+      assign: {
+        n: 14, title: "shape_traits", due: 15,
+        desc: "Refactor the Week 11 shape calculator using a trait.",
+        reqs: [
+          "Define  trait Shape { fn area(&self) -> f64; fn describe(&self) -> String; }",
+          "Implement Shape for at least 3 distinct structs (Circle, Rectangle, Triangle)",
+          "Write  fn print_all(shapes: &[Box<dyn Shape>])  that iterates and prints each one",
+          "Derive  Debug  on each struct and print the whole list with  {:#?}  in main"
+        ]
+      },
+      assess: {
+        type: "quiz", label: "Quiz 4",
+        topics: "Weeks 11-14: enums, error handling, modules, traits & generics",
+        format: "10 multiple-choice + 3 code-writing questions (30 min)",
+        samples: [
+          "What does the  ?  operator do, and what return type does the function need?",
+          "Write a trait Greet with method hello(&self) -> String, and implement it for a struct Person.",
+          "What is the difference between Option<T> and Result<T, E>?"
+        ]
+      }
+    },
+    {
+      n: 15, title: "Final Project Workshop & Review", badge: null,
+      objectives: [
+        "Apply the full course curriculum to a larger, self-directed project",
+        "Use clippy and rustfmt to clean up code",
+        "Give and receive structured peer feedback"
+      ],
+      topics: [
+        "Guided final project work time",
+        "Reading compiler errors strategically",
+        "cargo clippy — Rust's official linter",
+        "cargo fmt — automatic formatting",
+        "Debugging strategies: dbg!() macro, println! tracing, breakpoints",
+        "Q&A and final exam review"
+      ],
+      setup: null,
+      activity: {
+        title: '"Peer Code Review"',
+        desc: "Pair up. Each student runs  cargo clippy  on their partner's project, then gives a 5-point structured review: does it compile? does it run? are types meaningful? are errors handled? is naming clear?",
+        code: null
+      },
+      assign: {
+        n: 15, title: "Final Project Checkpoint", due: 16,
+        desc: "Submit your final project in its current state. Graded on effort and progress, not correctness.",
+        reqs: [
+          "Submit your current Cargo project (zip the folder, exclude target/)",
+          "Write a short README.md describing what the project does",
+          "List features that are complete and features still in progress",
+          "Include any compiler errors you are stuck on"
+        ]
+      },
+      assess: null
+    },
+    {
+      n: 16, title: "Final Presentations & Final Exam", badge: "Final",
+      objectives: [
+        "Present a complete Rust project to the class",
+        "Demonstrate command of all course concepts",
+        "Reflect on your learning journey"
+      ],
+      topics: [
+        "Final project presentations (5 min each)",
+        "Final exam — 60 minutes",
+        "Course wrap-up and where to go next: async, lifetimes, the Rust ecosystem"
+      ],
+      setup: null,
+      activity: {
+        title: "Final Project Presentations",
+        desc: "Each student gets 5 minutes to demo their project and explain: what it does, one borrow-checker fight they won, and one feature they would add with more time.",
+        code: null
+      },
+      assign: {
+        n: 16, title: "Final Project", due: 16,
+        desc: "Build a complete Rust application of your choice and present it.",
+        reqs: [
+          "At least 200 lines of meaningful Rust code, organized into 2+ modules",
+          "Must use: a struct or enum, ownership/borrowing, Result-based error handling, and a Vec or HashMap",
+          "Must add at least one external crate from crates.io",
+          "Bonus: define your own trait and implement it for two types",
+          "A README.md describing the project, how to build it, and how to run it"
+        ]
+      },
+      assess: {
+        type: "final", label: "Final Exam + Final Project",
+        desc: "A 60-minute written exam covering all 16 weeks, plus a graded final project and 5-minute live presentation.",
+        examSections: [
+          "Multiple Choice — 20 questions (1 pt each) covering all topics",
+          "Code Reading (10 pts) — analyze a Rust program and answer questions about ownership, types, and behavior",
+          "Bug Fix (10 pts) — identify and fix 3-5 compile errors and one logic bug in a provided program",
+          "Code Writing (20 pts) — write two short Rust programs from scratch (Cargo project not required)"
+        ],
+        rubric: [
+          { c: "Functionality (compiles and works as described)", p: 30 },
+          { c: "Code quality (idiomatic, readable, formatted)",   p: 20 },
+          { c: "Use of course concepts (ownership, traits, etc.)", p: 25 },
+          { c: "README / documentation",                          p: 10 },
+          { c: "Presentation",                                    p: 15 }
+        ]
+      }
+    }
+  ]
+};
+
+/* ═══════════════════════════
+   HELPERS
+═══════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function codeBlock(code) {
+  if (!code) return '';
+  return `<div class="code-block">
+    <div class="code-dots">
+      <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+    </div>
+    <pre>${esc(code)}</pre>
+  </div>`;
+}
+
+function setActive(id) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('nav-' + id);
+  if (el) { el.classList.add('active'); el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+}
+
+/* ═══════════════════════════
+   RENDER: OVERVIEW
+═══════════════════════════ */
+function renderOverview() {
+  document.getElementById('topTitle').textContent = 'Course Overview';
+  document.getElementById('topChip').textContent  = '16 Weeks · Beginner · No Rust Experience Required';
+
+  const goals   = data.goals.map(g => `<li>${esc(g)}</li>`).join('');
+  const grading = data.grading.map(g => `<tr><td>${esc(g.c)}</td><td>${esc(g.w)}</td></tr>`).join('');
+  const res     = data.resources.map(r =>
+    `<div class="resource-card" onclick="window.open('${r.url}','_blank')">
+      <div class="r-icon">${r.icon}</div>
+      <div class="r-title">${esc(r.title)}</div>
+      <div class="r-desc">${esc(r.desc)}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="hero">
+      <h1>Beginning Rust</h1>
+      <div class="tagline">Introduction to Systems Programming — A Complete 16-Week Beginner Course</div>
+      <div class="hero-stats">
+        <div class="stat-box"><div class="val">16</div><div class="lbl">Weeks</div></div>
+        <div class="stat-box"><div class="val">14</div><div class="lbl">Assignments</div></div>
+        <div class="stat-box"><div class="val">4</div><div class="lbl">Quizzes</div></div>
+        <div class="stat-box"><div class="val">2</div><div class="lbl">Projects</div></div>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fde7d8">🎯</span> Course Goals</div>
+        <ul class="check-list">${goals}</ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#e8f5e9">📊</span> Grading Breakdown</div>
+        <table class="grade-table"><tbody>${grading}</tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-icon" style="background:#fff3e0">📦</span> What You'll Need</div>
+        <ul class="check-list">
+          <li>Rust toolchain — free at rustup.rs</li>
+          <li>VS Code editor + the rust-analyzer extension</li>
+          <li>A computer with internet access (for Cargo and crates.io)</li>
+          <li>No prior programming experience required, but helpful</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="card-icon" style="background:#f7e9d6">🔗</span> Recommended Resources</div>
+      <div class="row3" style="margin-bottom:0; margin-top:4px">${res}</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: SCHEDULE
+═══════════════════════════ */
+function renderSchedule() {
+  document.getElementById('topTitle').textContent = 'Full Course Schedule';
+  document.getElementById('topChip').textContent  = 'All 16 Weeks';
+
+  const rows = data.weeks.map(w => {
+    let assess = '<span style="color:#bbb">—</span>';
+    if (w.assess) {
+      const cls = w.assess.type === 'quiz' ? 'tbl-quiz' : w.assess.type === 'midterm' ? 'tbl-midterm' : 'tbl-final';
+      assess = `<span class="tbl-pill ${cls}">${esc(w.assess.label)}</span>`;
+    }
+    const asgn = w.assign ? `A${w.assign.n}: ${esc(w.assign.title)}` : '<span style="color:#bbb">—</span>';
+    return `<tr onclick="go('week-${w.n}')">
+      <td class="wk-col">Week ${w.n}</td>
+      <td>${esc(w.title)}</td>
+      <td>${asgn}</td>
+      <td>${assess}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('content').innerHTML = `<div class="fade-in">
+    <div class="sched-wrap">
+      <table class="sched-table">
+        <thead><tr><th>Week</th><th>Topic</th><th>Assignment</th><th>Assessment</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin-top:-8px">Click any row to jump to that week.</p>
+  </div>`;
+}
+
+/* ═══════════════════════════
+   RENDER: WEEK
+═══════════════════════════ */
+function renderWeek(num) {
+  const w = data.weeks.find(x => x.n === num);
+  if (!w) return;
+
+  document.getElementById('topTitle').textContent = `Week ${w.n}: ${w.title}`;
+  document.getElementById('topChip').textContent  = `Week ${w.n} of 16`;
+
+  let html = '<div class="fade-in">';
+
+  // Assessment banner
+  let banner = '';
+  if (w.assess) {
+    const cls = { quiz:'banner-quiz', midterm:'banner-midterm', final:'banner-final' }[w.assess.type];
+    const ico = { quiz:'📝', midterm:'🏆', final:'🎓' }[w.assess.type];
+    banner = `<div class="banner ${cls}">${ico} Assessment this week: <strong>${esc(w.assess.label)}</strong></div>`;
+  }
+
+  // Objectives & Topics
+  const objs   = w.objectives.map(o => `<li>${esc(o)}</li>`).join('');
+  const topics = w.topics.map(t => `<li>${esc(t)}</li>`).join('');
+
+  html += `<div class="week-hdr">
+    <div class="wk-label">Week ${w.n}</div>
+    <h2>${esc(w.title)}</h2>
+    ${banner}
+    <div class="ot-grid">
+      <div class="ot-section">
+        <h4>Learning Objectives</h4>
+        <ul class="ot-list obj-list">${objs}</ul>
+      </div>
+      <div class="ot-section">
+        <h4>Topics Covered</h4>
+        <ul class="ot-list top-list">${topics}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  // Setup (Week 1 only)
+  if (w.setup) {
+    const items = w.setup.map(s => `<li>${esc(s)}</li>`).join('');
+    html += `<div class="sec setup">
+      <div class="sec-hdr">
+        <div class="sec-icon">⚙️</div>
+        <h3>Setup Checklist</h3>
+        <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--c-setup);background:rgba(106,52,16,.1);padding:3px 10px;border-radius:20px">Complete Before Class</span>
+      </div>
+      <p>Complete all steps below to set up your Rust development environment.</p>
+      <ul>${items}</ul>
+    </div>`;
+  }
+
+  // Activity
+  if (w.activity) {
+    html += `<div class="sec activity">
+      <div class="sec-hdr">
+        <div class="sec-icon">🎮</div>
+        <h3>In-Class Activity: ${esc(w.activity.title)}</h3>
+      </div>
+      <p class="desc">${esc(w.activity.desc)}</p>
+      ${codeBlock(w.activity.code)}
+    </div>`;
+  }
+
+  // Assignment
+  if (w.assign) {
+    const reqs = w.assign.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+    html += `<div class="sec assign">
+      <div class="sec-hdr">
+        <div class="sec-icon">📝</div>
+        <h3>Assignment ${w.assign.n}: ${esc(w.assign.title)}</h3>
+        <span class="due-tag">Due Week ${w.assign.due}</span>
+      </div>
+      <p class="desc">${esc(w.assign.desc)}</p>
+      <ul>${reqs}</ul>
+    </div>`;
+  }
+
+  // Assessment
+  if (w.assess) {
+    if (w.assess.type === 'quiz') {
+      const samples = w.assess.samples.map(s => `<li>${esc(s)}</li>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">📋</div>
+          <h3>${esc(w.assess.label)}</h3>
+          <span class="due-tag">End of Week ${w.n}</span>
+        </div>
+        <p><strong>Topics:</strong> ${esc(w.assess.topics)}</p>
+        <p><strong>Format:</strong> ${esc(w.assess.format)}</p>
+        <div class="sample-qs">
+          <h5>Sample Questions</h5>
+          <ul>${samples}</ul>
+        </div>
+      </div>`;
+
+    } else if (w.assess.type === 'midterm') {
+      const reqs   = w.assess.reqs.map(r => `<li>${esc(r)}</li>`).join('');
+      const rubric = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🏆</div>
+          <h3>Midterm Project: Number Guessing Game</h3>
+          <span class="due-tag">Due End of Week 8</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Requirements</div>
+        <ul>${reqs}</ul>
+        <div class="sec-label">Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+
+    } else if (w.assess.type === 'final') {
+      const sections = w.assess.examSections.map(s => `<li>${esc(s)}</li>`).join('');
+      const rubric   = w.assess.rubric.map(r => `<tr><td>${esc(r.c)}</td><td>${r.p} pts</td></tr>`).join('');
+      html += `<div class="sec assess">
+        <div class="sec-hdr">
+          <div class="sec-icon">🎓</div>
+          <h3>Final Exam + Final Project</h3>
+          <span class="due-tag">Week 16</span>
+        </div>
+        <p class="desc">${esc(w.assess.desc)}</p>
+        <div class="sec-label">Exam Sections</div>
+        <ul class="exam-list">${sections}</ul>
+        <div class="sec-label">Project Rubric (100 pts total)</div>
+        <table class="rubric-table">
+          <tbody>${rubric}
+            <tr style="border-top:2px solid rgba(245,124,0,.35)">
+              <td><strong>Total</strong></td><td><strong>100 pts</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`;
+    }
+  }
+
+  // Prev / Next navigation
+  const prev = num > 1  ? num - 1 : null;
+  const next = num < 16 ? num + 1 : null;
+  html += `<div class="wk-nav">
+    <button class="nav-btn" ${!prev ? 'disabled' : ''} onclick="go('week-${prev}')">
+      &#8592; Week ${prev ?? ''}
+    </button>
+    <span style="font-size:12px;color:var(--muted)">Week ${num} of 16</span>
+    <button class="nav-btn" ${!next ? 'disabled' : ''} onclick="go('week-${next}')">
+      Week ${next ?? ''} &#8594;
+    </button>
+  </div>`;
+
+  html += '</div>';
+  document.getElementById('content').innerHTML = html;
+  document.getElementById('content').scrollTop = 0;
+}
+
+/* ═══════════════════════════
+   NAVIGATION
+═══════════════════════════ */
+function go(view) {
+  setActive(view);
+  if (view === 'overview')             renderOverview();
+  else if (view === 'schedule')        renderSchedule();
+  else if (view.startsWith('week-'))   renderWeek(+view.replace('week-', ''));
+}
+
+function toggleNav() {
+  document.getElementById('navScroll').classList.toggle('open');
+}
+
+/* ═══════════════════════════
+   INIT — build sidebar
+═══════════════════════════ */
+(function buildNav() {
+  const nav = document.getElementById('navScroll');
+  data.weeks.forEach(w => {
+    let pillHtml = '';
+    if (w.badge) {
+      const cls = w.badge.includes('Quiz') ? 'quiz' : w.badge === 'Midterm' ? 'midterm' : 'final';
+      pillHtml = `<span class="pill pill-${cls}">${esc(w.badge)}</span>`;
+    }
+    const item = document.createElement('div');
+    item.className = 'nav-item';
+    item.id = `nav-week-${w.n}`;
+    item.onclick = () => go(`week-${w.n}`);
+    item.innerHTML = `<div class="nav-num">${w.n}</div><span class="nav-label">${esc(w.title)}</span>${pillHtml}`;
+    nav.appendChild(item);
+  });
+})();
+
+renderOverview();
+</script>
+</body>
+</html>
