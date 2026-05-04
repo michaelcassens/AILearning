@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Big Sky Ranch — A Montana Ranching Simulation</title>
+<style>
+  :root {
+    --bg: #1c2024;
+    --panel: #262b30;
+    --panel-2: #2f353b;
+    --ink: #e9e3d5;
+    --muted: #9aa0a6;
+    --accent: #c9a26a;
+    --accent-2: #8aa67b;
+    --danger: #c96a55;
+    --good: #7dac6e;
+    --warn: #d6a85b;
+    --line: #3a4047;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Georgia', 'Garamond', serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #2a2f34, #20252a);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+  }
+  header .sub {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 12px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 240px 1fr 300px;
+    gap: 10px;
+    padding: 10px;
+    height: calc(100vh - 56px);
+  }
+  .col {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: auto;
+    padding: 12px;
+  }
+  .col-center { padding: 0; display: flex; flex-direction: column; }
+  .col h2 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 5px;
+  }
+  .stat-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 13px; }
+  .stat-row .label { color: var(--muted); }
+  .stat-row .val { color: var(--ink); font-weight: bold; }
+  .stat-row .val.pos { color: var(--good); }
+  .stat-row .val.neg { color: var(--danger); }
+  .stat-row .val.warn { color: var(--warn); }
+
+  /* CANVAS WRAP */
+  .canvas-wrap {
+    position: relative;
+    background: #0a0d10;
+    border-bottom: 1px solid var(--line);
+  }
+  #ranchCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+  }
+  .scene-overlay {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .scene-tag {
+    background: rgba(28,32,36,0.85);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 4px 10px;
+    color: var(--ink);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .scene-tag .accent { color: var(--accent); }
+  .scene-tooltip {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(28,32,36,0.92);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 6px 14px;
+    font-style: italic;
+    font-size: 12px;
+    color: var(--ink);
+    z-index: 5;
+    text-align: center;
+    max-width: 80%;
+  }
+
+  /* TABS / CONTROL AREA */
+  .control-area {
+    flex: 1;
+    overflow: auto;
+    padding: 12px 14px;
+    background: var(--panel);
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 7px 12px;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab:hover { color: var(--ink); }
+  .panel-content { display: none; }
+  .panel-content.active { display: block; }
+
+  .card {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  .card h3 {
+    margin: 0 0 6px 0;
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  button {
+    background: var(--accent);
+    color: #1c2024;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+    margin: 2px;
+    font-size: 12px;
+  }
+  button.secondary { background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); }
+  button.danger { background: var(--danger); color: #fff; }
+  button.good { background: var(--good); color: #fff; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button:hover:not(:disabled) { filter: brightness(1.1); }
+  input[type="number"] {
+    background: var(--bg);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 4px 6px;
+    border-radius: 3px;
+    width: 80px;
+    font-family: inherit;
+    font-size: 12px;
+  }
+  .log {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .log .entry {
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--line);
+  }
+  .log .entry.event { color: var(--warn); }
+  .log .entry.bad { color: var(--danger); }
+  .log .entry.good { color: var(--good); }
+  .log .entry .date { color: var(--muted); font-size: 10px; }
+
+  .advance {
+    background: var(--accent-2);
+    color: #1c2024;
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .progress {
+    background: var(--bg);
+    height: 7px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 4px 0;
+  }
+  .progress > div { height: 100%; background: var(--accent); transition: width 0.3s; }
+  .progress.green > div { background: var(--good); }
+  .progress.red > div { background: var(--danger); }
+  .progress.yellow > div { background: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { padding: 5px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { color: var(--accent); font-weight: normal; text-transform: uppercase; font-size: 10px; letter-spacing: 0.08em; }
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.78);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 22px;
+    max-width: 540px;
+    width: 90%;
+    max-height: 85vh;
+    overflow: auto;
+  }
+  .modal h2 { color: var(--accent); margin-top: 0; }
+  .row { display: flex; gap: 10px; align-items: center; margin: 6px 0; }
+  .row .label { color: var(--muted); flex: 1; font-size: 12px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
+  .pill.ok { color: var(--good); border-color: var(--good); }
+  .pill.warn { color: var(--warn); border-color: var(--warn); }
+  .pill.bad { color: var(--danger); border-color: var(--danger); }
+  .help { color: var(--muted); font-size: 11px; font-style: italic; margin: 4px 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .checklist { list-style: none; padding-left: 0; margin: 4px 0; }
+  .checklist li { padding: 2px 0; color: var(--muted); font-size: 12px; }
+  .checklist li.done { color: var(--good); }
+  .checklist li.todo:before { content: "☐ "; }
+  .checklist li.done:before { content: "☑ "; }
+  .speed-control {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .speed-control button {
+    flex: 1;
+    margin: 0;
+    padding: 4px;
+    font-size: 11px;
+  }
+  .speed-control button.active { background: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>BIG SKY RANCH</h1>
+    <div class="sub">A Montana Cattle, Horse & Hay Operation</div>
+  </div>
+  <div id="dateBanner" style="color: var(--accent); font-size: 16px; letter-spacing: 0.1em;"></div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: STATUS -->
+  <div class="col" id="leftCol">
+    <h2>The Outfit</h2>
+    <div id="leftStats"></div>
+    <button class="advance" id="advanceBtn">Advance Month →</button>
+    <div class="speed-control">
+      <button class="secondary" id="speed1">1×</button>
+      <button class="secondary" id="speed3">3×</button>
+      <button class="secondary" id="speedAuto">Auto</button>
+    </div>
+    <button class="secondary" id="newGameBtn" style="width:100%; margin-top:6px;">New Game</button>
+  </div>
+
+  <!-- CENTER: CANVAS + TABS -->
+  <div class="col col-center">
+    <div class="canvas-wrap" id="canvasWrap">
+      <canvas id="ranchCanvas"></canvas>
+      <div class="scene-overlay">
+        <div class="scene-tag" id="seasonTag"></div>
+        <div class="scene-tag" id="weatherTag"></div>
+      </div>
+      <div class="scene-tooltip" id="sceneTooltip"></div>
+    </div>
+    <div class="control-area">
+      <div class="tabs" id="tabs">
+        <div class="tab active" data-tab="dashboard">Dashboard</div>
+        <div class="tab" data-tab="cattle">Cattle</div>
+        <div class="tab" data-tab="horses">Horses</div>
+        <div class="tab" data-tab="hay">Hay</div>
+        <div class="tab" data-tab="irrigation">Irrigation</div>
+        <div class="tab" data-tab="equipment">Equipment</div>
+        <div class="tab" data-tab="labor">Labor</div>
+        <div class="tab" data-tab="finance">Finance</div>
+      </div>
+
+      <div class="panel-content active" data-panel="dashboard"></div>
+      <div class="panel-content" data-panel="cattle"></div>
+      <div class="panel-content" data-panel="horses"></div>
+      <div class="panel-content" data-panel="hay"></div>
+      <div class="panel-content" data-panel="irrigation"></div>
+      <div class="panel-content" data-panel="equipment"></div>
+      <div class="panel-content" data-panel="labor"></div>
+      <div class="panel-content" data-panel="finance"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: LOG -->
+  <div class="col">
+    <h2>Ranch Journal</h2>
+    <div class="log" id="logBox"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+// ============================================================
+// BIG SKY RANCH — Montana Ranching Simulation
+// ============================================================
+
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+
+const PRICES = {
+  calfPriceBase: 245, cullCowBase: 110, bredHeiferBase: 2200, bullPrice: 5500,
+  weanedCalfWeight: 550, cullCowWeight: 1300,
+  hayPricePerTon: 220, hayYieldPerAcre: 4.5,
+  trainedHorsePrice: 18000, studFee: 1500,
+  fertilizerPerAcre: 95, fuelPerMonth: 2400,
+  vetPerCowYear: 38, feedPerCowWinterMonth: 95, mineralPerCowYear: 60,
+  insurancePerMonth: 1850, propertyTaxPerYear: 14000,
+  ranchHandWage: 4200, trainerWage: 5400, summerPipeHandWage: 3800,
+};
+
+function freshState() {
+  return {
+    year: 1, month: 1,
+    cash: 165000, loan: 280000, loanRate: 0.075,
+    cattle: { cows: 220, bulls: 9, heifersReplacement: 28, calves: 0, calvesAlive: 0,
+              pregnancyRate: 0.92, conditionScore: 5.5 },
+    horses: { broodmares: 7, foals: 0, inTraining: 4, finished: 2, reputation: 50 },
+    hay: { acres: 420, fertilized: false, cutsCompleted: 0, tonsInStorage: 580, yieldModifier: 1.0,
+           fieldStates: ['standing','standing','standing'] }, // standing|cut|stubble|baled
+    irrigation: { pipesSet: false, summerHands: 0, waterAvailable: 100 },
+    equipment: {
+      tractor1: { name: 'John Deere 7R', condition: 82 },
+      tractor2: { name: 'Case IH (older)', condition: 58 },
+      swather:  { name: 'Swather', condition: 70 },
+      baler:    { name: 'Round Baler', condition: 74 },
+      pickup:   { name: 'Ranch Pickup', condition: 78 },
+    },
+    labor: { fullTimeHands: 2, hasTrainer: true, summerHelp: 0 },
+    marketing: { calvesContracted: false, contractPrice: 0, contractedHead: 0 },
+    weather: { yearType: 'normal', currentEvent: null, eventTimer: 0 },
+    sustainability: { soilHealth: 78, pastureHealth: 80, morale: 75 },
+    annual: { revenue: 0, expenses: 0, calvesSold: 0, hayTonsSold: 0 },
+    history: [], log: [],
+    gameOver: false, gameOverReason: '', lastAction: null,
+  };
+}
+
+let S = freshState();
+
+// ============================================================
+// LOG
+// ============================================================
+function log(msg, type='info') {
+  S.log.unshift({ date: `${MONTH_NAMES[S.month-1]} Y${S.year}`, msg, type });
+  if (S.log.length > 200) S.log.pop();
+  showTooltip(msg);
+}
+let tooltipTimer = null;
+function showTooltip(msg) {
+  const t = document.getElementById('sceneTooltip');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  if (tooltipTimer) clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(() => { t.style.opacity = '0.4'; }, 4000);
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt$(n) { const sign = n < 0 ? '-' : ''; n = Math.abs(Math.round(n)); return sign + '$' + n.toLocaleString('en-US'); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function rand(a, b) { return a + Math.random() * (b - a); }
+function randInt(a, b) { return Math.floor(rand(a, b+1)); }
+function chance(p) { return Math.random() < p; }
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function seasonOf(m) {
+  if ([12,1,2].includes(m)) return 'winter';
+  if ([3,4,5].includes(m))  return 'spring';
+  if ([6,7,8].includes(m))  return 'summer';
+  return 'fall';
+}
+function seasonDescription() {
+  const desc = {
+    1: "Calving season prep — feeding heavy, watching pregnant cows in deep cold.",
+    2: "Heart of calving. Long nights checking heavy heifers in the calving shed.",
+    3: "Calving winding down. Mud season. Branding plans being made.",
+    4: "Branding, vaccinations, turn-out to spring pasture coming.",
+    5: "Turn cattle to summer range. Set irrigation pipe in the hay fields.",
+    6: "First cutting of alfalfa. Pipes moving every 12 hours. Long days.",
+    7: "Hot. Second cutting nears. Watch water and wildfire.",
+    8: "Second cutting. Continued irrigation. Horse training in full swing.",
+    9: "Third cutting if weather holds. Pull pipes late in month. Preg-check.",
+    10: "Wean calves. Auction sales begin. Cattle come down from summer range.",
+    11: "Last calf sales. Begin winter feeding. Snow comes early some years.",
+    12: "Deep winter. Heavy hay feeding. Check water. Plan next year.",
+  };
+  return desc[S.month] || '';
+}
+
+// ============================================================
+// SIMULATION (same as before) — month advance, events, etc
+// ============================================================
+function advanceMonth() {
+  if (S.gameOver) return;
+  payMonthlyExpenses();
+  monthlyTick();
+  rollRandomEvent();
+  S.month++;
+  if (S.month > 12) { yearEnd(); S.month = 1; S.year++; yearStart(); }
+  checkGameOver();
+  rebuildSceneEntities();
+  render();
+}
+
+function payMonthlyExpenses() {
+  let total = 0;
+  total += (S.loan * S.loanRate) / 12;
+  const wages = S.labor.fullTimeHands * PRICES.ranchHandWage
+              + (S.labor.hasTrainer ? PRICES.trainerWage : 0)
+              + (isIrrigationSeason() ? S.labor.summerHelp * PRICES.summerPipeHandWage : 0);
+  total += wages;
+  total += PRICES.insurancePerMonth;
+  let fuel = PRICES.fuelPerMonth;
+  if ([5,6,7,8,9].includes(S.month)) fuel *= 1.6;
+  total += fuel;
+  if ([11,12,1,2,3,4].includes(S.month)) {
+    const totalHead = S.cattle.cows + S.cattle.bulls + S.cattle.heifersReplacement;
+    const hayNeeded = totalHead * 0.5;
+    if (S.hay.tonsInStorage >= hayNeeded) {
+      S.hay.tonsInStorage -= hayNeeded;
+    } else {
+      const short = hayNeeded - S.hay.tonsInStorage;
+      const buyPrice = PRICES.hayPricePerTon * (S.weather.yearType === 'drought' ? 1.6 : 1.1);
+      total += short * buyPrice;
+      S.hay.tonsInStorage = 0;
+      log(`Bought ${short.toFixed(0)} tons of emergency hay at ${fmt$(buyPrice)}/ton.`, 'bad');
+    }
+    total += totalHead * PRICES.feedPerCowWinterMonth / 6;
+  }
+  if (S.month === 12) total += PRICES.propertyTaxPerYear;
+  S.cash -= total;
+  S.annual.expenses += total;
+}
+
+function isIrrigationSeason() { return [5,6,7,8,9].includes(S.month); }
+
+function monthlyTick() {
+  const m = S.month;
+  if (m === 2) doCalving();
+  if (m === 4) doBrandingVet();
+  if (m === 5) {
+    if (S.labor.summerHelp < 1 && S.hay.acres > 100) {
+      log("No summer help hired and irrigation season is here! Yield will suffer.", 'bad');
+      S.hay.yieldModifier *= 0.7;
+    } else {
+      S.irrigation.pipesSet = true;
+      log("Irrigation pipes set. Water turned in to the head ditch.", 'good');
+    }
+  }
+  if (m === 6) doHayCut(1);
+  if (m === 8) doHayCut(2);
+  if (m === 9) doHayCut(3);
+  if (m === 10) doWeaningAndSale();
+  if (m === 11) doFallSales();
+
+  // Field state visualization updates
+  if (m === 5) S.hay.fieldStates = ['standing','standing','standing'];
+  if (m === 6) S.hay.fieldStates = ['baled','standing','standing'];
+  if (m === 7) S.hay.fieldStates = ['standing','standing','standing']; // regrown
+  if (m === 8) S.hay.fieldStates = ['baled','baled','standing'];
+  if (m === 9) S.hay.fieldStates = ['baled','baled','baled'];
+  if (m === 10) S.hay.fieldStates = ['stubble','stubble','stubble'];
+  if (m === 11 || m === 12 || m === 1 || m === 2 || m === 3) S.hay.fieldStates = ['snow','snow','snow'];
+  if (m === 4) S.hay.fieldStates = ['standing','standing','standing'];
+
+  Object.values(S.equipment).forEach(eq => { eq.condition = clamp(eq.condition - rand(0.4, 1.2), 0, 100); });
+}
+
+function doCalving() {
+  const expectedCalves = Math.round((S.cattle.cows + S.cattle.heifersReplacement * 0.6) * S.cattle.pregnancyRate);
+  let lossRate = 0.04;
+  if (S.weather.yearType === 'harsh') {
+    lossRate += 0.06;
+    log("Brutal February cold and blizzards during calving. Hands working 18-hour days in the calving shed.", 'event');
+  } else if (S.weather.yearType === 'mild') {
+    lossRate -= 0.015;
+    log("Mild calving weather. Calves came easy this year.", 'good');
+  }
+  if (S.cattle.conditionScore < 5) lossRate += 0.03;
+  if (S.labor.fullTimeHands < 2) lossRate += 0.02;
+  const calves = Math.round(expectedCalves * (1 - lossRate));
+  S.cattle.calves = expectedCalves;
+  S.cattle.calvesAlive = calves;
+  log(`Calving complete: ${calves} live calves from ${expectedCalves} births (${(lossRate*100).toFixed(1)}% death loss).`,
+      lossRate > 0.08 ? 'bad' : (lossRate < 0.03 ? 'good' : 'info'));
+  if (S.horses.broodmares > 0) {
+    S.horses.foals = Math.round(S.horses.broodmares * rand(0.75, 0.92));
+    log(`${S.horses.foals} foals born this spring.`, 'info');
+  }
+}
+
+function doBrandingVet() {
+  const head = S.cattle.cows + S.cattle.bulls + S.cattle.heifersReplacement;
+  const cost = head * PRICES.vetPerCowYear + S.cattle.calvesAlive * 12;
+  S.cash -= cost; S.annual.expenses += cost;
+  log(`Spring branding & vaccinations completed: ${fmt$(cost)}.`, 'info');
+}
+
+function doHayCut(cutNum) {
+  if (!S.irrigation.pipesSet && cutNum > 1) log(`Cut #${cutNum}: stand stressed without irrigation.`, 'bad');
+  let baseYield = (PRICES.hayYieldPerAcre / 3) * S.hay.acres;
+  let mult = S.hay.yieldModifier;
+  if (S.hay.fertilized) mult *= 1.18;
+  if (S.weather.yearType === 'drought') mult *= 0.55;
+  if (S.weather.yearType === 'wet') mult *= 1.1;
+  if (S.weather.yearType === 'mild') mult *= 1.05;
+  if (S.irrigation.waterAvailable < 80) mult *= 0.8;
+  if (cutNum === 3 && chance(0.35)) {
+    log("Early frost killed the third cutting before it could be put up.", 'bad');
+    return;
+  }
+  if (cutNum === 3 && chance(0.15)) {
+    log("Late-summer rain ruined the windrows on third cutting.", 'bad');
+    mult *= 0.5;
+  }
+  const tons = Math.max(0, Math.round(baseYield * mult));
+  S.hay.tonsInStorage += tons;
+  S.hay.cutsCompleted = cutNum;
+  log(`Cut #${cutNum}: ${tons} tons of alfalfa baled and stacked.`, tons > baseYield * 0.9 ? 'good' : 'info');
+  Object.values(S.equipment).forEach(eq => eq.condition = clamp(eq.condition - rand(1, 3), 0, 100));
+  S.sustainability.soilHealth -= 0.4;
+  if (S.hay.fertilized) S.sustainability.soilHealth += 0.6;
+}
+
+function doWeaningAndSale() {
+  const head = S.cattle.calvesAlive;
+  if (head === 0) { log("No calves to sell this fall.", 'bad'); return; }
+  const keepHeifers = Math.min(28, Math.round(S.cattle.cows * 0.13));
+  const sellHead = head - keepHeifers;
+  const cwt = (PRICES.weanedCalfWeight / 100);
+  const marketSwing = rand(-0.18, 0.20);
+  const marketPrice = PRICES.calfPriceBase * (1 + marketSwing);
+  let revenue = 0, viaContract = 0;
+  if (S.marketing.calvesContracted) {
+    viaContract = Math.min(S.marketing.contractedHead, sellHead);
+    revenue += viaContract * cwt * S.marketing.contractPrice;
+    revenue += (sellHead - viaContract) * cwt * marketPrice;
+  } else {
+    revenue = sellHead * cwt * marketPrice;
+  }
+  S.cash += revenue; S.annual.revenue += revenue; S.annual.calvesSold += sellHead;
+  S.cattle.heifersReplacement += keepHeifers;
+  S.cattle.calvesAlive = 0;
+  let msg = `Sold ${sellHead} calves for ${fmt$(revenue)}. Auction: ${fmt$(marketPrice)}/cwt.`;
+  if (viaContract > 0) msg += ` (${viaContract} contracted at ${fmt$(S.marketing.contractPrice)}/cwt.)`;
+  log(msg, marketSwing > 0.05 ? 'good' : (marketSwing < -0.10 ? 'bad' : 'info'));
+  if (!S.marketing.calvesContracted && marketSwing < -0.10) {
+    log("In hindsight, locking in a forward contract last spring would have saved real money.", 'event');
+  }
+  S.marketing.calvesContracted = false;
+  S.marketing.contractedHead = 0;
+  S.marketing.contractPrice = 0;
+}
+
+function doFallSales() {
+  const culls = Math.round(S.cattle.cows * 0.10);
+  const cullPrice = PRICES.cullCowBase * (1 + rand(-0.10, 0.10));
+  const cullRev = culls * (PRICES.cullCowWeight/100) * cullPrice;
+  S.cash += cullRev; S.annual.revenue += cullRev;
+  S.cattle.cows -= culls;
+  const promote = S.cattle.heifersReplacement;
+  S.cattle.cows += promote;
+  S.cattle.heifersReplacement = 0;
+  log(`Sold ${culls} cull cows for ${fmt$(cullRev)}. Promoted ${promote} heifers to the cow herd.`, 'info');
+  if (S.horses.finished > 0) {
+    const repMult = 0.7 + S.horses.reputation/166;
+    const sold = S.horses.finished;
+    const horseRev = sold * PRICES.trainedHorsePrice * repMult;
+    S.cash += horseRev; S.annual.revenue += horseRev;
+    S.horses.finished = 0;
+    log(`Sold ${sold} finished horses for ${fmt$(horseRev)} (reputation x${repMult.toFixed(2)}).`, 'good');
+  }
+  if (S.horses.inTraining > 0 && S.labor.hasTrainer) {
+    S.horses.finished += S.horses.inTraining;
+    S.horses.inTraining = 0;
+    log(`Horses graduated from training and are ready to sell next fall.`, 'info');
+  }
+  S.horses.inTraining += S.horses.foals;
+  S.horses.foals = 0;
+}
+
+function rollRandomEvent() {
+  if (!chance(0.32)) return;
+  for (let i=0; i<5; i++) {
+    const e = pick(EVENTS);
+    if (!e.guard || e.guard()) { e.fire(); return; }
+  }
+}
+
+const EVENTS = [
+  { fire: () => {
+      const eq = pick(['tractor1','tractor2','swather','baler']);
+      const cost = randInt(4500, 18000);
+      S.cash -= cost;
+      S.equipment[eq].condition = clamp(S.equipment[eq].condition - 15, 0, 100);
+      log(`The ${S.equipment[eq].name} broke down — major repair: ${fmt$(cost)}.`, 'bad');
+    }
+  },
+  { guard: () => S.cattle.calvesAlive > 0,
+    fire: () => {
+      const lost = randInt(2, 6);
+      S.cattle.calvesAlive = Math.max(0, S.cattle.calvesAlive - lost);
+      log(`Wolves killed ${lost} calves in the upper pasture overnight.`, 'bad');
+    }
+  },
+  { guard: () => isIrrigationSeason(),
+    fire: () => { S.hay.yieldModifier *= rand(0.65, 0.85); log(`Hailstorm flattened a section of standing alfalfa.`, 'bad'); }
+  },
+  { guard: () => [7,8,9].includes(S.month),
+    fire: () => {
+      if (chance(0.4)) { log(`Wildfire crossed your line. Lost summer pasture and an outbuilding.`, 'bad'); S.cash -= 25000; S.sustainability.pastureHealth -= 8; S.weather.currentEvent = 'wildfire'; S.weather.eventTimer = 1; }
+      else { log(`Wildfire forced evacuation but stayed off the ranch.`, 'event'); }
+    }
+  },
+  { fire: () => { log(`Strong feeder cattle demand — futures rallied. Bullish outlook for fall.`, 'good'); S.weather.currentEvent = 'bull market'; } },
+  { fire: () => { log(`Feeder cattle futures dropped 12% on packer cutbacks.`, 'bad'); S.weather.currentEvent = 'bear market'; } },
+  { guard: () => S.cattle.bulls > 1,
+    fire: () => {
+      S.cattle.bulls -= 1;
+      log(`Herd bull pulled up lame. Sold for salvage; need to replace next spring.`, 'bad');
+      S.cash += PRICES.bullPrice * 0.85 - PRICES.bullPrice;
+    }
+  },
+  { guard: () => S.labor.hasTrainer && S.horses.inTraining + S.horses.finished > 0,
+    fire: () => {
+      const purse = randInt(8000, 24000);
+      S.cash += purse;
+      S.horses.reputation = clamp(S.horses.reputation + 10, 0, 100);
+      log(`Your colt placed in the Big Sky Futurity! Purse: ${fmt$(purse)}.`, 'good');
+    }
+  },
+  { fire: () => { const cost = randInt(2000, 7500); S.cash -= cost; log(`Vet emergency: ${fmt$(cost)}.`, 'bad'); } },
+  { guard: () => S.hay.tonsInStorage > 100,
+    fire: () => {
+      const lost = Math.round(S.hay.tonsInStorage * rand(0.3, 0.7));
+      S.hay.tonsInStorage -= lost;
+      log(`Lightning set the south hay barn on fire. Lost ${lost} tons of hay.`, 'bad');
+    }
+  },
+  { fire: () => { log(`BLM cut your AUMs by 15% over a sage-grouse review.`, 'event'); S.sustainability.pastureHealth -= 4; } },
+  { guard: () => S.hay.tonsInStorage > 200,
+    fire: () => {
+      const sold = randInt(40, 100);
+      const rev = sold * PRICES.hayPricePerTon * 1.05;
+      S.hay.tonsInStorage -= sold; S.cash += rev; S.annual.revenue += rev;
+      log(`Neighbor short on hay — sold ${sold} tons at a premium for ${fmt$(rev)}.`, 'good');
+    }
+  },
+  { guard: () => isIrrigationSeason(),
+    fire: () => { S.hay.yieldModifier *= 0.85; log(`Grasshoppers hatched heavy. Took the yield hit.`, 'bad'); }
+  },
+  { guard: () => isIrrigationSeason() && S.labor.summerHelp > 0,
+    fire: () => { S.labor.summerHelp -= 1; log(`A summer hand quit mid-season.`, 'bad'); S.hay.yieldModifier *= 0.93; }
+  },
+  { fire: () => { const extra = randInt(2500, 6000); S.cash -= extra; log(`Diesel jumped to over $5/gallon.`, 'bad'); } },
+];
+
+function yearStart() {
+  const r = Math.random();
+  if (r < 0.18) S.weather.yearType = 'drought';
+  else if (r < 0.30) S.weather.yearType = 'harsh';
+  else if (r < 0.45) S.weather.yearType = 'wet';
+  else if (r < 0.60) S.weather.yearType = 'mild';
+  else S.weather.yearType = 'normal';
+  S.irrigation.waterAvailable = ({drought:55, harsh:90, wet:100, mild:100, normal:95})[S.weather.yearType];
+  S.hay.cutsCompleted = 0;
+  S.hay.fertilized = false;
+  S.hay.yieldModifier = 1.0;
+  S.irrigation.pipesSet = false;
+  S.cattle.calves = 0;
+  S.annual = { revenue: 0, expenses: 0, calvesSold: 0, hayTonsSold: 0 };
+  log(`A new year begins. Forecast: ${S.weather.yearType.toUpperCase()} year ahead.`, 'event');
+  S.sustainability.pastureHealth = clamp(S.sustainability.pastureHealth + rand(2,6), 0, 100);
+  if (S.weather.yearType === 'drought') S.sustainability.pastureHealth -= 12;
+  if (S.weather.yearType === 'wet') S.sustainability.pastureHealth += 4;
+  S.cattle.pregnancyRate = clamp(0.78 + S.cattle.conditionScore*0.025, 0.7, 0.95);
+}
+
+function yearEnd() {
+  const profit = S.annual.revenue - S.annual.expenses;
+  S.history.push({
+    year: S.year, revenue: S.annual.revenue, expenses: S.annual.expenses, profit,
+    cash: S.cash, loan: S.loan, cows: S.cattle.cows,
+    weather: S.weather.yearType, soil: S.sustainability.soilHealth,
+  });
+  log(`=== YEAR ${S.year} CLOSED — ${profit>=0?'PROFIT':'LOSS'}: ${fmt$(profit)} ===`,
+      profit >= 0 ? 'good' : 'bad');
+  if (S.cash > 50000 && S.loan > 0) {
+    const pay = Math.min(50000, S.loan, S.cash - 30000);
+    S.loan -= pay; S.cash -= pay;
+    log(`Annual loan principal payment: ${fmt$(pay)}. Loan: ${fmt$(S.loan)}.`, 'info');
+  }
+}
+
+function checkGameOver() {
+  if (S.cash < -150000) { S.gameOver = true; S.gameOverReason = "The bank called the loan. The ranch sold at sheriff's auction."; }
+  if (S.cattle.cows < 30) { S.gameOver = true; S.gameOverReason = "Herd is below sustainable size."; }
+  if (S.year > 10) { S.gameOver = true; S.gameOverReason = "After a decade, you've handed the operation to the next generation. Well done."; }
+}
+
+// ============================================================
+// PLAYER ACTIONS
+// ============================================================
+function buyCows(n) {
+  const cost = n * PRICES.bredHeiferBase;
+  if (S.cash < cost) return alert("Not enough cash.");
+  S.cash -= cost; S.cattle.cows += n;
+  log(`Bought ${n} bred heifers for ${fmt$(cost)}.`, 'info');
+  rebuildSceneEntities(); render();
+}
+function sellCows(n) {
+  if (n > S.cattle.cows) return alert("Not that many cows in the herd.");
+  const rev = n * PRICES.cullCowBase * (PRICES.cullCowWeight/100);
+  S.cash += rev; S.annual.revenue += rev; S.cattle.cows -= n;
+  log(`Sold ${n} cows at the salebarn for ${fmt$(rev)}.`, 'info');
+  rebuildSceneEntities(); render();
+}
+function contractCalves(headPct) {
+  if (S.month > 7) return alert("Contracts must be locked in by mid-summer.");
+  const head = Math.round((S.cattle.cows + S.cattle.heifersReplacement*0.5) * S.cattle.pregnancyRate * (headPct/100));
+  const contractPrice = PRICES.calfPriceBase * rand(0.94, 1.02);
+  S.marketing.calvesContracted = true;
+  S.marketing.contractedHead = head;
+  S.marketing.contractPrice = contractPrice;
+  log(`Forward-contracted ${head} calves at ${fmt$(contractPrice)}/cwt.`, 'good');
+  render();
+}
+function fertilize() {
+  const cost = S.hay.acres * PRICES.fertilizerPerAcre;
+  if (S.cash < cost) return alert("Not enough cash.");
+  if (S.hay.fertilized) return alert("Already fertilized this year.");
+  if (S.month > 5) return alert("Too late in the season.");
+  S.cash -= cost; S.annual.expenses += cost; S.hay.fertilized = true;
+  log(`Fertilized ${S.hay.acres} acres for ${fmt$(cost)}.`, 'info');
+  render();
+}
+function sellHay(tons) {
+  if (tons > S.hay.tonsInStorage) return alert("Not enough hay.");
+  const winterNeed = (S.cattle.cows + S.cattle.bulls + S.cattle.heifersReplacement) * 0.5 * 6;
+  if (S.hay.tonsInStorage - tons < winterNeed * 0.7) {
+    if (!confirm(`Selling this much may leave you short for winter (need ~${winterNeed.toFixed(0)} t). Sell anyway?`)) return;
+  }
+  const price = PRICES.hayPricePerTon * (S.weather.yearType === 'drought' ? 1.5 : 1);
+  const rev = tons * price;
+  S.hay.tonsInStorage -= tons; S.cash += rev; S.annual.revenue += rev;
+  log(`Sold ${tons} tons of hay for ${fmt$(rev)}.`, 'info');
+  render();
+}
+function hireSummer(n) {
+  if (S.month > 4) return alert("Summer help should be lined up by April.");
+  S.labor.summerHelp = n;
+  log(`Lined up ${n} summer hand(s) for irrigation season.`, 'info');
+  rebuildSceneEntities(); render();
+}
+function setHands(n) {
+  S.labor.fullTimeHands = n;
+  log(`Full-time crew set at ${n}.`, 'info');
+  rebuildSceneEntities(); render();
+}
+function toggleTrainer() {
+  S.labor.hasTrainer = !S.labor.hasTrainer;
+  log(S.labor.hasTrainer ? `Brought a horse trainer onto the payroll.` : `Let the horse trainer go.`, S.labor.hasTrainer?'good':'event');
+  rebuildSceneEntities(); render();
+}
+function repairEquipment(key) {
+  const eq = S.equipment[key];
+  const cost = (100 - eq.condition) * 280;
+  if (S.cash < cost) return alert("Not enough cash.");
+  S.cash -= cost; S.annual.expenses += cost; eq.condition = 100;
+  log(`Overhauled the ${eq.name}: ${fmt$(cost)}.`, 'info');
+  render();
+}
+function replaceEquipment(key) {
+  const prices = { tractor1: 195000, tractor2: 95000, swather: 105000, baler: 70000, pickup: 52000 };
+  const price = prices[key];
+  if (S.cash < price * 0.30) return alert("Need at least 30% down.");
+  const tradeIn = price * (S.equipment[key].condition / 100) * 0.4;
+  const net = price - tradeIn;
+  if (S.cash >= net) S.cash -= net;
+  else { S.cash -= net * 0.3; S.loan += net * 0.7; log(`Financed the rest into the operating loan.`, 'event'); }
+  S.equipment[key].condition = 100;
+  log(`Bought new ${S.equipment[key].name} (trade-in ${fmt$(tradeIn)}).`, 'info');
+  render();
+}
+function payLoan(amount) {
+  if (S.cash < amount) return alert("Not that much cash.");
+  if (amount > S.loan) amount = S.loan;
+  S.cash -= amount; S.loan -= amount;
+  log(`Paid ${fmt$(amount)} on operating loan.`, 'good');
+  render();
+}
+function takeLoan(amount) {
+  S.loan += amount; S.cash += amount;
+  log(`Drew ${fmt$(amount)} on the operating note.`, 'event');
+  render();
+}
+
+// ============================================================
+// VISUALIZATION — CANVAS RANCH SCENE
+// ============================================================
+const canvas = document.getElementById('ranchCanvas');
+const ctx = canvas.getContext('2d');
+let CW = 800, CH = 420;
+
+function resizeCanvas() {
+  const wrap = document.getElementById('canvasWrap');
+  const w = wrap.clientWidth || 800;
+  CW = Math.floor(w);
+  CH = Math.floor(Math.min(w * 0.55, 460));
+  canvas.width = CW;
+  canvas.height = CH;
+  buildSceneLayout();
+  rebuildSceneEntities();
+}
+
+// === SCENE LAYOUT ===
+let LAYOUT = null;
+let CACHE = null;
+function buildSceneLayout() {
+  // Coordinate zones — fractions of CW/CH
+  LAYOUT = {
+    sky:         { x: 0, y: 0, w: CW, h: CH * 0.32 },
+    mountains:   { x: 0, y: CH * 0.18, w: CW, h: CH * 0.16 },
+    fieldsTop:   CH * 0.34,
+    fields: [
+      { x: CW * 0.04, y: CH * 0.34, w: CW * 0.30, h: CH * 0.22 },
+      { x: CW * 0.36, y: CH * 0.34, w: CW * 0.30, h: CH * 0.22 },
+      { x: CW * 0.68, y: CH * 0.34, w: CW * 0.28, h: CH * 0.22 },
+    ],
+    pasture:     { x: CW * 0.04, y: CH * 0.60, w: CW * 0.50, h: CH * 0.27 },
+    horsePen:    { x: CW * 0.56, y: CH * 0.60, w: CW * 0.18, h: CH * 0.27 },
+    buildings:   { x: CW * 0.74, y: CH * 0.55, w: CW * 0.22, h: CH * 0.32 },
+    road:        { y: CH * 0.92, h: CH * 0.05 },
+  };
+  // CACHE: pre-compute every random-position element so it doesn't flicker.
+  CACHE = {};
+  // Mountain ridge line
+  const peaks = [{ x: 0, y: CH * 0.34 }];
+  let mx = 0;
+  while (mx < CW) {
+    mx += rand(40, 90);
+    peaks.push({ x: mx, y: CH * (0.16 + Math.random() * 0.10) });
+  }
+  peaks.push({ x: CW, y: CH * 0.34 });
+  CACHE.mountainPeaks = peaks;
+  // Snow line jagged points
+  CACHE.snowLineLower = [];
+  CACHE.snowLineUpper = [];
+  for (let i = 0; i <= 10; i++) {
+    const px = (CW / 10) * i;
+    CACHE.snowLineLower.push({ x: px, y: CH * (0.18 + Math.sin(i * 1.7) * 0.02 + Math.cos(i * 0.9) * 0.015) });
+    CACHE.snowLineUpper.push({ x: px, y: CH * (0.21 + Math.sin(i * 2.1) * 0.018) });
+  }
+  // Tree line heights
+  CACHE.treeLine = [];
+  for (let x = 0; x < CW; x += 8) {
+    CACHE.treeLine.push({ x, h: 6 + Math.sin(x * 0.13) * 3 + Math.random() * 2 });
+  }
+  // Pasture grass blade positions
+  CACHE.pastureGrass = [];
+  for (let i = 0; i < 40; i++) {
+    CACHE.pastureGrass.push({
+      x: LAYOUT.pasture.x + Math.random() * LAYOUT.pasture.w,
+      y: LAYOUT.pasture.y + Math.random() * LAYOUT.pasture.h,
+    });
+  }
+  // Pasture snow patches
+  CACHE.pastureSnow = [];
+  for (let i = 0; i < 25; i++) {
+    CACHE.pastureSnow.push({
+      x: LAYOUT.pasture.x + Math.random() * LAYOUT.pasture.w,
+      y: LAYOUT.pasture.y + Math.random() * LAYOUT.pasture.h,
+      rx: rand(3, 7), ry: rand(1, 3),
+    });
+  }
+  // Field bale positions (per field, fixed layout)
+  CACHE.fieldBales = LAYOUT.fields.map(f => {
+    const baleCount = randInt(5, 10);
+    const bales = [];
+    for (let b = 0; b < baleCount; b++) {
+      bales.push({
+        x: f.x + 5 + ((b * 13 + 7) % (f.w - 10)),
+        y: f.y + 6 + ((b * 9 + 4) % (f.h - 12)),
+      });
+    }
+    return bales;
+  });
+  // Field stubble lines (deterministic from layout, but compute once)
+  CACHE.fieldStubble = LAYOUT.fields.map(f => {
+    const lines = [];
+    for (let xx = f.x + 2; xx < f.x + f.w; xx += 3) lines.push(xx);
+    return lines;
+  });
+  // Field standing-grass texture lines
+  CACHE.fieldStanding = LAYOUT.fields.map(f => {
+    const lines = [];
+    for (let yy = f.y + 3; yy < f.y + f.h; yy += 4) lines.push(yy);
+    return lines;
+  });
+  // Field snow flecks
+  CACHE.fieldSnow = LAYOUT.fields.map(f => {
+    const flecks = [];
+    for (let i = 0; i < 30; i++) {
+      flecks.push({ x: f.x + Math.random() * f.w, y: f.y + Math.random() * f.h });
+    }
+    return flecks;
+  });
+}
+
+// === ENTITIES ===
+let entities = [];
+let particles = [];
+
+class Cow {
+  constructor(bounds) {
+    this.bounds = bounds;
+    this.x = bounds.x + Math.random() * bounds.w;
+    this.y = bounds.y + Math.random() * bounds.h;
+    this.tx = this.x; this.ty = this.y;
+    const breeds = [
+      { body: '#1d1814', head: '#1d1814', face: false }, // black angus
+      { body: '#1d1814', head: '#1d1814', face: false },
+      { body: '#1d1814', head: '#1d1814', face: false },
+      { body: '#7a4630', head: '#fff7e8', face: true },  // hereford
+      { body: '#3a2d24', head: '#3a2d24', face: false },
+    ];
+    this.breed = pick(breeds);
+    this.size = rand(0.9, 1.1);
+    this.timer = randInt(40, 200);
+    this.facingRight = chance(0.5);
+    this.bobPhase = Math.random() * Math.PI * 2;
+  }
+  update() {
+    this.timer--;
+    if (this.timer <= 0 || Math.hypot(this.tx-this.x, this.ty-this.y) < 1.5) {
+      this.tx = this.bounds.x + 6 + Math.random() * (this.bounds.w - 12);
+      this.ty = this.bounds.y + 4 + Math.random() * (this.bounds.h - 8);
+      this.timer = randInt(80, 280);
+    }
+    const dx = this.tx - this.x, dy = this.ty - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 1) {
+      this.x += dx/d * 0.08;
+      this.y += dy/d * 0.08;
+      this.facingRight = dx > 0;
+    }
+    this.bobPhase += 0.05;
+  }
+  draw() {
+    const s = this.size;
+    const bob = Math.sin(this.bobPhase) * 0.4;
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + 4*s, 7*s, 1.5*s, 0, 0, Math.PI*2);
+    ctx.fill();
+    // body
+    ctx.fillStyle = this.breed.body;
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + bob, 7*s, 4*s, 0, 0, Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillStyle = '#1a1410';
+    ctx.fillRect(this.x - 5*s, this.y + 3*s, 1.2*s, 3*s);
+    ctx.fillRect(this.x + 4*s, this.y + 3*s, 1.2*s, 3*s);
+    // head
+    const hx = this.x + (this.facingRight ? 6*s : -6*s);
+    const hy = this.y - 1*s + bob;
+    ctx.fillStyle = this.breed.head;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 2.4*s, 0, Math.PI*2);
+    ctx.fill();
+    if (this.breed.face) {
+      ctx.fillStyle = '#fff7e8';
+      ctx.beginPath();
+      ctx.arc(hx + (this.facingRight?0.5:-0.5)*s, hy + 0.3*s, 1.7*s, 0, Math.PI*2);
+      ctx.fill();
+    }
+    // ears
+    ctx.fillStyle = this.breed.head;
+    ctx.fillRect(hx - 2*s, hy - 2*s, 1*s, 1*s);
+    ctx.fillRect(hx + 1*s, hy - 2*s, 1*s, 1*s);
+  }
+}
+
+class Calf extends Cow {
+  constructor(bounds) {
+    super(bounds);
+    this.size = rand(0.55, 0.7);
+    this.breed = { body: '#8b6240', head: '#8b6240', face: false };
+  }
+}
+
+class Horse {
+  constructor(bounds) {
+    this.bounds = bounds;
+    this.x = bounds.x + Math.random() * bounds.w;
+    this.y = bounds.y + Math.random() * bounds.h;
+    this.tx = this.x; this.ty = this.y;
+    const colors = [
+      { body: '#5a3a1f', mane: '#1a1006' },   // bay
+      { body: '#a4622a', mane: '#7a3f15' },   // sorrel
+      { body: '#d4b87a', mane: '#fff3d8' },   // palomino
+      { body: '#7a7568', mane: '#3d3a35' },   // gray
+      { body: '#3a2418', mane: '#1a1006' },   // dark bay
+      { body: '#fff', mane: '#1a1006' },      // paint base
+    ];
+    this.color = pick(colors);
+    this.timer = randInt(60, 180);
+    this.facingRight = chance(0.5);
+    this.bobPhase = Math.random() * Math.PI * 2;
+  }
+  update() {
+    this.timer--;
+    if (this.timer <= 0 || Math.hypot(this.tx-this.x, this.ty-this.y) < 2) {
+      this.tx = this.bounds.x + 6 + Math.random() * (this.bounds.w - 12);
+      this.ty = this.bounds.y + 4 + Math.random() * (this.bounds.h - 8);
+      this.timer = randInt(60, 200);
+    }
+    const dx = this.tx - this.x, dy = this.ty - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d > 1) {
+      this.x += dx/d * 0.12;
+      this.y += dy/d * 0.12;
+      this.facingRight = dx > 0;
+    }
+    this.bobPhase += 0.07;
+  }
+  draw() {
+    const bob = Math.sin(this.bobPhase) * 0.4;
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + 5, 8, 1.5, 0, 0, Math.PI*2);
+    ctx.fill();
+    // body
+    ctx.fillStyle = this.color.body;
+    ctx.beginPath();
+    ctx.ellipse(this.x, this.y + bob, 8, 3.5, 0, 0, Math.PI*2);
+    ctx.fill();
+    // legs
+    ctx.fillStyle = '#0e0a06';
+    ctx.fillRect(this.x - 6, this.y + 3, 1.2, 4);
+    ctx.fillRect(this.x + 5, this.y + 3, 1.2, 4);
+    // neck
+    const nx = this.x + (this.facingRight ? 7 : -7);
+    const ny = this.y - 2 + bob;
+    ctx.fillStyle = this.color.body;
+    ctx.beginPath();
+    ctx.moveTo(this.x + (this.facingRight?4:-4), this.y - 1 + bob);
+    ctx.lineTo(nx, ny - 3);
+    ctx.lineTo(nx + (this.facingRight?2:-2), ny + 1);
+    ctx.lineTo(this.x + (this.facingRight?5:-5), this.y + 1 + bob);
+    ctx.fill();
+    // mane
+    ctx.fillStyle = this.color.mane;
+    ctx.fillRect(this.x + (this.facingRight?2:-3), this.y - 4 + bob, 3, 3);
+    // head
+    ctx.fillStyle = this.color.body;
+    ctx.beginPath();
+    ctx.ellipse(nx + (this.facingRight?1:-1), ny - 3, 2.2, 1.6, 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+class Foal extends Horse {
+  constructor(bounds) {
+    super(bounds);
+    this.scale = 0.7;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.scale, this.scale);
+    ctx.translate(-this.x, -this.y);
+    super.draw();
+    ctx.restore();
+  }
+}
+
+class Worker {
+  constructor(role, bounds, fieldIndex) {
+    this.role = role;            // 'pipe', 'hand', 'trainer'
+    this.bounds = bounds;
+    this.fieldIndex = fieldIndex;
+    this.x = bounds.x + Math.random() * bounds.w;
+    this.y = bounds.y + Math.random() * bounds.h;
+    this.tx = this.x; this.ty = this.y;
+    this.task = 'walking';
+    this.taskTimer = 0;
+    this.shirt = role === 'trainer' ? '#7a3825' : pick(['#2d4a6b','#5b3220','#444','#3a5e3a','#6b3a2d']);
+    this.facingRight = true;
+    this.legPhase = 0;
+    this.pickNewTarget();
+  }
+  pickNewTarget() {
+    if (this.role === 'pipe') {
+      // Move along a pipe line in the field
+      this.tx = this.bounds.x + 4 + Math.random() * (this.bounds.w - 8);
+      this.ty = this.bounds.y + 4 + Math.random() * (this.bounds.h - 8);
+    } else if (this.role === 'trainer') {
+      this.tx = this.bounds.x + 4 + Math.random() * (this.bounds.w - 8);
+      this.ty = this.bounds.y + 4 + Math.random() * (this.bounds.h - 8);
+    } else {
+      this.tx = this.bounds.x + 4 + Math.random() * (this.bounds.w - 8);
+      this.ty = this.bounds.y + 4 + Math.random() * (this.bounds.h - 8);
+    }
+    this.taskTimer = randInt(60, 180);
+  }
+  update() {
+    const dx = this.tx - this.x, dy = this.ty - this.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 1.5) {
+      this.task = 'working';
+      this.taskTimer--;
+      if (this.taskTimer <= 0) {
+        this.task = 'walking';
+        this.pickNewTarget();
+      }
+    } else {
+      this.task = 'walking';
+      const speed = 0.16;
+      this.x += dx/d * speed;
+      this.y += dy/d * speed;
+      this.facingRight = dx > 0;
+      this.legPhase += 0.13;
+    }
+  }
+  draw() {
+    const x = this.x, y = this.y;
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, 3, 1, 0, 0, Math.PI*2);
+    ctx.fill();
+    // legs
+    const legSwing = this.task === 'walking' ? Math.sin(this.legPhase) * 1.5 : 0;
+    ctx.fillStyle = '#3a2818';
+    ctx.fillRect(x - 1.5 + legSwing*0.3, y, 1.2, 5);
+    ctx.fillRect(x + 0.3 - legSwing*0.3, y, 1.2, 5);
+    // body shirt
+    ctx.fillStyle = this.shirt;
+    ctx.fillRect(x - 2, y - 4, 4, 5);
+    // arms
+    if (this.task === 'working' && this.role === 'pipe') {
+      // Both arms forward, grabbing pipe
+      ctx.fillRect(x - 3, y - 3, 1.2, 3);
+      ctx.fillRect(x + 1.8, y - 3, 1.2, 3);
+      // pipe across hands
+      ctx.strokeStyle = '#888';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x - 4, y - 1.5);
+      ctx.lineTo(x + 4, y - 1.5);
+      ctx.stroke();
+    } else {
+      ctx.fillRect(x - 3, y - 3, 1.2, 4);
+      ctx.fillRect(x + 1.8, y - 3, 1.2, 4);
+    }
+    // head + hat
+    ctx.fillStyle = '#d4a878';
+    ctx.fillRect(x - 1.5, y - 7, 3, 3);
+    // cowboy hat
+    ctx.fillStyle = this.role === 'trainer' ? '#3a1c0d' : '#5b3a1f';
+    ctx.fillRect(x - 3, y - 8, 6, 1);
+    ctx.fillRect(x - 2, y - 9, 4, 1);
+  }
+}
+
+class Tractor {
+  constructor(field, mode) {
+    this.field = field;       // bounds rect
+    this.mode = mode;         // 'cutting', 'baling', 'feeding'
+    this.lanesH = 5;
+    this.lane = 0;
+    this.laneStep = 1;        // +1 going down lanes, -1 going up
+    this.dir = 1;             // +1 driving right, -1 driving left
+    this.x = field.x + 4;
+    this.y = this.laneY(0);
+    this.setNextTarget();
+  }
+  laneY(lane) {
+    const denom = Math.max(1, this.lanesH - 1);
+    return this.field.y + 4 + (this.field.h - 8) * (lane / denom);
+  }
+  setNextTarget() {
+    this.targetX = this.dir > 0 ? this.field.x + this.field.w - 8 : this.field.x + 4;
+    this.targetY = this.laneY(this.lane);
+  }
+  update() {
+    const speed = 0.28;
+    const dx = this.targetX - this.x;
+    const dy = this.targetY - this.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 0.6) {
+      // headland turn: reverse driving direction, ping-pong to next lane
+      this.dir *= -1;
+      const next = this.lane + this.laneStep;
+      if (next >= this.lanesH) { this.laneStep = -1; this.lane = this.lanesH - 1 + this.laneStep; }
+      else if (next < 0)        { this.laneStep = 1;  this.lane = 0 + this.laneStep; }
+      else                       this.lane = next;
+      this.setNextTarget();
+    } else {
+      this.x += (dx / dist) * speed;
+      this.y += (dy / dist) * speed;
+    }
+  }
+  draw() {
+    const x = this.x, y = this.y;
+    // shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(x, y + 5, 11, 2, 0, 0, Math.PI*2);
+    ctx.fill();
+    // tractor body (green)
+    ctx.fillStyle = '#3a6a1f';
+    ctx.fillRect(x - 6, y - 4, 10, 6);
+    // cab
+    ctx.fillStyle = '#2a4a18';
+    ctx.fillRect(x - 4, y - 8, 6, 5);
+    ctx.fillStyle = '#88ccff';
+    ctx.fillRect(x - 3, y - 7, 4, 3);
+    // wheels
+    ctx.fillStyle = '#1a1410';
+    ctx.beginPath();
+    ctx.arc(x - 4, y + 3, 2.2, 0, Math.PI*2);
+    ctx.arc(x + 3, y + 3, 2.2, 0, Math.PI*2);
+    ctx.fill();
+    // implement behind based on mode
+    if (this.mode === 'cutting') {
+      // swather header
+      ctx.fillStyle = '#c94535';
+      const ix = x - this.dir * 10;
+      ctx.fillRect(ix - 4, y - 1, 8, 4);
+      // cut grass trail
+      ctx.fillStyle = '#9a8b3a';
+      ctx.fillRect(this.dir > 0 ? this.field.x : this.x, y - 0.5, Math.abs(this.x - (this.dir>0?this.field.x:this.field.x+this.field.w)), 2);
+    } else if (this.mode === 'baling') {
+      // round baler
+      ctx.fillStyle = '#c89a4a';
+      const ix = x - this.dir * 12;
+      ctx.beginPath();
+      ctx.arc(ix, y, 4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#7a5d2a';
+      ctx.beginPath();
+      ctx.arc(ix, y, 3, 0, Math.PI*2);
+      ctx.fill();
+    } else if (this.mode === 'feeding') {
+      // hay wagon
+      ctx.fillStyle = '#a87a3a';
+      const ix = x - this.dir * 11;
+      ctx.fillRect(ix - 5, y - 3, 10, 5);
+    }
+  }
+}
+
+class Pickup {
+  constructor() {
+    this.y = LAYOUT.road.y + 2;
+    this.dir = chance(0.5) ? 1 : -1;
+    this.x = this.dir > 0 ? -20 : CW + 20;
+    this.color = pick(['#7a2d2d','#1f3550','#3a3a3a','#5b3220']);
+  }
+  update() {
+    this.x += this.dir * 0.7;
+  }
+  offscreen() { return this.x < -30 || this.x > CW + 30; }
+  draw() {
+    const x = this.x, y = this.y;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(x - 10, y + 4, 22, 2);
+    // bed
+    ctx.fillStyle = this.color;
+    ctx.fillRect(x - 10, y - 3, 14, 6);
+    // cab
+    ctx.fillStyle = this.color;
+    ctx.fillRect(x + 1, y - 6, 8, 9);
+    // window
+    ctx.fillStyle = '#88ccff';
+    ctx.fillRect(x + 2, y - 5, 6, 3);
+    // wheels
+    ctx.fillStyle = '#1a1410';
+    ctx.beginPath();
+    ctx.arc(x - 7, y + 4, 2, 0, Math.PI*2);
+    ctx.arc(x + 7, y + 4, 2, 0, Math.PI*2);
+    ctx.fill();
+  }
+}
+
+// === Build entity list based on game state ===
+function rebuildSceneEntities() {
+  if (!LAYOUT) return;
+  entities = [];
+
+  // CATTLE
+  let cattleBounds;
+  if ([12,1,2,3].includes(S.month)) {
+    // winter: clustered near buildings (feed grounds)
+    cattleBounds = { x: LAYOUT.pasture.x + 10, y: LAYOUT.pasture.y + 5, w: LAYOUT.pasture.w * 0.55, h: LAYOUT.pasture.h - 10 };
+  } else {
+    cattleBounds = LAYOUT.pasture;
+  }
+  // Cap visible cattle so canvas doesn't get crowded — show ~1 sprite per ~10 head
+  const cowCount = Math.min(28, Math.max(4, Math.floor(S.cattle.cows / 9)));
+  for (let i = 0; i < cowCount; i++) entities.push(new Cow(cattleBounds));
+  // Calves visible Feb-Sep
+  if ([2,3,4,5,6,7,8,9].includes(S.month) && S.cattle.calvesAlive > 0) {
+    const calfCount = Math.min(20, Math.max(3, Math.floor(S.cattle.calvesAlive / 9)));
+    for (let i = 0; i < calfCount; i++) entities.push(new Calf(cattleBounds));
+  }
+
+  // HORSES
+  const horseTotal = S.horses.broodmares + S.horses.inTraining + S.horses.finished;
+  const horseCount = Math.min(8, Math.max(2, Math.floor(horseTotal / 2)));
+  for (let i = 0; i < horseCount; i++) entities.push(new Horse(LAYOUT.horsePen));
+  // Foals in spring/summer
+  if ([4,5,6,7,8].includes(S.month) && S.horses.foals > 0) {
+    const foalCount = Math.min(4, S.horses.foals);
+    for (let i = 0; i < foalCount; i++) entities.push(new Foal(LAYOUT.horsePen));
+  }
+
+  // FULL TIME HANDS — visible in pasture or near buildings
+  for (let i = 0; i < S.labor.fullTimeHands; i++) {
+    entities.push(new Worker('hand', LAYOUT.pasture));
+  }
+
+  // TRAINER — in horse pen if employed and have horses
+  if (S.labor.hasTrainer && (S.horses.inTraining > 0 || S.horses.finished > 0)) {
+    entities.push(new Worker('trainer', LAYOUT.horsePen));
+  }
+
+  // SUMMER HELP — moving pipe in fields, May-Sep
+  if (isIrrigationSeason() && S.labor.summerHelp > 0) {
+    for (let i = 0; i < S.labor.summerHelp; i++) {
+      const f = LAYOUT.fields[i % 3];
+      entities.push(new Worker('pipe', f, i % 3));
+    }
+  }
+
+  // TRACTORS in fields during cuts
+  if (S.month === 6) entities.push(new Tractor(LAYOUT.fields[0], 'cutting'));
+  if (S.month === 8) {
+    entities.push(new Tractor(LAYOUT.fields[0], 'baling'));
+    entities.push(new Tractor(LAYOUT.fields[1], 'cutting'));
+  }
+  if (S.month === 9) {
+    entities.push(new Tractor(LAYOUT.fields[2], 'cutting'));
+  }
+  // Winter feeding
+  if ([12,1,2,3].includes(S.month)) {
+    entities.push(new Tractor(LAYOUT.pasture, 'feeding'));
+  }
+}
+
+// === Drawing the scene ===
+function getSeasonPalette() {
+  const m = S.month;
+  if ([12,1,2].includes(m)) {
+    // winter
+    return {
+      skyTop: '#6b7a88', skyBottom: '#c5cbd4',
+      mountain: '#5a6470', mountainSnow: '#fff',
+      ground: '#dde4ea',
+      pasture: '#cdd5dc',
+      pastureFence: '#3a2a1c',
+      hayStanding: '#a8b3bb', haySnow: '#e9eef2',
+      tree: '#2a3a2a',
+    };
+  }
+  if ([3,4].includes(m)) {
+    // early spring (mud, brown)
+    return {
+      skyTop: '#6e88a4', skyBottom: '#c0d0d8',
+      mountain: '#576470', mountainSnow: '#e8eef2',
+      ground: '#7a6a48',
+      pasture: '#7a8a5a',
+      pastureFence: '#3a2a1c',
+      hayStanding: '#7a8a4a', haySnow: '#9a9a7a',
+      tree: '#3a5a3a',
+    };
+  }
+  if ([5,6,7,8].includes(m)) {
+    // summer
+    return {
+      skyTop: '#5a8ec8', skyBottom: '#a8d4ee',
+      mountain: '#4a5860', mountainSnow: '#e8eef2',
+      ground: '#7a6e3a',
+      pasture: '#5a8a3d',
+      pastureFence: '#3a2a1c',
+      hayStanding: '#7a9a3a', haySnow: '#c8a85a',
+      tree: '#2a4a28',
+    };
+  }
+  if ([9,10].includes(m)) {
+    // fall
+    return {
+      skyTop: '#7090b0', skyBottom: '#c8b890',
+      mountain: '#4a5460', mountainSnow: '#d8dee2',
+      ground: '#8a7a3a',
+      pasture: '#9a8a4a',
+      pastureFence: '#3a2a1c',
+      hayStanding: '#a89a4a', haySnow: '#c8a85a',
+      tree: '#7a4a2a',
+    };
+  }
+  // 11
+  return {
+    skyTop: '#697a8a', skyBottom: '#aab2bc',
+    mountain: '#4a5460', mountainSnow: '#dae0e6',
+    ground: '#6a5a3a',
+    pasture: '#7a6a48',
+    pastureFence: '#3a2a1c',
+    hayStanding: '#7a6a48', haySnow: '#9a8a5a',
+    tree: '#5a4a2a',
+  };
+}
+
+let cloudOffset = 0;
+let smokeParticles = [];
+let animTime = 0;
+
+function drawScene() {
+  const P = getSeasonPalette();
+
+  // SKY gradient
+  const grd = ctx.createLinearGradient(0, 0, 0, CH * 0.45);
+  grd.addColorStop(0, P.skyTop);
+  grd.addColorStop(1, P.skyBottom);
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, CW, CH * 0.45);
+
+  // SUN / MOON
+  const isWinter = [12,1,2].includes(S.month);
+  ctx.fillStyle = isWinter ? '#fff8e0' : '#fff2c8';
+  ctx.beginPath();
+  ctx.arc(CW * 0.78, CH * 0.10, isWinter ? 9 : 14, 0, Math.PI*2);
+  ctx.fill();
+
+  // CLOUDS
+  cloudOffset = (cloudOffset + 0.15) % CW;
+  drawCloud((CW * 0.15 + cloudOffset) % (CW + 100) - 50, CH * 0.08, 1.2);
+  drawCloud((CW * 0.55 + cloudOffset * 0.7) % (CW + 100) - 50, CH * 0.05, 0.8);
+  drawCloud((CW * 0.85 + cloudOffset * 1.2) % (CW + 100) - 50, CH * 0.12, 1.0);
+
+  // MOUNTAINS
+  drawMountains(P);
+
+  // TREES on horizon
+  drawTreeLine(P, CH * 0.32);
+
+  // GROUND base
+  ctx.fillStyle = P.ground;
+  ctx.fillRect(0, CH * 0.34, CW, CH * 0.66);
+
+  // HAY FIELDS
+  LAYOUT.fields.forEach((f, i) => drawHayField(f, S.hay.fieldStates[i], P, i));
+
+  // PASTURE
+  ctx.fillStyle = P.pasture;
+  ctx.fillRect(LAYOUT.pasture.x, LAYOUT.pasture.y, LAYOUT.pasture.w, LAYOUT.pasture.h);
+  // pasture grass texture
+  if (!isWinter) {
+    ctx.fillStyle = `rgba(255,255,255,0.05)`;
+    CACHE.pastureGrass.forEach(g => ctx.fillRect(g.x, g.y, 1, 2));
+  } else {
+    // snow patches
+    ctx.fillStyle = '#f3f6f8';
+    CACHE.pastureSnow.forEach(s => {
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, s.rx, s.ry, 0, 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+
+  // HORSE PEN — sandy color
+  ctx.fillStyle = isWinter ? '#dadfe4' : '#b89870';
+  ctx.fillRect(LAYOUT.horsePen.x, LAYOUT.horsePen.y, LAYOUT.horsePen.w, LAYOUT.horsePen.h);
+  drawFence(LAYOUT.horsePen, '#5b3a1f');
+
+  // HAY FIELD FENCES
+  LAYOUT.fields.forEach(f => drawFence(f, P.pastureFence));
+  // PASTURE FENCE
+  drawFence(LAYOUT.pasture, P.pastureFence);
+
+  // BUILDINGS
+  drawBuildings(P);
+
+  // WINTER FEED PILES if winter
+  if ([12,1,2,3].includes(S.month) && S.hay.tonsInStorage > 0) {
+    drawHayBales(LAYOUT.pasture.x + 15, LAYOUT.pasture.y + LAYOUT.pasture.h - 16, 4);
+  }
+  // POST-CUT BALES in fields (positions cached per field — no flicker)
+  LAYOUT.fields.forEach((f, i) => {
+    if (S.hay.fieldStates[i] === 'baled') {
+      CACHE.fieldBales[i].forEach(bale => drawSingleBale(bale.x, bale.y));
+    }
+  });
+
+  // ROAD
+  drawRoad(P);
+
+  // ENTITIES — sort by y for layering
+  entities.sort((a, b) => a.y - b.y);
+  entities.forEach(e => { e.update(); e.draw(); });
+
+  // PICKUPS occasionally (one every ~25 sec on average)
+  if (chance(0.0007)) entities.push(new Pickup());
+  // (handled below)
+
+  // SMOKE from chimney
+  if (chance(0.4)) {
+    smokeParticles.push({
+      x: LAYOUT.buildings.x + LAYOUT.buildings.w * 0.30 + rand(-1,1),
+      y: LAYOUT.buildings.y + LAYOUT.buildings.h * 0.42,
+      vx: rand(-0.2, 0.4), vy: rand(-0.6, -0.3),
+      life: rand(40, 90), size: rand(2, 4),
+    });
+  }
+  smokeParticles = smokeParticles.filter(p => p.life > 0);
+  smokeParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    ctx.fillStyle = `rgba(220,220,220,${(p.life / 90) * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // WEATHER particles
+  drawWeatherParticles();
+  // wildfire smoke if event
+  if (S.weather.currentEvent === 'wildfire') drawWildfireHaze();
+}
+
+function drawCloud(x, y, scale) {
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.beginPath();
+  ctx.arc(x, y, 8*scale, 0, Math.PI*2);
+  ctx.arc(x + 7*scale, y - 3*scale, 7*scale, 0, Math.PI*2);
+  ctx.arc(x + 14*scale, y, 8*scale, 0, Math.PI*2);
+  ctx.arc(x + 7*scale, y + 2*scale, 9*scale, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawMountains(P) {
+  ctx.fillStyle = P.mountain;
+  ctx.beginPath();
+  CACHE.mountainPeaks.forEach((pt, i) => {
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  });
+  ctx.closePath();
+  ctx.fill();
+  // snow caps
+  ctx.fillStyle = P.mountainSnow;
+  ctx.beginPath();
+  ctx.moveTo(0, CH * 0.22);
+  CACHE.snowLineLower.forEach(pt => ctx.lineTo(pt.x, pt.y));
+  ctx.lineTo(CW, CH * 0.22);
+  ctx.lineTo(CW, CH * 0.20);
+  for (let i = CACHE.snowLineUpper.length - 1; i >= 0; i--) {
+    ctx.lineTo(CACHE.snowLineUpper[i].x, CACHE.snowLineUpper[i].y);
+  }
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawTreeLine(P, baseY) {
+  const treeColor = P.tree;
+  const winter = [12,1,2].includes(S.month);
+  CACHE.treeLine.forEach(t => {
+    ctx.fillStyle = treeColor;
+    ctx.beginPath();
+    ctx.moveTo(t.x, baseY);
+    ctx.lineTo(t.x + 4, baseY - t.h);
+    ctx.lineTo(t.x + 8, baseY);
+    ctx.fill();
+    if (winter) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.moveTo(t.x + 2, baseY - t.h*0.5);
+      ctx.lineTo(t.x + 4, baseY - t.h);
+      ctx.lineTo(t.x + 6, baseY - t.h*0.5);
+      ctx.fill();
+    }
+  });
+}
+
+function drawHayField(f, state, P, idx) {
+  let color;
+  switch (state) {
+    case 'standing': color = P.hayStanding; break;
+    case 'cut':      color = '#9a8a3a'; break;
+    case 'stubble':  color = '#a89a5a'; break;
+    case 'baled':    color = '#9a8a3a'; break;
+    case 'snow':     color = '#e9eef2'; break;
+    default:         color = P.hayStanding;
+  }
+  ctx.fillStyle = color;
+  ctx.fillRect(f.x, f.y, f.w, f.h);
+
+  if (state === 'standing') {
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    CACHE.fieldStanding[idx].forEach(yy => ctx.fillRect(f.x, yy, f.w, 1));
+    // Irrigation pipe lines
+    if (S.irrigation.pipesSet && isIrrigationSeason()) {
+      ctx.strokeStyle = '#bdbdbd';
+      ctx.lineWidth = 0.7;
+      for (let py = f.y + 6; py < f.y + f.h - 4; py += 8) {
+        ctx.beginPath();
+        ctx.moveTo(f.x + 2, py);
+        ctx.lineTo(f.x + f.w - 2, py);
+        ctx.stroke();
+      }
+      // sprinkler dots (deterministic — no random spawn per frame)
+      for (let py = f.y + 6; py < f.y + f.h - 4; py += 8) {
+        for (let px = f.x + 8; px < f.x + f.w - 4; px += 16) {
+          ctx.fillStyle = '#e0e8ec';
+          ctx.fillRect(px, py - 0.5, 1.5, 1.5);
+        }
+      }
+      // Animated mist (pulsing sine, no flicker)
+      const t = animTime * 0.05;
+      for (let py = f.y + 6; py < f.y + f.h - 4; py += 8) {
+        for (let px = f.x + 8; px < f.x + f.w - 4; px += 16) {
+          const phase = (px * 0.07 + py * 0.05);
+          const a = 0.18 + 0.18 * Math.sin(t + phase);
+          ctx.fillStyle = `rgba(180,220,240,${a.toFixed(2)})`;
+          ctx.beginPath();
+          ctx.arc(px + Math.sin(t*1.3 + phase)*1.5,
+                  py - 0.5 + Math.cos(t*1.1 + phase)*1.5,
+                  1.5, 0, Math.PI*2);
+          ctx.fill();
+        }
+      }
+    }
+  } else if (state === 'stubble' || state === 'cut') {
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    CACHE.fieldStubble[idx].forEach(xx => ctx.fillRect(xx, f.y + 2, 0.7, f.h - 4));
+  } else if (state === 'snow') {
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    CACHE.fieldSnow[idx].forEach(s => ctx.fillRect(s.x, s.y, 2, 1));
+  }
+}
+
+function drawFence(rect, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  // posts
+  ctx.fillStyle = color;
+  for (let x = rect.x; x <= rect.x + rect.w; x += 18) {
+    ctx.fillRect(x - 0.5, rect.y - 1, 1.2, rect.h + 2);
+  }
+}
+
+function drawBuildings(P) {
+  const b = LAYOUT.buildings;
+  const isWinter = [12,1,2].includes(S.month);
+  // ground
+  ctx.fillStyle = isWinter ? '#dadfe4' : '#7a6a48';
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+
+  // BARN (red, large)
+  const barn = { x: b.x + b.w * 0.05, y: b.y + b.h * 0.12, w: b.w * 0.60, h: b.h * 0.55 };
+  // body
+  ctx.fillStyle = '#8a2a1c';
+  ctx.fillRect(barn.x, barn.y + barn.h * 0.30, barn.w, barn.h * 0.70);
+  // roof
+  ctx.fillStyle = '#3a1a14';
+  ctx.beginPath();
+  ctx.moveTo(barn.x - 2, barn.y + barn.h * 0.35);
+  ctx.lineTo(barn.x + barn.w * 0.5, barn.y);
+  ctx.lineTo(barn.x + barn.w + 2, barn.y + barn.h * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  if (isWinter) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(barn.x - 2, barn.y + barn.h * 0.36);
+    ctx.lineTo(barn.x + barn.w * 0.5, barn.y + 1);
+    ctx.lineTo(barn.x + barn.w + 2, barn.y + barn.h * 0.36);
+    ctx.lineTo(barn.x + barn.w * 0.5, barn.y + barn.h * 0.20);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // barn doors
+  ctx.fillStyle = '#3a1a10';
+  ctx.fillRect(barn.x + barn.w * 0.42, barn.y + barn.h * 0.55, barn.w * 0.16, barn.h * 0.45);
+  // white trim X
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(barn.x + barn.w * 0.42, barn.y + barn.h * 0.55);
+  ctx.lineTo(barn.x + barn.w * 0.58, barn.y + barn.h);
+  ctx.moveTo(barn.x + barn.w * 0.58, barn.y + barn.h * 0.55);
+  ctx.lineTo(barn.x + barn.w * 0.42, barn.y + barn.h);
+  ctx.stroke();
+
+  // HOUSE (brown with chimney)
+  const house = { x: b.x + b.w * 0.10, y: b.y + b.h * 0.70, w: b.w * 0.45, h: b.h * 0.30 };
+  ctx.fillStyle = '#a87a4a';
+  ctx.fillRect(house.x, house.y + house.h * 0.30, house.w, house.h * 0.70);
+  // roof
+  ctx.fillStyle = '#3a2a1c';
+  ctx.beginPath();
+  ctx.moveTo(house.x - 1, house.y + house.h * 0.35);
+  ctx.lineTo(house.x + house.w * 0.5, house.y);
+  ctx.lineTo(house.x + house.w + 1, house.y + house.h * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  if (isWinter) {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(house.x, house.y + house.h * 0.36);
+    ctx.lineTo(house.x + house.w * 0.5, house.y + 1);
+    ctx.lineTo(house.x + house.w + 1, house.y + house.h * 0.36);
+    ctx.lineTo(house.x + house.w * 0.5, house.y + house.h * 0.18);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // chimney
+  ctx.fillStyle = '#5a4a3a';
+  ctx.fillRect(house.x + house.w * 0.30, house.y + house.h * 0.05, 3, 6);
+  // door + window
+  ctx.fillStyle = '#3a2a1c';
+  ctx.fillRect(house.x + house.w * 0.45, house.y + house.h * 0.55, 4, 8);
+  ctx.fillStyle = '#ffd96b';
+  ctx.fillRect(house.x + house.w * 0.15, house.y + house.h * 0.50, 3, 3);
+  ctx.fillRect(house.x + house.w * 0.70, house.y + house.h * 0.50, 3, 3);
+
+  // EQUIPMENT SHED
+  const shed = { x: b.x + b.w * 0.65, y: b.y + b.h * 0.60, w: b.w * 0.32, h: b.h * 0.40 };
+  ctx.fillStyle = '#8a8a8a';
+  ctx.fillRect(shed.x, shed.y + shed.h * 0.20, shed.w, shed.h * 0.80);
+  ctx.fillStyle = '#6a6a6a';
+  ctx.beginPath();
+  ctx.moveTo(shed.x, shed.y + shed.h * 0.25);
+  ctx.lineTo(shed.x + shed.w * 0.5, shed.y);
+  ctx.lineTo(shed.x + shed.w, shed.y + shed.h * 0.25);
+  ctx.closePath();
+  ctx.fill();
+  // shed open with tractor visible if any
+  ctx.fillStyle = '#1a1a1a';
+  ctx.fillRect(shed.x + shed.w * 0.10, shed.y + shed.h * 0.35, shed.w * 0.80, shed.h * 0.55);
+  // peek of tractor
+  if ([12,1,2,3,4,11].includes(S.month)) {
+    ctx.fillStyle = '#3a6a1f';
+    ctx.fillRect(shed.x + shed.w * 0.20, shed.y + shed.h * 0.55, shed.w * 0.60, shed.h * 0.30);
+    ctx.fillStyle = '#1a1410';
+    ctx.beginPath();
+    ctx.arc(shed.x + shed.w * 0.30, shed.y + shed.h * 0.85, 2, 0, Math.PI*2);
+    ctx.arc(shed.x + shed.w * 0.70, shed.y + shed.h * 0.85, 2, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // CALVING SHED (small, between barn and pasture)
+  const cs = { x: b.x - b.w * 0.05, y: b.y + b.h * 0.62, w: b.w * 0.20, h: b.h * 0.22 };
+  ctx.fillStyle = '#6a3a2a';
+  ctx.fillRect(cs.x, cs.y + cs.h * 0.30, cs.w, cs.h * 0.70);
+  ctx.fillStyle = '#3a1a14';
+  ctx.beginPath();
+  ctx.moveTo(cs.x, cs.y + cs.h * 0.35);
+  ctx.lineTo(cs.x + cs.w * 0.5, cs.y);
+  ctx.lineTo(cs.x + cs.w, cs.y + cs.h * 0.35);
+  ctx.closePath();
+  ctx.fill();
+  if (isWinter || S.month === 2) {
+    ctx.fillStyle = '#ffe88a';
+    ctx.fillRect(cs.x + cs.w * 0.40, cs.y + cs.h * 0.55, 3, 3);
+  }
+}
+
+function drawSingleBale(x, y) {
+  ctx.fillStyle = '#c89a4a';
+  ctx.beginPath();
+  ctx.ellipse(x, y, 4, 3, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#7a5d2a';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 4, 3, 0, 0, Math.PI*2);
+  ctx.stroke();
+}
+function drawHayBales(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    drawSingleBale(x + i * 9, y);
+  }
+}
+
+function drawRoad(P) {
+  ctx.fillStyle = '#5a4a38';
+  ctx.fillRect(0, LAYOUT.road.y, CW, LAYOUT.road.h);
+  ctx.strokeStyle = 'rgba(255,235,150,0.4)';
+  ctx.setLineDash([6, 6]);
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(0, LAYOUT.road.y + LAYOUT.road.h * 0.5);
+  ctx.lineTo(CW, LAYOUT.road.y + LAYOUT.road.h * 0.5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function drawWeatherParticles() {
+  // Snow falling in winter or harsh
+  if ([12,1,2].includes(S.month) || (S.weather.yearType === 'harsh' && [3,11].includes(S.month))) {
+    if (chance(0.7)) particles.push({ kind: 'snow', x: Math.random() * CW, y: -4, vy: rand(0.5, 1.4), vx: rand(-0.3, 0.3) });
+  }
+  // Rain in wet years
+  if (S.weather.yearType === 'wet' && [4,5,6].includes(S.month) && chance(0.6)) {
+    particles.push({ kind: 'rain', x: Math.random() * CW, y: -4, vy: rand(3, 5), vx: rand(-0.5, 0) });
+  }
+  // Heat shimmer in drought summer
+  // (handled as overlay below)
+  particles = particles.filter(p => p.y < CH);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if (p.kind === 'snow') {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(p.x, p.y, 1.5, 1.5);
+    } else if (p.kind === 'rain') {
+      ctx.strokeStyle = 'rgba(180,200,220,0.7)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - 1, p.y + 4);
+      ctx.stroke();
+    }
+  });
+  // Drought overlay
+  if (S.weather.yearType === 'drought' && [6,7,8].includes(S.month)) {
+    ctx.fillStyle = 'rgba(220,180,80,0.10)';
+    ctx.fillRect(0, 0, CW, CH);
+  }
+}
+function drawWildfireHaze() {
+  ctx.fillStyle = 'rgba(180,80,40,0.12)';
+  ctx.fillRect(0, 0, CW, CH);
+  ctx.fillStyle = 'rgba(40,30,20,0.18)';
+  ctx.fillRect(0, CH * 0.18, CW, CH * 0.18);
+}
+
+// ============================================================
+// ANIMATION LOOP
+// ============================================================
+let autoMode = false;
+let autoTimer = 0;
+function animate() {
+  animTime++;
+  drawScene();
+  // Cull off-screen pickups
+  entities = entities.filter(e => !(e instanceof Pickup) || !e.offscreen());
+
+  if (autoMode) {
+    autoTimer++;
+    if (autoTimer > 180 && !S.gameOver) { // every ~3 seconds at 60fps
+      autoTimer = 0;
+      advanceMonth();
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+// ============================================================
+// RENDER (UI)
+// ============================================================
+function render() {
+  document.getElementById('dateBanner').textContent = `${MONTH_NAMES[S.month-1]}, Year ${S.year}`;
+  document.getElementById('seasonTag').innerHTML = `<span class="accent">${MONTH_NAMES[S.month-1]} Y${S.year}</span> · ${seasonOf(S.month)}`;
+  document.getElementById('weatherTag').innerHTML = `<span class="accent">${S.weather.yearType.toUpperCase()}</span> year${S.weather.currentEvent ? ' · ' + S.weather.currentEvent : ''}`;
+  renderLeft();
+  renderTabs();
+  renderLog();
+  document.getElementById('advanceBtn').disabled = S.gameOver;
+  if (S.gameOver) showGameOver();
+}
+
+function renderLeft() {
+  const equity = S.cash + estimateAssetValue() - S.loan;
+  const cashCls = S.cash < 0 ? 'neg' : (S.cash < 25000 ? 'warn' : 'pos');
+  document.getElementById('leftStats').innerHTML = `
+    <div class="stat-row"><span class="label">Cash</span><span class="val ${cashCls}">${fmt$(S.cash)}</span></div>
+    <div class="stat-row"><span class="label">Loan</span><span class="val">${fmt$(S.loan)}</span></div>
+    <div class="stat-row"><span class="label">Equity</span><span class="val ${equity>0?'pos':'neg'}">${fmt$(equity)}</span></div>
+    <hr style="border-color: var(--line); margin: 8px 0;">
+    <div class="stat-row"><span class="label">Cows</span><span class="val">${S.cattle.cows}</span></div>
+    <div class="stat-row"><span class="label">Bulls</span><span class="val">${S.cattle.bulls}</span></div>
+    <div class="stat-row"><span class="label">Heifers</span><span class="val">${S.cattle.heifersReplacement}</span></div>
+    <div class="stat-row"><span class="label">Calves</span><span class="val">${S.cattle.calvesAlive}</span></div>
+    <hr style="border-color: var(--line); margin: 8px 0;">
+    <div class="stat-row"><span class="label">Mares</span><span class="val">${S.horses.broodmares}</span></div>
+    <div class="stat-row"><span class="label">Foals</span><span class="val">${S.horses.foals}</span></div>
+    <div class="stat-row"><span class="label">In Training</span><span class="val">${S.horses.inTraining}</span></div>
+    <div class="stat-row"><span class="label">Finished</span><span class="val">${S.horses.finished}</span></div>
+    <hr style="border-color: var(--line); margin: 8px 0;">
+    <div class="stat-row"><span class="label">Hay Storage</span><span class="val">${Math.round(S.hay.tonsInStorage)} t</span></div>
+    <div class="stat-row"><span class="label">Cuts</span><span class="val">${S.hay.cutsCompleted}/3</span></div>
+    <hr style="border-color: var(--line); margin: 8px 0;">
+    <div class="stat-row"><span class="label">Soil Health</span><span class="val">${pillFor(S.sustainability.soilHealth)}</span></div>
+    <div class="stat-row"><span class="label">Pasture</span><span class="val">${pillFor(S.sustainability.pastureHealth)}</span></div>
+  `;
+}
+
+function pillFor(v) {
+  v = Math.round(v);
+  let cls = 'ok';
+  if (v < 50) cls = 'bad';
+  else if (v < 70) cls = 'warn';
+  return `<span class="pill ${cls}">${v}</span>`;
+}
+
+function estimateAssetValue() {
+  let total = 0;
+  total += S.cattle.cows * 2400;
+  total += S.cattle.bulls * 5000;
+  total += S.cattle.heifersReplacement * 1900;
+  total += S.cattle.calvesAlive * 1100;
+  total += S.horses.broodmares * 4000;
+  total += S.horses.foals * 1800;
+  total += S.horses.inTraining * 6500;
+  total += S.horses.finished * 14000;
+  total += S.hay.tonsInStorage * PRICES.hayPricePerTon;
+  const eqPrices = { tractor1: 195000, tractor2: 95000, swather: 105000, baler: 70000, pickup: 52000 };
+  Object.entries(S.equipment).forEach(([k, eq]) => total += (eqPrices[k]||50000) * (eq.condition/100));
+  total += 1500 * 2500;
+  return total;
+}
+
+function renderTabs() {
+  renderDashboard(); renderCattle(); renderHorses(); renderHay();
+  renderIrrigation(); renderEquipment(); renderLabor(); renderFinance();
+}
+
+function renderDashboard() {
+  const profit = S.annual.revenue - S.annual.expenses;
+  let priorYears = '';
+  if (S.history.length) {
+    priorYears = `<div class="card"><h3>Year-End History</h3>
+      <table><tr><th>Yr</th><th>Wx</th><th>Rev</th><th>Exp</th><th>Profit</th><th>Cows</th></tr>
+      ${S.history.map(h => `<tr>
+        <td>${h.year}</td><td>${h.weather}</td>
+        <td>${fmt$(h.revenue)}</td><td>${fmt$(h.expenses)}</td>
+        <td style="color: ${h.profit>=0?'var(--good)':'var(--danger)'}">${fmt$(h.profit)}</td>
+        <td>${h.cows}</td></tr>`).join('')}
+      </table></div>`;
+  }
+  let checklist = `<ul class="checklist">
+    <li class="${S.month>=2 && S.cattle.calvesAlive>0 ? 'done' : 'todo'}">Calving complete</li>
+    <li class="${S.hay.fertilized ? 'done' : 'todo'}">Alfalfa fertilized</li>
+    <li class="${S.labor.summerHelp>0 ? 'done' : 'todo'}">Summer help hired</li>
+    <li class="${S.marketing.calvesContracted ? 'done' : 'todo'}">Calves forward-contracted (optional)</li>
+    <li class="${S.hay.cutsCompleted>=2 ? 'done' : 'todo'}">At least 2 hay cuts in</li>
+  </ul>`;
+  document.querySelector('[data-panel="dashboard"]').innerHTML = `
+    <div class="card"><h3>Year ${S.year} P&L</h3>
+      <div class="grid3">
+        <div><div style="color:var(--muted);font-size:10px;">Revenue</div><div style="font-size:16px;color:var(--good)">${fmt$(S.annual.revenue)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;">Expenses</div><div style="font-size:16px;color:var(--danger)">${fmt$(S.annual.expenses)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;">Net</div><div style="font-size:16px;color:${profit>=0?'var(--good)':'var(--danger)'}">${fmt$(profit)}</div></div>
+      </div>
+    </div>
+    <div class="card"><h3>This Year's Checklist</h3>${checklist}</div>
+    ${priorYears}
+    <div class="card"><h3>Quick Actions</h3>
+      <button onclick="advanceMonth()">Advance Month</button>
+      <button class="secondary" onclick="showHelp()">How To Play</button>
+    </div>`;
+}
+
+function renderCattle() {
+  const totalHead = S.cattle.cows + S.cattle.bulls + S.cattle.heifersReplacement;
+  const winterNeed = totalHead * 0.9 * 6;
+  document.querySelector('[data-panel="cattle"]').innerHTML = `
+    <div class="card"><h3>Cow Herd</h3>
+      <div class="grid2">
+        <div>
+          <div class="stat-row"><span class="label">Mother Cows</span><span class="val">${S.cattle.cows}</span></div>
+          <div class="stat-row"><span class="label">Bulls</span><span class="val">${S.cattle.bulls}</span></div>
+          <div class="stat-row"><span class="label">Replacement Heifers</span><span class="val">${S.cattle.heifersReplacement}</span></div>
+          <div class="stat-row"><span class="label">Calves</span><span class="val">${S.cattle.calvesAlive}</span></div>
+        </div>
+        <div>
+          <div class="stat-row"><span class="label">Pregnancy Rate</span><span class="val">${(S.cattle.pregnancyRate*100).toFixed(0)}%</span></div>
+          <div class="stat-row"><span class="label">Body Condition</span><span class="val">${S.cattle.conditionScore.toFixed(1)}/9</span></div>
+          <div class="stat-row"><span class="label">Winter Hay Need</span><span class="val">${winterNeed.toFixed(0)} t</span></div>
+          <div class="stat-row"><span class="label">In Storage</span><span class="val ${S.hay.tonsInStorage<winterNeed?'warn':'pos'}">${S.hay.tonsInStorage.toFixed(0)} t</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><h3>Buy / Sell Cattle</h3>
+      <div class="row"><input id="buyHeifers" type="number" value="10" min="1" max="100">
+        <button onclick="buyCows(parseInt(document.getElementById('buyHeifers').value))">Buy Bred Heifers @ ${fmt$(PRICES.bredHeiferBase)}/hd</button></div>
+      <div class="row"><input id="sellCows" type="number" value="10" min="1" max="200">
+        <button class="danger" onclick="sellCows(parseInt(document.getElementById('sellCows').value))">Sell Cull Cows</button></div>
+    </div>
+    <div class="card"><h3>Marketing — Options vs Auction</h3>
+      ${S.marketing.calvesContracted ? `
+        <p>Contracted <b>${S.marketing.contractedHead}</b> head at <b>${fmt$(S.marketing.contractPrice)}/cwt</b>. The rest goes to auction.</p>
+      ` : `
+        <p class="help">Forward contracts protect against a market crash but cap upside. The fall auction is the spot market.</p>
+        <div class="row">
+          <button onclick="contractCalves(50)" ${S.month>7?'disabled':''}>Contract 50%</button>
+          <button onclick="contractCalves(75)" ${S.month>7?'disabled':''}>Contract 75%</button>
+          <button onclick="contractCalves(100)" ${S.month>7?'disabled':''}>Contract 100%</button>
+        </div>
+        ${S.month > 7 ? '<p class="help" style="color:var(--warn)">Contract window is closed. Going to auction.</p>' : ''}
+      `}
+    </div>`;
+}
+
+function renderHorses() {
+  document.querySelector('[data-panel="horses"]').innerHTML = `
+    <div class="card"><h3>Horse Operation</h3>
+      <div class="grid2">
+        <div>
+          <div class="stat-row"><span class="label">Broodmares</span><span class="val">${S.horses.broodmares}</span></div>
+          <div class="stat-row"><span class="label">Foals</span><span class="val">${S.horses.foals}</span></div>
+          <div class="stat-row"><span class="label">In Training</span><span class="val">${S.horses.inTraining}</span></div>
+          <div class="stat-row"><span class="label">Ready to Sell</span><span class="val">${S.horses.finished}</span></div>
+        </div>
+        <div>
+          <div class="stat-row"><span class="label">Trainer Employed</span><span class="val">${S.labor.hasTrainer?'<span class="pill ok">Yes</span>':'<span class="pill bad">No</span>'}</span></div>
+          <div class="stat-row"><span class="label">Reputation</span><span class="val">${pillFor(S.horses.reputation)}</span></div>
+          <div class="stat-row"><span class="label">Avg Sale Price</span><span class="val">${fmt$(PRICES.trainedHorsePrice)}</span></div>
+        </div>
+      </div>
+      <p class="help">Foals drop in spring → enter training in fall → ready to sell the next fall (~2 yrs total).</p>
+      <div class="row"><button onclick="toggleTrainer()">${S.labor.hasTrainer?'Let trainer go':'Hire trainer'}</button></div>
+    </div>`;
+}
+
+function renderHay() {
+  const winterNeed = (S.cattle.cows + S.cattle.bulls + S.cattle.heifersReplacement) * 0.5 * 6;
+  const surplus = S.hay.tonsInStorage - winterNeed;
+  document.querySelector('[data-panel="hay"]').innerHTML = `
+    <div class="card"><h3>Alfalfa</h3>
+      <div class="grid2">
+        <div>
+          <div class="stat-row"><span class="label">Acres</span><span class="val">${S.hay.acres}</span></div>
+          <div class="stat-row"><span class="label">Fertilized</span><span class="val">${S.hay.fertilized?'<span class="pill ok">Yes</span>':'<span class="pill warn">No</span>'}</span></div>
+          <div class="stat-row"><span class="label">Cuts</span><span class="val">${S.hay.cutsCompleted}/3</span></div>
+        </div>
+        <div>
+          <div class="stat-row"><span class="label">In Storage</span><span class="val">${S.hay.tonsInStorage.toFixed(0)} t</span></div>
+          <div class="stat-row"><span class="label">Winter Need</span><span class="val">${winterNeed.toFixed(0)} t</span></div>
+          <div class="stat-row"><span class="label">Surplus / (Short)</span><span class="val ${surplus>=0?'pos':'neg'}">${surplus.toFixed(0)} t</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><h3>Inputs & Sales</h3>
+      <div class="row"><button onclick="fertilize()" ${S.hay.fertilized?'disabled':''}>Fertilize ${S.hay.acres} acres (${fmt$(S.hay.acres * PRICES.fertilizerPerAcre)})</button></div>
+      <div class="row"><input id="haySell" type="number" value="50" min="1">
+        <button onclick="sellHay(parseInt(document.getElementById('haySell').value))">Sell Hay @ ${fmt$(PRICES.hayPricePerTon * (S.weather.yearType==='drought'?1.5:1))}/ton</button></div>
+    </div>
+    <div class="card"><h3>Three-Cut Schedule</h3>
+      <p class="help"><b>1st (Jun):</b> biggest tonnage. <b>2nd (Aug):</b> peak protein. <b>3rd (Sep):</b> risky — frost/rain can ruin it.</p>
+    </div>`;
+}
+
+function renderIrrigation() {
+  const need = Math.ceil(S.hay.acres / 150);
+  document.querySelector('[data-panel="irrigation"]').innerHTML = `
+    <div class="card"><h3>Irrigation</h3>
+      <div class="stat-row"><span class="label">Water Allocation</span><span class="val">${S.irrigation.waterAvailable}% of normal</span></div>
+      <div class="stat-row"><span class="label">Pipes Set</span><span class="val">${S.irrigation.pipesSet?'<span class="pill ok">Yes</span>':'<span class="pill bad">No</span>'}</span></div>
+      <div class="stat-row"><span class="label">Summer Hands Hired</span><span class="val">${S.labor.summerHelp}</span></div>
+      <p class="help">${S.hay.acres} acres of hand-set wheel-line and gated pipe — roughly <b>${need}</b> summer hands needed, May–September.</p>
+    </div>
+    <div class="card"><h3>Hire Summer Help</h3>
+      <div class="row"><input id="summerHelp" type="number" value="${S.labor.summerHelp}" min="0" max="6">
+        <button onclick="hireSummer(parseInt(document.getElementById('summerHelp').value))" ${S.month>4?'disabled':''}>Set Summer Crew</button></div>
+      ${S.month > 4 ? '<p class="help" style="color:var(--warn)">Too late — should have hired before May.</p>' : ''}
+    </div>`;
+}
+
+function renderEquipment() {
+  let rows = '';
+  Object.entries(S.equipment).forEach(([key, eq]) => {
+    const cls = eq.condition < 35 ? 'red' : (eq.condition < 65 ? 'yellow' : 'green');
+    const repairCost = (100 - eq.condition) * 280;
+    rows += `<tr>
+      <td><b>${eq.name}</b></td>
+      <td><div class="progress ${cls}"><div style="width:${eq.condition}%"></div></div>${eq.condition.toFixed(0)}%</td>
+      <td>${fmt$(repairCost)}</td>
+      <td><button class="secondary" onclick="repairEquipment('${key}')">Repair</button>
+        <button onclick="replaceEquipment('${key}')">Replace</button></td></tr>`;
+  });
+  document.querySelector('[data-panel="equipment"]').innerHTML = `
+    <div class="card"><h3>Iron on the Ranch</h3>
+      <table><tr><th>Machine</th><th>Condition</th><th>Repair</th><th>Action</th></tr>${rows}</table>
+      <p class="help">Equipment wears every month. Below 35% breakdowns become common.</p>
+    </div>`;
+}
+
+function renderLabor() {
+  const wages = S.labor.fullTimeHands * PRICES.ranchHandWage
+              + (S.labor.hasTrainer ? PRICES.trainerWage : 0)
+              + (isIrrigationSeason() ? S.labor.summerHelp * PRICES.summerPipeHandWage : 0);
+  document.querySelector('[data-panel="labor"]').innerHTML = `
+    <div class="card"><h3>Crew</h3>
+      <div class="stat-row"><span class="label">Full-Time Hands</span><span class="val">${S.labor.fullTimeHands} @ ${fmt$(PRICES.ranchHandWage)}/mo</span></div>
+      <div class="stat-row"><span class="label">Horse Trainer</span><span class="val">${S.labor.hasTrainer?'Yes — ' + fmt$(PRICES.trainerWage) + '/mo':'No'}</span></div>
+      <div class="stat-row"><span class="label">Summer Hands</span><span class="val">${S.labor.summerHelp} @ ${fmt$(PRICES.summerPipeHandWage)}/mo (May–Sep)</span></div>
+      <hr style="border-color: var(--line)">
+      <div class="stat-row"><span class="label">Monthly Payroll</span><span class="val">${fmt$(wages)}</span></div>
+    </div>
+    <div class="card"><h3>Adjust Crew</h3>
+      <div class="row"><input id="hands" type="number" value="${S.labor.fullTimeHands}" min="0" max="5">
+        <button onclick="setHands(parseInt(document.getElementById('hands').value))">Set Full-Time Hands</button></div>
+      <div class="row"><button onclick="toggleTrainer()">${S.labor.hasTrainer?'Let Trainer Go':'Hire Trainer'}</button></div>
+      <p class="help">Below 2 full-time hands raises calving losses. Above 3 rarely worth the wage burden.</p>
+    </div>`;
+}
+
+function renderFinance() {
+  const equity = S.cash + estimateAssetValue() - S.loan;
+  const monthlyInterest = (S.loan * S.loanRate) / 12;
+  document.querySelector('[data-panel="finance"]').innerHTML = `
+    <div class="card"><h3>Balance Sheet</h3>
+      <div class="stat-row"><span class="label">Cash</span><span class="val">${fmt$(S.cash)}</span></div>
+      <div class="stat-row"><span class="label">Asset Value</span><span class="val">${fmt$(estimateAssetValue())}</span></div>
+      <div class="stat-row"><span class="label">Operating Loan</span><span class="val">${fmt$(S.loan)} @ ${(S.loanRate*100).toFixed(2)}%</span></div>
+      <div class="stat-row"><span class="label">Monthly Interest</span><span class="val">${fmt$(monthlyInterest)}</span></div>
+      <hr><div class="stat-row"><span class="label">Equity</span><span class="val ${equity>0?'pos':'neg'}">${fmt$(equity)}</span></div>
+    </div>
+    <div class="card"><h3>Loan Operations</h3>
+      <div class="row"><input id="payAmt" type="number" value="20000" min="1000" step="1000">
+        <button class="good" onclick="payLoan(parseInt(document.getElementById('payAmt').value))">Pay Down</button></div>
+      <div class="row"><input id="drawAmt" type="number" value="50000" min="1000" step="1000">
+        <button class="danger" onclick="takeLoan(parseInt(document.getElementById('drawAmt').value))">Draw on Note</button></div>
+    </div>`;
+}
+
+function renderLog() {
+  document.getElementById('logBox').innerHTML = S.log.map(e => `
+    <div class="entry ${e.type}">
+      <div class="date">${e.date}</div>
+      <div>${e.msg}</div>
+    </div>`).join('');
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function showModal(html) {
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalBg').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modalBg').style.display = 'none'; }
+document.getElementById('modalBg').addEventListener('click', e => { if (e.target.id === 'modalBg') closeModal(); });
+
+function showHelp() {
+  showModal(`
+    <h2>How to Run the Ranch</h2>
+    <p>1,500 acres in central Montana — 420 of irrigated alfalfa, the rest pasture and timber. Cow herd, small horse program, an operating loan at the bank. Keep it solvent.</p>
+    <h3 style="color:var(--accent)">The Yearly Rhythm</h3>
+    <ul>
+      <li><b>Jan–Mar:</b> Calving. Heavy hay feeding.</li>
+      <li><b>Apr–May:</b> Branding, vaccinations, set pipe, decide on fertilizer & contracts.</li>
+      <li><b>Jun–Sep:</b> Three hay cuts. Irrigation runs all summer.</li>
+      <li><b>Oct–Nov:</b> Wean and sell calves. Cull cows. Sell horses.</li>
+      <li><b>Dec:</b> Plan next year. Pay property tax.</li>
+    </ul>
+    <h3 style="color:var(--accent)">Key Decisions</h3>
+    <ul>
+      <li><b>Marketing calves:</b> Forward contract for safety vs. roll the dice on fall auction.</li>
+      <li><b>Hay sales:</b> Only sell with a clear winter surplus.</li>
+      <li><b>Fertilizer:</b> Pays back in normal/wet years.</li>
+      <li><b>Crew:</b> Two hands minimum. Trainer earns her keep on horse sales.</li>
+    </ul>
+    <h3 style="color:var(--accent)">Watching the Ranch</h3>
+    <p>The scene above shows what's happening this month. Cattle move to feed grounds in winter, calves appear after February, summer hands move pipes in June–September, tractors run during cuts, snow falls in winter, drought tints the air gold.</p>
+    <h3 style="color:var(--accent)">Win/Loss</h3>
+    <p>Survive 10 years with positive equity. Below 30 cows or below -$150,000 cash and the bank takes the place.</p>
+    <button onclick="closeModal()">Got it</button>
+  `);
+}
+
+function showGameOver() {
+  showModal(`
+    <h2>${S.year > 10 ? 'A Decade of Ranching' : 'The Outfit is Done'}</h2>
+    <p>${S.gameOverReason}</p>
+    <p>Final equity: <b>${fmt$(S.cash + estimateAssetValue() - S.loan)}</b></p>
+    <p>Years run: <b>${S.year - (S.year>10?1:0)}</b></p>
+    <button onclick="closeModal(); newGame();">Start Over</button>
+  `);
+}
+
+function newGame() {
+  S = freshState();
+  log("A new generation takes over the ranch. Welcome to Big Sky.", 'event');
+  log("Tip: hire summer help before May, fertilize before June, decide on calf contracts by July.", 'info');
+  yearStart();
+  rebuildSceneEntities();
+  render();
+}
+
+// ============================================================
+// EVENTS / BOOT
+// ============================================================
+document.getElementById('advanceBtn').addEventListener('click', advanceMonth);
+document.getElementById('newGameBtn').addEventListener('click', () => {
+  if (confirm("Start a new game? Current progress will be lost.")) newGame();
+});
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel-content').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelector(`[data-panel="${t.dataset.tab}"]`).classList.add('active');
+  });
+});
+
+document.getElementById('speed1').addEventListener('click', e => { autoMode = false; setSpeedActive('speed1'); });
+document.getElementById('speed3').addEventListener('click', e => { autoMode = false; setSpeedActive('speed3'); for(let i=0;i<3 && !S.gameOver;i++) advanceMonth(); });
+document.getElementById('speedAuto').addEventListener('click', e => { autoMode = !autoMode; setSpeedActive(autoMode?'speedAuto':null); });
+function setSpeedActive(id) {
+  ['speed1','speed3','speedAuto'].forEach(s => document.getElementById(s).classList.toggle('active', s === id));
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+// BOOT
+resizeCanvas();
+newGame();
+showHelp();
+animate();
+</script>
+
+</body>
+</html>
