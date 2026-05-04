@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hành Trình Việt Nam — Journey Through Vietnam</title>
+<style>
+  :root {
+    --red: #da251d;          /* flag red */
+    --gold: #ffcd00;         /* flag gold */
+    --ink: #1a1410;
+    --paper: #f5ecd9;
+    --paper-dark: #e6d8b8;
+    --jade: #2f7a5f;
+    --rose: #c14b6e;
+    --shadow: 0 6px 24px rgba(0,0,0,0.18);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: "Georgia", "Times New Roman", serif;
+    background:
+      radial-gradient(ellipse at top, #fff7e0 0%, #f0e1bd 40%, #d6b87a 100%);
+    color: var(--ink);
+    overflow: hidden;
+    line-height: 1.5;
+  }
+  #app {
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .scene {
+    width: 100%; max-width: 1100px;
+    max-height: 100%;
+    background: var(--paper);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--paper-dark);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .scene::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(218, 37, 29, 0.04) 0, transparent 30%),
+      radial-gradient(circle at 80% 70%, rgba(255, 205, 0, 0.06) 0, transparent 30%);
+    pointer-events: none;
+  }
+  /* ---------- TITLE SCREEN ---------- */
+  .title-screen {
+    padding: 50px 40px;
+    text-align: center;
+    background:
+      linear-gradient(180deg, rgba(218,37,29,0.92), rgba(180,20,15,0.92)),
+      repeating-linear-gradient(45deg, transparent 0 10px, rgba(255,255,255,0.04) 10px 20px);
+    color: var(--paper);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+  }
+  .title-star {
+    width: 90px; height: 90px;
+    color: var(--gold);
+    filter: drop-shadow(0 0 12px rgba(255,205,0,0.6));
+    animation: spin 24s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .title-screen h1 {
+    font-size: clamp(32px, 5vw, 54px);
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .title-screen .subtitle {
+    font-style: italic;
+    font-size: clamp(15px, 2vw, 20px);
+    opacity: 0.92;
+    max-width: 600px;
+  }
+  .title-screen p {
+    max-width: 620px;
+    font-size: 16px;
+    opacity: 0.95;
+  }
+  /* ---------- BUTTONS ---------- */
+  .btn {
+    background: var(--gold);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: bold;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.25); }
+  .btn:active { transform: translateY(0); }
+  .btn.secondary {
+    background: transparent;
+    color: var(--paper);
+    border: 2px solid var(--gold);
+  }
+  .btn.dark {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ---------- MAP SCREEN ---------- */
+  .map-screen {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    height: 100%;
+    min-height: 0;
+  }
+  .map-area {
+    position: relative;
+    background:
+      radial-gradient(ellipse at center, #cfe5d0 0%, #a8c9a7 80%);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .map-area svg {
+    width: 95%;
+    height: 95%;
+    max-height: 100%;
+  }
+  .pin { cursor: pointer; }
+  .pin.visited .pin-main { fill: var(--jade); }
+  .pin.visited .pin-halo { display: none; }
+  .pin-label {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    fill: var(--ink);
+    paint-order: stroke;
+    stroke: var(--paper);
+    stroke-width: 3px;
+    pointer-events: none;
+  }
+  .map-title {
+    position: absolute;
+    top: 14px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--ink);
+    background: rgba(245,236,217,0.85);
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--paper-dark);
+  }
+  .passport {
+    background: var(--paper-dark);
+    padding: 20px;
+    overflow-y: auto;
+    border-left: 2px solid #c9b78e;
+    display: flex;
+    flex-direction: column;
+  }
+  .passport h2 {
+    font-size: 18px;
+    text-align: center;
+    color: var(--red);
+    border-bottom: 2px solid var(--red);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+  .stamp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stamp {
+    aspect-ratio: 1;
+    border: 2px dashed #b09060;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #8a7848;
+    background: rgba(255,255,255,0.3);
+    text-align: center;
+    padding: 6px;
+  }
+  .stamp.earned {
+    border-style: solid;
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(218,37,29,0.07);
+    transform: rotate(-3deg);
+    font-weight: bold;
+  }
+  .stamp.earned .icon { font-size: 28px; }
+  .souvenirs {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #b09060;
+  }
+  .souvenirs h3 { font-size: 14px; color: var(--ink); margin-bottom: 8px; }
+  .souvenirs ul { list-style: none; font-size: 13px; }
+  .souvenirs li { padding: 4px 0; color: #5a4a30; }
+  .souvenirs li.empty { font-style: italic; opacity: 0.6; }
+  .map-footer {
+    position: absolute;
+    bottom: 14px; left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+  }
+
+  /* ---------- LOCATION SCREEN ---------- */
+  .location {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .location-header {
+    padding: 24px 36px 16px;
+    background: linear-gradient(180deg, var(--red), #b41a13);
+    color: var(--paper);
+  }
+  .location-header h1 {
+    font-size: 28px;
+    letter-spacing: 1px;
+  }
+  .location-header .vn-name {
+    color: var(--gold);
+    font-style: italic;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+  .location-body {
+    flex: 1;
+    padding: 24px 36px;
+    overflow-y: auto;
+  }
+  .location-body h2 {
+    color: var(--red);
+    margin: 18px 0 8px;
+    font-size: 19px;
+  }
+  .location-body p { margin-bottom: 12px; }
+  .location-body .hero {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(135deg, var(--jade), #1f5a40);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    color: var(--gold);
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .location-footer {
+    padding: 16px 36px;
+    background: var(--paper-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ---------- VISUAL NOVEL BEAT STAGE ---------- */
+  .beat-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .beat-visual {
+    flex: 1;
+    min-height: 220px;
+    background: var(--ink);
+    overflow: hidden;
+    position: relative;
+  }
+  .beat-visual svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .beat-text {
+    background: linear-gradient(180deg, rgba(245,236,217,0.98), rgba(230,216,184,0.98));
+    padding: 18px 36px 16px;
+    font-size: 15.5px;
+    line-height: 1.6;
+    border-top: 4px solid var(--gold);
+    position: relative;
+    max-height: 38%;
+    overflow-y: auto;
+  }
+  .beat-text::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
+  }
+  .beat-text .narrator {
+    color: var(--red);
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  .beat-text p { margin-bottom: 8px; }
+  .beat-text p:last-child { margin-bottom: 0; }
+  .beat-controls {
+    padding: 12px 36px;
+    background: var(--paper-dark);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid #c9b78e;
+  }
+  .beat-progress {
+    display: flex;
+    gap: 7px;
+  }
+  .beat-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    transition: all 0.2s;
+  }
+  .beat-dot.active { background: var(--red); transform: scale(1.25); }
+  .beat-dot.done   { background: var(--jade); }
+
+  /* ---------- CHALLENGE STYLES ---------- */
+  .challenge { padding: 12px 0; }
+  .question {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 14px;
+    color: var(--ink);
+  }
+  .progress-pip {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--paper-dark);
+    margin-right: 6px;
+  }
+  .progress-pip.active { background: var(--red); }
+  .progress-pip.done { background: var(--jade); }
+  .options {
+    display: grid;
+    gap: 10px;
+  }
+  .option {
+    padding: 14px 18px;
+    background: white;
+    border: 2px solid var(--paper-dark);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 15px;
+    transition: all 0.2s;
+    color: var(--ink);
+  }
+  .option:hover { border-color: var(--gold); transform: translateX(4px); }
+  .option.correct { background: #d6efd9; border-color: var(--jade); }
+  .option.wrong { background: #f5d4d4; border-color: var(--red); }
+  .option:disabled { cursor: default; }
+  .feedback {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: #fffbe8;
+    border-left: 4px solid var(--gold);
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .feedback.correct { border-left-color: var(--jade); background: #ecf7ee; }
+  .feedback.wrong { border-left-color: var(--red); background: #fdeaea; }
+
+  /* Drag-order */
+  .order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .order-item {
+    padding: 12px 16px;
+    background: white;
+    border: 2px solid var(--paper-dark);
+    border-radius: 8px;
+    cursor: grab;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .order-item:active { cursor: grabbing; }
+  .order-item.dragging { opacity: 0.4; }
+  .order-item.drop-above { border-top: 4px solid var(--red); }
+  .order-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  /* Match pairs */
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .match-col h3 {
+    font-size: 14px;
+    color: #6a5a30;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .match-item {
+    padding: 12px 14px;
+    background: white;
+    border: 2px solid var(--paper-dark);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+  }
+  .match-item:hover { border-color: var(--gold); }
+  .match-item.selected { border-color: var(--red); background: #fff4e0; }
+  .match-item.matched {
+    background: #ecf7ee;
+    border-color: var(--jade);
+    cursor: default;
+    opacity: 0.7;
+  }
+  .match-item.matched::after {
+    content: " ✓";
+    color: var(--jade);
+    font-weight: bold;
+  }
+
+  /* Lantern challenge */
+  .lantern-area {
+    position: relative;
+    height: 280px;
+    background: linear-gradient(180deg, #1a1845 0%, #3a1f4a 100%);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .lantern {
+    position: absolute;
+    width: 56px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    text-align: center;
+    color: var(--paper);
+    font-size: 22px;
+    user-select: none;
+  }
+  .lantern:hover { transform: scale(1.15); }
+  .lantern .glow {
+    width: 56px; height: 70px;
+    background: radial-gradient(ellipse, #ffcd6e 0%, #d44a4a 70%, #8a1a1a 100%);
+    border-radius: 50% 50% 40% 40%;
+    box-shadow: 0 0 20px rgba(255, 180, 80, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+  }
+  .lantern.popped { animation: pop 0.4s forwards; pointer-events: none; }
+  @keyframes pop {
+    to { transform: scale(0); opacity: 0; }
+  }
+  .lantern.wrong .glow { background: radial-gradient(ellipse, #888, #444); }
+  .lantern-tracker {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 14px;
+  }
+
+  /* ---------- ENDING SCREEN ---------- */
+  .ending {
+    padding: 40px;
+    text-align: center;
+    overflow-y: auto;
+  }
+  .ending h1 {
+    color: var(--red);
+    font-size: 36px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .ending .vn-h1 {
+    color: var(--gold);
+    background: var(--ink);
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 999px;
+    font-style: italic;
+    font-size: 18px;
+    margin-bottom: 24px;
+  }
+  .ending .reflection {
+    max-width: 700px;
+    margin: 0 auto 24px;
+    text-align: left;
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .ending .reflection p { margin-bottom: 12px; }
+  .recap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    max-width: 800px;
+    margin: 24px auto;
+  }
+  .recap-card {
+    background: var(--paper-dark);
+    padding: 14px;
+    border-radius: 10px;
+    border-left: 4px solid var(--red);
+  }
+  .recap-card .icon { font-size: 28px; }
+  .recap-card .vn { color: var(--red); font-weight: bold; }
+  .recap-card .en { font-size: 13px; color: #5a4a30; }
+
+  /* ---------- HELPER ---------- */
+  .vn { font-style: italic; }
+  .center { text-align: center; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* responsive */
+  @media (max-width: 800px) {
+    .map-screen { grid-template-columns: 1fr; }
+    .passport { border-left: none; border-top: 2px solid #c9b78e; max-height: 35%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ============================================================
+//  Hành Trình Việt Nam — Journey Through Vietnam
+//  A small educational game about Vietnamese culture & history
+// ============================================================
+
+const state = {
+  visited: {},        // location id -> true
+  souvenirs: [],      // list of strings
+  currentLocation: null,
+  currentBeat: 0,     // which narrative beat we're on within a location
+};
+
+// ---------- SCENE BUILDER HELPERS (for visual-novel illustrations) ----------
+const SCENE = {
+  // Wrap content in a 400x280 SVG with a vertical gradient background
+  bg(stops, content) {
+    const id = "g" + Math.floor(Math.random() * 1e9);
+    const stopEls = stops.map((c, i) =>
+      `<stop offset="${(i * 100 / (stops.length - 1)).toFixed(0)}%" stop-color="${c}"/>`
+    ).join("");
+    return `<svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+      <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${stopEls}</linearGradient></defs>
+      <rect width="400" height="280" fill="url(#${id})"/>
+      ${content}
+    </svg>`;
+  },
+  badge(text, x = 80, y = 38) {
+    const w = Math.max(90, text.length * 7.5 + 24);
+    return `<g transform="translate(${x},${y})">
+      <rect x="${-w/2}" y="-16" width="${w}" height="32" rx="4" fill="rgba(0,0,0,0.82)" stroke="#ffcd00" stroke-width="2"/>
+      <text x="0" y="5" text-anchor="middle" font-size="12" fill="#ffcd00" font-weight="bold" font-family="Segoe UI,sans-serif">${text}</text>
+    </g>`;
+  },
+  emoji(char, x = 200, y = 170, size = 90) {
+    return `<text x="${x}" y="${y}" text-anchor="middle" font-size="${size}">${char}</text>`;
+  },
+  sun(x = 320, y = 80, r = 36, color = "#fff5d0", op = 0.85) {
+    return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" opacity="${op}"/>`;
+  },
+  mountains(color = "#2a3a4a", op = 0.55, baseY = 180) {
+    return `<path d="M 0 ${baseY} L 70 ${baseY-50} L 130 ${baseY-15} L 200 ${baseY-70} L 280 ${baseY-30} L 400 ${baseY-50} L 400 280 L 0 280 Z" fill="${color}" opacity="${op}"/>`;
+  },
+  water(color = "#1a2a3a", op = 0.7, y = 220) {
+    return `<path d="M 0 ${y} Q 100 ${y-5} 200 ${y} T 400 ${y} L 400 280 L 0 280 Z" fill="${color}" opacity="${op}"/>`;
+  },
+  ripples(y = 235, color = "#fff", op = 0.35) {
+    return `<g opacity="${op}" stroke="${color}" stroke-width="1" fill="none">
+      <ellipse cx="200" cy="${y}" rx="100" ry="6"/>
+      <ellipse cx="200" cy="${y+10}" rx="60" ry="4"/>
+    </g>`;
+  },
+};
+
+// --- LOCATION DATA (six destinations on a journey south to north and back) ---
+const LOCATIONS = [
+  {
+    id: "hanoi",
+    name: "Hà Nội",
+    en: "Hanoi",
+    tagline: "The Thousand-Year Capital",
+    icon: "🏯",
+    x: 220, y: 90,            // pin position on the SVG map
+    souvenir: "📜 A rubbing from a stone stele at the Temple of Literature",
+    beats: [
+      {
+        narrator: "Năm 1010 CE — The Year 1010",
+        visual: SCENE.bg(["#ff8866", "#ffd09c", "#3d6680"],
+          SCENE.sun() +
+          SCENE.mountains("#2a3a4a", 0.55, 175) +
+          SCENE.water("#1a2a3a", 0.78, 215) +
+          SCENE.ripples(245, "#fff", 0.4) +
+          SCENE.emoji("🐉", 200, 165, 100) +
+          SCENE.badge("Năm 1010 CE", 70, 38)
+        ),
+        text: `<p>Emperor <b>Lý Thái Tổ</b> chose a new capital. Standing on the bank of the Red River, he saw a golden dragon rising from the water — and named the city <b>Thăng Long</b>: "Ascending Dragon."</p>
+        <p>The dragon became a national symbol. The city became capital, on and off, for a thousand years. Today it is called <b>Hà Nội</b> — "between two rivers."</p>`
+      },
+      {
+        narrator: "Hồ Hoàn Kiếm — Lake of the Returned Sword",
+        visual: SCENE.bg(["#d8e8d8", "#a8c9b8", "#5a8a78"],
+          `<g opacity="0.65"><line x1="50" y1="170" x2="50" y2="220" stroke="#3a4a30" stroke-width="2"/>
+           <path d="M 50 170 Q 30 195 22 230 M 50 170 Q 60 190 68 215" stroke="#5a7a40" stroke-width="2" fill="none"/></g>
+           <g opacity="0.65"><line x1="350" y1="160" x2="350" y2="220" stroke="#3a4a30" stroke-width="2"/>
+           <path d="M 350 160 Q 372 185 380 225 M 350 160 Q 338 180 332 210" stroke="#5a7a40" stroke-width="2" fill="none"/></g>` +
+          `<ellipse cx="200" cy="240" rx="180" ry="40" fill="#3a6a58" opacity="0.78"/>
+           <ellipse cx="200" cy="235" rx="100" ry="14" fill="none" stroke="#fff" stroke-width="1" opacity="0.4"/>
+           <ellipse cx="200" cy="232" rx="60" ry="8" fill="none" stroke="#fff" stroke-width="1" opacity="0.3"/>` +
+          SCENE.emoji("🐢", 200, 195, 70) +
+          `<text x="270" y="200" font-size="42" transform="rotate(-25 270 200)">⚔️</text>` +
+          SCENE.badge("Hồ Hoàn Kiếm", 90, 38)
+        ),
+        text: `<p>At the heart of modern Hà Nội sits a small green lake. Legend: a magic turtle once gave King <b>Lê Lợi</b> a sword to drive out invaders — then took it back when peace returned.</p>
+        <p>At dawn today, you'll find elders practicing tai chi on the shore.</p>`
+      },
+      {
+        narrator: "Văn Miếu — Temple of Literature, founded 1070",
+        visual: SCENE.bg(["#f0e0c0", "#dcc086", "#a88040"],
+          `<g opacity="0.18">
+            <line x1="0" y1="50" x2="400" y2="58" stroke="#5a4030" stroke-width="0.5"/>
+            <line x1="0" y1="120" x2="400" y2="115" stroke="#5a4030" stroke-width="0.5"/>
+            <line x1="0" y1="200" x2="400" y2="210" stroke="#5a4030" stroke-width="0.5"/>
+          </g>` +
+          [115, 175, 235].map((x, i) => `
+            <g transform="translate(${x},${i===1?75:90})">
+              <path d="M 0 0 Q 0 -12 12 -12 L 38 -12 Q 50 -12 50 0 L 50 ${i===1?145:130} L 0 ${i===1?145:130} Z" fill="#7a6a4a" stroke="#3a2a1a" stroke-width="2"/>
+              <line x1="8" y1="10" x2="42" y2="10" stroke="#3a2a1a" stroke-width="0.5" opacity="0.6"/>
+              <line x1="8" y1="22" x2="42" y2="22" stroke="#3a2a1a" stroke-width="0.5" opacity="0.6"/>
+              <line x1="8" y1="34" x2="42" y2="34" stroke="#3a2a1a" stroke-width="0.5" opacity="0.6"/>
+              <line x1="8" y1="46" x2="42" y2="46" stroke="#3a2a1a" stroke-width="0.5" opacity="0.6"/>
+            </g>
+          `).join("") +
+          SCENE.emoji("📜", 320, 70, 44) +
+          SCENE.badge("Văn Miếu, 1070", 90, 38)
+        ),
+        text: `<p>Sixty years after the founding, Vietnam built its first national university — dedicated to <b>Confucius</b>. For 800 years, scholars who passed the imperial exams had their names carved on stone steles. Many still stand.</p>
+        <p>Confucian values — learning, respect for elders, family harmony — shaped Vietnamese government, education, and life for nearly a thousand years.</p>`
+      },
+      {
+        narrator: "Hai Bà Trưng — The Trưng Sisters, 40 CE",
+        visual: SCENE.bg(["#5a1010", "#c83020", "#ff9a40"],
+          `<circle cx="200" cy="100" r="55" fill="#ffcd00" opacity="0.3"/>` +
+          `<rect x="0" y="240" width="400" height="40" fill="#3a1a08" opacity="0.55"/>` +
+          SCENE.emoji("🐘", 130, 220, 90) +
+          SCENE.emoji("🐘", 270, 220, 90) +
+          `<g><line x1="200" y1="55" x2="200" y2="115" stroke="#4a2810" stroke-width="3"/>
+           <path d="M 175 55 L 230 55 L 230 95 L 215 105 L 230 115 L 175 115 Z" fill="#ffcd00" stroke="#5a3010" stroke-width="2"/>
+           <polygon fill="#da251d" points="200,68 204,80 217,80 207,87 211,99 200,92 189,99 193,87 183,80 196,80"/></g>` +
+          SCENE.badge("Hai Bà Trưng, 40 CE", 105, 38)
+        ),
+        text: `<p>A thousand years before any of this, two sisters — <b>Trưng Trắc</b> and <b>Trưng Nhị</b> — led an army on elephants against Chinese rule. They freed Vietnam for three years before being defeated.</p>
+        <p>Every February the country still honors them. They remain symbols of resistance — and of women's leadership in Vietnamese history.</p>`
+      }
+    ],
+    challenge: {
+      type: "quiz",
+      title: "Test your knowledge of Hà Nội",
+      questions: [
+        {
+          q: "What does the name 'Thăng Long' (the old name for Hà Nội) mean?",
+          options: [
+            "Ascending Dragon",
+            "Two Rivers",
+            "Sleeping Tiger",
+            "Sacred Mountain"
+          ],
+          correct: 0,
+          explain: "Emperor Lý Thái Tổ named it 'Thăng Long' — Ascending Dragon — after a vision of a dragon rising from the Red River as he chose the new capital in 1010 CE."
+        },
+        {
+          q: "The Văn Miếu (Temple of Literature) was Vietnam's first national university. Whose teachings were central to it?",
+          options: [
+            "Buddha",
+            "Confucius",
+            "Lao Tzu",
+            "Saint Francis Xavier"
+          ],
+          correct: 1,
+          explain: "The Văn Miếu was dedicated to Confucius. Confucianism — emphasizing scholarship, respect for elders, and social harmony — shaped Vietnamese government, education, and family life for nearly a thousand years."
+        },
+        {
+          q: "Who were the Trưng Sisters (Hai Bà Trưng)?",
+          options: [
+            "Two poets of the Lý dynasty",
+            "The wives of two emperors",
+            "Sisters who led an uprising against Chinese rule in 40 CE",
+            "Founders of Vietnamese Buddhism"
+          ],
+          correct: 2,
+          explain: "Trưng Trắc and Trưng Nhị are national heroes. In 40 CE they led a rebellion that briefly freed Vietnam from China's Han dynasty. They remain symbols of Vietnamese resistance — and of women's leadership."
+        }
+      ]
+    }
+  },
+
+  {
+    id: "halong",
+    name: "Vịnh Hạ Long",
+    en: "Hạ Long Bay",
+    tagline: "Where the Dragon Descends to the Sea",
+    icon: "🐉",
+    x: 250, y: 130,
+    souvenir: "💎 A small jade dragon, carved from the bay's stone",
+    beats: [
+      {
+        narrator: "Vịnh Hạ Long — Descending Dragon Bay",
+        visual: SCENE.bg(["#cfe5e0", "#88c2bb", "#2c5e58"],
+          // limestone karsts
+          `<path d="M 30 220 Q 60 130 90 220" fill="#2a4a48" opacity="0.85"/>
+           <path d="M 110 230 Q 140 150 170 230" fill="#1a3a38" opacity="0.85"/>
+           <path d="M 200 235 Q 230 100 260 235" fill="#2a4a48" opacity="0.85"/>
+           <path d="M 280 230 Q 310 160 340 230" fill="#1a3a38" opacity="0.85"/>
+           <path d="M 360 235 Q 380 180 400 235" fill="#2a4a48" opacity="0.85"/>` +
+          // water reflections
+          `<path d="M 0 240 Q 200 232 400 240 L 400 280 L 0 280 Z" fill="#3a7a78" opacity="0.85"/>
+           <ellipse cx="60" cy="252" rx="20" ry="3" fill="#fff" opacity="0.3"/>
+           <ellipse cx="220" cy="258" rx="30" ry="3" fill="#fff" opacity="0.3"/>` +
+          // small boat
+          SCENE.emoji("⛵", 320, 250, 30) +
+          SCENE.badge("Vịnh Hạ Long", 90, 38)
+        ),
+        text: `<p>Nearly <b>2,000 limestone islands</b> rise from a turquoise bay in northern Vietnam. The name means "<i>Descending Dragon</i>." UNESCO calls it a World Heritage Site.</p>
+        <p>The Vietnamese have a story for how it came to be — older than the country itself.</p>`
+      },
+      {
+        narrator: "Long ago, Vietnam was young…",
+        visual: SCENE.bg(["#1a1a3a", "#4a2a4a", "#5a3a3a"],
+          // lightning
+          `<path d="M 110 30 L 130 90 L 115 90 L 135 150" stroke="#ffe070" stroke-width="2" fill="none" opacity="0.7"/>` +
+          // ships on horizon
+          [120, 200, 280].map(x => `
+            <g transform="translate(${x},190)">
+              <path d="M -25 0 L 25 0 L 18 12 L -18 12 Z" fill="#1a1010" stroke="#3a2010" stroke-width="1"/>
+              <line x1="0" y1="0" x2="0" y2="-30" stroke="#3a2010" stroke-width="2"/>
+              <path d="M 0 -28 L 14 -10 L 0 -10 Z" fill="#5a2010" opacity="0.8"/>
+              <path d="M 0 -28 L -14 -10 L 0 -10 Z" fill="#5a2010" opacity="0.8"/>
+            </g>
+          `).join("") +
+          // storm water
+          `<path d="M 0 210 Q 50 205 100 212 T 200 210 T 300 213 T 400 210 L 400 280 L 0 280 Z" fill="#1a1a2a" opacity="0.85"/>
+           <path d="M 0 230 Q 100 226 200 232 T 400 230" stroke="#fff" stroke-width="1" fill="none" opacity="0.25"/>` +
+          SCENE.badge("Invaders from the sea", 105, 38)
+        ),
+        text: `<p>When Vietnam was young, ships of <b>invaders</b> came across the sea, threatening the coast.</p>
+        <p>The people prayed to the heavens for help.</p>`
+      },
+      {
+        narrator: "From the heavens…",
+        visual: SCENE.bg(["#ffaa55", "#ff6622", "#5a1010"],
+          `<circle cx="200" cy="120" r="80" fill="#ffe070" opacity="0.35"/>
+           <circle cx="200" cy="120" r="45" fill="#fff8b0" opacity="0.5"/>` +
+          // sparkle/jewels falling
+          [60, 120, 180, 240, 300, 350].map(x => `
+            <g transform="translate(${x},${180 + Math.sin(x) * 20})">
+              <polygon points="0,-8 3,-2 9,0 3,2 0,8 -3,2 -9,0 -3,-2" fill="#88e8c8" opacity="0.85"/>
+            </g>
+          `).join("") +
+          SCENE.emoji("🐉", 200, 175, 110) +
+          SCENE.badge("The Jade Emperor's gift", 110, 38)
+        ),
+        text: `<p>The <b>Jade Emperor</b> sent a family of dragons to defend the coast. As they flew over the bay, they spat <b>jewels and jade</b> into the water.</p>
+        <p>The jewels hardened into thousands of stone islands — blocking the invaders' fleet.</p>`
+      },
+      {
+        narrator: "And so, the dragons stayed…",
+        visual: SCENE.bg(["#cfe5e0", "#7ab8b0", "#1a4a48"],
+          // serene karsts
+          `<path d="M 20 230 Q 50 140 80 230" fill="#2a5a58" opacity="0.85"/>
+           <path d="M 100 240 Q 140 160 180 240" fill="#1a3a38" opacity="0.85"/>
+           <path d="M 220 240 Q 260 130 300 240" fill="#2a5a58" opacity="0.85"/>
+           <path d="M 320 240 Q 350 170 380 240" fill="#1a3a38" opacity="0.85"/>` +
+          // calm water
+          `<path d="M 0 245 L 400 245 L 400 280 L 0 280 Z" fill="#1a5a58" opacity="0.85"/>
+           <ellipse cx="200" cy="258" rx="160" ry="3" fill="#fff" opacity="0.25"/>` +
+          // sleeping dragon outline curling around
+          `<path d="M 240 130 Q 280 110 310 140 Q 320 170 290 175 Q 270 175 265 165"
+            fill="none" stroke="#ffcd00" stroke-width="3" opacity="0.7"/>
+           <circle cx="248" cy="132" r="3" fill="#ffcd00" opacity="0.9"/>` +
+          // small boat
+          SCENE.emoji("🚣", 130, 258, 26) +
+          SCENE.badge("Con Rồng cháu Tiên", 105, 38)
+        ),
+        text: `<p>The invaders were defeated. The dragons looked down at Earth and were charmed by its beauty. They chose to <b>stay</b>, sleeping in the bay forever.</p>
+        <p>Vietnamese people still call themselves <i>"con Rồng cháu Tiên"</i> — <b>children of the Dragon, grandchildren of the Fairy</b>.</p>`
+      }
+    ],
+    challenge: {
+      type: "order",
+      title: "Put the legend of Hạ Long Bay in order",
+      instructions: "Drag the events to arrange them from beginning to end:",
+      items: [
+        { id: 1, text: "Vietnam is a young nation, threatened by invaders from the sea." },
+        { id: 2, text: "The Jade Emperor sends a family of dragons to defend the coast." },
+        { id: 3, text: "The dragons spit jewels and jade that harden in the water." },
+        { id: 4, text: "The hardened jewels form thousands of islands, blocking the invaders." },
+        { id: 5, text: "Charmed by Earth's beauty, the dragons stay and live in the bay forever." },
+      ],
+      explain: "The legend captures something true about Hạ Long: it does feel mythical. The dragon is one of the four sacred animals in Vietnamese tradition (along with the phoenix, unicorn, and turtle), and Vietnamese people often call themselves <i>'con Rồng cháu Tiên'</i> — 'children of the Dragon, grandchildren of the Fairy.'"
+    }
+  },
+
+  {
+    id: "hue",
+    name: "Huế",
+    en: "Huế",
+    tagline: "The Imperial City",
+    icon: "👑",
+    x: 230, y: 230,
+    souvenir: "🧧 A scrap of royal-yellow áo dài silk",
+    beats: [
+      {
+        narrator: "Huế — Capital of the Nguyễn Dynasty, 1802",
+        visual: SCENE.bg(["#7a1010", "#c83020", "#5a1010"],
+          // citadel walls
+          `<rect x="40" y="140" width="320" height="100" fill="#3a0a0a" stroke="#ffcd00" stroke-width="2"/>
+           <rect x="40" y="140" width="320" height="20" fill="#5a1010"/>` +
+          // crenellations
+          [60, 100, 140, 180, 220, 260, 300, 340].map(x => `
+            <rect x="${x-8}" y="130" width="16" height="14" fill="#3a0a0a" stroke="#ffcd00" stroke-width="1"/>
+          `).join("") +
+          // central gate (pagoda style)
+          `<g transform="translate(200,140)">
+            <path d="M -45 0 L -45 -25 L -30 -50 L 30 -50 L 45 -25 L 45 0 Z" fill="#ffcd00" stroke="#3a0a0a" stroke-width="2"/>
+            <rect x="-20" y="0" width="40" height="60" fill="#3a0a0a"/>
+            <rect x="-15" y="10" width="30" height="40" fill="#7a1010"/>
+            <circle cx="0" cy="-30" r="6" fill="#da251d"/>
+          </g>` +
+          // river
+          `<path d="M 0 240 L 400 240 L 400 280 L 0 280 Z" fill="#1a3a4a" opacity="0.8"/>
+           <path d="M 0 255 Q 200 250 400 255" stroke="#fff" stroke-width="1" fill="none" opacity="0.3"/>` +
+          SCENE.badge("Hoàng Thành — Imperial Citadel", 130, 38)
+        ),
+        text: `<p>Halfway down Vietnam, on the gentle <b>Perfume River</b>, sits Huế. Its imperial citadel walls stretch <b>2 km across</b> — modeled after Beijing's Forbidden City but adapted to Vietnamese style.</p>
+        <p>From 1802 to 1945, this was the capital of the <b>Nguyễn Dynasty</b> — the last imperial dynasty of Vietnam.</p>`
+      },
+      {
+        narrator: "Lý → Trần → Lê → Nguyễn",
+        visual: SCENE.bg(["#dcc086", "#c89a4a", "#7a4a20"],
+          // timeline of dynasties
+          `<line x1="40" y1="140" x2="360" y2="140" stroke="#3a2010" stroke-width="3"/>` +
+          // dynasty markers
+          [
+            {x: 70, label: "Lý", years: "1009–1225"},
+            {x: 150, label: "Trần", years: "1225–1400"},
+            {x: 240, label: "Lê", years: "1428–1789"},
+            {x: 330, label: "Nguyễn", years: "1802–1945"},
+          ].map((d) => `
+            <g transform="translate(${d.x},140)">
+              <circle r="9" fill="#da251d" stroke="#ffcd00" stroke-width="2"/>
+              <text x="0" y="-18" text-anchor="middle" font-size="14" fill="#3a1a08" font-weight="bold" font-family="Segoe UI,sans-serif">${d.label}</text>
+              <text x="0" y="32" text-anchor="middle" font-size="9" fill="#5a3a20" font-family="Segoe UI,sans-serif">${d.years}</text>
+            </g>
+          `).join("") +
+          // crown above last marker
+          SCENE.emoji("👑", 330, 100, 32) +
+          // small fall mark on last
+          `<text x="330" y="220" text-anchor="middle" font-size="11" fill="#5a1010" font-family="Segoe UI,sans-serif" font-style="italic">abdication, 1945</text>` +
+          SCENE.badge("Một Nghìn Năm — A Thousand Years", 130, 38)
+        ),
+        text: `<p>The Nguyễn was the last in a thousand-year line: <b>Lý → Trần → Lê → Nguyễn</b> — four dynasties spanning the centuries between Chinese rule and French colonialism.</p>
+        <p>In <b>August 1945</b> the last emperor, <b>Bảo Đại</b>, abdicated. The era of Vietnamese monarchy ended after almost a thousand years.</p>`
+      },
+      {
+        narrator: "Áo dài — the long dress",
+        visual: SCENE.bg(["#ffd9e0", "#f5b8c8", "#a86878"],
+          // soft lotus background
+          [60, 320, 100, 280].map((x, i) => `
+            <g transform="translate(${x},${i < 2 ? 100 : 180})" opacity="0.4">
+              <path d="M 0 0 Q -8 -16 0 -22 Q 8 -16 0 0" fill="#fff" />
+              <path d="M 0 0 Q -16 -8 -22 0 Q -16 8 0 0" fill="#fff" />
+              <path d="M 0 0 Q 16 -8 22 0 Q 16 8 0 0" fill="#fff" />
+              <path d="M 0 0 Q -8 16 0 22 Q 8 16 0 0" fill="#fff" />
+              <circle r="3" fill="#ffcd00"/>
+            </g>
+          `).join("") +
+          // áo dài silhouette
+          `<g transform="translate(200,100)">
+            <circle cx="0" cy="0" r="14" fill="#3a2818" stroke="#fff" stroke-width="1.5"/>
+            <path d="M -22 14 Q -28 50 -32 100 L -36 200 L -8 200 L -6 100 L 6 100 L 8 200 L 36 200 L 32 100 Q 28 50 22 14 Q 12 8 0 8 Q -12 8 -22 14 Z"
+                  fill="#da251d" stroke="#5a1010" stroke-width="1.5"/>
+            <path d="M -8 60 L -8 200 L 8 200 L 8 60" fill="#ffcd00" opacity="0.85"/>
+            <path d="M -22 14 Q -22 30 -8 30 L 8 30 Q 22 30 22 14" fill="#5a1010" opacity="0.7"/>
+          </g>` +
+          SCENE.badge("Áo dài", 70, 38)
+        ),
+        text: `<p>The <b>áo dài</b> — Vietnam's iconic dress — took its modern shape here in Huế. A long flowing tunic over loose trousers.</p>
+        <p>School uniforms in many cities are still white áo dài. Weddings still feature red ones. Tết still calls for áo dài of every color.</p>`
+      },
+      {
+        narrator: "Imperial Cuisine",
+        visual: SCENE.bg(["#f5e0bc", "#dcb878", "#8a5a30"],
+          // wood table
+          `<rect x="0" y="180" width="400" height="100" fill="#5a3a20" opacity="0.85"/>
+           <line x1="0" y1="195" x2="400" y2="195" stroke="#3a2010" stroke-width="1" opacity="0.5"/>` +
+          // small dishes in a row
+          [80, 160, 240, 320].map((x, i) => {
+            const colors = ["#da251d", "#3a7a5a", "#ffcd00", "#a83020"];
+            return `
+              <g transform="translate(${x},170)">
+                <ellipse cx="0" cy="6" rx="32" ry="4" fill="rgba(0,0,0,0.3)"/>
+                <circle r="28" fill="#f5ecd9" stroke="#3a2010" stroke-width="1.5"/>
+                <circle r="20" fill="${colors[i]}" opacity="0.9"/>
+                <circle r="3" fill="#fff" opacity="0.6"/>
+              </g>`;
+          }).join("") +
+          // herb garnish
+          `<text x="80" y="135" text-anchor="middle" font-size="22">🌿</text>
+           <text x="320" y="135" text-anchor="middle" font-size="22">🌶️</text>` +
+          SCENE.badge("Royal Table", 80, 38)
+        ),
+        text: `<p>Huế kept the Emperor fed. Royal cuisine here is precise: <b>tiny dishes, vivid colors, balanced flavors</b>. A meal might have a dozen small plates.</p>
+        <p><b>Bún bò Huế</b> — a spicy lemongrass beef noodle soup — is the city's most famous descendant. Now eaten across the country.</p>`
+      }
+    ],
+    challenge: {
+      type: "match",
+      title: "Match each dynasty to its time period",
+      instructions: "Click a dynasty, then click its matching period. Vietnamese history before colonialism is shaped by these four major dynasties.",
+      pairs: [
+        { left: "Lý Dynasty", right: "1009–1225 — Founded Thăng Long (Hà Nội), built the first university" },
+        { left: "Trần Dynasty", right: "1225–1400 — Three times defeated Mongol invasions" },
+        { left: "Lê Dynasty", right: "1428–1789 — Drove out the Ming; Vietnam's longest dynasty" },
+        { left: "Nguyễn Dynasty", right: "1802–1945 — Last imperial dynasty; capital at Huế" },
+      ],
+      explain: "These four dynasties span almost a thousand years — from Vietnam's first long stretch of independence after Chinese rule, through repeated defenses against Mongol and Ming invaders, to the end of monarchy in 1945 when Emperor Bảo Đại abdicated."
+    }
+  },
+
+  {
+    id: "hoian",
+    name: "Hội An",
+    en: "Hội An",
+    tagline: "The Lantern Town",
+    icon: "🏮",
+    x: 240, y: 270,
+    souvenir: "🏮 A red silk lantern from the Old Town",
+    beats: [
+      {
+        narrator: "Hội An — a trading port, 1500s–1800s",
+        visual: SCENE.bg(["#ffaa66", "#f08850", "#5a2010"],
+          // setting sun
+          `<circle cx="320" cy="120" r="40" fill="#ffe080" opacity="0.85"/>
+           <circle cx="320" cy="120" r="60" fill="#ffaa55" opacity="0.4"/>` +
+          // ships
+          [100, 180, 260].map((x, i) => `
+            <g transform="translate(${x},${190 + i * 5})">
+              <path d="M -28 0 L 28 0 L 22 14 L -22 14 Z" fill="#3a1a08" stroke="#1a0a04" stroke-width="1"/>
+              <line x1="-5" y1="0" x2="-5" y2="-35" stroke="#3a1a08" stroke-width="2"/>
+              <path d="M -5 -32 L 18 -10 L -5 -10 Z" fill="#dcc086" opacity="0.95"/>
+              <line x1="10" y1="0" x2="10" y2="-25" stroke="#3a1a08" stroke-width="2"/>
+              <path d="M 10 -22 L 26 -8 L 10 -8 Z" fill="#dcc086" opacity="0.95"/>
+            </g>
+          `).join("") +
+          // water with reflections
+          `<path d="M 0 230 L 400 230 L 400 280 L 0 280 Z" fill="#3a1810" opacity="0.85"/>
+           <ellipse cx="320" cy="245" rx="40" ry="3" fill="#ffaa55" opacity="0.5"/>
+           <ellipse cx="320" cy="252" rx="35" ry="2" fill="#ffe080" opacity="0.4"/>` +
+          SCENE.badge("Southeast Asia's busiest port", 130, 38)
+        ),
+        text: `<p>For 400 years, Hội An was Southeast Asia's busiest <b>trading port</b>. Chinese, Japanese, Dutch, Portuguese, and Indian merchants all met here.</p>
+        <p>Each left a piece of architecture behind. The <b>Japanese Covered Bridge</b>, built in the 1590s, still arches over a small canal — UNESCO-protected, almost unchanged in 400 years.</p>`
+      },
+      {
+        narrator: "Every full moon, the town goes dark",
+        visual: SCENE.bg(["#1a1a4a", "#3a2050", "#1a0a30"],
+          // street perspective
+          `<path d="M 100 280 L 175 150 L 225 150 L 300 280 Z" fill="#0a0510"/>
+           <path d="M 0 280 L 100 150 L 100 280 Z" fill="#1a0a30"/>
+           <path d="M 400 280 L 300 150 L 300 280 Z" fill="#1a0a30"/>` +
+          // hanging lanterns
+          [
+            {x: 80, y: 60, c: "#ff6644"},
+            {x: 130, y: 95, c: "#ffcd00"},
+            {x: 200, y: 50, c: "#ff4466"},
+            {x: 270, y: 95, c: "#ff8855"},
+            {x: 320, y: 60, c: "#ff6644"},
+            {x: 160, y: 130, c: "#ffaa44"},
+            {x: 240, y: 130, c: "#ff5588"},
+          ].map(l => `
+            <g transform="translate(${l.x},${l.y})">
+              <line x1="0" y1="-20" x2="0" y2="-5" stroke="#5a3010" stroke-width="1"/>
+              <ellipse cx="0" cy="0" rx="14" ry="18" fill="${l.c}" opacity="0.95"/>
+              <ellipse cx="0" cy="0" rx="14" ry="18" fill="none" stroke="#3a1010" stroke-width="0.5"/>
+              <line x1="-14" y1="-9" x2="14" y2="-9" stroke="#3a1010" stroke-width="0.5"/>
+              <line x1="-14" y1="9" x2="14" y2="9" stroke="#3a1010" stroke-width="0.5"/>
+              <ellipse cx="-30" cy="0" rx="40" ry="35" fill="${l.c}" opacity="0.15"/>
+            </g>
+          `).join("") +
+          SCENE.badge("Đêm trăng rằm — Full Moon Night", 130, 38)
+        ),
+        text: `<p>Today Hội An is most famous for its <b>silk lanterns</b>. Every full moon, the town switches off its electric lights.</p>
+        <p>Only the lanterns illuminate the streets — red, yellow, green, blue. Walking through the Old Town that night feels like stepping back two hundred years.</p>`
+      },
+      {
+        narrator: "Tết Trung Thu — Mid-Autumn Festival",
+        visual: SCENE.bg(["#1a2a5a", "#5a4080", "#3a2050"],
+          // big full moon
+          `<circle cx="100" cy="100" r="55" fill="#fff8dc" opacity="0.95"/>
+           <circle cx="100" cy="100" r="55" fill="none" stroke="#ffe080" stroke-width="1" opacity="0.5"/>
+           <circle cx="85" cy="85" r="6" fill="#dccda0" opacity="0.6"/>
+           <circle cx="115" cy="105" r="4" fill="#dccda0" opacity="0.6"/>
+           <circle cx="105" cy="120" r="3" fill="#dccda0" opacity="0.6"/>` +
+          // child silhouette with star lantern
+          `<g transform="translate(280,180)">
+            <circle cx="0" cy="-30" r="12" fill="#3a1810"/>
+            <rect x="-12" y="-18" width="24" height="40" rx="4" fill="#5a2018"/>
+            <line x1="-4" y1="22" x2="-4" y2="42" stroke="#3a1810" stroke-width="2"/>
+            <line x1="4" y1="22" x2="4" y2="42" stroke="#3a1810" stroke-width="2"/>
+            <line x1="20" y1="-15" x2="50" y2="-50" stroke="#3a1810" stroke-width="1"/>
+            <polygon transform="translate(50,-55)" fill="#ffcd00" stroke="#5a2010" stroke-width="1.5"
+              points="0,-18 5,-5 18,-5 8,4 12,18 0,10 -12,18 -8,4 -18,-5 -5,-5"/>
+            <circle cx="50" cy="-55" r="32" fill="#ffe080" opacity="0.25"/>
+          </g>` +
+          // mooncake on plate
+          `<g transform="translate(170,230)">
+            <ellipse cx="0" cy="6" rx="38" ry="4" fill="rgba(0,0,0,0.4)"/>
+            <circle r="32" fill="#f5ecd9" stroke="#3a2010" stroke-width="1.5"/>
+            <circle r="22" fill="#a8702a"/>
+            <circle r="22" fill="none" stroke="#5a3010" stroke-width="1.5"/>
+            <text x="0" y="6" text-anchor="middle" font-size="14" fill="#5a3010" font-weight="bold" font-family="Segoe UI,sans-serif">福</text>
+          </g>` +
+          SCENE.badge("Tết Trung Thu", 90, 38)
+        ),
+        text: `<p>On the <b>15th day of the 8th lunar month</b>: children parade with star-shaped lanterns. Lion dancers leap through alleys.</p>
+        <p>Families share <b>bánh trung thu</b> — mooncakes filled with lotus seed paste and salted egg yolk. The full moon symbolizes <b>reunion</b>. The whole festival is mostly for children.</p>`
+      }
+    ],
+    challenge: {
+      type: "lanterns",
+      title: "Light up the lanterns of Tết Trung Thu",
+      instructions: "Click only the lanterns showing things that belong to <b>Tết Trung Thu (Mid-Autumn Festival)</b>. Avoid the ones that don't fit! You need 4 correct out of 6.",
+      items: [
+        { icon: "🌕", correct: true, label: "Full moon" },
+        { icon: "🥮", correct: true, label: "Mooncake" },
+        { icon: "⭐", correct: true, label: "Star lantern" },
+        { icon: "🦁", correct: true, label: "Lion dance" },
+        { icon: "🎄", correct: false, label: "Christmas tree" },
+        { icon: "🎃", correct: false, label: "Jack-o'-lantern" },
+      ],
+      explain: "Mid-Autumn Festival is sometimes called 'Children's Festival' because so much of it is for kids: parading lanterns, watching lion dances, hearing the legend of Chú Cuội (the man on the moon), and eating mooncakes shared with family. The full moon symbolizes reunion."
+    }
+  },
+
+  {
+    id: "mekong",
+    name: "Đồng Bằng Sông Cửu Long",
+    en: "Mekong Delta",
+    tagline: "The Rice Bowl",
+    icon: "🌾",
+    x: 210, y: 380,
+    souvenir: "👒 A nón lá — the iconic conical leaf hat",
+    beats: [
+      {
+        narrator: "Cửu Long — The Nine Dragons",
+        visual: SCENE.bg(["#cce7d0", "#88be8a", "#3a7a4a"],
+          // map-like view with nine river branches splitting
+          `<path d="M 200 30 Q 195 80 180 130" stroke="#1a4a6a" stroke-width="6" fill="none" opacity="0.7"/>` +
+          // delta fan
+          [
+            "M 180 130 Q 100 170 50 250",
+            "M 180 130 Q 130 180 110 260",
+            "M 180 130 Q 160 190 155 270",
+            "M 180 130 Q 195 200 200 270",
+            "M 195 130 Q 220 195 240 270",
+            "M 195 130 Q 250 190 285 265",
+            "M 195 130 Q 290 180 340 255",
+            "M 200 130 Q 320 165 380 230",
+            "M 200 130 Q 270 140 350 145",
+          ].map(d => `<path d="${d}" stroke="#1a4a6a" stroke-width="4" fill="none" opacity="0.65"/>`).join("") +
+          // rice paddies (small green dots)
+          [60, 100, 145, 195, 245, 295, 340].map((x, i) => `
+            <ellipse cx="${x}" cy="${230 + (i % 2) * 18}" rx="14" ry="6" fill="#5a8a40" opacity="0.55"/>
+          `).join("") +
+          SCENE.badge("Mekong Delta — Đồng Bằng Sông Cửu Long", 145, 38)
+        ),
+        text: `<p>The <b>Mekong River</b> begins in Tibet. By the time it reaches southern Vietnam, it splits into nine smaller rivers — <b>Cửu Long</b>, "the Nine Dragons."</p>
+        <p>The delta produces about <b>half of Vietnam's rice</b> and a huge share of its fruit. It's one of the most fertile places on Earth.</p>`
+      },
+      {
+        narrator: "Cái Răng Floating Market, dawn",
+        visual: SCENE.bg(["#ffd09c", "#f0a070", "#5a4080"],
+          // sun on horizon
+          `<circle cx="60" cy="120" r="30" fill="#fff5d0" opacity="0.9"/>
+           <circle cx="60" cy="120" r="50" fill="#ffe0a0" opacity="0.4"/>` +
+          // boats with selling poles
+          [
+            {x: 110, y: 200, item: "🍍"},
+            {x: 200, y: 215, item: "🍌"},
+            {x: 290, y: 200, item: "🍉"},
+            {x: 360, y: 220, item: "🥭"},
+          ].map(b => `
+            <g transform="translate(${b.x},${b.y})">
+              <path d="M -32 0 L 32 0 L 25 12 L -25 12 Z" fill="#5a3010" stroke="#3a1808" stroke-width="1"/>
+              <line x1="0" y1="0" x2="0" y2="-50" stroke="#3a1808" stroke-width="2"/>
+              <text x="0" y="-50" text-anchor="middle" font-size="22">${b.item}</text>
+              <ellipse cx="0" cy="16" rx="32" ry="3" fill="#fff" opacity="0.3"/>
+            </g>
+          `).join("") +
+          // water
+          `<path d="M 0 220 L 400 220 L 400 280 L 0 280 Z" fill="#3a2a5a" opacity="0.7"/>
+           <path d="M 0 240 Q 100 235 200 240 T 400 240" stroke="#fff" stroke-width="1" fill="none" opacity="0.35"/>` +
+          SCENE.badge("Chợ nổi — Floating Market", 110, 38)
+        ),
+        text: `<p>At dawn, farmers gather their boats. Each one hoists a sample of what it sells on a tall pole — a pineapple, a bunch of bananas, a watermelon — visible from far away.</p>
+        <p>This is how trade has worked here for generations. Houses rise on stilts above the river. Children paddle to school in <b>sampans</b>.</p>`
+      },
+      {
+        narrator: "Cuisine of the South",
+        visual: SCENE.bg(["#f5ecc8", "#dcc086", "#7a5a30"],
+          // bowl
+          `<g transform="translate(200,150)">
+            <ellipse cx="0" cy="80" rx="120" ry="14" fill="rgba(0,0,0,0.35)"/>
+            <ellipse cx="0" cy="60" rx="115" ry="20" fill="#f5ecd9" stroke="#5a3010" stroke-width="2"/>
+            <path d="M -115 60 Q -115 95 0 100 Q 115 95 115 60" fill="#f5ecd9" stroke="#5a3010" stroke-width="2"/>
+            <ellipse cx="0" cy="58" rx="105" ry="14" fill="#a85020" opacity="0.95"/>
+            <ellipse cx="0" cy="56" rx="105" ry="12" fill="#c86030" opacity="0.7"/>
+            <!-- noodles -->
+            <path d="M -50 50 Q -30 60 -10 50 M 10 50 Q 30 60 50 50" stroke="#f5d8a0" stroke-width="2" fill="none" opacity="0.85"/>
+            <path d="M -40 56 Q -10 64 20 56 M 30 56 Q 50 62 70 56" stroke="#f5d8a0" stroke-width="2" fill="none" opacity="0.85"/>
+            <!-- meat slices -->
+            <ellipse cx="-30" cy="48" rx="14" ry="4" fill="#8a3018" opacity="0.85"/>
+            <ellipse cx="20" cy="50" rx="14" ry="4" fill="#8a3018" opacity="0.85"/>
+            <!-- herbs -->
+            <text x="-45" y="42" font-size="14">🌿</text>
+            <text x="40" y="40" font-size="14">🌶️</text>
+            <text x="0" y="44" text-anchor="middle" font-size="14">🍋</text>
+            <!-- steam -->
+            <path d="M -30 30 Q -34 18 -28 6 M 0 26 Q -4 12 2 -2 M 30 30 Q 26 18 32 6" stroke="#fff" stroke-width="2" fill="none" opacity="0.55"/>
+          </g>` +
+          SCENE.badge("Phở", 60, 38)
+        ),
+        text: `<p>Southern Vietnamese cooking is sweeter, lighter, and more herb-forward than the north — shaped by warmer weather, French influence, and trade with Khmer, Chinese, and Indian neighbors.</p>
+        <p><b>Phở, bánh mì, gỏi cuốn</b> — much of what the world knows as Vietnamese food was shaped here. Almost every meal includes a bowl of <i>nước chấm</i> (fish sauce dip) and a pile of fresh herbs.</p>`
+      },
+      {
+        narrator: "Nón lá — the conical hat",
+        visual: SCENE.bg(["#cce7d0", "#88be8a", "#3a7a4a"],
+          // rice paddy lines
+          `<g opacity="0.55">
+            ${[210, 225, 240, 255, 270].map(y => `<path d="M 0 ${y} Q 100 ${y-3} 200 ${y} T 400 ${y}" stroke="#3a5a30" stroke-width="2" fill="none"/>`).join("")}
+          </g>` +
+          // sun
+          `<circle cx="320" cy="80" r="28" fill="#fff5d0" opacity="0.85"/>` +
+          // farmer figure with conical hat
+          `<g transform="translate(150,140)">
+            <!-- hat (cone) -->
+            <path d="M -30 -10 L 0 -55 L 30 -10 Z" fill="#dcc086" stroke="#5a3010" stroke-width="1.5"/>
+            <ellipse cx="0" cy="-10" rx="32" ry="6" fill="#c8a86a" stroke="#5a3010" stroke-width="1"/>
+            <!-- head -->
+            <ellipse cx="0" cy="6" rx="10" ry="14" fill="#e8c8a8"/>
+            <!-- body -->
+            <path d="M -16 18 L 16 18 L 14 70 L -14 70 Z" fill="#5a8030" stroke="#3a4a20" stroke-width="1"/>
+            <!-- arms -->
+            <line x1="-16" y1="22" x2="-30" y2="55" stroke="#e8c8a8" stroke-width="6"/>
+            <line x1="16" y1="22" x2="30" y2="55" stroke="#e8c8a8" stroke-width="6"/>
+            <!-- water bucket pole over shoulder -->
+            <line x1="-30" y1="55" x2="40" y2="42" stroke="#5a3010" stroke-width="2"/>
+          </g>` +
+          // second figure
+          `<g transform="translate(280,170)" opacity="0.75">
+            <path d="M -22 -10 L 0 -42 L 22 -10 Z" fill="#dcc086" stroke="#5a3010" stroke-width="1"/>
+            <ellipse cx="0" cy="-10" rx="24" ry="4" fill="#c8a86a"/>
+            <ellipse cx="0" cy="4" rx="8" ry="10" fill="#e8c8a8"/>
+            <path d="M -12 12 L 12 12 L 10 50 L -10 50 Z" fill="#a83020"/>
+          </g>` +
+          SCENE.badge("Cánh Đồng Lúa — Rice Fields", 120, 38)
+        ),
+        text: `<p>Across the delta — and across all of Vietnam — you'll see the <b>nón lá</b>: the conical leaf hat, woven from palm leaves, tied with a silk ribbon. It shades farmers from the sun and sheds the rain.</p>
+        <p>It's older than any dynasty. A piece of Vietnamese identity you can still buy on any street corner today.</p>`
+      }
+    ],
+    challenge: {
+      type: "match",
+      title: "Match each Vietnamese dish to its description",
+      instructions: "Click a dish, then click its description.",
+      pairs: [
+        { left: "Phở", right: "Beef or chicken broth simmered for hours, served over rice noodles with fresh herbs — Vietnam's most famous dish." },
+        { left: "Bánh mì", right: "A baguette sandwich with pâté, pickled vegetables, herbs, and chili — born from French colonial influence." },
+        { left: "Gỏi cuốn", right: "Fresh spring rolls — translucent rice paper wrapped around shrimp, pork, herbs, and rice noodles, served with peanut sauce." },
+        { left: "Bún bò Huế", right: "A spicy beef noodle soup from the imperial city, with lemongrass and a deep red broth." },
+        { left: "Cà phê sữa đá", right: "Strong drip coffee poured over sweetened condensed milk and ice — a daily ritual on every street corner." },
+      ],
+      explain: "Vietnamese food is built on balance: salty, sweet, sour, bitter, spicy. Almost every meal includes a small bowl of <i>nước chấm</i> (fish sauce dip) and a pile of fresh herbs at the table. Food is rarely fancy — but it is almost always shared."
+    }
+  },
+
+  {
+    id: "saigon",
+    name: "Thành Phố Hồ Chí Minh",
+    en: "Hồ Chí Minh City (Sài Gòn)",
+    tagline: "Modern Vietnam",
+    icon: "🏙️",
+    x: 230, y: 410,
+    souvenir: "☕ A small Vietnamese coffee filter (phin)",
+    beats: [
+      {
+        narrator: "Sài Gòn / Hồ Chí Minh City",
+        visual: SCENE.bg(["#3a4a6a", "#5a6a90", "#1a2030"],
+          // city silhouette — colonial on left, modern skyscrapers on right
+          // colonial buildings (left)
+          `<g>
+            <rect x="20" y="170" width="60" height="80" fill="#dcc086" stroke="#3a2010" stroke-width="1"/>
+            <polygon points="20,170 50,140 80,170" fill="#a8302a" stroke="#3a1010" stroke-width="1"/>
+            <rect x="35" y="195" width="12" height="20" fill="#3a2010"/>
+            <rect x="55" y="195" width="12" height="20" fill="#3a2010"/>
+            <rect x="35" y="220" width="12" height="20" fill="#3a2010"/>
+            <rect x="55" y="220" width="12" height="20" fill="#3a2010"/>
+          </g>` +
+          // modern skyscrapers (right)
+          `<g>
+            <rect x="220" y="100" width="40" height="150" fill="#1a2a4a" stroke="#3a4a6a" stroke-width="1"/>
+            ${[110,130,150,170,190,210,230].map(y => `<rect x="225" y="${y}" width="8" height="10" fill="#88c8e8" opacity="0.85"/><rect x="245" y="${y}" width="8" height="10" fill="#aae0f0" opacity="0.85"/>`).join("")}
+            <rect x="280" y="60" width="50" height="190" fill="#1a3050" stroke="#3a4a6a" stroke-width="1"/>
+            ${[80,100,120,140,160,180,200,220].map(y => `<rect x="288" y="${y}" width="10" height="12" fill="#88c8e8" opacity="0.85"/><rect x="312" y="${y}" width="10" height="12" fill="#88c8e8" opacity="0.85"/>`).join("")}
+            <polygon points="280,60 305,30 330,60" fill="#1a3050" stroke="#3a4a6a" stroke-width="1"/>
+            <rect x="345" y="130" width="36" height="120" fill="#1a2a4a"/>
+            ${[140,160,180,200,220].map(y => `<rect x="350" y="${y}" width="10" height="10" fill="#aae0f0" opacity="0.85"/><rect x="368" y="${y}" width="10" height="10" fill="#88c8e8" opacity="0.85"/>`).join("")}
+          </g>` +
+          // dividing river
+          `<rect x="0" y="250" width="400" height="30" fill="#0a1020"/>
+           <ellipse cx="200" cy="262" rx="60" ry="2" fill="#88c8e8" opacity="0.4"/>` +
+          SCENE.badge("Two Names, One City", 100, 38)
+        ),
+        text: `<p>Vietnam's largest city has two names. Older residents still call it <b>Sài Gòn</b>. Officially, since <b>1976</b>, it's <b>Hồ Chí Minh City</b>.</p>
+        <p>The two names mark a turning point in the country's history. To understand why, we have to look back a single year — to 1975.</p>`
+      },
+      {
+        narrator: "April 30, 1975 — Reunification",
+        visual: SCENE.bg(["#5a4030", "#3a2818", "#1a0e08"],
+          // gates of palace
+          `<g transform="translate(200,165)">
+            <!-- gate posts -->
+            <rect x="-90" y="-70" width="20" height="140" fill="#5a3a20" stroke="#3a2010" stroke-width="2"/>
+            <rect x="70" y="-70" width="20" height="140" fill="#5a3a20" stroke="#3a2010" stroke-width="2"/>
+            <!-- crossbar with star -->
+            <rect x="-90" y="-90" width="180" height="20" fill="#5a3a20" stroke="#3a2010" stroke-width="2"/>
+            <polygon fill="#ffcd00" stroke="#3a2010" stroke-width="1.5"
+              points="0,-105 4,-92 18,-92 7,-83 11,-70 0,-78 -11,-70 -7,-83 -18,-92 -4,-92"/>
+            <!-- gate bars -->
+            ${[-60, -40, -20, 0, 20, 40, 60].map(x => `<line x1="${x}" y1="-70" x2="${x}" y2="60" stroke="#3a2010" stroke-width="2"/>`).join("")}
+            <!-- iron horizontal -->
+            <line x1="-70" y1="-30" x2="70" y2="-30" stroke="#3a2010" stroke-width="2"/>
+            <line x1="-70" y1="30" x2="70" y2="30" stroke="#3a2010" stroke-width="2"/>
+          </g>` +
+          // ground/cobble
+          `<rect x="0" y="240" width="400" height="40" fill="#2a1810"/>
+           ${[40,100,160,220,280,340].map(x => `<rect x="${x}" y="245" width="40" height="10" fill="#3a2818" stroke="#1a0a08" stroke-width="0.5"/>`).join("")}` +
+          SCENE.badge("Ngày 30 Tháng 4, 1975", 110, 38)
+        ),
+        text: `<p>The American War — called the <b>Vietnam War</b> in the U.S. — ends. The iron gates of the Reunification Palace fall in Sài Gòn.</p>
+        <p>North and South join again as one country. The next year, the city is renamed Hồ Chí Minh City. <b>April 30</b> is now Reunification Day — a public holiday across Vietnam.</p>`
+      },
+      {
+        narrator: "A Layered City",
+        visual: SCENE.bg(["#ffd9a8", "#f0a888", "#5a3a40"],
+          // Notre Dame Cathedral silhouette (left)
+          `<g transform="translate(80,110)">
+            <rect x="-30" y="20" width="60" height="120" fill="#c85040" stroke="#5a1010" stroke-width="1.5"/>
+            <polygon points="-30,20 0,-10 30,20" fill="#a83828" stroke="#5a1010" stroke-width="1.5"/>
+            <rect x="-15" y="-30" width="30" height="50" fill="#a83828"/>
+            <polygon points="-15,-30 0,-55 15,-30" fill="#7a2818"/>
+            <circle cx="0" cy="-15" r="3" fill="#ffcd00"/>
+            <rect x="-8" y="60" width="16" height="30" fill="#3a1810" rx="2"/>
+            <line x1="-30" y1="80" x2="30" y2="80" stroke="#5a1010" stroke-width="1"/>
+          </g>` +
+          // skyscraper (middle)
+          `<g transform="translate(200,80)">
+            <rect x="-22" y="0" width="44" height="170" fill="#3a4a6a" stroke="#1a2030" stroke-width="1"/>
+            ${[10,30,50,70,90,110,130,150].map(y => `<rect x="-18" y="${y}" width="14" height="14" fill="#aae0f0" opacity="0.7"/><rect x="4" y="${y}" width="14" height="14" fill="#88c8e8" opacity="0.7"/>`).join("")}
+            <rect x="-3" y="-15" width="6" height="20" fill="#3a4a6a"/>
+          </g>` +
+          // Opera House (right)
+          `<g transform="translate(320,140)">
+            <rect x="-40" y="0" width="80" height="100" fill="#dcc086" stroke="#5a3010" stroke-width="1"/>
+            <rect x="-40" y="0" width="80" height="14" fill="#a85020"/>
+            ${[-30,-10,10,30].map(x => `<rect x="${x-3}" y="20" width="6" height="40" fill="#5a3010"/>`).join("")}
+            <polygon points="-40,0 0,-25 40,0" fill="#a85020" stroke="#5a3010" stroke-width="1"/>
+          </g>` +
+          // scooters streaming below
+          `<g transform="translate(0,235)">
+            ${[40,90,140,190,240,290,340].map(x => `<text x="${x}" y="20" font-size="22">🛵</text>`).join("")}
+          </g>` +
+          SCENE.badge("Two centuries layered", 105, 38)
+        ),
+        text: `<p>Two centuries layer here. The French left <b>Notre Dame Cathedral</b> and the <b>Saigon Opera House</b>. Wars left memorials. Modern Vietnam adds neon, glass towers, and <b>scooters by the millions</b>.</p>
+        <p>Walk a single block and you walk through it all.</p>`
+      },
+      {
+        narrator: "Tết Nguyên Đán — Lunar New Year",
+        visual: SCENE.bg(["#5a1010", "#c8302a", "#7a1818"],
+          // golden glow
+          `<circle cx="200" cy="80" r="60" fill="#ffcd00" opacity="0.25"/>` +
+          // fireworks/sparkles
+          [
+            {x: 100, y: 60}, {x: 320, y: 70}, {x: 60, y: 130}, {x: 350, y: 130},
+          ].map(s => `
+            <g transform="translate(${s.x},${s.y})" opacity="0.85">
+              <line x1="-15" y1="0" x2="15" y2="0" stroke="#ffcd00" stroke-width="2"/>
+              <line x1="0" y1="-15" x2="0" y2="15" stroke="#ffcd00" stroke-width="2"/>
+              <line x1="-10" y1="-10" x2="10" y2="10" stroke="#ffcd00" stroke-width="1.5"/>
+              <line x1="-10" y1="10" x2="10" y2="-10" stroke="#ffcd00" stroke-width="1.5"/>
+              <circle r="3" fill="#fff"/>
+            </g>
+          `).join("") +
+          // red envelope (lì xì)
+          `<g transform="translate(130,180)">
+            <rect x="-32" y="-22" width="64" height="44" rx="4" fill="#da251d" stroke="#ffcd00" stroke-width="2"/>
+            <text x="0" y="6" text-anchor="middle" font-size="22" fill="#ffcd00" font-weight="bold" font-family="Segoe UI,sans-serif">福</text>
+          </g>` +
+          // kumquat tree
+          `<g transform="translate(280,200)">
+            <rect x="-4" y="0" width="8" height="40" fill="#5a3010"/>
+            <ellipse cx="0" cy="-10" rx="40" ry="40" fill="#3a7a30"/>
+            ${[-25,-10,5,18,-15,10,-20,20,0].map((x, i) => `<circle cx="${x}" cy="${-30 + (i*4)%30}" r="4" fill="#ff8830"/>`).join("")}
+          </g>` +
+          SCENE.badge("Tết — Lunar New Year", 105, 38)
+        ),
+        text: `<p>The biggest holiday is <b>Tết Nguyên Đán</b> — Lunar New Year. Families clean their homes, settle debts, decorate with <b>kumquat and peach trees</b>, give children <i>lì xì</i> (red envelopes of lucky money), and visit ancestors' graves.</p>
+        <p>Vietnam today: nearly <b>100 million people</b>. Young, fast-growing, proud of two thousand years of resilience.</p>`
+      }
+    ],
+    challenge: {
+      type: "order",
+      title: "Place these key moments in Vietnamese history in order",
+      instructions: "Drag to arrange from earliest to most recent. (You're piecing together about 2,000 years.)",
+      items: [
+        { id: 1, text: "40 CE — The Trưng Sisters lead a rebellion against Chinese Han rule." },
+        { id: 2, text: "1010 — Emperor Lý Thái Tổ founds Thăng Long (modern Hà Nội)." },
+        { id: 3, text: "1288 — Trần dynasty defeats the Mongols at the Battle of Bạch Đằng River." },
+        { id: 4, text: "1887 — French colonial rule formally established as 'Indochina.'" },
+        { id: 5, text: "1945 — Hồ Chí Minh declares Vietnamese independence in Hà Nội." },
+        { id: 6, text: "1975 — End of the American War; north and south Vietnam reunified." },
+        { id: 7, text: "1986 — 'Đổi Mới' reforms open the economy; modern era begins." },
+      ],
+      explain: "These seven moments span almost two thousand years. A pattern recurs: a foreign power arrives, Vietnam endures, and eventually reunites. The country's modern identity — Confucian heritage, Buddhist majority, French-influenced food and architecture, fast-growing economy — is built from all of these layers, not just the most recent ones."
+    }
+  },
+];
+
+// --- VIETNAM MAP SVG (stylized) ---
+const MAP_SVG = `
+<svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- water -->
+  <rect x="0" y="0" width="400" height="500" fill="#a8c9c9" opacity="0.0"/>
+  <!-- Vietnam outline (stylized S-shape) -->
+  <path d="
+    M 215 50
+    Q 240 60 245 90
+    Q 260 110 255 140
+    Q 265 165 245 185
+    Q 220 200 230 220
+    Q 245 245 230 270
+    Q 215 290 230 310
+    Q 250 330 235 355
+    Q 215 380 200 400
+    Q 175 425 165 410
+    Q 175 390 195 375
+    Q 210 360 215 340
+    Q 215 320 200 305
+    Q 195 280 215 260
+    Q 230 235 215 210
+    Q 200 185 220 165
+    Q 240 145 230 125
+    Q 220 105 215 80
+    Z
+  " fill="#dfe9c8" stroke="#7a8a4a" stroke-width="2"/>
+
+  <!-- decorative rivers -->
+  <path d="M 220 80 Q 230 110 215 130" stroke="#6a9bbb" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M 200 380 Q 195 395 175 405" stroke="#6a9bbb" stroke-width="2" fill="none" opacity="0.6"/>
+
+  <!-- compass rose -->
+  <g transform="translate(50, 50)" opacity="0.6">
+    <circle r="18" fill="none" stroke="#7a5a30" stroke-width="1"/>
+    <path d="M 0 -18 L 4 0 L 0 18 L -4 0 Z" fill="#7a5a30"/>
+    <text x="0" y="-22" text-anchor="middle" font-size="10" fill="#7a5a30">N</text>
+  </g>
+
+  <!-- pins inserted here by JS -->
+  <g id="pin-layer"></g>
+</svg>
+`;
+
+// ============================================================
+//  RENDERING
+// ============================================================
+const $app = document.getElementById("app");
+
+function show(html) {
+  $app.innerHTML = `<div class="scene">${html}</div>`;
+}
+
+// --- TITLE SCREEN ---
+function renderTitle() {
+  show(`
+    <div class="title-screen">
+      <svg class="title-star" viewBox="0 0 100 100">
+        <polygon fill="currentColor"
+          points="50,5 61,38 96,38 68,59 79,93 50,72 21,93 32,59 4,38 39,38"/>
+      </svg>
+      <h1>Hành Trình Việt Nam</h1>
+      <div class="subtitle">A Journey Through Vietnam</div>
+      <p>You hold an empty passport. Six destinations wait — from a thousand-year capital
+      in the north, to dragon-formed islands, to a lantern-lit trading town, to the southern
+      delta where rivers flow into the sea. At each stop you'll learn a piece of Vietnamese
+      culture and history, complete a small challenge, and earn a stamp.</p>
+      <p style="margin-top:8px; font-size:14px; opacity:0.85;">
+      Designed for a curious beginner. Allow 15–20 minutes.</p>
+      <button class="btn" onclick="renderMap()">Begin the Journey</button>
+    </div>
+  `);
+}
+
+// --- MAP SCREEN ---
+function renderMap() {
+  const visitedCount = Object.keys(state.visited).length;
+  const allDone = visitedCount === LOCATIONS.length;
+
+  show(`
+    <div class="map-screen">
+      <div class="map-area">
+        <div class="map-title">Việt Nam</div>
+        ${MAP_SVG}
+        <div class="map-footer">
+          ${allDone
+            ? `<button class="btn pulse" onclick="renderEnding()">Complete Your Journey →</button>`
+            : `<span style="background:rgba(245,236,217,0.85); padding:6px 14px; border-radius:999px; font-size:13px;">
+                Click a glowing pin to visit (${visitedCount} / ${LOCATIONS.length})
+              </span>`}
+        </div>
+      </div>
+      <div class="passport">
+        <h2>📔 My Passport</h2>
+        <div class="stamp-grid">
+          ${LOCATIONS.map(loc => {
+            const earned = state.visited[loc.id];
+            return `<div class="stamp ${earned ? "earned" : ""}">
+              ${earned
+                ? `<div class="icon">${loc.icon}</div><div>${loc.name}</div>`
+                : `<div style="font-size:22px;">?</div><div>—</div>`
+              }
+            </div>`;
+          }).join("")}
+        </div>
+        <div class="souvenirs">
+          <h3>Souvenirs collected</h3>
+          <ul>
+            ${state.souvenirs.length === 0
+              ? `<li class="empty">(none yet)</li>`
+              : state.souvenirs.map(s => `<li>${s}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    </div>
+  `);
+
+  // Inject pins into the SVG
+  const pinLayer = document.getElementById("pin-layer");
+  LOCATIONS.forEach(loc => {
+    const visited = state.visited[loc.id];
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.classList.add("pin");
+    if (visited) g.classList.add("visited");
+    g.setAttribute("transform", `translate(${loc.x}, ${loc.y})`);
+    g.innerHTML = `
+      <circle class="pin-halo" r="15" fill="${visited ? '#2f7a5f' : '#da251d'}" opacity="0.25"></circle>
+      <circle class="pin-main" r="9" fill="${visited ? '#2f7a5f' : '#da251d'}" stroke="#fff" stroke-width="2"></circle>
+      <circle r="3" fill="#fff"/>
+      <text class="pin-label" x="18" y="5">${loc.name}</text>
+    `;
+    g.addEventListener("click", () => renderLocation(loc.id));
+    pinLayer.appendChild(g);
+  });
+}
+
+// --- LOCATION SCREEN (intro + challenge) ---
+function renderLocation(id) {
+  const loc = LOCATIONS.find(l => l.id === id);
+  state.currentLocation = loc;
+  state.currentBeat = 0;
+  renderBeat();
+}
+
+function renderBeat() {
+  const loc = state.currentLocation;
+  const i = state.currentBeat;
+  const beat = loc.beats[i];
+  const isLast = i === loc.beats.length - 1;
+  const isFirst = i === 0;
+  const visited = state.visited[loc.id];
+
+  show(`
+    <div class="location">
+      <div class="location-header">
+        <h1>${loc.icon} ${loc.en}</h1>
+        <div class="vn-name">${loc.name} — <i>${loc.tagline}</i></div>
+      </div>
+      <div class="beat-stage">
+        <div class="beat-visual">${beat.visual}</div>
+        <div class="beat-text">
+          ${beat.narrator ? `<div class="narrator">${beat.narrator}</div>` : ''}
+          ${beat.text}
+        </div>
+      </div>
+      <div class="beat-controls">
+        <button class="btn secondary dark" onclick="${isFirst ? 'renderMap()' : 'prevBeat()'}">
+          ${isFirst ? '← Back to Map' : '← Previous'}
+        </button>
+        <div class="beat-progress" title="Scene ${i + 1} of ${loc.beats.length}">
+          ${loc.beats.map((_, j) =>
+            `<span class="beat-dot ${j === i ? 'active' : j < i ? 'done' : ''}"></span>`
+          ).join('')}
+        </div>
+        <button class="btn" onclick="${isLast ? 'renderChallenge()' : 'nextBeat()'}">
+          ${isLast
+            ? (visited ? 'Replay Challenge →' : 'Begin Challenge →')
+            : 'Next Scene →'}
+        </button>
+      </div>
+    </div>
+  `);
+}
+
+function nextBeat() {
+  state.currentBeat++;
+  renderBeat();
+}
+
+function prevBeat() {
+  if (state.currentBeat > 0) {
+    state.currentBeat--;
+    renderBeat();
+  }
+}
+
+// --- CHALLENGE DISPATCHER ---
+function renderChallenge() {
+  const loc = state.currentLocation;
+  const ch = loc.challenge;
+
+  show(`
+    <div class="location">
+      <div class="location-header">
+        <h1>${loc.icon} ${loc.en} — Challenge</h1>
+        <div class="vn-name">${ch.title}</div>
+      </div>
+      <div class="location-body" id="challenge-body">
+        ${getChallengeHTML(ch)}
+      </div>
+      <div class="location-footer" id="challenge-footer">
+        <button class="btn secondary dark" onclick="renderLocation('${loc.id}')">← Back</button>
+        <span id="footer-status"></span>
+      </div>
+    </div>
+  `);
+
+  initChallenge(ch);
+}
+
+function getChallengeHTML(ch) {
+  if (ch.type === "quiz") return renderQuizHTML(ch);
+  if (ch.type === "order") return renderOrderHTML(ch);
+  if (ch.type === "match") return renderMatchHTML(ch);
+  if (ch.type === "lanterns") return renderLanternsHTML(ch);
+  return `<p>Unknown challenge type.</p>`;
+}
+
+function initChallenge(ch) {
+  if (ch.type === "quiz") initQuiz(ch);
+  if (ch.type === "order") initOrder(ch);
+  if (ch.type === "match") initMatch(ch);
+  if (ch.type === "lanterns") initLanterns(ch);
+}
+
+// ============================================================
+//  CHALLENGE: QUIZ (multi-question with explanations)
+// ============================================================
+let quizState;
+
+function renderQuizHTML(ch) {
+  return `
+    <div class="challenge">
+      <div id="quiz-progress" style="margin-bottom: 14px;"></div>
+      <div id="quiz-content"></div>
+    </div>
+  `;
+}
+
+function initQuiz(ch) {
+  quizState = { ch, idx: 0, score: 0 };
+  drawQuizQuestion();
+}
+
+function drawQuizQuestion() {
+  const { ch, idx } = quizState;
+  const q = ch.questions[idx];
+
+  document.getElementById("quiz-progress").innerHTML =
+    ch.questions.map((_, i) =>
+      `<span class="progress-pip ${i < idx ? 'done' : i === idx ? 'active' : ''}"></span>`
+    ).join("") +
+    `<span style="margin-left:10px; font-size:13px; color:#6a5a30;">Question ${idx + 1} of ${ch.questions.length}</span>`;
+
+  document.getElementById("quiz-content").innerHTML = `
+    <div class="question">${q.q}</div>
+    <div class="options">
+      ${q.options.map((opt, i) =>
+        `<button class="option" data-i="${i}">${opt}</button>`
+      ).join("")}
+    </div>
+    <div id="quiz-feedback"></div>
+  `;
+
+  document.querySelectorAll(".option").forEach(btn => {
+    btn.addEventListener("click", () => answerQuiz(parseInt(btn.dataset.i)));
+  });
+}
+
+function answerQuiz(chosen) {
+  const { ch, idx } = quizState;
+  const q = ch.questions[idx];
+  const correct = chosen === q.correct;
+  if (correct) quizState.score++;
+
+  document.querySelectorAll(".option").forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === chosen) btn.classList.add("wrong");
+  });
+
+  const fb = document.getElementById("quiz-feedback");
+  fb.innerHTML = `
+    <div class="feedback ${correct ? 'correct' : 'wrong'}">
+      <b>${correct ? '✓ Correct!' : '✗ Not quite.'}</b><br>
+      ${q.explain}
+    </div>
+    <div style="margin-top:14px; text-align:right;">
+      <button class="btn" id="quiz-next">
+        ${idx + 1 < ch.questions.length ? 'Next Question →' : 'Finish Challenge →'}
+      </button>
+    </div>
+  `;
+
+  document.getElementById("quiz-next").addEventListener("click", () => {
+    if (quizState.idx + 1 < ch.questions.length) {
+      quizState.idx++;
+      drawQuizQuestion();
+    } else {
+      const passed = quizState.score >= Math.ceil(ch.questions.length * 0.6);
+      finishChallenge(passed, `You got ${quizState.score} of ${ch.questions.length} correct.`);
+    }
+  });
+}
+
+// ============================================================
+//  CHALLENGE: ORDER (drag-to-reorder)
+// ============================================================
+let orderState;
+
+function renderOrderHTML(ch) {
+  // shuffle the items
+  const shuffled = [...ch.items].sort(() => Math.random() - 0.5);
+  return `
+    <div class="challenge">
+      <p style="margin-bottom: 14px;">${ch.instructions}</p>
+      <div class="order-list" id="order-list">
+        ${shuffled.map(item =>
+          `<div class="order-item" draggable="true" data-id="${item.id}">
+            <div class="order-num">?</div>
+            <div>${item.text}</div>
+          </div>`
+        ).join("")}
+      </div>
+      <div class="row">
+        <button class="btn" id="order-check">Check My Order</button>
+        <span id="order-feedback" style="font-size:14px;"></span>
+      </div>
+    </div>
+  `;
+}
+
+function initOrder(ch) {
+  orderState = { ch };
+  const list = document.getElementById("order-list");
+  let dragged = null;
+
+  function refreshNumbers() {
+    [...list.children].forEach((el, i) => {
+      el.querySelector(".order-num").textContent = i + 1;
+    });
+  }
+  refreshNumbers();
+
+  list.addEventListener("dragstart", e => {
+    dragged = e.target.closest(".order-item");
+    dragged.classList.add("dragging");
+  });
+  list.addEventListener("dragend", e => {
+    if (dragged) dragged.classList.remove("dragging");
+    [...list.children].forEach(c => c.classList.remove("drop-above"));
+    refreshNumbers();
+  });
+  list.addEventListener("dragover", e => {
+    e.preventDefault();
+    const target = e.target.closest(".order-item");
+    if (!target || target === dragged) return;
+    [...list.children].forEach(c => c.classList.remove("drop-above"));
+    target.classList.add("drop-above");
+    const rect = target.getBoundingClientRect();
+    const before = (e.clientY - rect.top) < rect.height / 2;
+    if (before) list.insertBefore(dragged, target);
+    else list.insertBefore(dragged, target.nextSibling);
+  });
+
+  document.getElementById("order-check").addEventListener("click", () => {
+    const ids = [...list.children].map(c => parseInt(c.dataset.id));
+    const correctOrder = ch.items.map(it => it.id);
+    const isCorrect = ids.every((id, i) => id === correctOrder[i]);
+    const fb = document.getElementById("order-feedback");
+    if (isCorrect) {
+      fb.innerHTML = `<span style="color: var(--jade); font-weight: bold;">✓ Perfect order!</span>`;
+      finishChallenge(true, "You arranged the events correctly.");
+    } else {
+      // count how many are in correct position
+      const matches = ids.filter((id, i) => id === correctOrder[i]).length;
+      fb.innerHTML = `<span style="color: var(--red);">${matches} of ${ids.length} are in the right place. Keep trying.</span>`;
+    }
+  });
+}
+
+// ============================================================
+//  CHALLENGE: MATCH PAIRS
+// ============================================================
+let matchState;
+
+function renderMatchHTML(ch) {
+  // shuffle right column
+  const lefts = ch.pairs.map((p, i) => ({ ...p, idx: i }));
+  const rights = [...lefts].sort(() => Math.random() - 0.5);
+  return `
+    <div class="challenge">
+      <p style="margin-bottom: 14px;">${ch.instructions}</p>
+      <div class="match-grid">
+        <div class="match-col">
+          <h3>Left</h3>
+          ${lefts.map(p =>
+            `<div class="match-item match-left" data-idx="${p.idx}">${p.left}</div>`
+          ).join("")}
+        </div>
+        <div class="match-col">
+          <h3>Right</h3>
+          ${rights.map(p =>
+            `<div class="match-item match-right" data-idx="${p.idx}">${p.right}</div>`
+          ).join("")}
+        </div>
+      </div>
+      <div id="match-feedback" style="margin-top:14px;"></div>
+    </div>
+  `;
+}
+
+function initMatch(ch) {
+  matchState = { ch, selectedLeft: null, matched: 0, mistakes: 0 };
+
+  document.querySelectorAll(".match-left").forEach(el => {
+    el.addEventListener("click", () => {
+      if (el.classList.contains("matched")) return;
+      document.querySelectorAll(".match-left").forEach(o => o.classList.remove("selected"));
+      el.classList.add("selected");
+      matchState.selectedLeft = el;
+    });
+  });
+
+  document.querySelectorAll(".match-right").forEach(el => {
+    el.addEventListener("click", () => {
+      if (el.classList.contains("matched")) return;
+      if (!matchState.selectedLeft) return;
+      const li = matchState.selectedLeft;
+      const same = li.dataset.idx === el.dataset.idx;
+      if (same) {
+        li.classList.add("matched"); li.classList.remove("selected");
+        el.classList.add("matched");
+        matchState.selectedLeft = null;
+        matchState.matched++;
+        if (matchState.matched === ch.pairs.length) {
+          finishChallenge(true, `All ${ch.pairs.length} pairs matched.`);
+        }
+      } else {
+        matchState.mistakes++;
+        el.classList.add("wrong");
+        setTimeout(() => el.classList.remove("wrong"), 350);
+      }
+    });
+  });
+}
+
+// ============================================================
+//  CHALLENGE: LANTERNS (click correct items)
+// ============================================================
+let lanternState;
+
+function renderLanternsHTML(ch) {
+  return `
+    <div class="challenge">
+      <p style="margin-bottom: 14px;">${ch.instructions}</p>
+      <div class="lantern-area" id="lantern-area"></div>
+      <div class="lantern-tracker" id="lantern-tracker"></div>
+    </div>
+  `;
+}
+
+function initLanterns(ch) {
+  lanternState = { ch, popped: 0, wrongClicks: 0 };
+  const area = document.getElementById("lantern-area");
+  const items = [...ch.items].sort(() => Math.random() - 0.5);
+  // Place lanterns randomly within the area
+  const positions = [];
+  items.forEach((item, i) => {
+    let x, y, attempts = 0;
+    do {
+      x = 20 + Math.random() * (area.clientWidth - 80 - 40);
+      y = 20 + Math.random() * (area.clientHeight - 90 - 40);
+      attempts++;
+    } while (positions.some(p => Math.hypot(p.x - x, p.y - y) < 80) && attempts < 50);
+    positions.push({ x, y });
+
+    const el = document.createElement("div");
+    el.className = "lantern";
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.innerHTML = `
+      <div class="glow">${item.icon}</div>
+      <div style="font-size:11px; margin-top:2px;">${item.label}</div>
+    `;
+    el.addEventListener("click", () => clickLantern(el, item));
+    area.appendChild(el);
+  });
+
+  updateLanternTracker();
+}
+
+function updateLanternTracker() {
+  const need = lanternState.ch.items.filter(i => i.correct).length;
+  document.getElementById("lantern-tracker").innerHTML = `
+    Correct: <b style="color: var(--jade);">${lanternState.popped} / ${need}</b>
+    &nbsp;&nbsp; Wrong clicks: <b style="color: var(--red);">${lanternState.wrongClicks}</b>
+  `;
+}
+
+function clickLantern(el, item) {
+  if (item.correct) {
+    el.classList.add("popped");
+    lanternState.popped++;
+    updateLanternTracker();
+    const need = lanternState.ch.items.filter(i => i.correct).length;
+    if (lanternState.popped === need) {
+      const passed = lanternState.wrongClicks <= 1;
+      finishChallenge(passed, passed
+        ? "You lit the festival beautifully."
+        : "You lit them all — but you also clicked some that didn't belong.");
+    }
+  } else {
+    el.classList.add("wrong");
+    lanternState.wrongClicks++;
+    updateLanternTracker();
+    setTimeout(() => el.classList.remove("wrong"), 600);
+  }
+}
+
+// ============================================================
+//  FINISH A CHALLENGE
+// ============================================================
+function finishChallenge(passed, summary) {
+  const loc = state.currentLocation;
+  const isFirstTime = !state.visited[loc.id];
+  if (passed && isFirstTime) {
+    state.visited[loc.id] = true;
+    state.souvenirs.push(loc.souvenir);
+  }
+
+  const body = document.getElementById("challenge-body");
+  body.innerHTML = `
+    <div class="feedback ${passed ? 'correct' : 'wrong'}" style="font-size:16px;">
+      <b style="font-size:18px;">${passed ? '🌟 Challenge complete!' : 'Not quite — try again?'}</b>
+      <p style="margin-top: 8px;">${summary}</p>
+    </div>
+    <div class="location-body" style="padding-left:0; padding-right:0;">
+      <h2>What you learned</h2>
+      <p>${loc.challenge.explain || ''}</p>
+      ${passed && isFirstTime ? `
+        <div style="margin-top:18px; padding:16px; background: var(--paper-dark); border-radius:10px; border-left: 4px solid var(--gold);">
+          <b>Stamp earned:</b> ${loc.icon} ${loc.name}<br>
+          <b>Souvenir added:</b> ${loc.souvenir}
+        </div>
+      ` : ''}
+      ${passed && !isFirstTime ? `<p style="font-style:italic; color:#5a4a30;">(You had already earned this stamp on a previous visit.)</p>` : ''}
+    </div>
+  `;
+
+  document.getElementById("challenge-footer").innerHTML = passed
+    ? `<button class="btn secondary dark" onclick="renderLocation('${loc.id}')">Re-read about ${loc.name}</button>
+       <button class="btn" onclick="renderMap()">Return to Map →</button>`
+    : `<button class="btn secondary dark" onclick="renderLocation('${loc.id}')">Back</button>
+       <button class="btn" onclick="renderChallenge()">Try Again</button>`;
+}
+
+// ============================================================
+//  ENDING SCREEN
+// ============================================================
+function renderEnding() {
+  show(`
+    <div class="ending">
+      <h1>Hành Trình Hoàn Tất</h1>
+      <div class="vn-h1">Journey Complete</div>
+
+      <div class="reflection">
+        <p>You've traveled the length of Vietnam — from the Confucian study halls of Hà Nội,
+        to the dragon islands of Hạ Long, through the imperial city of Huế and the lantern alleys
+        of Hội An, into the rice-thick Mekong Delta, and finally to the southern metropolis of
+        Sài Gòn.</p>
+
+        <p>If one thread runs through it all, it might be this: Vietnam has been invaded, divided,
+        colonized, and reunified — and yet its everyday culture is remarkably <i>warm</i>.
+        Tết Nguyên Đán still brings families together to honor ancestors. Tết Trung Thu still
+        gives lanterns to children. The áo dài still appears at weddings. Phở is still simmered
+        all night. Floating markets still convene at dawn.</p>
+
+        <p>You've barely scratched the surface — but you've now met the country properly:
+        not as a war, not as a vacation poster, but as a culture with two thousand years of
+        memory and a hundred million people living it forward.</p>
+
+        <p style="text-align:center; font-style:italic; color:var(--red); margin-top:20px;">
+        "Một cây làm chẳng nên non, ba cây chụm lại nên hòn núi cao."<br>
+        <span style="font-style:normal; color:var(--ink); font-size:14px;">
+        ("One tree alone is not a forest; three trees together make a mountain." — a Vietnamese proverb on community.)
+        </span></p>
+      </div>
+
+      <h2 style="color: var(--ink); margin-bottom: 8px;">Your Souvenirs</h2>
+      <div class="recap">
+        ${LOCATIONS.map(loc => `
+          <div class="recap-card">
+            <div class="icon">${loc.icon}</div>
+            <div class="vn">${loc.name}</div>
+            <div class="en">${loc.en}</div>
+            <div style="margin-top:6px; font-size:12px;">${loc.souvenir}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="row" style="justify-content:center; margin-top: 20px;">
+        <button class="btn secondary dark" onclick="resetAndRestart()">Restart Journey</button>
+        <button class="btn" onclick="renderMap()">Return to Map</button>
+      </div>
+
+      <p style="margin-top: 24px; font-size: 13px; color: #6a5a30; max-width: 600px; margin-left: auto; margin-right: auto;">
+        <b>Want to learn more?</b> Try Vietnamese food at a local restaurant (phở or bún bò Huế are great starting points),
+        watch the documentary <i>The Vietnam War</i> by Ken Burns and Lynn Novick, or read
+        <i>The Sympathizer</i> by Viet Thanh Nguyen for a Vietnamese-American perspective on the war's aftermath.
+      </p>
+    </div>
+  `);
+}
+
+function resetAndRestart() {
+  state.visited = {};
+  state.souvenirs = [];
+  state.currentLocation = null;
+  renderTitle();
+}
+
+// boot
+renderTitle();
+</script>
+</body>
+</html>

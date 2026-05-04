@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder — A Business Simulator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 16px;
+    line-height: 1.5;
+  }
+  .container { max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 32px; color: #f1f5f9; margin-bottom: 4px; letter-spacing: -0.5px; }
+  h2 { font-size: 22px; color: #f1f5f9; margin-bottom: 12px; }
+  h3 { font-size: 16px; color: #cbd5e1; margin-bottom: 8px; }
+  p { margin-bottom: 12px; color: #cbd5e1; }
+  .muted { color: #94a3b8; font-size: 13px; }
+  .small { font-size: 13px; }
+  .tagline { color: #a78bfa; margin-bottom: 24px; font-size: 15px; }
+
+  .card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card.tight { padding: 16px; }
+
+  .grid { display: grid; gap: 12px; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 800px) { .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 500px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+  .option {
+    background: rgba(15, 23, 42, 0.6);
+    border: 2px solid rgba(148, 163, 184, 0.15);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .option:hover { border-color: #818cf8; transform: translateY(-2px); }
+  .option.selected { border-color: #a78bfa; background: rgba(167, 139, 250, 0.1); }
+  .option .title { font-weight: 600; color: #f1f5f9; margin-bottom: 4px; }
+  .option .meta { font-size: 12px; color: #94a3b8; }
+  .option .desc { font-size: 13px; color: #cbd5e1; margin-top: 6px; }
+
+  button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  button:hover:not(:disabled) { background: #818cf8; transform: translateY(-1px); }
+  button:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+  button.primary { background: #10b981; padding: 14px 28px; font-size: 16px; }
+  button.primary:hover:not(:disabled) { background: #34d399; }
+  button.danger { background: #dc2626; }
+  button.danger:hover:not(:disabled) { background: #ef4444; }
+  button.ghost { background: transparent; border: 1px solid #475569; color: #cbd5e1; }
+  button.ghost:hover:not(:disabled) { background: rgba(99, 102, 241, 0.1); border-color: #818cf8; }
+  button.small { padding: 6px 12px; font-size: 12px; }
+
+  input[type=text], input[type=number] {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid #475569;
+    border-radius: 6px;
+    color: #f1f5f9;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    width: 100%;
+  }
+  input:focus { outline: none; border-color: #a78bfa; }
+
+  .stat {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+  }
+  .stat .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 4px; }
+  .stat .value { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+  .stat .sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .stat.good .value { color: #34d399; }
+  .stat.bad .value { color: #f87171; }
+  .stat.warn .value { color: #fbbf24; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid rgba(148, 163, 184, 0.15); }
+  .tab {
+    padding: 10px 16px;
+    cursor: pointer;
+    color: #94a3b8;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-size: 14px;
+  }
+  .tab:hover { color: #cbd5e1; }
+  .tab.active { color: #a78bfa; border-bottom-color: #a78bfa; }
+
+  .pl-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+    font-size: 14px;
+  }
+  .pl-row.total { font-weight: 700; border-top: 1px solid #475569; border-bottom: none; padding-top: 10px; margin-top: 6px; }
+  .pl-row .pos { color: #34d399; }
+  .pl-row .neg { color: #f87171; }
+  .pl-row.indent { padding-left: 16px; color: #94a3b8; font-size: 13px; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+  }
+  .pill.green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .pill.red   { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+  .pill.amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+  .info-box {
+    background: rgba(99, 102, 241, 0.08);
+    border-left: 3px solid #818cf8;
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin: 10px 0;
+    font-size: 13px;
+    color: #c7d2fe;
+  }
+  .info-box .head { font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+
+  .event {
+    background: rgba(245, 158, 11, 0.1);
+    border-left: 3px solid #f59e0b;
+    padding: 10px 14px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .event.good { background: rgba(16, 185, 129, 0.1); border-left-color: #10b981; }
+  .event.bad  { background: rgba(239, 68, 68, 0.1);  border-left-color: #ef4444; }
+
+  .header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .biz-id .name { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+  .biz-id .sub { font-size: 13px; color: #94a3b8; }
+
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .action-row:last-child { border-bottom: none; }
+  .action-row .meta { flex: 1; min-width: 220px; }
+  .action-row .meta .name { font-weight: 600; color: #f1f5f9; }
+  .action-row .meta .desc { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .action-row .ctrl { display: flex; gap: 8px; align-items: center; }
+
+  .info-toggle {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    text-align: center;
+    line-height: 18px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 6px;
+    user-select: none;
+  }
+  .info-toggle:hover { background: rgba(99, 102, 241, 0.4); }
+
+  .slider { width: 140px; }
+  input[type=range] { accent-color: #a78bfa; }
+
+  .footer-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .glossary-item {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  }
+  .glossary-item .term { font-weight: 700; color: #c7d2fe; margin-bottom: 4px; }
+  .glossary-item .def  { font-size: 13px; color: #cbd5e1; }
+
+  .progress-track {
+    height: 6px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #a78bfa);
+    transition: width 0.3s;
+  }
+
+  .end-card { text-align: center; padding: 40px 24px; }
+  .end-card .verdict { font-size: 36px; font-weight: 800; margin-bottom: 8px; }
+  .end-card .verdict.win { color: #34d399; }
+  .end-card .verdict.lose { color: #f87171; }
+  .end-card .verdict.ok { color: #fbbf24; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+// ============================================================================
+// GAME DATA
+// ============================================================================
+
+const ENTITIES = {
+  'sole-prop': {
+    name: 'Sole Proprietorship',
+    setupCost: 0,
+    setupTime: 0,
+    liabilityRisk: 'high',
+    taxRate: 0.22,
+    seTax: 0.153, // self-employment tax
+    description: 'You and the business are legally the same. Cheapest, simplest, but personal assets are at risk.',
+    learnMore: 'No paperwork — start by selling. You report business income on your personal tax return (Schedule C). Downside: if the business gets sued, your house and savings are on the line.',
+  },
+  'llc': {
+    name: 'LLC',
+    setupCost: 300,
+    setupTime: 0,
+    liabilityRisk: 'low',
+    taxRate: 0.22,
+    seTax: 0.153,
+    description: 'Limited Liability Company. Personal assets protected. Modest paperwork and state fees.',
+    learnMore: 'You file articles of organization with the state ($50–$500). Default tax treatment is pass-through (like sole-prop), so you still pay self-employment tax — but if the business is sued, creditors generally cannot reach your personal assets.',
+  },
+  's-corp': {
+    name: 'S-Corp Election',
+    setupCost: 800,
+    setupTime: 0,
+    liabilityRisk: 'low',
+    taxRate: 0.22,
+    seTax: 0.06, // only on "reasonable salary" portion
+    description: 'LLC or corp that elects S-Corp tax status. Saves on self-employment tax once profitable.',
+    learnMore: 'You pay yourself a "reasonable salary" (subject to payroll tax) and take the rest as distributions (no SE tax). Worth it once profit is steady — the savings beat the extra accounting cost. Requires payroll setup.',
+  },
+};
+
+const INDUSTRIES = {
+  cafe: {
+    name: 'Coffee Cafe',
+    description: 'Brick-and-mortar shop. Steady foot traffic, high fixed costs.',
+    startCost: 28000,
+    baseRevenue: 11000,
+    fixedCosts: 6500,
+    cogsRatio: 0.32,
+    marketingPower: 0.8,
+    seasonality: [0.95, 0.92, 1.0, 1.05, 1.1, 0.95, 0.85, 0.85, 1.0, 1.05, 1.1, 1.15],
+    capacityPerEmployee: 10000,
+  },
+  freelance: {
+    name: 'Freelance Consulting',
+    description: 'Solo expert work. Low overhead, capped by your time.',
+    startCost: 2500,
+    baseRevenue: 7000,
+    fixedCosts: 900,
+    cogsRatio: 0.06,
+    marketingPower: 0.6,
+    seasonality: [0.8, 0.95, 1.05, 1.1, 1.05, 0.95, 0.85, 0.85, 1.05, 1.15, 1.05, 0.7],
+    capacityPerEmployee: 6500,
+  },
+  ecom: {
+    name: 'Online Store',
+    description: 'Sell products online. Scales fastest with marketing.',
+    startCost: 9000,
+    baseRevenue: 5000,
+    fixedCosts: 1400,
+    cogsRatio: 0.5,
+    marketingPower: 1.6,
+    seasonality: [0.85, 0.85, 0.95, 1.0, 1.05, 0.95, 0.95, 1.0, 1.05, 1.1, 1.4, 1.5],
+    capacityPerEmployee: 8000,
+  },
+  saas: {
+    name: 'Software / SaaS',
+    description: 'Build once, sell many. Slow start, compounding upside.',
+    startCost: 14000,
+    baseRevenue: 1800,
+    fixedCosts: 1100,
+    cogsRatio: 0.08,
+    marketingPower: 1.3,
+    seasonality: [1, 1, 1, 1, 1, 0.95, 0.95, 1, 1, 1, 1, 1],
+    capacityPerEmployee: 12000,
+    compounds: 1.07, // recurring revenue grows
+  },
+};
+
+const RANDOM_EVENTS = [
+  { id: 'review', minMonth: 3, prob: 0.10, type: 'good',
+    text: 'A local influencer raved about you. Revenue +25% this month.',
+    apply: s => { s.flags.eventRevMult = 1.25; } },
+  { id: 'breakdown', minMonth: 2, prob: 0.10, type: 'bad',
+    text: 'Critical equipment broke. Surprise repair: $1,800.',
+    apply: s => { s.finance.cash -= 1800; s.flags.surpriseExpense = (s.flags.surpriseExpense||0) + 1800; } },
+  { id: 'lawsuit', minMonth: 6, prob: 0.04, type: 'bad',
+    text: 'A customer slipped and is suing. Legal threat: $12,000.',
+    apply: s => {
+      const protected_ = s.business.entity !== 'sole-prop';
+      if (protected_) {
+        s.events.push({ type: 'good', text: '✓ LLC/S-Corp shield held — only $1,500 in legal fees, personal assets safe.' });
+        s.finance.cash -= 1500;
+      } else {
+        s.finance.cash -= 12000;
+        s.events.push({ type: 'bad', text: '⚠ As a sole prop, you paid $12,000 personally. An LLC would have shielded you.' });
+      }
+    } },
+  { id: 'refund', minMonth: 2, prob: 0.07, type: 'bad',
+    text: 'A big customer demanded a refund. Lost $1,200.',
+    apply: s => { s.finance.cash -= 1200; } },
+  { id: 'word', minMonth: 4, prob: 0.08, type: 'good',
+    text: 'Word-of-mouth boost. Next 2 months: +12% revenue.',
+    apply: s => { s.flags.wordMonths = 2; } },
+  { id: 'recession', minMonth: 9, prob: 0.05, type: 'bad',
+    text: 'Local recession. Next 3 months: -20% revenue.',
+    apply: s => { s.flags.recessionMonths = 3; } },
+  { id: 'partnership', minMonth: 5, prob: 0.06, type: 'good',
+    text: 'A partnership opportunity emerged. +$2,500 one-time revenue.',
+    apply: s => { s.finance.cash += 2500; s.flags.bonusRevenue = (s.flags.bonusRevenue||0) + 2500; } },
+];
+
+const GLOSSARY = [
+  ['P&L (Profit & Loss)', 'A monthly summary of revenue minus all expenses. Net income = what you actually earned. The single most important report a founder reads.'],
+  ['Cash flow vs profit', "You can be profitable on paper and still go broke. Profit is an accounting number; cash is what's actually in your account. Many businesses fail not from being unprofitable but from running out of cash."],
+  ['EIN (Employer ID Number)', "A federal tax ID for your business — like a Social Security number for the company. Free from the IRS. Required for an LLC or S-Corp, hiring, or opening a business bank account in the company's name."],
+  ['Operating capital', "The cash you have available to run the business day-to-day. Healthy rule of thumb: keep 3–6 months of expenses in reserve. Below that, one bad month sinks you."],
+  ['Good debt vs bad debt', "Good debt funds something that earns more than the loan costs (e.g., equipment that produces revenue). Bad debt funds non-productive spending or carries higher interest than your business can cover (e.g., credit-card consumer debt)."],
+  ['COGS (Cost of Goods Sold)', "The direct cost to deliver each sale — coffee beans for a cafe, hosting for SaaS. Revenue minus COGS = gross profit."],
+  ['Fixed costs', "Costs that don't change with sales volume — rent, software subscriptions, base salaries. Dangerous when revenue dips because they keep eating cash."],
+  ['Self-employment tax', "Sole-prop and LLC owners pay 15.3% on top of income tax (Social Security + Medicare, normally split with an employer). S-Corp election can reduce this on the distribution portion of pay."],
+  ['Estimated quarterly taxes', "If you owe more than ~$1,000 in tax for the year, the IRS expects payments four times a year (Apr/Jun/Sep/Jan). Skip them and you owe penalties + interest."],
+  ['Itemized deductions (business)', "Legitimate business expenses (supplies, rent, software, marketing, mileage, a portion of home office) reduce your taxable income. Tracked properly, this can save you thousands."],
+  ['Pass-through taxation', "Sole props, LLCs, and S-Corps don't pay federal income tax themselves — profit 'passes through' to your personal return. You're taxed once, at your personal rate."],
+  ['Limited liability', "When the business is a separate legal entity (LLC/Corp), creditors generally can't come after your personal assets if the business is sued or goes bankrupt."],
+  ['Reasonable salary (S-Corp)', "S-Corp owners must pay themselves a market-rate salary before taking distributions, or the IRS will reclassify distributions as wages and bill back-taxes."],
+  ['Runway', "Months of expenses your cash can cover at the current burn rate. Investors live by this number; you should too."],
+];
+
+// ============================================================================
+// STATE
+// ============================================================================
+
+let state;
+function newState() {
+  return {
+    phase: 'setup',
+    setupStep: 0,
+    business: {
+      name: '',
+      entity: null,
+      hasEIN: false,
+      industry: null,
+      capitalSource: null,
+    },
+    finance: {
+      cash: 0,
+      startingCapital: 0,
+      personalContribution: 0,
+      debt: 0,           // bank/equipment loan principal
+      debtRateAnnual: 0,
+      ccDebt: 0,         // credit card
+      ccRateAnnual: 0.24,
+      equipmentValue: 0,
+      taxesAccrued: 0,   // for current year
+      taxesPaid: 0,      // estimated payments made this year
+      lifetimeTaxes: 0,
+      lifetimeRevenue: 0,
+      lifetimeExpenses: 0,
+      lifetimeNet: 0,
+    },
+    ops: {
+      employees: 0,
+      monthlyMarketing: 0,
+      pricingMultiplier: 1.0,
+      productivityBoost: 1.0, // from equipment
+    },
+    time: { month: 1, year: 1 },
+    history: [],   // array of monthly P&L
+    events: [],    // current month events
+    flags: {},     // temporary modifiers
+    unlocks: new Set(),
+    decisionsThisMonth: { lockedActions: new Set() },
+  };
+}
+
+const fmt = n => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString();
+const fmtNoSign = n => '$' + Math.abs(Math.round(n)).toLocaleString();
+const monthName = m => ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][(m-1)%12];
+
+// ============================================================================
+// SETUP FLOW
+// ============================================================================
+
+const SETUP_STEPS = [
+  { id: 'name',     title: 'Name your business',     render: renderSetupName },
+  { id: 'industry', title: 'Pick what you sell',     render: renderSetupIndustry },
+  { id: 'entity',   title: 'Choose a legal entity',  render: renderSetupEntity },
+  { id: 'ein',      title: 'Get an EIN?',            render: renderSetupEIN },
+  { id: 'capital',  title: 'How will you fund it?',  render: renderSetupCapital },
+  { id: 'review',   title: 'Confirm and launch',     render: renderSetupReview },
+];
+
+function renderSetup() {
+  const step = SETUP_STEPS[state.setupStep];
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <h1>Founder</h1>
+    <div class="tagline">A simulator for learning what really makes (or breaks) a new business.</div>
+    <div class="card">
+      <div class="header-bar">
+        <div>
+          <div class="muted small">Step ${state.setupStep + 1} of ${SETUP_STEPS.length}</div>
+          <h2>${step.title}</h2>
+        </div>
+        <div class="muted small">${SETUP_STEPS.map((s,i)=> i===state.setupStep ? '●' : '○').join(' ')}</div>
+      </div>
+      <div id="setup-body"></div>
+      <div class="footer-bar">
+        <button class="ghost" id="back-btn" ${state.setupStep === 0 ? 'disabled' : ''}>← Back</button>
+        <button class="primary" id="next-btn">Continue →</button>
+      </div>
+    </div>
+  `;
+  step.render();
+  document.getElementById('back-btn').onclick = () => { if (state.setupStep > 0) { state.setupStep--; renderSetup(); } };
+  document.getElementById('next-btn').onclick = onSetupNext;
+}
+
+function renderSetupName() {
+  document.getElementById('setup-body').innerHTML = `
+    <p>Every business needs a name. This will appear on your bank account, tax forms, and business cards.</p>
+    <input type="text" id="biz-name" placeholder="e.g. Misty Mountain Coffee" value="${state.business.name}">
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">💡 Why this matters</div>
+      Picking a name is also a chance to check if the .com is available, if there's a trademark conflict, and if your state allows it. Don't print business cards before you check.
+    </div>
+  `;
+  document.getElementById('biz-name').oninput = e => { state.business.name = e.target.value; };
+}
+
+function renderSetupIndustry() {
+  const body = document.getElementById('setup-body');
+  body.innerHTML = `
+    <p>Each industry has a totally different financial shape. Pick one — you'll see the difference quickly.</p>
+    <div class="grid grid-2" id="industry-grid"></div>
+  `;
+  const grid = document.getElementById('industry-grid');
+  for (const [key, ind] of Object.entries(INDUSTRIES)) {
+    const card = document.createElement('div');
+    card.className = 'option' + (state.business.industry === key ? ' selected' : '');
+    card.innerHTML = `
+      <div class="title">${ind.name}</div>
+      <div class="meta">Startup cost: ${fmtNoSign(ind.startCost)} · Base revenue: ~${fmtNoSign(ind.baseRevenue)}/mo</div>
+      <div class="desc">${ind.description}</div>
+    `;
+    card.onclick = () => { state.business.industry = key; renderSetupIndustry(); };
+    grid.appendChild(card);
+  }
+}
+
+function renderSetupEntity() {
+  const body = document.getElementById('setup-body');
+  body.innerHTML = `
+    <p>How you legally organize your business affects taxes, paperwork, and what happens if you get sued.</p>
+    <div class="grid grid-3" id="entity-grid"></div>
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">💡 The trade-off</div>
+      Sole prop: cheapest and fastest, but no liability shield. LLC: small fee for big legal protection — most new founders pick this. S-Corp election: tax savings once you're consistently profitable; not worth the overhead in year one.
+    </div>
+  `;
+  const grid = document.getElementById('entity-grid');
+  for (const [key, ent] of Object.entries(ENTITIES)) {
+    const card = document.createElement('div');
+    card.className = 'option' + (state.business.entity === key ? ' selected' : '');
+    const liabPill = ent.liabilityRisk === 'high'
+      ? '<span class="pill red">No liability shield</span>'
+      : '<span class="pill green">Liability shield</span>';
+    card.innerHTML = `
+      <div class="title">${ent.name}</div>
+      <div class="meta">Setup cost: ${fmtNoSign(ent.setupCost)}</div>
+      <div style="margin:6px 0;">${liabPill}</div>
+      <div class="desc">${ent.description}</div>
+    `;
+    card.onclick = () => { state.business.entity = key; renderSetupEntity(); };
+    grid.appendChild(card);
+  }
+}
+
+function renderSetupEIN() {
+  const ent = state.business.entity;
+  const required = ent === 'llc' || ent === 's-corp';
+  if (required) state.business.hasEIN = true;
+  document.getElementById('setup-body').innerHTML = `
+    <p>An <b>EIN</b> (Employer Identification Number) is a free federal tax ID for your business — like a Social Security number for the company.</p>
+    <div class="grid grid-2">
+      <div class="option ${state.business.hasEIN ? 'selected' : ''}" id="ein-yes">
+        <div class="title">Get an EIN ✓</div>
+        <div class="desc">Free, takes 10 minutes online at IRS.gov. Lets you open a business bank account, separate finances, and hire employees later.</div>
+      </div>
+      <div class="option ${!state.business.hasEIN ? 'selected' : ''} ${required ? 'disabled' : ''}" id="ein-no" style="${required ? 'opacity:0.5;pointer-events:none;' : ''}">
+        <div class="title">Use my SSN</div>
+        <div class="desc">Sole props can technically use a personal SSN, but it leaks your number on every W-9 and blocks proper business banking.</div>
+      </div>
+    </div>
+    ${required ? '<div class="info-box" style="margin-top:14px;"><div class="head">Required</div>An LLC or S-Corp needs an EIN to file taxes correctly. Locked on.</div>' : ''}
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">💡 Why this matters</div>
+      Mixing personal and business money — "commingling funds" — can pierce your LLC's liability shield in court. The EIN + a separate business bank account is what keeps the legal wall up.
+    </div>
+  `;
+  if (!required) {
+    document.getElementById('ein-yes').onclick = () => { state.business.hasEIN = true; renderSetupEIN(); };
+    document.getElementById('ein-no').onclick  = () => { state.business.hasEIN = false; renderSetupEIN(); };
+  }
+}
+
+function renderSetupCapital() {
+  const ind = INDUSTRIES[state.business.industry];
+  const startCost = ind.startCost + ENTITIES[state.business.entity].setupCost;
+  const buffer = Math.max(8000, ind.fixedCosts * 3);
+  const opts = [
+    { id: 'savings',  title: 'Personal savings', desc: 'No interest. No outside pressure. But your money is on the line.', cash: startCost + buffer, debt: 0, ccDebt: 0, contrib: startCost + buffer },
+    { id: 'mixed',    title: 'Savings + small loan', desc: 'Half from savings, $20k bank loan at 8% APR (good debt — used for equipment).', cash: startCost + buffer + 12000, debt: 20000, ccDebt: 0, contrib: Math.max(0, startCost - 8000) },
+    { id: 'cards',    title: 'Mostly credit cards', desc: '$5k from savings, $25k on cards at 24% APR. Fast — and dangerous.', cash: startCost + buffer + 5000, debt: 0, ccDebt: 25000, contrib: 5000 },
+    { id: 'investor', title: 'Friends-and-family investor', desc: 'A relative gives you $40k for 20% of the business. No debt, but you share the upside.', cash: 40000, debt: 0, ccDebt: 0, contrib: 0, investor: 0.2 },
+  ];
+  document.getElementById('setup-body').innerHTML = `
+    <p>You need <b>${fmtNoSign(startCost)}</b> to launch (industry startup + entity filing). How will you fund it — and the operating capital after?</p>
+    <div class="grid grid-2" id="cap-grid"></div>
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">💡 Operating capital</div>
+      Beyond startup costs, you need cash to survive the months before revenue catches up. Underfunded businesses don't fail because of bad ideas — they fail because they ran out of cash before they got there.
+    </div>
+  `;
+  const grid = document.getElementById('cap-grid');
+  for (const o of opts) {
+    const card = document.createElement('div');
+    card.className = 'option' + (state.business.capitalSource === o.id ? ' selected' : '');
+    card.innerHTML = `
+      <div class="title">${o.title}</div>
+      <div class="meta">Starting cash: ${fmtNoSign(o.cash)} · Debt: ${fmtNoSign(o.debt)} · CC: ${fmtNoSign(o.ccDebt)}</div>
+      <div class="desc">${o.desc}</div>
+    `;
+    card.onclick = () => {
+      state.business.capitalSource = o.id;
+      state.finance.cash = o.cash;
+      state.finance.startingCapital = o.cash;
+      state.finance.personalContribution = o.contrib;
+      state.finance.debt = o.debt;
+      state.finance.debtRateAnnual = 0.08;
+      state.finance.ccDebt = o.ccDebt;
+      state.finance.investorEquity = o.investor || 0;
+      renderSetupCapital();
+    };
+    grid.appendChild(card);
+  }
+}
+
+function renderSetupReview() {
+  const b = state.business, f = state.finance;
+  const ind = INDUSTRIES[b.industry], ent = ENTITIES[b.entity];
+  const startCost = ind.startCost + ent.setupCost;
+  const cashAfterStart = f.cash - startCost;
+  document.getElementById('setup-body').innerHTML = `
+    <p>Final review. After paying startup costs you'll have <b>${fmt(cashAfterStart)}</b> in operating cash to work with.</p>
+    <div class="grid grid-2">
+      <div class="card tight"><h3>Business</h3>
+        <div class="pl-row"><span>Name</span><span>${b.name || '<i>(unnamed)</i>'}</span></div>
+        <div class="pl-row"><span>Industry</span><span>${ind.name}</span></div>
+        <div class="pl-row"><span>Entity</span><span>${ent.name}</span></div>
+        <div class="pl-row"><span>EIN</span><span>${b.hasEIN ? '✓' : '—'}</span></div>
+      </div>
+      <div class="card tight"><h3>Money</h3>
+        <div class="pl-row"><span>Starting cash</span><span class="pos">${fmt(f.cash)}</span></div>
+        <div class="pl-row"><span>Startup costs</span><span class="neg">-${fmtNoSign(startCost)}</span></div>
+        <div class="pl-row"><span>Bank loan</span><span>${fmt(f.debt)}</span></div>
+        <div class="pl-row"><span>Credit-card debt</span><span>${fmt(f.ccDebt)}</span></div>
+        <div class="pl-row total"><span>Cash on day 1</span><span>${fmt(cashAfterStart)}</span></div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">🚀 Ready?</div>
+      You'll play through 24 months. Each month you make decisions, see your P&L, and watch how choices ripple. Win condition: be cash-positive and profitable at month 24, with paid taxes. Hit $0 cash at any point and you're forced to close.
+    </div>
+  `;
+}
+
+function onSetupNext() {
+  const step = SETUP_STEPS[state.setupStep];
+  if (step.id === 'name' && !state.business.name.trim()) { alert('Pick a name first.'); return; }
+  if (step.id === 'industry' && !state.business.industry) { alert('Pick an industry.'); return; }
+  if (step.id === 'entity' && !state.business.entity) { alert('Pick an entity.'); return; }
+  if (step.id === 'capital' && !state.business.capitalSource) { alert('Pick a funding source.'); return; }
+
+  if (state.setupStep === SETUP_STEPS.length - 1) {
+    // Pay startup costs and begin
+    const ind = INDUSTRIES[state.business.industry];
+    const ent = ENTITIES[state.business.entity];
+    state.finance.cash -= (ind.startCost + ent.setupCost);
+    state.finance.equipmentValue = ind.startCost * 0.6; // rough equipment portion of startup
+    state.phase = 'playing';
+    state.events.push({ type: 'good', text: `🎉 ${state.business.name} is open for business!` });
+    state.unlocks.add('p&l');
+    state.unlocks.add('cash flow vs profit');
+    render();
+  } else {
+    state.setupStep++;
+    renderSetup();
+  }
+}
+
+// ============================================================================
+// MONTHLY SIMULATION
+// ============================================================================
+
+function computeMonthlyPL() {
+  const ind = INDUSTRIES[state.business.industry];
+  const month = ((state.time.month - 1) % 12);
+  const seasonality = ind.seasonality[month];
+
+  // Revenue model
+  let baseRev = ind.baseRevenue;
+  // SaaS compounds over time
+  if (ind.compounds) {
+    const monthsElapsed = (state.time.year - 1) * 12 + (state.time.month - 1);
+    baseRev *= Math.pow(ind.compounds, monthsElapsed);
+  }
+  // Marketing effect (diminishing returns)
+  const mkt = state.ops.monthlyMarketing;
+  const mktEffect = Math.sqrt(mkt / 250) * ind.marketingPower * 600; // each $250 mkt → some revenue
+  // Pricing effect: higher price → more revenue per unit but lost demand
+  const p = state.ops.pricingMultiplier;
+  const demandCurve = Math.pow(p, -1.4); // elastic demand
+  // Capacity cap: employees + you
+  const capacity = (1 + state.ops.employees) * ind.capacityPerEmployee * state.ops.productivityBoost;
+
+  let revenue = (baseRev + mktEffect) * p * demandCurve * seasonality;
+  revenue = Math.min(revenue, capacity);
+
+  // Apply random-event modifiers
+  if (state.flags.eventRevMult)    { revenue *= state.flags.eventRevMult; }
+  if (state.flags.wordMonths)      { revenue *= 1.12; }
+  if (state.flags.recessionMonths) { revenue *= 0.80; }
+
+  // Expenses
+  const cogs = revenue * ind.cogsRatio;
+  const fixed = ind.fixedCosts;
+  const payroll = state.ops.employees * 4000;
+  const marketing = mkt;
+  // Debt service: interest on bank loan + principal payment
+  const bankInterest = state.finance.debt * (state.finance.debtRateAnnual / 12);
+  const ccInterest = state.finance.ccDebt * (state.finance.ccRateAnnual / 12);
+  // Bank loan: 5-year amortization, simple
+  const bankPrincipal = state.finance.debt > 0 ? Math.min(state.finance.debt, state.finance.debt / 60) : 0;
+  // Equipment depreciation: 10% per year
+  const depreciation = state.finance.equipmentValue * (0.10 / 12);
+
+  const totalCashExpenses = cogs + fixed + payroll + marketing + bankInterest + ccInterest + bankPrincipal;
+  const totalAccountingExpenses = cogs + fixed + payroll + marketing + bankInterest + ccInterest + depreciation;
+
+  const grossProfit = revenue - cogs;
+  const operatingProfit = revenue - cogs - fixed - payroll - marketing;
+  const netCashIncome = revenue - totalCashExpenses;
+  const netAccountingIncome = revenue - totalAccountingExpenses;
+
+  // Tax estimate (federal income tax + SE tax). Apply on accounting income.
+  const ent = ENTITIES[state.business.entity];
+  let taxThisMonth = 0;
+  if (netAccountingIncome > 0) {
+    const incomeTax = netAccountingIncome * ent.taxRate;
+    const seTax = netAccountingIncome * ent.seTax;
+    taxThisMonth = incomeTax + seTax;
+  }
+
+  return {
+    revenue, cogs, fixed, payroll, marketing,
+    bankInterest, ccInterest, bankPrincipal, depreciation,
+    grossProfit, operatingProfit, netCashIncome, netAccountingIncome,
+    taxThisMonth, capacity,
+  };
+}
+
+function advanceMonth() {
+  // Roll random event
+  state.events = [];
+  for (const ev of RANDOM_EVENTS) {
+    if (state.time.month + (state.time.year-1)*12 < ev.minMonth) continue;
+    if (Math.random() < ev.prob) {
+      ev.apply(state);
+      state.events.push({ type: ev.type, text: ev.text });
+      break; // at most one event per month
+    }
+  }
+
+  // Compute P&L
+  const pl = computeMonthlyPL();
+
+  // Update cash
+  state.finance.cash += pl.netCashIncome;
+  // Pay down bank loan principal
+  state.finance.debt = Math.max(0, state.finance.debt - pl.bankPrincipal);
+  // Tax accrual
+  state.finance.taxesAccrued += pl.taxThisMonth;
+
+  // Save history snapshot
+  state.history.push({
+    year: state.time.year, month: state.time.month,
+    ...pl,
+    cashAfter: state.finance.cash,
+    debtAfter: state.finance.debt,
+    ccDebtAfter: state.finance.ccDebt,
+  });
+
+  state.finance.lifetimeRevenue += pl.revenue;
+  state.finance.lifetimeExpenses += (pl.revenue - pl.netAccountingIncome);
+  state.finance.lifetimeNet += pl.netAccountingIncome;
+
+  // Decay temp flags
+  if (state.flags.eventRevMult) delete state.flags.eventRevMult;
+  if (state.flags.wordMonths)   { state.flags.wordMonths--; if (state.flags.wordMonths<=0) delete state.flags.wordMonths; }
+  if (state.flags.recessionMonths) { state.flags.recessionMonths--; if (state.flags.recessionMonths<=0) delete state.flags.recessionMonths; }
+
+  // Quarterly tax payment
+  if (state.time.month % 3 === 0) {
+    handleQuarterlyTax();
+  }
+
+  // Year end?
+  if (state.time.month === 12) {
+    handleYearEnd();
+    state.time.month = 1;
+    state.time.year++;
+  } else {
+    state.time.month++;
+  }
+
+  // Reset locked actions for new month
+  state.decisionsThisMonth.lockedActions.clear();
+
+  // Check end conditions
+  if (state.finance.cash < 0) { endGame('bankrupt'); return; }
+  if (state.time.year > 2)    { endGame('finished'); return; }
+
+  render();
+}
+
+function handleQuarterlyTax() {
+  const owed = state.finance.taxesAccrued - state.finance.taxesPaid;
+  if (owed > 100) {
+    if (state.finance.cash >= owed) {
+      state.finance.cash -= owed;
+      state.finance.taxesPaid += owed;
+      state.finance.lifetimeTaxes += owed;
+      state.events.push({ type: 'bad', text: `📋 Quarterly estimated taxes paid: ${fmt(owed)}.` });
+      state.unlocks.add('estimated quarterly taxes');
+    } else {
+      // Not enough cash — pay what you can, accrue penalty
+      const paid = state.finance.cash;
+      state.finance.cash = 0;
+      state.finance.taxesPaid += paid;
+      state.finance.lifetimeTaxes += paid;
+      const penalty = (owed - paid) * 0.05;
+      state.finance.taxesAccrued += penalty;
+      state.events.push({ type: 'bad', text: `⚠ Couldn't cover quarterly taxes. Paid ${fmt(paid)}, hit with ${fmt(penalty)} late penalty.` });
+    }
+  }
+}
+
+function handleYearEnd() {
+  // Itemize: equipment depreciation + business expenses already deducted in monthly accounting income
+  // Reconcile: if total taxes paid > true tax, get a refund (small). Else owe more.
+  const owed = state.finance.taxesAccrued - state.finance.taxesPaid;
+  if (owed > 50) {
+    state.events.push({ type: 'bad', text: `📅 Year ${state.time.year} tax return: you still owe ${fmt(owed)}.` });
+    if (state.finance.cash >= owed) {
+      state.finance.cash -= owed;
+      state.finance.taxesPaid += owed;
+      state.finance.lifetimeTaxes += owed;
+    }
+  } else if (owed < -50) {
+    state.events.push({ type: 'good', text: `📅 Year ${state.time.year} tax return: refund of ${fmt(-owed)} (overpaid quarterlies).` });
+    state.finance.cash += -owed;
+    state.finance.lifetimeTaxes += owed; // negative
+  } else {
+    state.events.push({ type: 'good', text: `📅 Year ${state.time.year} taxes filed. Balanced.` });
+  }
+  state.unlocks.add('itemized deductions (business)');
+  // Reset for next year
+  state.finance.taxesAccrued = 0;
+  state.finance.taxesPaid = 0;
+}
+
+// ============================================================================
+// ACTIONS
+// ============================================================================
+
+function doAction(id) {
+  if (state.decisionsThisMonth.lockedActions.has(id)) return;
+  switch (id) {
+    case 'hire': {
+      if (state.finance.cash < 1000) { alert('Need at least $1000 cash to onboard.'); return; }
+      state.ops.employees++;
+      state.finance.cash -= 1000; // onboarding cost
+      state.events.push({ type: 'good', text: `👤 Hired employee #${state.ops.employees}. Adds capacity but $4,000/mo payroll.` });
+      state.decisionsThisMonth.lockedActions.add('hire');
+      break;
+    }
+    case 'fire': {
+      if (state.ops.employees <= 0) return;
+      state.ops.employees--;
+      state.finance.cash -= 1500; // severance
+      state.events.push({ type: 'bad', text: `Let an employee go. $1,500 severance.` });
+      state.decisionsThisMonth.lockedActions.add('fire');
+      break;
+    }
+    case 'buy-equipment-cash': {
+      if (state.finance.cash < 6000) { alert('Need $6,000 cash.'); return; }
+      state.finance.cash -= 6000;
+      state.finance.equipmentValue += 6000;
+      state.ops.productivityBoost += 0.10;
+      state.events.push({ type: 'good', text: '🔧 Bought equipment with cash. +10% productivity. Depreciates over time.' });
+      state.unlocks.add('good debt vs bad debt');
+      state.decisionsThisMonth.lockedActions.add('buy-equipment-cash');
+      state.decisionsThisMonth.lockedActions.add('buy-equipment-loan');
+      break;
+    }
+    case 'buy-equipment-loan': {
+      state.finance.debt += 6000;
+      state.finance.equipmentValue += 6000;
+      state.ops.productivityBoost += 0.10;
+      state.events.push({ type: 'good', text: '🔧 Financed equipment. +10% productivity. This is "good debt" if it earns more than 8% APR.' });
+      state.unlocks.add('good debt vs bad debt');
+      state.decisionsThisMonth.lockedActions.add('buy-equipment-cash');
+      state.decisionsThisMonth.lockedActions.add('buy-equipment-loan');
+      break;
+    }
+    case 'pay-cc': {
+      if (state.finance.ccDebt <= 0) return;
+      const pay = Math.min(state.finance.ccDebt, Math.min(state.finance.cash, 2000));
+      state.finance.cash -= pay;
+      state.finance.ccDebt -= pay;
+      state.events.push({ type: 'good', text: `💳 Paid down ${fmt(pay)} of credit-card debt (24% APR — "bad debt"). Smart.` });
+      break;
+    }
+    case 'pay-loan': {
+      if (state.finance.debt <= 0) return;
+      const pay = Math.min(state.finance.debt, Math.min(state.finance.cash, 2500));
+      state.finance.cash -= pay;
+      state.finance.debt -= pay;
+      state.events.push({ type: 'good', text: `🏦 Paid down ${fmt(pay)} of bank loan principal.` });
+      break;
+    }
+    case 'convert-llc': {
+      if (state.business.entity !== 'sole-prop') return;
+      if (state.finance.cash < 300) { alert('Need $300 to file.'); return; }
+      state.finance.cash -= 300;
+      state.business.entity = 'llc';
+      state.business.hasEIN = true;
+      state.events.push({ type: 'good', text: '📄 Converted to LLC. Liability shield engaged. EIN issued.' });
+      state.unlocks.add('limited liability');
+      state.decisionsThisMonth.lockedActions.add('convert-llc');
+      break;
+    }
+    case 'elect-scorp': {
+      if (state.business.entity === 's-corp') return;
+      if (state.business.entity === 'sole-prop') { alert('Form an LLC first.'); return; }
+      if (state.finance.cash < 800) { alert('Need $800 for filing + payroll setup.'); return; }
+      state.finance.cash -= 800;
+      state.business.entity = 's-corp';
+      state.events.push({ type: 'good', text: '🧾 Elected S-Corp tax status. Self-employment tax drops on the distribution portion of pay.' });
+      state.unlocks.add('reasonable salary (s-corp)');
+      state.decisionsThisMonth.lockedActions.add('elect-scorp');
+      break;
+    }
+  }
+  render();
+}
+
+function setMarketing(v) {
+  state.ops.monthlyMarketing = Math.max(0, Math.min(5000, +v || 0));
+  render();
+}
+function setPricing(v) {
+  state.ops.pricingMultiplier = Math.max(0.7, Math.min(1.5, +v || 1.0));
+  render();
+}
+
+// ============================================================================
+// END GAME
+// ============================================================================
+
+function endGame(reason) {
+  state.phase = 'ended';
+  state.endReason = reason;
+  render();
+}
+
+// ============================================================================
+// RENDER — playing screen
+// ============================================================================
+
+let activeTab = 'dashboard';
+
+function render() {
+  if (state.phase === 'setup') return renderSetup();
+  if (state.phase === 'ended') return renderEnd();
+  renderPlaying();
+}
+
+function renderPlaying() {
+  const f = state.finance;
+  const ent = ENTITIES[state.business.entity];
+  const ind = INDUSTRIES[state.business.industry];
+  const lastPL = state.history[state.history.length - 1];
+  const burn = lastPL ? Math.max(0, -lastPL.netCashIncome) : ind.fixedCosts;
+  const runway = burn > 0 ? (f.cash / burn).toFixed(1) : '∞';
+  const totalDebt = f.debt + f.ccDebt;
+
+  document.getElementById('app').innerHTML = `
+    <div class="header-bar">
+      <div class="biz-id">
+        <div class="name">${state.business.name}</div>
+        <div class="sub">${ind.name} · ${ent.name} ${state.business.hasEIN ? '· EIN ✓' : ''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="muted small">Year ${state.time.year}, ${monthName(state.time.month)}</div>
+        <div style="font-size:18px;font-weight:700;color:#a78bfa;">Month ${(state.time.year-1)*12 + state.time.month} of 24</div>
+        <div class="progress-track" style="width:160px;"><div class="progress-fill" style="width:${(((state.time.year-1)*12 + state.time.month)/24)*100}%"></div></div>
+      </div>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="stat ${f.cash < 5000 ? 'warn' : 'good'}"><div class="label">Cash</div><div class="value">${fmt(f.cash)}</div><div class="sub">Runway: ${runway} mo</div></div>
+      <div class="stat ${lastPL && lastPL.netAccountingIncome > 0 ? 'good' : (lastPL ? 'bad' : '')}"><div class="label">Last month net</div><div class="value">${lastPL ? fmt(lastPL.netAccountingIncome) : '—'}</div><div class="sub">${lastPL ? 'rev '+fmt(lastPL.revenue) : 'no data yet'}</div></div>
+      <div class="stat ${totalDebt > 30000 ? 'warn' : ''}"><div class="label">Debt</div><div class="value">${fmt(totalDebt)}</div><div class="sub">Bank ${fmt(f.debt)} · CC ${fmt(f.ccDebt)}</div></div>
+      <div class="stat warn"><div class="label">Tax accrued (year)</div><div class="value">${fmt(f.taxesAccrued - f.taxesPaid)}</div><div class="sub">paid ${fmt(f.taxesPaid)}</div></div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <div class="tabs">
+        <div class="tab ${activeTab==='dashboard'?'active':''}" data-tab="dashboard">Dashboard</div>
+        <div class="tab ${activeTab==='actions'?'active':''}" data-tab="actions">Decisions</div>
+        <div class="tab ${activeTab==='pl'?'active':''}" data-tab="pl">P&L</div>
+        <div class="tab ${activeTab==='learn'?'active':''}" data-tab="learn">Learn</div>
+      </div>
+      <div id="tab-body"></div>
+    </div>
+
+    <div class="footer-bar">
+      <div class="muted small">${state.events.length ? '' : 'No new events this month.'}</div>
+      <button class="primary" id="advance-btn">▶ Advance to ${monthName(state.time.month)} ${state.time.year}</button>
+    </div>
+  `;
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => { activeTab = t.dataset.tab; renderTab(); };
+  });
+  document.getElementById('advance-btn').onclick = advanceMonth;
+  renderTab();
+}
+
+function renderTab() {
+  const body = document.getElementById('tab-body');
+  if (!body) return;
+  if      (activeTab === 'dashboard') renderDashboard(body);
+  else if (activeTab === 'actions')   renderActions(body);
+  else if (activeTab === 'pl')        renderPL(body);
+  else if (activeTab === 'learn')     renderLearn(body);
+}
+
+function renderDashboard(body) {
+  const projected = computeMonthlyPL();
+  const events = state.events.slice().reverse();
+
+  body.innerHTML = `
+    <div class="grid grid-2">
+      <div>
+        <h3>This month — projected</h3>
+        <div class="pl-row"><span>Revenue</span><span class="pos">${fmt(projected.revenue)}</span></div>
+        <div class="pl-row"><span>Expenses (cash)</span><span class="neg">-${fmtNoSign(projected.cogs + projected.fixed + projected.payroll + projected.marketing + projected.bankInterest + projected.ccInterest + projected.bankPrincipal)}</span></div>
+        <div class="pl-row total"><span>Net cash change</span><span class="${projected.netCashIncome>=0?'pos':'neg'}">${fmt(projected.netCashIncome)}</span></div>
+        <div class="info-box small" style="margin-top:14px;">
+          <div class="head">Capacity used</div>
+          ${Math.round(100 * projected.revenue / Math.max(1, projected.capacity))}% of max revenue capacity (${fmt(projected.capacity)}). Hire when you're consistently capped out.
+        </div>
+      </div>
+      <div>
+        <h3>Recent events</h3>
+        ${events.length ? events.map(e => `<div class="event ${e.type}">${e.text}</div>`).join('') : '<p class="muted small">A quiet month so far.</p>'}
+      </div>
+    </div>
+
+    ${state.finance.cash < 5000 ? `
+      <div class="info-box" style="margin-top:14px;border-left-color:#f87171;background:rgba(239,68,68,0.08);color:#fecaca;">
+        <div class="head" style="color:#fca5a5;">⚠ Low operating capital</div>
+        Your cash buffer is dangerously thin. One bad month or surprise expense ends the run. Cut marketing, delay hires, or pay down the high-interest credit card before it spirals.
+      </div>
+    ` : ''}
+  `;
+}
+
+function renderActions(body) {
+  const f = state.finance, b = state.business;
+  const locked = state.decisionsThisMonth.lockedActions;
+  body.innerHTML = `
+    <h3>Operating decisions</h3>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Marketing spend / mo</div>
+        <div class="desc">Drives revenue with diminishing returns. Industry-dependent — ecommerce scales harder than a cafe.</div>
+      </div>
+      <div class="ctrl">
+        <input type="range" min="0" max="3500" step="100" value="${state.ops.monthlyMarketing}" class="slider" id="mkt-slider">
+        <span style="min-width:70px;text-align:right;">${fmt(state.ops.monthlyMarketing)}</span>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Pricing</div>
+        <div class="desc">Higher price = more per sale, but you'll lose customers. Lower price = volume, lower margin.</div>
+      </div>
+      <div class="ctrl">
+        <input type="range" min="0.7" max="1.4" step="0.05" value="${state.ops.pricingMultiplier}" class="slider" id="price-slider">
+        <span style="min-width:48px;text-align:right;">${(state.ops.pricingMultiplier*100).toFixed(0)}%</span>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Hire / fire</div>
+        <div class="desc">Each employee adds ${fmt(INDUSTRIES[b.industry].capacityPerEmployee)} in revenue capacity for $4,000/mo payroll + $1,000 onboarding. Currently ${state.ops.employees}.</div>
+      </div>
+      <div class="ctrl">
+        <button class="small" onclick="doAction('hire')" ${locked.has('hire')?'disabled':''}>+ Hire</button>
+        <button class="small ghost" onclick="doAction('fire')" ${locked.has('fire')||state.ops.employees===0?'disabled':''}>− Fire</button>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px;">Capital decisions</h3>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Buy equipment <span class="info-toggle" onclick="alert('Equipment improves productivity — your team produces more revenue with the same hours. The choice between cash and a loan is the classic good-debt question: if the equipment earns more than the loan APR (8%), borrowing is the right call. If not, cash.')">i</span></div>
+        <div class="desc">+10% productivity. Costs $6,000. Pay cash or finance over 5 years at 8%.</div>
+      </div>
+      <div class="ctrl">
+        <button class="small" onclick="doAction('buy-equipment-cash')" ${locked.has('buy-equipment-cash')||f.cash<6000?'disabled':''}>Pay cash</button>
+        <button class="small ghost" onclick="doAction('buy-equipment-loan')" ${locked.has('buy-equipment-loan')?'disabled':''}>Finance @ 8%</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Pay down credit-card debt <span class="info-toggle" onclick="alert('Credit-card debt at 24% APR is almost always the highest-cost money in a small business. Paying it down is a guaranteed 24% return — better than nearly any business investment. Pay it before almost anything else.')">i</span></div>
+        <div class="desc">CC balance: ${fmt(f.ccDebt)} at 24% APR. Pay up to $2,000/mo from cash.</div>
+      </div>
+      <div class="ctrl">
+        <button class="small" onclick="doAction('pay-cc')" ${f.ccDebt===0||f.cash<500?'disabled':''}>Pay $2,000</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Pay down bank loan</div>
+        <div class="desc">Bank balance: ${fmt(f.debt)} at 8% APR. Lower priority than CC unless you're flush.</div>
+      </div>
+      <div class="ctrl">
+        <button class="small ghost" onclick="doAction('pay-loan')" ${f.debt===0||f.cash<1000?'disabled':''}>Pay $2,500</button>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px;">Legal & tax structure</h3>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Convert to LLC <span class="info-toggle" onclick="alert('Filing an LLC is the single highest-leverage paperwork move a sole prop can make. ~$300 once, and it puts a legal wall between your business and your personal assets. Worth doing before your first lawsuit risk, not after.')">i</span></div>
+        <div class="desc">${b.entity === 'sole-prop' ? 'Currently sole prop. Filing LLC: $300, instant liability shield + EIN.' : 'Already an LLC or S-Corp.'}</div>
+      </div>
+      <div class="ctrl">
+        <button class="small" onclick="doAction('convert-llc')" ${b.entity!=='sole-prop'||locked.has('convert-llc')?'disabled':''}>Convert</button>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <div class="meta">
+        <div class="name">Elect S-Corp tax status <span class="info-toggle" onclick="alert('Once an LLC is reliably profitable (rule of thumb: $40k+ net), electing S-Corp tax treatment lets you split pay between salary (subject to payroll tax) and distributions (not). Real savings — but only if profit can support a reasonable salary.')">i</span></div>
+        <div class="desc">${b.entity === 's-corp' ? 'Already elected.' : 'Costs $800 (filing + payroll setup). Cuts SE tax going forward.'}</div>
+      </div>
+      <div class="ctrl">
+        <button class="small" onclick="doAction('elect-scorp')" ${b.entity==='s-corp'||b.entity==='sole-prop'||locked.has('elect-scorp')?'disabled':''}>Elect S-Corp</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('mkt-slider').oninput = e => setMarketing(e.target.value);
+  document.getElementById('price-slider').oninput = e => setPricing(e.target.value);
+}
+
+function renderPL(body) {
+  const projected = computeMonthlyPL();
+  const histRows = state.history.slice(-6).reverse().map(h => `
+    <div class="pl-row">
+      <span>Y${h.year} ${monthName(h.month)}</span>
+      <span>${fmt(h.revenue)} rev / <span class="${h.netAccountingIncome>=0?'pos':'neg'}">${fmt(h.netAccountingIncome)} net</span></span>
+    </div>
+  `).join('') || '<p class="muted small">No history yet — advance a month.</p>';
+
+  body.innerHTML = `
+    <div class="grid grid-2">
+      <div>
+        <h3>Profit & Loss — current month projection</h3>
+        <div class="pl-row"><span>Revenue</span><span class="pos">${fmt(projected.revenue)}</span></div>
+        <div class="pl-row indent"><span>Cost of Goods Sold</span><span class="neg">-${fmtNoSign(projected.cogs)}</span></div>
+        <div class="pl-row"><span>Gross profit</span><span>${fmt(projected.grossProfit)}</span></div>
+        <div class="pl-row indent"><span>Fixed costs (rent, utilities, software)</span><span class="neg">-${fmtNoSign(projected.fixed)}</span></div>
+        <div class="pl-row indent"><span>Payroll</span><span class="neg">-${fmtNoSign(projected.payroll)}</span></div>
+        <div class="pl-row indent"><span>Marketing</span><span class="neg">-${fmtNoSign(projected.marketing)}</span></div>
+        <div class="pl-row"><span>Operating profit</span><span class="${projected.operatingProfit>=0?'pos':'neg'}">${fmt(projected.operatingProfit)}</span></div>
+        <div class="pl-row indent"><span>Interest (bank loan)</span><span class="neg">-${fmtNoSign(projected.bankInterest)}</span></div>
+        <div class="pl-row indent"><span>Interest (credit card)</span><span class="neg">-${fmtNoSign(projected.ccInterest)}</span></div>
+        <div class="pl-row indent"><span>Depreciation (equipment)</span><span class="neg">-${fmtNoSign(projected.depreciation)}</span></div>
+        <div class="pl-row total"><span>Net income</span><span class="${projected.netAccountingIncome>=0?'pos':'neg'}">${fmt(projected.netAccountingIncome)}</span></div>
+        <div class="pl-row" style="font-size:12px;color:#94a3b8;"><span>Tax estimate this month</span><span>${fmt(projected.taxThisMonth)}</span></div>
+      </div>
+
+      <div>
+        <h3>History (recent)</h3>
+        ${histRows}
+
+        <h3 style="margin-top:18px;">Lifetime totals</h3>
+        <div class="pl-row"><span>Revenue</span><span>${fmt(state.finance.lifetimeRevenue)}</span></div>
+        <div class="pl-row"><span>Expenses</span><span>${fmt(state.finance.lifetimeExpenses)}</span></div>
+        <div class="pl-row"><span>Taxes paid</span><span>${fmt(state.finance.lifetimeTaxes)}</span></div>
+        <div class="pl-row total"><span>Net</span><span class="${state.finance.lifetimeNet>=0?'pos':'neg'}">${fmt(state.finance.lifetimeNet)}</span></div>
+      </div>
+    </div>
+    <div class="info-box" style="margin-top:14px;">
+      <div class="head">📊 How to read this</div>
+      Net income includes non-cash items like depreciation. Net <i>cash</i> change is what really lands in the bank. A profitable P&L with negative cash flow means you're "paper-rich, cash-poor" — usually a working-capital problem (slow-paying customers, fast-growing inventory).
+    </div>
+  `;
+}
+
+function renderLearn(body) {
+  const items = GLOSSARY.map(([term, def]) => {
+    const unlocked = state.unlocks.has(term.toLowerCase()) || true; // show all
+    return `<div class="glossary-item"><div class="term">${term}</div><div class="def">${def}</div></div>`;
+  }).join('');
+  body.innerHTML = `
+    <p>Reference glossary. Concepts unlock as you encounter them in play, but feel free to read ahead.</p>
+    ${items}
+  `;
+}
+
+function renderEnd() {
+  const f = state.finance;
+  const reason = state.endReason;
+  const finalCash = f.cash;
+  const finalDebt = f.debt + f.ccDebt;
+  const equity = state.finance.equipmentValue + finalCash - finalDebt;
+
+  let verdict, verdictClass, blurb;
+  if (reason === 'bankrupt') {
+    verdict = 'Out of cash';
+    verdictClass = 'lose';
+    blurb = 'You ran out of operating capital. The most common reason new businesses fail isn\'t a bad idea — it\'s underestimating how long it takes to become cash-positive.';
+  } else {
+    if (equity > state.finance.startingCapital * 1.5) {
+      verdict = 'You built a real business.';
+      verdictClass = 'win';
+      blurb = 'You ended in the black, paid your taxes, and grew equity. This is what actual founder progress looks like — slow, deliberate, and based on understanding the numbers.';
+    } else if (equity > state.finance.startingCapital * 0.8) {
+      verdict = 'Steady, but flat.';
+      verdictClass = 'ok';
+      blurb = 'You survived 24 months — most businesses don\'t. But you didn\'t pull meaningfully ahead. Common causes: under-investing in marketing, over-paying on bad debt, or holding pricing too low.';
+    } else {
+      verdict = 'Survived but bleeding.';
+      verdictClass = 'lose';
+      blurb = 'You made it to month 24 but lost equity along the way. Re-play and watch the credit-card interest line — that\'s often where it leaks out.';
+    }
+  }
+
+  document.getElementById('app').innerHTML = `
+    <div class="card end-card">
+      <div class="muted small">${state.business.name} · ${INDUSTRIES[state.business.industry].name} · ${ENTITIES[state.business.entity].name}</div>
+      <div class="verdict ${verdictClass}">${verdict}</div>
+      <p style="max-width:560px;margin:0 auto 24px;">${blurb}</p>
+
+      <div class="grid grid-3" style="max-width:680px;margin:0 auto 24px;">
+        <div class="stat"><div class="label">Final cash</div><div class="value">${fmt(finalCash)}</div></div>
+        <div class="stat"><div class="label">Total debt</div><div class="value">${fmt(finalDebt)}</div></div>
+        <div class="stat"><div class="label">Net equity</div><div class="value">${fmt(equity)}</div></div>
+        <div class="stat"><div class="label">Lifetime revenue</div><div class="value">${fmt(f.lifetimeRevenue)}</div></div>
+        <div class="stat"><div class="label">Lifetime taxes paid</div><div class="value">${fmt(f.lifetimeTaxes)}</div></div>
+        <div class="stat"><div class="label">Months survived</div><div class="value">${state.history.length}</div></div>
+      </div>
+
+      <div class="info-box" style="text-align:left;max-width:680px;margin:0 auto 24px;">
+        <div class="head">📚 What this game taught (or tried to)</div>
+        • Entity choice (sole prop / LLC / S-Corp) is a triangle of cost, liability, and tax savings.<br>
+        • An EIN + separate business banking is what keeps the LLC's liability shield intact.<br>
+        • Cash flow ≠ profit. You can be profitable on paper and still go bankrupt.<br>
+        • Operating capital matters more than ambition — keep 3+ months of runway.<br>
+        • Good debt earns more than its interest rate. Bad debt (credit cards at 24%) is where margin goes to die.<br>
+        • Quarterly estimated taxes are not optional. Skip them and the IRS bills penalties + interest.<br>
+        • Itemized business deductions are how legit founders legally pay less in tax.<br>
+      </div>
+
+      <button class="primary" onclick="state = newState(); render();">Play again</button>
+    </div>
+  `;
+}
+
+// ============================================================================
+// BOOT
+// ============================================================================
+
+state = newState();
+render();
+</script>
+</body>
+</html>
