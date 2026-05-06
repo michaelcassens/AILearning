@@ -665,6 +665,169 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
   font-style: normal;
 }
 
+.commit-path {
+  margin-top: 18px;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.commit-path-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--forest);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.commit-path-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commit-path-list li {
+  font-size: 13px;
+  line-height: 1.55;
+  padding-left: 18px;
+  position: relative;
+  color: var(--ink-soft);
+}
+
+.commit-path-list li::before {
+  content: '◆';
+  position: absolute;
+  left: 0;
+  color: var(--forest);
+  font-size: 7px;
+  top: 4px;
+}
+
+.commit-path-list .proj {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.commit-path-list .proj-cap {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--forest);
+  margin-left: 4px;
+}
+
+.commit-honest {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(184, 68, 42, 0.06);
+  border-left: 2px solid var(--rust);
+  font-size: 12px;
+  color: var(--ink-soft);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.commit-tech {
+  margin-top: 0;
+  padding: 14px;
+  background: rgba(71, 97, 116, 0.07);
+  border: 1px solid var(--line);
+  border-top: none;
+}
+
+.commit-tech-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--sky);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.tech-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.tech-item {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  padding-left: 18px;
+  position: relative;
+}
+
+.tech-item::before {
+  content: '◇';
+  position: absolute;
+  left: 0;
+  color: var(--sky);
+  font-size: 9px;
+  top: 3px;
+}
+
+.tech-item .tname {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--sky);
+}
+
+.tech-item .tstatus {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--forest);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.commit-sources {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+}
+
+.commit-sources-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-mute);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.commit-sources a {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--sky);
+  text-decoration: none;
+  margin-bottom: 5px;
+  line-height: 1.5;
+  padding-left: 14px;
+  position: relative;
+}
+
+.commit-sources a::before {
+  content: '↗';
+  position: absolute;
+  left: 0;
+  color: var(--ink-mute);
+}
+
+.commit-sources a:hover {
+  color: var(--rust);
+}
+
 .footer {
   margin-top: 80px;
   padding-top: 32px;
@@ -693,6 +856,583 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
 .sources p {
   break-inside: avoid;
   margin-bottom: 8px;
+}
+
+/* ── Section 5 visualizations ─────────────────────────── */
+.takeaway-viz { margin-top: 16px; }
+
+/* T1: Activity equivalents */
+.t1-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+.t1-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 14px 10px 10px;
+  text-align: center;
+}
+.t1-equiv {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--rust);
+}
+.t1-queries {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  margin-top: 3px;
+}
+.t1-activity {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+  line-height: 1.4;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.t1-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-mute);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* T2: Before/after column chart */
+.t2-chart { display: flex; gap: 40px; align-items: flex-end; }
+.t2-bars {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+.t2-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.t2-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.t2-bar-outer {
+  width: 64px;
+  height: 120px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.t2-bar-fill {
+  width: 100%;
+  background: linear-gradient(to top, var(--rust-deep), var(--rust));
+}
+.t2-bar-fill.t2-new {
+  background: linear-gradient(to top, var(--forest), #4a6344);
+}
+.t2-year {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+}
+.t2-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding-bottom: 30px;
+}
+.t2-improvement {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 2.8rem;
+  line-height: 1;
+  color: var(--forest);
+  letter-spacing: -0.03em;
+}
+.t2-improvement-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--forest);
+}
+.t2-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-mute);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* T3: Emissions trajectory */
+.t3-compare { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
+.t3-row { display: grid; grid-template-columns: 100px 1fr; gap: 12px; align-items: center; }
+.t3-company-label {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 14px;
+}
+.t3-since {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+.t3-bars { display: flex; flex-direction: column; gap: 5px; }
+.t3-bar-pair { display: flex; align-items: center; gap: 8px; }
+.t3-bar-track {
+  flex: 1;
+  height: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+.t3-bar-inner { height: 100%; }
+.t3-bar-inner.baseline { background: var(--sky); opacity: 0.55; }
+.t3-bar-inner.current  { background: var(--rust); }
+.t3-bar-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  width: 120px;
+  flex-shrink: 0;
+}
+.t3-target-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--rust);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.t3-divider { border: none; border-top: 1px solid var(--line); margin: 4px 0; }
+
+/* T4: Timeline */
+.t4-timeline { margin-top: 10px; }
+.t4-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  margin-left: 100px;
+}
+.t4-row { display: grid; grid-template-columns: 100px 1fr; gap: 12px; margin-bottom: 8px; align-items: center; }
+.t4-row-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  text-align: right;
+  line-height: 1.4;
+}
+.t4-track {
+  height: 28px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: visible;
+}
+.t4-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+.t4-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+}
+.t4-dot.demand   { background: var(--rust); }
+.t4-dot.solution { background: var(--forest); }
+.t4-dot.maybe    { background: var(--sky); }
+.t4-mlabel {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  margin-top: 3px;
+  color: var(--ink);
+}
+.t4-gap {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(184,68,42,0.12);
+  border-left: 1px dashed var(--rust);
+  border-right: 1px dashed rgba(184,68,42,0.35);
+  pointer-events: none;
+}
+.t4-gap-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--rust);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+  margin-top: 4px;
+  margin-left: 100px;
+}
+
+/* T5: Scale comparisons */
+.t5-scale { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin-top: 8px; }
+.t5-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 14px 10px 10px;
+  text-align: center;
+}
+.t5-number {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(1.4rem,3vw,2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--rust);
+}
+.t5-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--forest);
+  margin-top: 3px;
+}
+.t5-desc {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 8px;
+  line-height: 1.4;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+@media (max-width: 720px) {
+  .t2-chart { flex-direction: column; }
+  .t3-row   { grid-template-columns: 1fr; }
+  .t4-row   { grid-template-columns: 1fr; }
+  .t4-axis  { margin-left: 0; }
+  .t4-gap-label { margin-left: 0; }
+  .t3-bar-tag { width: 80px; font-size: 9px; }
+}
+
+/* Search compare visualization (section 01a) */
+.search-compare {
+  margin: 32px 0;
+  position: relative;
+}
+
+.sc-header-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 72px 72px;
+  gap: 12px;
+  align-items: flex-end;
+  padding-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.sc-baseline-tick {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+.sc-baseline-tick::before {
+  content: '';
+  width: 1px;
+  flex: 1;
+  background: var(--rust);
+  opacity: 0.5;
+}
+
+.sc-baseline-tick span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: var(--rust);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  transform: translateX(-50%);
+  display: block;
+}
+
+.sc-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 72px 72px;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.sc-row:last-child { border-bottom: none; }
+
+.sc-baseline-row {
+  background: rgba(184, 68, 42, 0.04);
+}
+
+.sc-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.sc-sub {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size: 9px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+
+.sc-bar-area {
+  position: relative;
+}
+
+.sc-bar-track {
+  height: 24px;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.sc-bar-fill {
+  height: 100%;
+  min-width: 2px;
+}
+.sc-bar-fill.baseline { background: repeating-linear-gradient(45deg, var(--rust) 0, var(--rust) 3px, rgba(184,68,42,0.2) 3px, rgba(184,68,42,0.2) 7px); }
+.sc-bar-fill.gold     { background: linear-gradient(90deg, var(--gold), #a07624); }
+.sc-bar-fill.rust     { background: linear-gradient(90deg, var(--rust), var(--rust-deep)); }
+.sc-bar-fill.sky      { background: linear-gradient(90deg, var(--sky), #2f4454); }
+.sc-bar-fill.forest   { background: linear-gradient(90deg, var(--forest), #2a3c26); }
+
+.sc-mult {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 14px;
+  text-align: right;
+  color: var(--ink);
+}
+.sc-mult.baseline-label {
+  font-size: 9px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--rust);
+}
+.sc-mult.cheaper { color: var(--forest); }
+.sc-mult.high    { color: var(--rust); }
+
+.sc-elec {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-mute);
+  text-align: right;
+}
+
+.sc-mult-col, .sc-elec-col {
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .sc-header-row, .sc-row { grid-template-columns: 1fr 80px; }
+  .sc-bar-area, .sc-elec { display: none; }
+  .sc-name { font-size: 14px; }
+}
+
+/* Model compare visualization */
+.model-compare { margin: 32px 0; }
+
+.compare-legend {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+  align-items: center;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+.legend-swatch.elec { background: var(--gold); }
+.legend-swatch.water { background: var(--sky); }
+.legend-swatch.co2 { background: var(--forest); }
+
+.compare-scale-note {
+  margin-left: auto;
+  font-style: italic;
+  font-size: 9px;
+}
+
+.model-block {
+  border: 1px solid var(--line);
+  margin-bottom: 14px;
+  background: rgba(255, 253, 247, 0.5);
+}
+
+.model-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper-dark);
+}
+
+.model-block-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.model-block-name .sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size: 9px;
+  color: var(--ink-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-left: 10px;
+}
+
+.trust-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  color: var(--paper);
+  flex-shrink: 0;
+}
+.trust-badge.strong { background: var(--forest); }
+.trust-badge.weak { background: var(--rust); }
+.trust-badge.outside { background: var(--sky); }
+.trust-badge.none { background: var(--ink-mute); }
+
+.model-metrics {
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 72px 140px;
+  gap: 12px;
+  align-items: center;
+}
+
+.metric-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+
+.metric-track {
+  height: 18px;
+  background: var(--paper-dark);
+  border: 1px solid var(--line);
+  position: relative;
+}
+
+.metric-fill {
+  height: 100%;
+  min-width: 3px;
+  transition: width 0.3s ease;
+}
+.metric-fill.elec { background: linear-gradient(90deg, var(--gold), #a07624); }
+.metric-fill.water { background: linear-gradient(90deg, var(--sky), #2f4454); }
+.metric-fill.co2 { background: linear-gradient(90deg, var(--forest), #2a3c26); }
+.metric-fill.na {
+  width: 100% !important;
+  min-width: 0;
+  background: repeating-linear-gradient(45deg, var(--line) 0, var(--line) 3px, transparent 3px, transparent 7px);
+}
+
+.metric-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.metric-analog {
+  font-size: 12px;
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
+.model-block.no-data .model-metrics {
+  padding: 18px 20px;
+}
+
+.no-data-note {
+  font-size: 14px;
+  color: var(--ink-mute);
+  font-style: italic;
+  line-height: 1.55;
+}
+
+@media (max-width: 720px) {
+  .metric-row { grid-template-columns: 64px 1fr 64px; }
+  .metric-analog { display: none; }
+  .compare-scale-note { display: none; }
 }
 
 @media (max-width: 720px) {
@@ -795,81 +1535,271 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
     </p>
 
     <div class="plain-box">
-      <span class="plain-label">Quick orientation</span>
+      <span class="plain-label">Quick orientation — Electricity</span>
       <strong>0.3 watt-hours</strong> is the kind of tiny number that's hard to picture.
       Think of it this way: watching nine seconds of television uses about the
       same electricity as one Google AI question. A single LED light bulb, left on
       for 3 minutes, uses roughly the same as a whole ChatGPT answer.
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Company & AI</th>
-            <th>Electricity per question</th>
-            <th>Water per question</th>
-            <th>Carbon per question</th>
-            <th>How trustworthy is this number?</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="provider-cell">
-              Google
-              <span class="model">Gemini · a typical text question</span>
-            </td>
-            <td><span class="num">0.24<span class="unit">Wh</span></span><br><span class="caveat">= 9 seconds of TV</span></td>
-            <td><span class="num">0.26<span class="unit">mL</span></span><br><span class="caveat">= 5 drops</span></td>
-            <td><span class="num">0.03<span class="unit">g</span></span><br><span class="caveat">= a single breath</span></td>
-            <td class="caveat">Strong. Google published a detailed technical report (Aug 2025) that counts everything, including idle machines and cooling.</td>
-          </tr>
-          <tr>
-            <td class="provider-cell">
-              OpenAI
-              <span class="model">ChatGPT · "average" question</span>
-            </td>
-            <td><span class="num">0.34<span class="unit">Wh</span></span><br><span class="caveat">= oven for 1 second</span></td>
-            <td><span class="num">~0.32<span class="unit">mL</span></span><br><span class="caveat">= 1/15 of a teaspoon</span></td>
-            <td class="caveat">not shared</td>
-            <td class="caveat">Weak. CEO Sam Altman posted this in a blog (Jun 2025) with no methodology. Probably counts only the main chip, not the whole building.</td>
-          </tr>
-          <tr>
-            <td class="provider-cell">
-              Anthropic
-              <span class="model">Claude Sonnet · short question</span>
-            </td>
-            <td><span class="num">~0.84<span class="unit">Wh</span></span><br><span class="caveat">= microwave 3 seconds</span></td>
-            <td><span class="num">~1.6<span class="unit">mL</span></span><br><span class="caveat">= 1/3 teaspoon</span></td>
-            <td><span class="num">~0.36<span class="unit">g</span></span></td>
-            <td class="caveat">Outside estimate. Anthropic doesn't publish its own numbers. Independent study (2025) rated Claude the most efficient of the big AI models.</td>
-          </tr>
-          <tr>
-            <td class="provider-cell">
-              Anthropic
-              <span class="model">Claude Opus · longer question</span>
-            </td>
-            <td><span class="num">~4.05<span class="unit">Wh</span></span><br><span class="caveat">= laptop for 5 minutes</span></td>
-            <td><span class="num">~7.7<span class="unit">mL</span></span><br><span class="caveat">= 1.5 teaspoons</span></td>
-            <td><span class="num">~1.80<span class="unit">g</span></span></td>
-            <td class="caveat">Outside estimate. Bigger model + longer answers = more energy per question.</td>
-          </tr>
-          <tr>
-            <td class="provider-cell">
-              Microsoft
-              <span class="model">Copilot · runs OpenAI's models</span>
-            </td>
-            <td colspan="3" class="caveat">Microsoft doesn't publish per-question numbers. Copilot's footprint is basically whatever ChatGPT's footprint is, plus how efficient Microsoft's data centers are.</td>
-            <td class="caveat">Only whole-company totals are shared.</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="plain-box">
+      <span class="plain-label">Quick orientation — Water</span>
+      <strong>A milliliter</strong> is about 20 drops from a medicine dropper. The most
+      efficient AI query in this guide (Google Gemini at 0.26 mL) uses roughly five
+      drops — less than what clings to your hands after a quick rinse. The heaviest
+      (Claude Opus at 7.7 mL) is about 1.5 teaspoons. For context, a single toilet
+      flush uses around 6,000 mL — equivalent to about 800 Claude Opus queries.
     </div>
+
+    <div class="plain-box">
+      <span class="plain-label">Quick orientation — Carbon</span>
+      <strong>A gram of CO₂</strong> is genuinely tiny. The lightest query here (Google
+      at 0.03 g) is less than what your lungs exhale in one breath. Even the heaviest
+      (Claude Opus at 1.8 g) is roughly what a typical car emits driving about
+      15 meters. For scale: a round-trip flight from New York to Los Angeles
+      produces around 1,000,000 g (one metric tonne) of CO₂ per passenger.
+    </div>
+
+    <div class="model-compare">
+
+      <div class="compare-legend">
+        <span><span class="legend-swatch elec"></span>Electricity (Wh)</span>
+        <span><span class="legend-swatch water"></span>Water (mL)</span>
+        <span><span class="legend-swatch co2"></span>Carbon (g CO₂)</span>
+        <span class="compare-scale-note">Bar widths use a square-root scale so small values remain visible</span>
+      </div>
+
+      <!-- Google Gemini -->
+      <div class="model-block">
+        <div class="model-block-header">
+          <div class="model-block-name">Google <span class="sub">Gemini · typical text question</span></div>
+          <span class="trust-badge strong">Strong data</span>
+        </div>
+        <div class="model-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Electricity</span>
+            <div class="metric-track"><div class="metric-fill elec" style="width:24%"></div></div>
+            <span class="metric-val">0.24 Wh</span>
+            <span class="metric-analog">= 9 seconds of TV</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Water</span>
+            <div class="metric-track"><div class="metric-fill water" style="width:18%"></div></div>
+            <span class="metric-val">0.26 mL</span>
+            <span class="metric-analog">= 5 drops</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Carbon</span>
+            <div class="metric-track"><div class="metric-fill co2" style="width:13%"></div></div>
+            <span class="metric-val">0.03 g</span>
+            <span class="metric-analog">= a single breath</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- OpenAI ChatGPT -->
+      <div class="model-block">
+        <div class="model-block-header">
+          <div class="model-block-name">OpenAI <span class="sub">ChatGPT · "average" question</span></div>
+          <span class="trust-badge weak">Weak data</span>
+        </div>
+        <div class="model-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Electricity</span>
+            <div class="metric-track"><div class="metric-fill elec" style="width:29%"></div></div>
+            <span class="metric-val">0.34 Wh</span>
+            <span class="metric-analog">= oven for 1 second</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Water</span>
+            <div class="metric-track"><div class="metric-fill water" style="width:20%"></div></div>
+            <span class="metric-val">~0.32 mL</span>
+            <span class="metric-analog">= 1/15 teaspoon</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Carbon</span>
+            <div class="metric-track"><div class="metric-fill na"></div></div>
+            <span class="metric-val" style="color:var(--ink-mute)">not shared</span>
+            <span class="metric-analog">no methodology published</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claude Sonnet -->
+      <div class="model-block">
+        <div class="model-block-header">
+          <div class="model-block-name">Anthropic <span class="sub">Claude Sonnet · short question</span></div>
+          <span class="trust-badge outside">Outside estimate</span>
+        </div>
+        <div class="model-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Electricity</span>
+            <div class="metric-track"><div class="metric-fill elec" style="width:46%"></div></div>
+            <span class="metric-val">~0.84 Wh</span>
+            <span class="metric-analog">= microwave 3 sec</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Water</span>
+            <div class="metric-track"><div class="metric-fill water" style="width:46%"></div></div>
+            <span class="metric-val">~1.6 mL</span>
+            <span class="metric-analog">= 1/3 teaspoon</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Carbon</span>
+            <div class="metric-track"><div class="metric-fill co2" style="width:45%"></div></div>
+            <span class="metric-val">~0.36 g</span>
+            <span class="metric-analog">= 12× a Google query</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Claude Opus -->
+      <div class="model-block">
+        <div class="model-block-header">
+          <div class="model-block-name">Anthropic <span class="sub">Claude Opus · longer question</span></div>
+          <span class="trust-badge outside">Outside estimate</span>
+        </div>
+        <div class="model-metrics">
+          <div class="metric-row">
+            <span class="metric-label">Electricity</span>
+            <div class="metric-track"><div class="metric-fill elec" style="width:100%"></div></div>
+            <span class="metric-val">~4.05 Wh</span>
+            <span class="metric-analog">= laptop for 5 min</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Water</span>
+            <div class="metric-track"><div class="metric-fill water" style="width:100%"></div></div>
+            <span class="metric-val">~7.7 mL</span>
+            <span class="metric-analog">= 1.5 teaspoons</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Carbon</span>
+            <div class="metric-track"><div class="metric-fill co2" style="width:100%"></div></div>
+            <span class="metric-val">~1.80 g</span>
+            <span class="metric-analog">= 60× a Google query</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Microsoft Copilot -->
+      <div class="model-block no-data">
+        <div class="model-block-header">
+          <div class="model-block-name">Microsoft <span class="sub">Copilot · runs OpenAI's models</span></div>
+          <span class="trust-badge none">No data</span>
+        </div>
+        <div class="model-metrics">
+          <p class="no-data-note">
+            Microsoft doesn't publish per-question numbers. Copilot's footprint is effectively whatever ChatGPT's footprint is, adjusted by how efficient Microsoft's own data centers are. Only whole-company totals are shared.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
     <p class="footnote">
       Important catch: these numbers only cover regular text questions. Asking AI to
       "think harder" (reasoning modes), or generate images or video, can use
       10× to 70× more. And none of these numbers include the one-time cost of
       building the AI in the first place — which is covered next.
+      OpenAI's numbers come from a blog post with no methodology and likely count
+      only the main chip, not the whole building — treat them as a floor, not a ceiling.
+    </p>
+  </section>
+
+  <!-- SECTION 1a: VS GOOGLE SEARCH -->
+  <section class="section">
+    <div class="section-header">
+      <span class="section-number">01a</span>
+      <h2>Compared to just Googling it</h2>
+    </div>
+    <p class="section-intro">
+      The most intuitive benchmark isn't a household — it's a plain web search.
+      Google has published that a traditional Google search uses about
+      <strong>0.3 watt-hours</strong>. Here's how each AI query stacks up against that.
+    </p>
+
+    <div class="plain-box">
+      <span class="plain-label">The surprising result</span>
+      A simple question to <strong>Google Gemini uses less electricity than a traditional Google search</strong> — 0.24 Wh versus 0.3 Wh.
+      That's partly because Google has gotten extremely efficient at AI inference, and partly because a web search still has to crawl,
+      rank, and serve an entire results page. But the moment you switch to a larger model like Claude Opus,
+      you're at <strong>13× a regular search</strong>.
+    </div>
+
+    <div class="search-compare">
+
+      <div class="sc-header-row">
+        <div class="sc-name"></div>
+        <div class="sc-bar-area">
+          <div class="sc-baseline-tick" style="left: calc(0.3 / 4.05 * 100%)">
+            <span>Google search baseline (0.3 Wh)</span>
+          </div>
+        </div>
+        <div class="sc-mult-col">vs. search</div>
+        <div class="sc-elec-col">electricity</div>
+      </div>
+
+      <div class="sc-row sc-baseline-row">
+        <div class="sc-name">Google search <span class="sc-sub">Traditional web results page</span></div>
+        <div class="sc-bar-area">
+          <div class="sc-bar-track">
+            <div class="sc-bar-fill baseline" style="width: calc(0.3 / 4.05 * 100%)"></div>
+          </div>
+        </div>
+        <div class="sc-mult baseline-label">baseline</div>
+        <div class="sc-elec">0.30 Wh</div>
+      </div>
+
+      <div class="sc-row">
+        <div class="sc-name">Gemini <span class="sc-sub">Google · simple text question</span></div>
+        <div class="sc-bar-area">
+          <div class="sc-bar-track">
+            <div class="sc-bar-fill gold" style="width: calc(0.24 / 4.05 * 100%)"></div>
+          </div>
+        </div>
+        <div class="sc-mult cheaper">0.8×</div>
+        <div class="sc-elec">0.24 Wh</div>
+      </div>
+
+      <div class="sc-row">
+        <div class="sc-name">ChatGPT <span class="sc-sub">OpenAI · average question</span></div>
+        <div class="sc-bar-area">
+          <div class="sc-bar-track">
+            <div class="sc-bar-fill rust" style="width: calc(0.34 / 4.05 * 100%)"></div>
+          </div>
+        </div>
+        <div class="sc-mult">1.1×</div>
+        <div class="sc-elec">0.34 Wh</div>
+      </div>
+
+      <div class="sc-row">
+        <div class="sc-name">Claude Sonnet <span class="sc-sub">Anthropic · short question</span></div>
+        <div class="sc-bar-area">
+          <div class="sc-bar-track">
+            <div class="sc-bar-fill sky" style="width: calc(0.84 / 4.05 * 100%)"></div>
+          </div>
+        </div>
+        <div class="sc-mult">2.8×</div>
+        <div class="sc-elec">0.84 Wh</div>
+      </div>
+
+      <div class="sc-row">
+        <div class="sc-name">Claude Opus <span class="sc-sub">Anthropic · longer question</span></div>
+        <div class="sc-bar-area">
+          <div class="sc-bar-track">
+            <div class="sc-bar-fill forest" style="width: 100%"></div>
+          </div>
+        </div>
+        <div class="sc-mult high">13.5×</div>
+        <div class="sc-elec">4.05 Wh</div>
+      </div>
+
+    </div>
+
+    <p class="footnote">
+      Google search figure (0.3 Wh) is from Google's 2023 environmental data; it covers the server-side cost of returning
+      a results page. It does not include the electricity your own device uses to display it, which would add roughly the
+      same again. AI inference figures are the same as Section 01. Bars are linear and to scale — Claude Opus is the maximum.
     </p>
   </section>
 
@@ -1060,6 +1990,29 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           <li><span class="year">Now</span>Has contracts for 34 gigawatts of renewable energy across 24 countries</li>
           <li><span class="year">⚠ Problem</span>Total emissions have actually <strong>gone up 23–30%</strong> since 2020 because of AI buildout — the opposite direction of the promise</li>
         </ul>
+        <div class="commit-path">
+          <span class="commit-path-label">Named initiatives that could help</span>
+          <ul class="commit-path-list">
+            <li><span class="proj">Three Mile Island restart</span><span class="proj-cap">835 MW · Pennsylvania · online 2028</span> — Constellation Energy restarting the closed nuclear plant under a 20-year power purchase agreement with Microsoft. The $1.6B project received a $1B DOE loan in late 2025.</li>
+            <li><span class="proj">Helion fusion plant</span><span class="proj-cap">50 MW · Chelan County, WA · target 2028</span> — The world's first commercial fusion power agreement. Construction began July 2025. If it delivers, entirely carbon-free baseload power.</li>
+            <li><span class="proj">Brookfield Renewable framework</span><span class="proj-cap">10.5 GW · US &amp; Europe · 2026–2030</span> — The largest corporate renewable energy deal ever signed, covering new wind and solar capacity.</li>
+            <li><span class="proj">Gaia carbon capture</span><span class="proj-cap">~3 million tons CO₂ · Copenhagen</span> — Industrial capture at a waste-to-energy plant, targeting the historical-emissions removal promise.</li>
+          </ul>
+          <div class="commit-honest">Reality check: 2024 was the first year emissions dipped slightly — still 23% above the 2020 starting point. Removing every ton of CO₂ emitted since 1975 by 2050 requires carbon removal technology at roughly 50–100× today's global scale.</div>
+        </div>
+        <div class="commit-tech">
+          <span class="commit-tech-label">Technologies that could change the math</span>
+          <div class="tech-list">
+            <div class="tech-item"><span class="tname">Submer immersion cooling</span><span class="tstatus">available now</span> — Submerging servers in dielectric fluid cuts cooling energy ~50% and uses 99% less water than traditional air cooling. Intel-certified and deployable today; addresses Microsoft's water-positive goal directly.</div>
+            <div class="tech-item"><span class="tname">Climeworks Cypress DAC Hub</span><span class="tstatus">construction 2026</span> — Industrial-scale direct air capture plant in Louisiana (DOE-funded, 3rd-gen Climeworks technology). Microsoft already holds purchase agreements. When operational, provides verifiable CO₂ removal credits at megaton scale — the only path to "carbon negative."</div>
+            <div class="tech-item"><span class="tname">Form Energy iron-air batteries</span><span class="tstatus">pilot 2025–26</span> — 100-hour discharge storage at a target cost of ~$20/kWh (vs. $100+ for lithium-ion). Firms up wind and solar to run 24/7 without natural gas backup — essential if nuclear restarts are delayed.</div>
+          </div>
+        </div>
+        <div class="commit-sources">
+          <span class="commit-sources-label">Source documents</span>
+          <a href="https://www.microsoft.com/en-us/corporate-responsibility/sustainability/report/" target="_blank" rel="noopener">2025 Environmental Sustainability Report</a>
+          <a href="https://blogs.microsoft.com/blog/2020/01/16/microsoft-will-be-carbon-negative-by-2030/" target="_blank" rel="noopener">Original carbon-negative pledge (Jan 2020)</a>
+        </div>
       </div>
 
       <div class="commit-card">
@@ -1077,6 +2030,30 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           <li><span class="year">2030s</span>Building partnerships for small nuclear reactors (with a company called Kairos Power and the Tennessee Valley Authority) — new clean power specifically for AI</li>
           <li><span class="year">⚠ Problem</span>Total emissions are <strong>up 51%</strong> since 2019, also driven by AI growth</li>
         </ul>
+        <div class="commit-path">
+          <span class="commit-path-label">Named initiatives that could help</span>
+          <ul class="commit-path-list">
+            <li><span class="proj">Kairos Power SMRs with TVA</span><span class="proj-cap">500 MW total · Oak Ridge, TN · first reactor 2030</span> — The first utility in the US to sign a binding deal with a next-generation small modular reactor company. Power goes directly to Google data centers in Tennessee and Alabama.</li>
+            <li><span class="proj">NextEra Duane Arnold nuclear restart</span><span class="proj-cap">615 MW · Cedar Rapids, IA · online 2029</span> — 25-year power purchase agreement; Google plans up to 6 data centers near the facility.</li>
+            <li><span class="proj">Elementl Power advanced nuclear</span><span class="proj-cap">1.8 GW · 3 US sites · target late 2020s</span> — Google provides early-stage capital; Elementl selects the reactor technology per site. Elementl's broader goal is 10+ GW by 2035.</li>
+            <li><span class="proj">Intersect Power acquisition</span><span class="proj-cap">$4.75B · announced Dec 2025</span> — Brings clean energy development fully in-house rather than relying on third-party PPAs.</li>
+          </ul>
+          <div class="commit-honest">Reality check: Google quietly moved its net-zero 2030 goal from its main sustainability page to a report appendix in 2024 — a sign of internal doubt. Data center efficiency dropped emissions 12% in 2024, but electricity consumption grew 27% the same year. The efficiency gains are real; the volume growth is faster.</div>
+        </div>
+        <div class="commit-tech">
+          <span class="commit-tech-label">Technologies that could change the math</span>
+          <div class="tech-list">
+            <div class="tech-item"><span class="tname">Fervo Energy enhanced geothermal</span><span class="tstatus">contracted · online late 2026</span> — Google signed a 115 MW PPA for Fervo's Cape Station in Utah; Phase 2 targets 400 MW by 2028. Unlike solar or wind, geothermal runs 24/7 with no storage needed and uses minimal water — solving both the carbon-free and water-positive gaps at once.</div>
+            <div class="tech-item"><span class="tname">DeepMind AlphaControl</span><span class="tstatus">already deployed</span> — Machine learning system that optimizes data center cooling in real time. Already cuts cooling energy ~40% across Google's own facilities. Represents one of the few efficiency wins that actually shows up in the numbers today.</div>
+            <div class="tech-item"><span class="tname">Form Energy iron-air batteries</span><span class="tstatus">pilot 2025–26</span> — 100-hour discharge at ~$20/kWh target cost. Enables Google's solar and wind contracts to cover overnight and multi-day gaps — the missing piece for hitting 24/7 carbon-free energy on every grid, every hour.</div>
+          </div>
+        </div>
+        <div class="commit-sources">
+          <span class="commit-sources-label">Source documents</span>
+          <a href="https://sustainability.google/reports/google-2025-environmental-report/" target="_blank" rel="noopener">2025 Environmental Report</a>
+          <a href="https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference/" target="_blank" rel="noopener">Gemini per-prompt energy impact (technical paper)</a>
+          <a href="https://sustainability.google/reports/247-carbon-free-energy/" target="_blank" rel="noopener">24/7 Carbon-Free Energy commitment</a>
+        </div>
       </div>
 
       <div class="commit-card">
@@ -1095,6 +2072,28 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           <li><span class="year">2026+</span>New 800-acre campus in Abilene, Texas; uses 8 million gallons of water to initially fill the cooling system</li>
           <li><span class="year">⚠ Problem</span>Without published numbers, nobody can verify efficiency claims</li>
         </ul>
+        <div class="commit-path">
+          <span class="commit-path-label">Named initiatives that could help</span>
+          <ul class="commit-path-list">
+            <li><span class="proj">SB Energy solar + battery partnership</span><span class="proj-cap">multi-GW · $1B investment · 2026–2027</span> — SoftBank subsidiary building dedicated solar and battery storage campuses for Stargate data centers. First site in Milam County, Texas (1.2 GW) targets 2026.</li>
+            <li><span class="proj">Stargate five-site buildout</span><span class="proj-cap">~7 GW across TX, and 3 additional sites</span> — Each site paired with renewable generation, though natural gas remains a component for baseload reliability.</li>
+            <li><span class="proj">Small modular reactors (planned)</span><span class="proj-cap">no named partner yet</span> — Sam Altman has publicly stated SMRs are essential for Stargate baseload, but unlike Google and Microsoft, OpenAI has not signed a deal with a specific nuclear company as of early 2026.</li>
+          </ul>
+          <div class="commit-honest">Reality check: OpenAI has no carbon target, no water commitment, and no sustainability report. The Stargate buildout is primarily a compute strategy, not an environmental one. Without named nuclear partners or binding emissions goals, the clean-energy framing remains aspirational.</div>
+        </div>
+        <div class="commit-tech">
+          <span class="commit-tech-label">Technologies that could change the math</span>
+          <div class="tech-list">
+            <div class="tech-item"><span class="tname">Oklo Aurora micro-reactors</span><span class="tstatus">NRC license review</span> — Sam Altman personally backed Oklo; their Aurora units produce ~15 MW each and can be sited directly next to data centers without new long-distance transmission. A cluster of units could provide firm baseload for a Stargate site. NRC licensing is the main bottleneck.</div>
+            <div class="tech-item"><span class="tname">X-energy Xe-100 TRISO reactors</span><span class="tstatus">Amazon deploying 2027–28</span> — Amazon is already investing in these 76 MW units for AWS data centers. TRISO fuel is physically incapable of melting (tolerates temperatures above 1,600°C), sharply reducing regulatory risk. OpenAI could follow Amazon's lead and contract capacity from the same vendor.</div>
+            <div class="tech-item"><span class="tname">NVIDIA TensorRT-LLM speculative decoding</span><span class="tstatus">available now</span> — A technique where a small "draft" model predicts multiple tokens at once, which the main model verifies in a single pass. Delivers 2–3.6× inference throughput with no accuracy loss — meaning the same Stargate hardware answers 2–3× as many questions for the same electricity.</div>
+          </div>
+        </div>
+        <div class="commit-sources">
+          <span class="commit-sources-label">Source documents</span>
+          <a href="https://blog.samaltman.com/the-gentle-singularity" target="_blank" rel="noopener">Sam Altman — "The Gentle Singularity" (Jun 2025)</a>
+          <a href="https://openai.com/index/announcing-the-stargate-project/" target="_blank" rel="noopener">Stargate Project announcement</a>
+        </div>
       </div>
 
       <div class="commit-card">
@@ -1113,6 +2112,27 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           <li><span class="year">2028</span>Projects a <strong>5 GW</strong> training data center, and advocates for 50 GW of US AI capacity total</li>
           <li><span class="year">⚠ Position</span>Treats building out this much energy infrastructure as a national priority versus China, rather than primarily a climate question</li>
         </ul>
+        <div class="commit-path">
+          <span class="commit-path-label">Named initiatives that could help</span>
+          <ul class="commit-path-list">
+            <li><span class="proj">Amazon Indiana campus</span><span class="proj-cap">1,200 acres · $11B · already operational</span> — Dedicated infrastructure built and operated by Amazon Web Services for Anthropic's workloads. Anthropic's footprint here is effectively whatever AWS's energy mix is.</li>
+            <li><span class="proj">Fluidstack data centers</span><span class="proj-cap">New York &amp; Texas · $50B commitment · 2026</span> — Custom-designed facilities coming online throughout 2026, built specifically for Anthropic's training and inference workloads.</li>
+            <li><span class="proj">Grid cost offset commitment</span><span class="proj-cap">no cap disclosed</span> — Anthropic has pledged to cover 100% of grid upgrade costs for interconnecting its data centers, and to offset electricity price increases for consumers in regions where its demand outpaces local generation — a notably honest acknowledgment of grid strain.</li>
+          </ul>
+          <div class="commit-honest">Reality check: Anthropic's approach is more candid than its peers — it acknowledges grid strain and commits to covering consumer costs — but it is reactive rather than proactive. There are no named renewable or nuclear deals, no carbon targets, and no pathway to net-zero. The company's own projections (5 GW for a single training run by 2028) imply AI training at frontier scale is fundamentally incompatible with near-term climate goals.</div>
+        </div>
+        <div class="commit-tech">
+          <span class="commit-tech-label">Technologies that could change the math</span>
+          <div class="tech-list">
+            <div class="tech-item"><span class="tname">AWS Trainium2 chips</span><span class="tstatus">in production</span> — Amazon's custom AI accelerator, purpose-built for training large models. Roughly 2× more energy-efficient than equivalent GPU alternatives. Because Anthropic runs on AWS, every shift toward Trainium2 directly reduces Claude's training footprint without any infrastructure changes on Anthropic's end.</div>
+            <div class="tech-item"><span class="tname">Speculative decoding (vLLM / TensorRT-LLM)</span><span class="tstatus">available now</span> — A widely-adopted inference technique where a small cheap model drafts tokens and the main model batch-verifies them. Cuts active compute per output token by 2–3× at no quality cost. Already in production at several major labs; Anthropic deploying this would immediately reduce inference energy per Claude query.</div>
+            <div class="tech-item"><span class="tname">Fervo Energy geothermal via AWS</span><span class="tstatus">AWS contracted · online 2026</span> — AWS has its own geothermal power purchase agreements with Fervo Energy. Since Anthropic's workloads run on AWS infrastructure, those clean-energy contracts reduce Anthropic's effective carbon footprint even without a direct deal — one of the few areas where running on a cloud provider is an environmental advantage.</div>
+          </div>
+        </div>
+        <div class="commit-sources">
+          <span class="commit-sources-label">Source documents</span>
+          <a href="https://www.anthropic.com/news/build-ai-in-america" target="_blank" rel="noopener">"Build AI in America" energy report (2025)</a>
+        </div>
       </div>
 
     </div>
@@ -1128,6 +2148,7 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
     <div class="implications">
       <h3>Five honest takeaways</h3>
 
+      <!-- TAKEAWAY 1 -->
       <div class="takeaway">
         <div class="takeaway-head">1. Individual use is basically harmless.</div>
         <p>
@@ -1137,8 +2158,34 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           questions. Driving to the store uses more gas than a year of chatting
           with an AI. This is not the place to feel guilty.
         </p>
+        <div class="takeaway-viz">
+          <div class="t1-grid">
+            <div class="t1-card">
+              <div class="t1-equiv">12×</div>
+              <div class="t1-queries">Gemini queries</div>
+              <div class="t1-activity">1 hour of Netflix streaming (~3 Wh)</div>
+            </div>
+            <div class="t1-card">
+              <div class="t1-equiv">5,800×</div>
+              <div class="t1-queries">Gemini queries</div>
+              <div class="t1-activity">1 load of laundry, wash + dry (~1,400 Wh)</div>
+            </div>
+            <div class="t1-card">
+              <div class="t1-equiv">6,250×</div>
+              <div class="t1-queries">Gemini queries</div>
+              <div class="t1-activity">1 five-minute shower, electric heater (~1,500 Wh)</div>
+            </div>
+            <div class="t1-card">
+              <div class="t1-equiv">150,000×</div>
+              <div class="t1-queries">Gemini queries</div>
+              <div class="t1-activity">1 ten-mile car trip, gasoline (~36,000 Wh)</div>
+            </div>
+          </div>
+          <p class="t1-note">Each card shows how many Gemini queries (0.24 Wh each) equal one everyday activity by electricity used. Source: Google 2025 Environmental Report; US residential energy estimates.</p>
+        </div>
       </div>
 
+      <!-- TAKEAWAY 2 -->
       <div class="takeaway">
         <div class="takeaway-head">2. The efficiency gains are real — and enormous.</div>
         <p>
@@ -1146,8 +2193,35 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           Claude is running strong AI at under 1 watt-hour per typical question.
           The engineering progress here is moving fast, and it's not fake.
         </p>
+        <div class="takeaway-viz">
+          <div class="t2-chart">
+            <div class="t2-bars">
+              <div class="t2-col">
+                <div class="t2-val">7.9 Wh</div>
+                <div class="t2-bar-outer">
+                  <div class="t2-bar-fill" style="height:100%"></div>
+                </div>
+                <div class="t2-year">May 2024</div>
+              </div>
+              <div class="t2-col">
+                <div class="t2-val">0.24 Wh</div>
+                <div class="t2-bar-outer">
+                  <div class="t2-bar-fill t2-new" style="height:3%"></div>
+                </div>
+                <div class="t2-year">May 2025</div>
+              </div>
+            </div>
+            <div class="t2-stat">
+              <div class="t2-improvement">33×</div>
+              <div class="t2-improvement-label">more efficient</div>
+              <div class="t2-improvement-label">in 12 months</div>
+            </div>
+          </div>
+          <p class="t2-caption">Energy per Gemini text query. Source: Google Cloud blog, Aug 2025. Driven by speculative decoding, model distillation, and custom TPU improvements.</p>
+        </div>
       </div>
 
+      <!-- TAKEAWAY 3 -->
       <div class="takeaway">
         <div class="takeaway-head">3. The total footprint is exploding anyway.</div>
         <p>
@@ -1157,8 +2231,43 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           starting points. Without a major shift, <strong>those 2030 promises
           will not be met.</strong>
         </p>
+        <div class="takeaway-viz">
+          <div class="t3-compare">
+            <div class="t3-row">
+              <div class="t3-company-label">Google<span class="t3-since">since 2019</span></div>
+              <div class="t3-bars">
+                <div class="t3-bar-pair">
+                  <div class="t3-bar-track"><div class="t3-bar-inner baseline" style="width:50%"></div></div>
+                  <div class="t3-bar-tag">2019 pledge baseline</div>
+                </div>
+                <div class="t3-bar-pair">
+                  <div class="t3-bar-track"><div class="t3-bar-inner current" style="width:75.5%"></div></div>
+                  <div class="t3-bar-tag">2024 actual &nbsp;+51%</div>
+                </div>
+                <div class="t3-target-note">2030 target: net-zero (needs to reach 0)</div>
+              </div>
+            </div>
+            <hr class="t3-divider">
+            <div class="t3-row">
+              <div class="t3-company-label">Microsoft<span class="t3-since">since 2020</span></div>
+              <div class="t3-bars">
+                <div class="t3-bar-pair">
+                  <div class="t3-bar-track"><div class="t3-bar-inner baseline" style="width:50%"></div></div>
+                  <div class="t3-bar-tag">2020 pledge baseline</div>
+                </div>
+                <div class="t3-bar-pair">
+                  <div class="t3-bar-track"><div class="t3-bar-inner current" style="width:61.7%"></div></div>
+                  <div class="t3-bar-tag">2024 actual &nbsp;+23.4%</div>
+                </div>
+                <div class="t3-target-note">2030 target: carbon negative (needs to reach 0)</div>
+              </div>
+            </div>
+          </div>
+          <p class="t1-note">Source: Microsoft 2025 Environmental Sustainability Report; Google 2025 Environmental Report. Bar widths are proportional; the pledge-year baseline is set at 50% so current emissions can be shown extending past it.</p>
+        </div>
       </div>
 
+      <!-- TAKEAWAY 4 -->
       <div class="takeaway">
         <div class="takeaway-head">4. The backup plan depends on things that don't fully exist yet.</div>
         <p>
@@ -1168,8 +2277,42 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           has to arrive on a very tight schedule. Historically, it usually
           doesn't.
         </p>
+        <div class="takeaway-viz">
+          <div class="t4-timeline">
+            <div class="t4-axis">
+              <span>2025</span><span>2026</span><span>2027</span><span>2028</span><span>2029</span><span>2030</span><span>2031</span><span>2032</span><span>2033</span><span>2034</span><span>2035</span>
+            </div>
+            <div class="t4-row">
+              <div class="t4-row-label">AI power<br>demand</div>
+              <div class="t4-track">
+                <div class="t4-gap" style="left:30%; width:20%"></div>
+                <div class="t4-marker" style="left:30%">
+                  <div class="t4-dot demand"></div>
+                  <div class="t4-mlabel">50 GW needed</div>
+                </div>
+              </div>
+            </div>
+            <div class="t4-row">
+              <div class="t4-row-label">Clean tech<br>arrives</div>
+              <div class="t4-track">
+                <div class="t4-gap" style="left:30%; width:20%"></div>
+                <div class="t4-marker" style="left:50%">
+                  <div class="t4-dot solution"></div>
+                  <div class="t4-mlabel">SMRs / LDES</div>
+                </div>
+                <div class="t4-marker" style="left:80%">
+                  <div class="t4-dot maybe"></div>
+                  <div class="t4-mlabel">Fusion?</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="t4-gap-label">← shaded zone = gap between when AI needs power and when clean solutions arrive →</p>
+          <p class="t1-note">Sources: Anthropic "Build AI in America" (2025); World Nuclear Association SMR tracker; DOE Long-Duration Energy Storage liftoff report; Commonwealth Fusion Systems timeline. No US SMR is yet operational; fusion timelines are industry estimates.</p>
+        </div>
       </div>
 
+      <!-- TAKEAWAY 5 -->
       <div class="takeaway">
         <div class="takeaway-head">5. The real problem is coming, fast.</div>
         <p>
@@ -1180,7 +2323,33 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
           the environmental story of AI. That decision is being made now, mostly
           outside public view.
         </p>
+        <div class="takeaway-viz">
+          <div class="t5-scale">
+            <div class="t5-card">
+              <div class="t5-number">50</div>
+              <div class="t5-unit">nuclear plants</div>
+              <div class="t5-desc">At 1 GW each — the typical size of a large US nuclear facility</div>
+            </div>
+            <div class="t5-card">
+              <div class="t5-number">2×</div>
+              <div class="t5-unit">NYC peak demand</div>
+              <div class="t5-desc">New York City's peak electricity draw is roughly 25 GW. AI needs twice that.</div>
+            </div>
+            <div class="t5-card">
+              <div class="t5-number">⅓</div>
+              <div class="t5-unit">of all US solar</div>
+              <div class="t5-desc">The US has ~150 GW of installed solar capacity. AI's 50 GW need equals one-third of all of it.</div>
+            </div>
+            <div class="t5-card">
+              <div class="t5-number">16M</div>
+              <div class="t5-unit">homes powered</div>
+              <div class="t5-desc">50 GW running continuously could power roughly 16 million average US homes.</div>
+            </div>
+          </div>
+          <p class="t1-note">50 GW figure: Anthropic "Build AI in America" (2025); corroborated by Brookings Institution and EPRI projections. US solar capacity: EIA (2024). NYC peak: NYISO.</p>
+        </div>
       </div>
+
     </div>
   </section>
 
