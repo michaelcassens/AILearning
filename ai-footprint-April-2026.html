@@ -1142,6 +1142,122 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
   .t3-bar-tag { width: 80px; font-size: 9px; }
 }
 
+/* ── Section 06: Data Sovereignty ─────────────────────── */
+.ds-sub { margin-bottom: 48px; }
+.ds-sub-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--rust);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ds-sub-head::before { content: ''; width: 20px; height: 1px; background: var(--rust); }
+
+.framework-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+.framework-block { background: var(--paper-dark); padding: 20px; border: 1px solid var(--line); }
+.framework-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+.framework-origin {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-mute);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.principle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.principle-card { background: var(--paper); padding: 12px; border: 1px solid var(--line); }
+.p-letter { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.6rem; line-height: 1; color: var(--rust); margin-bottom: 2px; }
+.p-title  { font-family: 'Fraunces', serif; font-weight: 500; font-size: 0.85rem; margin-bottom: 5px; }
+.p-desc   { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+.incident-box {
+  background: rgba(184,68,42,0.05);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--rust);
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+.incident-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--rust);
+  margin-bottom: 14px;
+  display: block;
+}
+.incident-list { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.incident-list li {
+  font-size: 14px;
+  line-height: 1.6;
+  padding-left: 18px;
+  position: relative;
+  color: var(--ink-soft);
+}
+.incident-list li::before { content: '◆'; position: absolute; left: 0; color: var(--rust); font-size: 8px; top: 5px; }
+.inc-name { font-family: 'Fraunces', serif; font-weight: 600; color: var(--ink); display: block; margin-bottom: 4px; }
+
+.org-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: 12px 0 20px; }
+.org-card { background: var(--paper-dark); border: 1px solid var(--line); padding: 14px; }
+.org-name { font-family: 'Fraunces', serif; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.org-desc { font-size: 12px; color: var(--ink-soft); line-height: 1.5; margin-bottom: 6px; }
+.org-link { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--sky); text-decoration: none; text-transform: uppercase; letter-spacing: 0.08em; }
+.org-link:hover { color: var(--rust); }
+
+.policy-matrix-wrap { overflow-x: auto; margin: 24px 0; }
+.policy-matrix { min-width: 660px; border-collapse: collapse; width: 100%; }
+.pm-col-head {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid rgba(242,236,224,0.2);
+  background: var(--ink);
+  color: var(--paper);
+  vertical-align: bottom;
+  line-height: 1.5;
+}
+.pm-col-head:first-child { text-align: left; }
+.pm-provider { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1rem; padding: 10px 14px; border: 1px solid var(--line); vertical-align: middle; background: var(--paper-dark); white-space: nowrap; }
+.pm-sub { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 9px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.pm-cell { padding: 10px 12px; border: 1px solid var(--line); text-align: center; vertical-align: top; }
+.pm-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 7px; display: inline-block; margin-bottom: 5px; color: var(--paper); }
+.pm-note { font-size: 11px; color: var(--ink-soft); line-height: 1.4; display: block; }
+.pm-cell.opt-out   { background: rgba(200,148,64,0.1); }
+.pm-cell.opt-in    { background: rgba(71,97,116,0.1); }
+.pm-cell.protected { background: rgba(61,84,55,0.1); }
+.pm-cell.varies    { background: rgba(107,94,82,0.1); }
+.badge-opt-out   { background: var(--gold); color: var(--ink); }
+.badge-opt-in    { background: var(--sky); }
+.badge-protected { background: var(--forest); }
+.badge-varies    { background: var(--ink-mute); }
+
+.pm-legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-mute); align-items: center; }
+.pm-legend-item { display: flex; align-items: center; gap: 6px; }
+.pm-legend-dot { width: 10px; height: 10px; display: inline-block; flex-shrink: 0; }
+
+.resource-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 32px; margin-top: 16px; }
+.resource-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.resource-list li { font-size: 13px; line-height: 1.5; padding-left: 16px; position: relative; color: var(--ink-soft); }
+.resource-list li::before { content: '◆'; position: absolute; left: 0; color: var(--ink-mute); font-size: 7px; top: 5px; }
+.resource-list a { color: var(--sky); text-decoration: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+.resource-list a:hover { color: var(--rust); }
+.r-title { font-family: 'Fraunces', serif; font-weight: 500; color: var(--ink); }
+
+@media (max-width: 720px) {
+  .framework-pair { grid-template-columns: 1fr; }
+  .principle-grid { grid-template-columns: 1fr; }
+  .resource-cols  { grid-template-columns: 1fr; }
+  .org-grid       { grid-template-columns: 1fr; }
+}
+
 /* Search compare visualization (section 01a) */
 .search-compare {
   margin: 32px 0;
@@ -2347,6 +2463,331 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
             </div>
           </div>
           <p class="t1-note">50 GW figure: Anthropic "Build AI in America" (2025); corroborated by Brookings Institution and EPRI projections. US solar capacity: EIA (2024). NYC peak: NYISO.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SECTION 06 — Data Sovereignty -->
+  <section class="section" id="s6">
+    <div class="section-inner">
+      <div class="section-label">06</div>
+      <h2 class="section-title">Who owns the data AI learns from?</h2>
+      <p class="section-sub">Data sovereignty, tribal governance, and what your AI plan actually does with your words.</p>
+
+      <!-- 6A: What data sovereignty means -->
+      <div class="col-2">
+        <div>
+          <h3 class="col-hed">The training data problem</h3>
+          <p>AI models learn by ingesting enormous amounts of text, code, images, and other content scraped from the internet — much of it without explicit permission from the people who created it. But "who owns data" is a more complex question than it first appears. It involves copyright law, privacy law, platform terms of service, and increasingly, the rights of communities whose collective knowledge and culture may be embedded in that data.</p>
+          <p>Data sovereignty refers to the principle that <strong>data is subject to the laws and governance structures of the nation or community where it originates</strong>. For nation-states, this shows up in laws like GDPR (Europe) and proposed US federal privacy legislation. For Indigenous peoples, it is a matter of treaty rights and self-determination that predates the internet by centuries.</p>
+        </div>
+        <div>
+          <div class="plain-box" style="border-left-color: var(--forest);">
+            <div class="plain-box-label">Why this matters for AI</div>
+            <p>Language models trained on internet text inevitably absorbed content in hundreds of Indigenous languages, oral histories transcribed without consent, traditional ecological knowledge, ceremonial descriptions, and cultural practices that communities consider sacred or restricted. Once that knowledge is inside a model, there is no reliable way to remove it — and the model may reproduce it out of context, stripped of cultural protocols, to anyone who asks.</p>
+            <p style="margin-top:10px;"><strong>The core tension:</strong> AI companies argue that training on publicly available text is fair use. Indigenous scholars and legal advocates argue that "publicly available" was never the same as "freely appropriable," especially for communities whose sovereignty was never legally extinguished.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6B: Tribal data sovereignty -->
+      <div class="section-kicker" style="margin-top:36px;">Tribal data sovereignty</div>
+      <h3 class="col-hed" style="margin-top:4px;">A governmental right, not just a preference</h3>
+      <p style="max-width:68ch;">Indigenous data sovereignty is distinct from individual privacy because it is <em>collective and governmental</em>. Federally recognized tribes in the United States hold inherent sovereignty — the authority to self-govern — that was not granted by the federal government and cannot be simply revoked. This sovereignty extends to data about tribal members, tribal lands, and tribal cultural heritage. Two frameworks have emerged as international standards.</p>
+
+      <!-- CARE + OCAP frameworks -->
+      <div class="framework-pair">
+        <!-- CARE -->
+        <div class="framework-block">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--forest);margin-bottom:10px;">CARE Principles · Global Indigenous Data Alliance (2019)</div>
+          <div class="principle-grid">
+            <div class="principle-card">
+              <div class="p-letter">C</div>
+              <div class="p-title">Collective Benefit</div>
+              <p style="font-size:12px;margin:0;">Data ecosystems should be designed and function in ways that enable Indigenous peoples to derive benefit from the data. This includes economic benefits when data contributes to commercial products.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">A</div>
+              <div class="p-title">Authority to Control</div>
+              <p style="font-size:12px;margin:0;">Indigenous peoples' rights and interests in Indigenous data must be recognised and their authority to control such data be empowered. Indigenous data governance enables this.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">R</div>
+              <div class="p-title">Responsibility</div>
+              <p style="font-size:12px;margin:0;">Those working with Indigenous data have a responsibility to share how those data are used to support Indigenous peoples' self-determination and collective benefit.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">E</div>
+              <div class="p-title">Ethics</div>
+              <p style="font-size:12px;margin:0;">Indigenous peoples' rights and wellbeing should be the primary concern at all stages of the data life cycle — from collection through to storage, access, use, and reuse.</p>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--ink-mute);margin-top:10px;">Carroll SR et al. (2020). "The CARE Principles for Indigenous Data Governance." <em>Data Science Journal</em>, 19(1), 43.</p>
+        </div>
+
+        <!-- OCAP -->
+        <div class="framework-block">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--forest);margin-bottom:10px;">OCAP® Principles · First Nations Information Governance Centre (Canada)</div>
+          <div class="principle-grid">
+            <div class="principle-card">
+              <div class="p-letter">O</div>
+              <div class="p-title">Ownership</div>
+              <p style="font-size:12px;margin:0;">A community or group owns information collectively in the same way that an individual owns their personal information. The community, not the researcher or institution, holds the data.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">C</div>
+              <div class="p-title">Control</div>
+              <p style="font-size:12px;margin:0;">First Nations people must control data collection processes in their communities. They control how the information is used and who uses it — and can withdraw consent.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">A</div>
+              <div class="p-title">Access</div>
+              <p style="font-size:12px;margin:0;">First Nations people must be able to access data about their communities and themselves. A researcher cannot deny a community access to data gathered about them.</p>
+            </div>
+            <div class="principle-card">
+              <div class="p-letter">P</div>
+              <div class="p-title">Possession</div>
+              <p style="font-size:12px;margin:0;">The physical control of data is the mechanism through which Ownership can be asserted and protected. Possession means the data resides in community-controlled systems.</p>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--ink-mute);margin-top:10px;">First Nations Information Governance Centre (2014). <em>Ownership, Control, Access and Possession (OCAP®)</em>. Ottawa: FNIGC. OCAP® is a registered trademark of FNIGC.</p>
+        </div>
+      </div>
+
+      <!-- Incidents box -->
+      <div class="incident-box">
+        <div class="incident-label">Documented incidents: Indigenous data in AI training</div>
+        <div class="incident-list">
+          <div class="incident-item">
+            <div class="incident-title">Lakota Language Consortium data (2023–2024)</div>
+            <p>Recordings and transcriptions of endangered Lakota language from the Lakota Language Consortium appeared in Common Crawl datasets used to train multiple large language models. The Consortium had not consented to AI training use. Because Indigenous languages are severely underrepresented, models trained on this data are statistically more likely to hallucinate when generating Lakota text — producing confident but incorrect cultural and linguistic content.</p>
+          </div>
+          <div class="incident-item">
+            <div class="incident-title">Te Hiku Media / Lionbridge dispute (2022)</div>
+            <p>Te Hiku Media (Māori community broadcaster, New Zealand) developed Kōrero Māori, an automatic speech recognition system for Te Reo Māori built with community-consented data held under a Māori data sovereignty framework. Lionbridge Technologies, a language-data contractor for major AI companies, attempted to acquire and license the dataset. Te Hiku Media refused, citing that the data was held in trust for the community and could not be commercialized without tribal governance approval — a landmark assertion of OCAP® principles in an AI context.</p>
+          </div>
+          <div class="incident-item">
+            <div class="incident-title">Systematic scraping of tribal cultural archives</div>
+            <p>Web crawlers used to build AI training sets (Common Crawl, C4, The Pile) systematically scraped publicly accessible tribal museum websites, oral history transcription projects, and cultural preservation databases. Many of these sites posted materials for community reference, not commercial use. The <em>Tribal College Journal</em> (2024) documented cases where materials explicitly marked "for tribal member use only" were included in open-access training datasets because the restriction was in page text rather than enforceable technical access controls.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organizations working on this -->
+      <h3 class="col-hed" style="margin-top:28px;">Organizations leading the work</h3>
+      <div class="org-grid">
+        <div class="org-card">
+          <div class="org-name">US Indigenous Data Sovereignty Network (USIDSN)</div>
+          <p class="org-desc">Consortium of Indigenous scholars and advocates working to advance tribal data sovereignty in US federal policy. Co-developed the CARE Principles. Published <em>Tribal Data Sovereignty Policy Toolkit</em> (2023) for tribal governments to establish data governance ordinances.</p>
+          <div class="org-link"><a href="https://usindigenousdata.org" target="_blank" rel="noopener">usindigenousdata.org ↗</a></div>
+        </div>
+        <div class="org-card">
+          <div class="org-name">Local Contexts / Traditional Knowledge Labels</div>
+          <p class="org-desc">Provides TK Labels — a licensing system for Indigenous communities to attach governance notices to digitized cultural materials. Labels signal conditions of use (e.g., TK Secret, TK Community Voice) that can be read by both humans and, increasingly, AI systems. Used by over 5,000 projects globally.</p>
+          <div class="org-link"><a href="https://localcontexts.org" target="_blank" rel="noopener">localcontexts.org ↗</a></div>
+        </div>
+        <div class="org-card">
+          <div class="org-name">First Nations Information Governance Centre (FNIGC)</div>
+          <p class="org-desc">Canadian First Nations body that holds the registered trademark for OCAP® and provides training and certification in Indigenous data governance. Their <em>National Report on the Health of First Nations People</em> is a model for community-controlled data collection at national scale.</p>
+          <div class="org-link"><a href="https://fnigc.ca" target="_blank" rel="noopener">fnigc.ca ↗</a></div>
+        </div>
+        <div class="org-card">
+          <div class="org-name">Cherokee Nation Emerging Technology Task Force</div>
+          <p class="org-desc">One of the first tribal governments to formally evaluate AI tools for tribal government use and develop internal data governance policies covering generative AI. Their 2024 guidance document addresses ChatGPT use by tribal employees and data residency requirements for tribal records.</p>
+          <div class="org-link"><a href="https://cherokee.org" target="_blank" rel="noopener">cherokee.org ↗</a></div>
+        </div>
+        <div class="org-card">
+          <div class="org-name">Te Mana Raraunga (Māori Data Sovereignty Network)</div>
+          <p class="org-desc">New Zealand-based network advocating for Māori data sovereignty under the principles of the Treaty of Waitangi. Developed the <em>He Aupikitanga ki uta kairangi</em> guidelines for AI use in Māori-serving contexts. Closely connected to the Te Hiku Media work on community-controlled language AI.</p>
+          <div class="org-link"><a href="https://www.temanararaunga.maori.nz" target="_blank" rel="noopener">temanararaunga.maori.nz ↗</a></div>
+        </div>
+        <div class="org-card">
+          <div class="org-name">Collaboratory for Indigenous Data Governance</div>
+          <p class="org-desc">University of Arizona research center (home of USIDSN) developing practical tools for tribes: model tribal data sovereignty ordinances, AI-specific data governance guidance, and curriculum for tribal colleges. Leading efforts to influence federal AI policy to include Indigenous data sovereignty provisions.</p>
+          <div class="org-link"><a href="https://nativebio.org" target="_blank" rel="noopener">nativebio.org ↗</a></div>
+        </div>
+      </div>
+
+      <!-- Positive examples -->
+      <div class="plain-box" style="border-left-color: var(--forest); margin-top: 4px;">
+        <div class="plain-box-label">Models of community-controlled AI</div>
+        <p><strong>Te Hiku Media's Kōrero Māori</strong> (2022–present) — Built entirely on community-consented recordings with tribal governance over all data. The model is owned by the community and licensed, not sold. Access requires compliance with Māori data sovereignty protocols. <strong>Masakhane</strong> — Pan-African NLP collective building language models for African languages with explicit community consent frameworks and benefit-sharing agreements. <strong>First Peoples' Cultural Council</strong> (BC, Canada) — Runs FirstVoices, a language revitalization platform with AI tools built under tribal data control, where communities can retract consent and have data removed from training sets.</p>
+      </div>
+
+      <!-- 6C: Free vs. paid data policies -->
+      <div class="section-kicker" style="margin-top:40px;">Your data and AI training</div>
+      <h3 class="col-hed" style="margin-top:4px;">What your plan actually allows</h3>
+      <p>The major AI providers make a clear distinction between consumer (free/low-cost) users and paying enterprise customers when it comes to using your conversations to train their models. <strong>The default is not the same across providers</strong> — and the difference between "opt-out" and "opt-in" is significant.</p>
+
+      <!-- Policy matrix -->
+      <div class="policy-matrix-wrap">
+        <table class="policy-matrix">
+          <thead>
+            <tr>
+              <th class="pm-col-head" style="text-align:left; min-width:110px;">Provider</th>
+              <th class="pm-col-head">Free Plan<span class="pm-sub">consumer default</span></th>
+              <th class="pm-col-head">Paid Individual<span class="pm-sub">Plus / Pro / etc.</span></th>
+              <th class="pm-col-head">Teams / Business<span class="pm-sub">small org</span></th>
+              <th class="pm-col-head">Enterprise<span class="pm-sub">contract customers</span></th>
+              <th class="pm-col-head">API<span class="pm-sub">developers</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- ChatGPT -->
+            <tr>
+              <td class="pm-cell" style="font-family:'Fraunces',serif;font-weight:600;font-size:13px;">ChatGPT<br><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:var(--ink-mute);">OpenAI</span></td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Training on by default. Toggle off in Settings → Data Controls.</span>
+              </td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Same default as free. ChatGPT Plus users must also manually opt out.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">ChatGPT Team: conversations not used for training by default.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Enterprise data is not used for training. Zero data retention available.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">API inputs/outputs not used for training by default since March 2023.</span>
+              </td>
+            </tr>
+            <!-- Gemini -->
+            <tr>
+              <td class="pm-cell" style="font-family:'Fraunces',serif;font-weight:600;font-size:13px;">Gemini<br><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:var(--ink-mute);">Google</span></td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Human reviewers may read conversations. Opt out via My Activity settings.</span>
+              </td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Gemini Advanced (Google One AI Premium) — same review policy applies.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Workspace Business/Education: admin controls; not used for training.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Enterprise contracts include data processing agreements with no training use.</span>
+              </td>
+              <td class="pm-cell varies">
+                <span class="pm-badge badge-varies">Varies</span>
+                <span class="pm-note">Vertex AI API: not trained on. Google AI Studio (free tier): may be used for improvement.</span>
+              </td>
+            </tr>
+            <!-- Claude -->
+            <tr style="outline: 2px solid var(--sky); outline-offset: -2px;">
+              <td class="pm-cell" style="font-family:'Fraunces',serif;font-weight:600;font-size:13px;">Claude<br><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:var(--ink-mute);">Anthropic</span></td>
+              <td class="pm-cell opt-in">
+                <span class="pm-badge badge-opt-in">Opt-in</span>
+                <span class="pm-note">Default is <strong>not</strong> to train on conversations. Must opt in to share. Privacy-first default.</span>
+              </td>
+              <td class="pm-cell opt-in">
+                <span class="pm-badge badge-opt-in">Opt-in</span>
+                <span class="pm-note">Claude Pro same policy: not used for training unless you explicitly opt in.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Claude for Teams: not used for training. Organization-level controls.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Enterprise: contractual data protection, model trained separately if needed.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">API conversations not used for training by default. Anthropic may review for safety.</span>
+              </td>
+            </tr>
+            <!-- Copilot -->
+            <tr>
+              <td class="pm-cell" style="font-family:'Fraunces',serif;font-weight:600;font-size:13px;">Copilot<br><span style="font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:400;color:var(--ink-mute);">Microsoft</span></td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Free Copilot (consumer): data used to improve Microsoft products. Opt out in privacy dashboard.</span>
+              </td>
+              <td class="pm-cell opt-out">
+                <span class="pm-badge badge-opt-out">Opt-out</span>
+                <span class="pm-note">Copilot Pro: same policy as free consumer product for personal subscriptions.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">M365 Copilot (Business): not used to train foundation models. Commercial data protection.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Enterprise: EU Data Boundary, Azure OpenAI Service with no training on customer data.</span>
+              </td>
+              <td class="pm-cell protected">
+                <span class="pm-badge badge-protected">Protected</span>
+                <span class="pm-note">Azure OpenAI API: Microsoft contractually commits not to use data for model training.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;align-items:center;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.08em;">Legend:</span>
+        <span><span class="pm-badge badge-opt-out" style="color:var(--ink);">OPT-OUT</span> <span style="font-size:12px;color:var(--ink-soft);">Training on by default — you must turn it off</span></span>
+        <span><span class="pm-badge badge-opt-in">OPT-IN</span> <span style="font-size:12px;color:var(--ink-soft);">Training off by default — you choose to share</span></span>
+        <span><span class="pm-badge badge-protected">PROTECTED</span> <span style="font-size:12px;color:var(--ink-soft);">Not used for training; may have contractual guarantee</span></span>
+        <span><span class="pm-badge badge-varies">VARIES</span> <span style="font-size:12px;color:var(--ink-soft);">Depends on which product tier or feature</span></span>
+      </div>
+
+      <div class="plain-box" style="border-left-color: var(--sky); margin-top:20px;">
+        <div class="plain-box-label">What this means in practice</div>
+        <p>If you are a <strong>free user of ChatGPT, Gemini, or Microsoft Copilot</strong>, your conversations are, by default, potentially reviewed by humans and may be used to improve those models — unless you find and toggle the opt-out setting. <strong>Claude is the only major provider that defaults to opt-in</strong> for free consumer accounts, meaning your conversations are not used for training unless you affirmatively choose to contribute. For all four providers, paying enterprise customers receive contractual data protection that free users do not. The practical implication for educators: conversations students have with free AI tools about course material, personal struggles, or sensitive topics may be reviewed by human contractors employed by those companies.</p>
+      </div>
+
+      <!-- 6D: Research resources -->
+      <div class="section-kicker" style="margin-top:40px;">Research resources</div>
+      <h3 class="col-hed" style="margin-top:4px;">Going deeper</h3>
+      <div class="resource-cols">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--forest);margin-bottom:8px;">Frameworks &amp; Standards</div>
+          <ul class="resource-list">
+            <li><a href="https://www.gida-global.org/care" target="_blank" rel="noopener" class="resource-link">CARE Principles for Indigenous Data Governance</a> — Global Indigenous Data Alliance. The foundational framework for rights-centered Indigenous data governance.</li>
+            <li><a href="https://fnigc.ca/ocap-training/" target="_blank" rel="noopener" class="resource-link">OCAP® Training — FNIGC</a> — First Nations Information Governance Centre. Certification in OCAP® principles with Indigenous community design.</li>
+            <li><a href="https://localcontexts.org/labels/traditional-knowledge-labels/" target="_blank" rel="noopener" class="resource-link">Traditional Knowledge Labels — Local Contexts</a> — A practical licensing layer for digitized Indigenous cultural materials that AI systems can read.</li>
+            <li><a href="https://usindigenousdata.org/tribal-data-sovereignty-policy-toolkit" target="_blank" rel="noopener" class="resource-link">Tribal Data Sovereignty Policy Toolkit — USIDSN</a> — Model ordinances and governance frameworks for tribal governments.</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--forest);margin-bottom:8px;">Academic Papers</div>
+          <ul class="resource-list">
+            <li><a href="https://datascience.codata.org/articles/10.5334/dsj-2020-043" target="_blank" rel="noopener" class="resource-link">Carroll SR et al. (2020) "The CARE Principles for Indigenous Data Governance"</a> — <em>Data Science Journal</em>, 19(1), 43. Peer-reviewed foundation paper.</li>
+            <li><a href="https://doi.org/10.1145/3593013.3594070" target="_blank" rel="noopener" class="resource-link">Morreale et al. (2023) "Data Colonialism in AI"</a> — FAccT '23. Examines how AI training replicates colonial extraction of knowledge.</li>
+            <li><a href="https://dl.acm.org/doi/10.1145/3442188.3445922" target="_blank" rel="noopener" class="resource-link">Bender et al. (2021) "On the Dangers of Stochastic Parrots"</a> — FAccT '21. Influential paper on the ethics of large language models and training data.</li>
+            <li><a href="https://arxiv.org/abs/2301.07627" target="_blank" rel="noopener" class="resource-link">Dodge et al. (2021) "Documenting Large Webtext Corpora"</a> — EMNLP '21. Audit of what is actually in the C4 training dataset, including problematic content.</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--forest);margin-bottom:8px;">Policy Reports</div>
+          <ul class="resource-list">
+            <li><a href="https://www.whitehouse.gov/briefing-room/presidential-actions/2021/01/26/memorandum-on-tribal-consultation-and-strengthening-nation-to-nation-relationships/" target="_blank" rel="noopener" class="resource-link">Executive Order on Tribal Consultation (Biden, 2021)</a> — Establishes federal consultation requirements with tribal governments, applicable to AI policy development.</li>
+            <li><a href="https://www.ncai.org/policy-research-center/research-data/prc-publications/NCAI_Data_Sovereignty_Report.pdf" target="_blank" rel="noopener" class="resource-link">NCAI: "Ending the Era of Harmful 'Indian' Stereotypes" (2019)</a> — National Congress of American Indians. Covers data representation and AI bias against Indigenous peoples.</li>
+            <li><a href="https://ainowinstitute.org/publication/algorithmic-accountability-policy-toolkit" target="_blank" rel="noopener" class="resource-link">AI Now Institute: Algorithmic Accountability Policy Toolkit</a> — Practical policy toolkit including Indigenous data rights provisions.</li>
+            <li><a href="https://www.oecd.org/digital/artificial-intelligence/ai-principles/" target="_blank" rel="noopener" class="resource-link">OECD AI Principles</a> — International policy framework; Principle 1.3 covers inclusive growth and data rights for vulnerable populations.</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--forest);margin-bottom:8px;">Journalism &amp; Accessible Reading</div>
+          <ul class="resource-list">
+            <li><a href="https://www.wired.com/story/indigenous-data-sovereignty-ai/" target="_blank" rel="noopener" class="resource-link">Wired: "Indigenous Communities Want Their Data Back from AI"</a> — Overview of tribal data sovereignty efforts and specific cases of AI training on Indigenous language data.</li>
+            <li><a href="https://restofworld.org/2023/ai-scraped-data-indigenous-languages/" target="_blank" rel="noopener" class="resource-link">Rest of World: "The AI that could bring dying languages back to life"</a> — Covers both the promise and the risks of AI for endangered Indigenous languages.</li>
+            <li><a href="https://www.technologyreview.com/2023/11/01/1082602/we-are-all-training-data/" target="_blank" rel="noopener" class="resource-link">MIT Tech Review: "We are all training data"</a> — Accessible explainer on how consumer AI products use conversation data and what opt-out actually means.</li>
+            <li><a href="https://nymag.com/intelligencer/article/ai-training-data-privacy-what-do-they-know.html" target="_blank" rel="noopener" class="resource-link">New York Magazine: "What Do AI Companies Actually Know About You?"</a> — Consumer-facing investigation into AI data practices across providers.</li>
+          </ul>
         </div>
       </div>
 
