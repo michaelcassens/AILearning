@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Big Sky Ranch — A Montana Ranching Simulation</title>
+<title>Montana Ranch — A Ranching Simulation</title>
 <style>
   :root {
     --bg: #1c2024;
@@ -284,7 +284,7 @@
 
 <header>
   <div>
-    <h1>BIG SKY RANCH</h1>
+    <h1>MONTANA RANCH</h1>
     <div class="sub">A Montana Cattle, Horse & Hay Operation</div>
   </div>
   <div id="dateBanner" style="color: var(--accent); font-size: 16px; letter-spacing: 0.1em;"></div>
@@ -351,7 +351,7 @@
 
 <script>
 // ============================================================
-// BIG SKY RANCH — Montana Ranching Simulation
+// MONTANA RANCH — Ranching Simulation
 // ============================================================
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -687,7 +687,7 @@ const EVENTS = [
       const purse = randInt(8000, 24000);
       S.cash += purse;
       S.horses.reputation = clamp(S.horses.reputation + 10, 0, 100);
-      log(`Your colt placed in the Big Sky Futurity! Purse: ${fmt$(purse)}.`, 'good');
+      log(`Your colt placed in the Montana Futurity! Purse: ${fmt$(purse)}.`, 'good');
     }
   },
   { fire: () => { const cost = randInt(2000, 7500); S.cash -= cost; log(`Vet emergency: ${fmt$(cost)}.`, 'bad'); } },
@@ -2249,7 +2249,7 @@ function showGameOver() {
 
 function newGame() {
   S = freshState();
-  log("A new generation takes over the ranch. Welcome to Big Sky.", 'event');
+  log("A new generation takes over the ranch. Welcome to Montana Ranch.", 'event');
   log("Tip: hire summer help before May, fertilize before June, decide on calf contracts by July.", 'info');
   yearStart();
   rebuildSceneEntities();
