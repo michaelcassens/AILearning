@@ -1562,6 +1562,40 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
   .equivalent-viz { padding: 28px 22px; }
   .implications, .glossary { padding: 24px; }
 }
+
+/* ── Accordion ──────────────────────────────────────────── */
+.section-header {
+  cursor: pointer;
+  user-select: none;
+}
+.section-header:hover { opacity: 0.82; }
+.section-header:focus-visible {
+  outline: 2px solid var(--rust);
+  outline-offset: 3px;
+}
+
+.section-chevron {
+  margin-left: auto;
+  padding-left: 16px;
+  color: var(--ink-mute);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  transition: transform 0.35s ease;
+}
+.section--collapsed .section-chevron { transform: rotate(-90deg); }
+
+/* Grid-row trick: smooth open/close with no JS height measuring */
+.section-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.38s ease;
+}
+.section-body-inner { overflow: hidden; }
+.section--collapsed .section-body { grid-template-rows: 0fr; }
+
+/* Collapsed: nudge margin so sections don't look detached */
+.section--collapsed { margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -2821,12 +2855,94 @@ tbody tr:hover { background: rgba(184, 68, 42, 0.04); }
 </div>
 
 <script>
+  // House grid
   const grid = document.getElementById('houseGrid');
   for (let i = 0; i < 57; i++) {
     const h = document.createElement('div');
     h.className = 'house' + (i < 5 ? ' accent' : '');
     grid.appendChild(h);
   }
+
+  // ── Accordion ────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    const chevronSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+    document.querySelectorAll('section.section').forEach(section => {
+      let trigger, contentParent;
+
+      const legacyHeader = section.querySelector(':scope > .section-header');
+      const innerWrap    = section.querySelector(':scope > .section-inner');
+
+      if (legacyHeader) {
+        // Sections 01 – 05: header is a direct child of <section>
+        trigger       = legacyHeader;
+        contentParent = section;
+      } else if (innerWrap) {
+        // Section 06: everything lives inside .section-inner
+        const label = innerWrap.querySelector('.section-label');
+        const title = innerWrap.querySelector('.section-title');
+        const sub   = innerWrap.querySelector('.section-sub');
+
+        // Build a header from label + title + subtitle
+        const fakeHeader = document.createElement('div');
+        fakeHeader.className = 'section-header';
+
+        const numSpan = document.createElement('span');
+        numSpan.className = 'section-number';
+        numSpan.textContent = label ? label.textContent : '';
+
+        const titleBlock = document.createElement('div');
+        titleBlock.style.flex = '1';
+        if (title) titleBlock.appendChild(title);
+        if (sub)   titleBlock.appendChild(sub);
+
+        fakeHeader.appendChild(numSpan);
+        fakeHeader.appendChild(titleBlock);
+        if (label) label.remove();
+
+        innerWrap.prepend(fakeHeader);
+        trigger       = fakeHeader;
+        contentParent = innerWrap;
+      } else {
+        return; // skip anything that doesn't match
+      }
+
+      // Wrap all non-trigger children in .section-body > .section-body-inner
+      const body      = document.createElement('div');
+      body.className  = 'section-body';
+      const bodyInner = document.createElement('div');
+      bodyInner.className = 'section-body-inner';
+
+      [...contentParent.children]
+        .filter(el => el !== trigger)
+        .forEach(el => bodyInner.appendChild(el));
+
+      body.appendChild(bodyInner);
+      contentParent.appendChild(body);
+
+      // Append animated chevron
+      const chevron = document.createElement('span');
+      chevron.className   = 'section-chevron';
+      chevron.innerHTML   = chevronSVG;
+      chevron.setAttribute('aria-hidden', 'true');
+      trigger.appendChild(chevron);
+
+      // Accessibility
+      trigger.setAttribute('role',          'button');
+      trigger.setAttribute('aria-expanded', 'true');
+      trigger.setAttribute('tabindex',      '0');
+
+      const toggle = () => {
+        const collapsed = section.classList.toggle('section--collapsed');
+        trigger.setAttribute('aria-expanded', String(!collapsed));
+      };
+
+      trigger.addEventListener('click', toggle);
+      trigger.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+      });
+    });
+  });
 </script>
 </body>
 </html>
