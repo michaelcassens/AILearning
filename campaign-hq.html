@@ -8,9 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
 <style>
 /* ===== CSS RESET & BASE ===== */
@@ -671,7 +668,7 @@ h1, h2, h3, .font-display {
     <div class="splash-subtitle">Master the Claude Toolkit</div>
     <input id="player-name" class="input-field" type="text" placeholder="Enter your volunteer name" maxlength="30" autocomplete="off">
     <button class="btn btn-primary" onclick="startGame()">Join the Mission →</button>
-    <p class="splash-tagline">Compete with your team on the live leaderboard</p>
+    <p class="splash-tagline">Learn Claude tools through real campaign scenarios</p>
   </div>
 </div>
 
@@ -683,7 +680,6 @@ h1, h2, h3, .font-display {
     <h2 id="tracks-heading">Choose Your Mission</h2>
     <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
       <span style="font-size:0.9rem;color:var(--gray);">Total Score: <span id="total-score-display" style="color:var(--gold);font-weight:800;">0</span></span>
-      <button class="btn btn-gold" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
     </div>
   </div>
   <div class="tracks-grid" id="tracks-grid"></div>
@@ -720,77 +716,13 @@ h1, h2, h3, .font-display {
       Total Campaign Score: <span id="complete-total" style="color:var(--gold);font-weight:700;">0</span> pts
     </div>
     <div class="complete-actions">
-      <button class="btn btn-gold" onclick="showScreen('leaderboard')">View Leaderboard</button>
-      <button class="btn btn-outline" onclick="showScreen('tracks')">Pick Another Mission</button>
+      <button class="btn btn-gold" onclick="showScreen('tracks')">Pick Another Mission</button>
     </div>
   </div>
 </div>
 
-<!-- ============================
-     SCREEN 5: LEADERBOARD
-     ============================ -->
-<div id="screen-leaderboard" class="screen">
-  <div class="screen-header">
-    <h2>🏆 Campaign Leaderboard</h2>
-    <button class="btn btn-ghost" onclick="showScreen('tracks')">← Back to Missions</button>
-  </div>
-  <div class="leaderboard-body">
-    <div id="local-note" class="local-note hidden">
-      <strong>📋 Local Session Scores</strong> — Firebase not configured. Showing scores from this session only.
-      <br>To enable the live leaderboard, replace the Firebase config at the top of the JS section.
-    </div>
-    <div id="lb-loading" style="text-align:center;padding:2rem;"><div class="spinner"></div></div>
-    <table class="leaderboard-table hidden" id="lb-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Volunteer</th>
-          <th>Score</th>
-          <th>Latest Track</th>
-          <th>Time</th>
-        </tr>
-      </thead>
-      <tbody id="lb-body"></tbody>
-    </table>
-    <div id="lb-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--gray);">
-      No scores yet — be the first! 🚀
-    </div>
-  </div>
-</div>
 
 <script>
-// =====================================================================
-// FIREBASE CONFIGURATION
-// SETUP: Replace with your Firebase config from console.firebase.google.com
-// After replacing, set up Database Rules in Firebase console:
-// {
-//   "rules": {
-//     "leaderboard": {
-//       ".read": true,
-//       ".write": true
-//     }
-//   }
-// }
-// =====================================================================
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-};
-
-// Detect placeholder config
-const FIREBASE_ENABLED = !firebaseConfig.apiKey.startsWith("YOUR_");
-let db = null;
-
-if (FIREBASE_ENABLED) {
-  try {
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.database();
-  } catch(e) {
-    console.warn("Firebase init failed:", e);
-  }
-}
 
 // =====================================================================
 // GAME DATA
@@ -1308,7 +1240,6 @@ function showScreen(name) {
   if (el) el.classList.add('active');
 
   if (name === 'tracks') renderTracks();
-  if (name === 'leaderboard') renderLeaderboard();
 }
 
 // =====================================================================
@@ -1582,7 +1513,6 @@ function completeMission() {
 
   showScreen('complete');
   startConfetti();
-  postToLeaderboard();
 }
 
 // =====================================================================
@@ -1629,114 +1559,9 @@ function startConfetti() {
   requestAnimationFrame(draw);
 }
 
-// =====================================================================
-// FIREBASE / LEADERBOARD
-// =====================================================================
-function postToLeaderboard() {
-  const entry = {
-    name: gameState.playerName,
-    score: gameState.sessionScore,
-    badges: gameState.earnedBadges.join(', ') || '—',
-    trackName: gameState.currentTrack.name,
-    timestamp: Date.now(),
-  };
-
-  if (FIREBASE_ENABLED && db) {
-    db.ref('leaderboard').push(entry).catch(e => console.warn("Firebase write error:", e));
-  } else {
-    // Local session storage fallback
-    const local = JSON.parse(sessionStorage.getItem('campaign_hq_scores') || '[]');
-    // Update or add player's best score
-    const existingIdx = local.findIndex(e => e.name === entry.name);
-    if (existingIdx >= 0) {
-      if (entry.score > local[existingIdx].score) local[existingIdx] = entry;
-    } else {
-      local.push(entry);
-    }
-    sessionStorage.setItem('campaign_hq_scores', JSON.stringify(local));
-  }
-}
-
-function renderLeaderboard() {
-  const loading = document.getElementById('lb-loading');
-  const table = document.getElementById('lb-table');
-  const empty = document.getElementById('lb-empty');
-  const localNote = document.getElementById('local-note');
-
-  loading.classList.remove('hidden');
-  table.classList.add('hidden');
-  empty.classList.add('hidden');
-
-  if (FIREBASE_ENABLED && db) {
-    localNote.classList.add('hidden');
-    db.ref('leaderboard')
-      .orderByChild('score')
-      .limitToLast(20)
-      .once('value')
-      .then(snap => {
-        const entries = [];
-        snap.forEach(child => entries.push(child.val()));
-        entries.sort((a, b) => b.score - a.score);
-        renderLbTable(entries);
-      })
-      .catch(() => {
-        renderLbTable([]);
-      });
-  } else {
-    localNote.classList.remove('hidden');
-    const local = JSON.parse(sessionStorage.getItem('campaign_hq_scores') || '[]');
-    local.sort((a, b) => b.score - a.score);
-    renderLbTable(local.slice(0, 20));
-  }
-}
-
-function renderLbTable(entries) {
-  const loading = document.getElementById('lb-loading');
-  const table = document.getElementById('lb-table');
-  const empty = document.getElementById('lb-empty');
-  const body = document.getElementById('lb-body');
-
-  loading.classList.add('hidden');
-
-  if (!entries.length) {
-    empty.classList.remove('hidden');
-    return;
-  }
-
-  table.classList.remove('hidden');
-  body.innerHTML = entries.map((e, i) => {
-    const isMe = e.name === gameState.playerName;
-    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
-    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-    const time = e.timestamp ? timeAgo(e.timestamp) : '—';
-    return `<tr class="${isMe ? 'mine' : ''}">
-      <td class="${rankClass}" style="font-weight:800;">${medal}</td>
-      <td>${escHtml(e.name)} ${isMe ? '← you' : ''}</td>
-      <td style="font-weight:800;color:var(--gold)">${e.score.toLocaleString()} pts</td>
-      <td style="color:var(--gray)">${escHtml(e.trackName || '—')}</td>
-      <td style="color:var(--gray);font-size:0.8rem">${time}</td>
-    </tr>`;
-  }).join('');
-}
-
-function timeAgo(ts) {
-  const diff = Math.floor((Date.now() - ts) / 1000);
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-  return Math.floor(diff/86400) + 'd ago';
-}
-
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// Auto-refresh leaderboard every 30 seconds when on that screen
-setInterval(() => {
-  if (document.getElementById('screen-leaderboard').classList.contains('active')) {
-    renderLeaderboard();
-  }
-}, 30000);
 
 // =====================================================================
 // INIT
