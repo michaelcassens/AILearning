@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign HQ: Master the Claude Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+
+<style>
+/* ===== CSS RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy: #1B2A4A;
+  --navy-light: #243660;
+  --navy-lighter: #2d4275;
+  --red: #E63946;
+  --red-dark: #c02e3a;
+  --white: #FFFFFF;
+  --gold: #FFD166;
+  --gold-dark: #e6b84a;
+  --green: #2DC653;
+  --yellow: #FFC107;
+  --gray: #8892a4;
+  --card-bg: rgba(255,255,255,0.06);
+  --card-border: rgba(255,255,255,0.12);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 0.04em;
+}
+
+/* ===== SCREEN SYSTEM ===== */
+.screen {
+  display: none;
+  min-height: 100vh;
+  animation: slideIn 0.35s ease;
+}
+.screen.active { display: flex; flex-direction: column; }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== SPLASH SCREEN ===== */
+#screen-splash {
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+#star-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.splash-content {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  width: 100%;
+}
+
+.splash-logo {
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  color: var(--gold);
+  line-height: 1;
+  text-shadow: 0 0 40px rgba(255,209,102,0.4);
+}
+
+.splash-subtitle {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  color: var(--white);
+  margin-bottom: 2.5rem;
+  opacity: 0.9;
+  font-family: 'Bebas Neue', cursive;
+  letter-spacing: 0.1em;
+}
+
+.splash-tagline {
+  font-size: 0.9rem;
+  color: var(--gray);
+  margin-top: 1.5rem;
+}
+
+.red-bar {
+  width: 80px;
+  height: 5px;
+  background: var(--red);
+  border-radius: 3px;
+  margin: 0.75rem auto 1.5rem;
+}
+
+/* ===== INPUTS & BUTTONS ===== */
+.input-field {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  border-radius: 10px;
+  border: 2px solid var(--card-border);
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  font-size: 1.05rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 1rem;
+}
+.input-field::placeholder { color: var(--gray); }
+.input-field:focus { border-color: var(--gold); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.85rem 1.8rem;
+  border-radius: 10px;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  text-decoration: none;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+  background: var(--red);
+  color: var(--white);
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+.btn-primary:hover { background: var(--red-dark); }
+
+.btn-gold {
+  background: var(--gold);
+  color: var(--navy);
+  font-weight: 800;
+}
+.btn-gold:hover { background: var(--gold-dark); }
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--card-border);
+  color: var(--white);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+.btn-ghost {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  border: 1px solid var(--card-border);
+}
+
+/* ===== TRACK SELECT SCREEN ===== */
+#screen-tracks {
+  padding: 0;
+  flex-direction: column;
+}
+
+.screen-header {
+  background: var(--navy-light);
+  border-bottom: 2px solid var(--red);
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.screen-header h2 {
+  font-size: clamp(1.3rem, 4vw, 2rem);
+  color: var(--gold);
+}
+
+.tracks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+  padding: 1.5rem;
+  flex: 1;
+}
+
+.track-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.track-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+}
+.track-card.completed {
+  border-color: var(--green);
+  background: rgba(45, 198, 83, 0.07);
+}
+
+.track-icon { font-size: 2.8rem; margin-bottom: 0.5rem; }
+.track-name {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.5rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+.track-desc { font-size: 0.875rem; color: var(--gray); margin: 0.3rem 0 0.8rem; }
+.track-count { font-size: 0.8rem; color: var(--white); opacity: 0.7; }
+
+.track-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--red);
+  color: var(--white);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+  letter-spacing: 0.08em;
+}
+
+.track-play {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--green);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+}
+
+/* ===== SCENARIO SCREEN ===== */
+#screen-scenario {
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.scenario-topbar {
+  background: var(--navy-light);
+  border-bottom: 2px solid var(--red);
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.topbar-track {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+
+.topbar-score {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--white);
+  margin-left: auto;
+}
+
+.topbar-progress { font-size: 0.85rem; color: var(--gray); }
+
+.progress-bar-wrap {
+  height: 6px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 1.2rem;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.scenario-body {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.situation-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--red);
+  color: var(--white);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.scenario-title {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 0.75rem;
+}
+
+.scenario-desc {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-left: 4px solid var(--gold);
+  padding: 1rem 1.2rem;
+  border-radius: 0 10px 10px 0;
+}
+
+.your-move {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.answer-btn {
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.7rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.answer-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  background: rgba(255,209,102,0.08);
+  transform: translateX(3px);
+}
+.answer-btn:disabled { cursor: default; }
+
+.answer-btn.correct   { border-color: var(--green);  background: rgba(45,198,83,0.15); }
+.answer-btn.good      { border-color: var(--yellow);  background: rgba(255,193,7,0.15); }
+.answer-btn.okay      { border-color: var(--yellow);  background: rgba(255,193,7,0.1); }
+.answer-btn.weak      { border-color: var(--red);     background: rgba(230,57,70,0.12); }
+
+.answer-letter {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.6rem;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 1rem;
+  border-radius: 8px;
+  animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+}
+@keyframes popIn {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.score-badge.s100 { background: rgba(45,198,83,0.2);  color: var(--green); }
+.score-badge.s75  { background: rgba(255,209,102,0.2); color: var(--gold); }
+.score-badge.s50  { background: rgba(255,193,7,0.2);   color: var(--yellow); }
+.score-badge.s25  { background: rgba(230,57,70,0.2);   color: var(--red); }
+
+.feedback-panel {
+  background: var(--navy-light);
+  border: 1.5px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  margin-top: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+.feedback-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 0.8rem;
+}
+
+.pro-tip {
+  background: rgba(255,209,102,0.1);
+  border: 1px solid rgba(255,209,102,0.3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--gold);
+  line-height: 1.5;
+}
+
+.pro-tip-label {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+#btn-next {
+  margin-top: 1.2rem;
+  display: none;
+  background: var(--red);
+  color: var(--white);
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+#btn-next:hover { background: var(--red-dark); transform: translateY(-2px); }
+
+/* ===== MISSION COMPLETE ===== */
+#screen-complete {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.complete-content {
+  position: relative;
+  z-index: 1;
+  max-width: 520px;
+  width: 100%;
+}
+
+.complete-title {
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stars-display {
+  font-size: 2.5rem;
+  margin: 0.75rem 0;
+  letter-spacing: 0.2rem;
+}
+
+.complete-score {
+  font-family: 'Bebas Neue', cursive;
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: var(--white);
+  margin: 0.5rem 0;
+}
+
+.mission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,209,102,0.15);
+  border: 2px solid var(--gold);
+  border-radius: 12px;
+  padding: 0.8rem 1.5rem;
+  margin: 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.complete-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+/* ===== LEADERBOARD ===== */
+#screen-leaderboard {
+  flex-direction: column;
+}
+
+.leaderboard-body {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.leaderboard-table td {
+  padding: 0.75rem 0.8rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.leaderboard-table tr.mine td {
+  background: rgba(255,209,102,0.1);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.rank-1 { color: var(--gold); font-weight: 800; }
+.rank-2 { color: #C0C0C0; }
+.rank-3 { color: #CD7F32; }
+
+.local-note {
+  background: rgba(255,209,102,0.08);
+  border: 1px solid rgba(255,209,102,0.25);
+  border-radius: 10px;
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 1.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== SCORE COUNTER ===== */
+#score-counter {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 1.1rem;
+  color: var(--gold);
+  transition: transform 0.2s;
+}
+#score-counter.bump {
+  transform: scale(1.4);
+}
+
+/* ===== UTILITY ===== */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.hidden { display: none !important; }
+.gold { color: var(--gold); }
+.red { color: var(--red); }
+.green { color: var(--green); }
+
+/* ===== MOBILE ===== */
+@media (max-width: 600px) {
+  .tracks-grid { grid-template-columns: 1fr; padding: 1rem; gap: 1rem; }
+  .scenario-body { padding: 1rem; }
+  .screen-header { padding: 0.9rem 1rem; }
+  .complete-actions { flex-direction: column; }
+  .complete-actions .btn { width: 100%; }
+  .leaderboard-table th:nth-child(4),
+  .leaderboard-table td:nth-child(4) { display: none; }
+}
+
+/* ===== SCORE ANIMATION ===== */
+@keyframes scoreFloat {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+.score-float {
+  position: fixed;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2rem;
+  color: var(--gold);
+  pointer-events: none;
+  animation: scoreFloat 1.2s ease forwards;
+  z-index: 999;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================
+     SCREEN 1: SPLASH
+     ============================ -->
+<div id="screen-splash" class="screen active">
+  <canvas id="star-canvas"></canvas>
+  <div class="splash-content">
+    <div class="splash-logo">Campaign HQ</div>
+    <div class="red-bar"></div>
+    <div class="splash-subtitle">Master the Claude Toolkit</div>
+    <input id="player-name" class="input-field" type="text" placeholder="Enter your volunteer name" maxlength="30" autocomplete="off">
+    <button class="btn btn-primary" onclick="startGame()">Join the Mission →</button>
+    <p class="splash-tagline">Compete with your team on the live leaderboard</p>
+  </div>
+</div>
+
+<!-- ============================
+     SCREEN 2: TRACK SELECT
+     ============================ -->
+<div id="screen-tracks" class="screen">
+  <div class="screen-header">
+    <h2 id="tracks-heading">Choose Your Mission</h2>
+    <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+      <span style="font-size:0.9rem;color:var(--gray);">Total Score: <span id="total-score-display" style="color:var(--gold);font-weight:800;">0</span></span>
+      <button class="btn btn-gold" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
+    </div>
+  </div>
+  <div class="tracks-grid" id="tracks-grid"></div>
+</div>
+
+<!-- ============================
+     SCREEN 3: SCENARIO
+     ============================ -->
+<div id="screen-scenario" class="screen">
+  <div class="scenario-topbar">
+    <span class="topbar-track" id="topbar-track-name"></span>
+    <span class="topbar-progress" id="topbar-progress"></span>
+    <span class="topbar-score">Score: <span id="score-counter">0</span></span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar-fill" style="width:0%"></div>
+  </div>
+  <div class="scenario-body" id="scenario-body"></div>
+</div>
+
+<!-- ============================
+     SCREEN 4: MISSION COMPLETE
+     ============================ -->
+<div id="screen-complete" class="screen">
+  <canvas id="confetti-canvas"></canvas>
+  <div class="complete-content">
+    <div class="complete-title">Mission Complete!</div>
+    <div style="font-size:1.5rem;margin:0.3rem 0;">🎉</div>
+    <div class="stars-display" id="stars-display">⭐⭐⭐</div>
+    <div class="complete-score" id="complete-score-display">+500 pts</div>
+    <div style="font-size:0.85rem;color:var(--gray);margin-bottom:0.5rem;">Mission Score</div>
+    <div class="mission-badge" id="mission-badge-display"></div>
+    <div style="font-size:0.85rem;color:var(--gray);">
+      Total Campaign Score: <span id="complete-total" style="color:var(--gold);font-weight:700;">0</span> pts
+    </div>
+    <div class="complete-actions">
+      <button class="btn btn-gold" onclick="showScreen('leaderboard')">View Leaderboard</button>
+      <button class="btn btn-outline" onclick="showScreen('tracks')">Pick Another Mission</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     SCREEN 5: LEADERBOARD
+     ============================ -->
+<div id="screen-leaderboard" class="screen">
+  <div class="screen-header">
+    <h2>🏆 Campaign Leaderboard</h2>
+    <button class="btn btn-ghost" onclick="showScreen('tracks')">← Back to Missions</button>
+  </div>
+  <div class="leaderboard-body">
+    <div id="local-note" class="local-note hidden">
+      <strong>📋 Local Session Scores</strong> — Firebase not configured. Showing scores from this session only.
+      <br>To enable the live leaderboard, replace the Firebase config at the top of the JS section.
+    </div>
+    <div id="lb-loading" style="text-align:center;padding:2rem;"><div class="spinner"></div></div>
+    <table class="leaderboard-table hidden" id="lb-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Volunteer</th>
+          <th>Score</th>
+          <th>Latest Track</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="lb-body"></tbody>
+    </table>
+    <div id="lb-empty" class="hidden" style="text-align:center;padding:2rem;color:var(--gray);">
+      No scores yet — be the first! 🚀
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// FIREBASE CONFIGURATION
+// SETUP: Replace with your Firebase config from console.firebase.google.com
+// After replacing, set up Database Rules in Firebase console:
+// {
+//   "rules": {
+//     "leaderboard": {
+//       ".read": true,
+//       ".write": true
+//     }
+//   }
+// }
+// =====================================================================
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+};
+
+// Detect placeholder config
+const FIREBASE_ENABLED = !firebaseConfig.apiKey.startsWith("YOUR_");
+let db = null;
+
+if (FIREBASE_ENABLED) {
+  try {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } catch(e) {
+    console.warn("Firebase init failed:", e);
+  }
+}
+
+// =====================================================================
+// GAME DATA
+// =====================================================================
+const TRACKS = [
+  {
+    id: "chat",
+    icon: "🗣️",
+    name: "Chat Central",
+    desc: "Master Claude Chat",
+    badge: null,
+    earnedBadge: "🗣️ Chat Champion",
+    scenarios: [
+      {
+        situationBadge: "🚨 RAPID RESPONSE",
+        title: "The candidate is going on local TV in 20 minutes",
+        desc: "You need to get them 5 talking points on housing affordability — fast. How do you prompt Claude?",
+        answers: [
+          { letter:"A", text:'Claude, give me housing talking points', pts:50,
+            feedback:"Not bad, but vague! Claude will give you something generic. You didn't specify the format, count, audience, or length.",
+            tip:"Always specify: how many, for whom, what format, and how long." },
+          { letter:"B", text:'Give me 5 punchy talking points on housing affordability for a 2-minute TV interview in Montana. Use plain language, focus on solutions voters can visualize, and avoid policy jargon.', pts:100,
+            feedback:"Excellent! You gave Claude the format (5 punchy points), context (TV interview, Montana), style (plain language, solution-focused), and constraint (no jargon).",
+            tip:"Context + Task + Format + Constraints = 🔥 prompt." },
+          { letter:"C", text:'Help me with housing', pts:25,
+            feedback:"Too vague! Claude has no idea what you need — a summary? A speech? Stats? It'll guess, and probably guess wrong.",
+            tip:"Think: what would I tell a very smart intern to do?" },
+          { letter:"D", text:'Open Google and search for housing talking points', pts:25,
+            feedback:"Claude can synthesize and customize talking points for your specific candidate and audience in seconds. Google won't do that!",
+            tip:"Claude is faster than search for drafting because it can customize to your exact needs." }
+        ]
+      },
+      {
+        situationBadge: "✏️ REVISION TIME",
+        title: "The draft came back too stiff",
+        desc: "You asked Claude to write a volunteer recruitment post but it sounds like a corporate press release. What do you do next?",
+        answers: [
+          { letter:"A", text:'Delete it and start over with a new prompt', pts:25,
+            feedback:"You're throwing away a good first draft! Claude already has all the context. A revision prompt is faster.",
+            tip:"Never start over — refine. Claude holds the context of what it wrote." },
+          { letter:"B", text:'"Make this sound warmer and more personal, like a friend texting a friend — keep all the facts but lose the formality"', pts:100,
+            feedback:"Perfect revision prompt! You told Claude what's wrong (too formal), how to fix it (friend-to-friend), and what to preserve (the facts).",
+            tip:"Revision prompts should say: what's wrong, how to fix it, and what to keep." },
+          { letter:"C", text:'Post it anyway — it\'s close enough', pts:25,
+            feedback:"You're leaving easy improvement on the table. One more prompt = a much better post. Don't settle!",
+            tip:"The best Claude users iterate 2-3 times on important content." },
+          { letter:"D", text:'"Rewrite this with more energy and a conversational tone, keep it under 100 words"', pts:75,
+            feedback:"Good! Energy + conversational tone + word limit is solid. Could be even better by specifying the audience (friends inviting friends).",
+            tip:"Adding the audience perspective ('write it as if a friend is texting a friend') gives Claude powerful voice guidance." }
+        ]
+      },
+      {
+        situationBadge: "📄 DOCUMENT INTEL",
+        title: "30-page policy brief just landed in your inbox",
+        desc: "A supporter sent a dense policy document on water rights. You need the key points in 5 minutes. What's your Claude move?",
+        answers: [
+          { letter:"A", text:'Paste it in and ask "Summarize this"', pts:50,
+            feedback:"You'll get a summary, but probably a generic one. Ask for what YOU need — a campaign-ready version focused on voter impact.",
+            tip:"A summary for a policy wonk is different from a summary for a voter. Tell Claude which one you need." },
+          { letter:"B", text:'Read it yourself', pts:25,
+            feedback:"At 30 pages, that's an hour you don't have. Claude can do this in seconds and give you exactly what you need.",
+            tip:"Paste long documents into Claude Chat and ask specific questions — it's like having a research assistant on call." },
+          { letter:"C", text:'"Here\'s a 30-page policy brief on water rights: [paste]. Extract the 5 points most relevant to rural farmers in eastern Montana. Write each point in one sentence a non-expert can understand."', pts:100,
+            feedback:"Outstanding! You gave Claude the document, specified the audience (rural farmers, eastern Montana), the format (5 points, one sentence each), and the reading level (non-expert).",
+            tip:"The more specific your question about a document, the more useful the answer." },
+          { letter:"D", text:'Ask a colleague who knows policy', pts:25,
+            feedback:"Your colleague is busy too! Claude can do in seconds what would take a policy expert 30 minutes — and it won't need coffee first.",
+            tip:"Claude can read and synthesize any pasted document. Paste first, ask questions second." }
+        ]
+      },
+      {
+        situationBadge: "📱 MULTI-PLATFORM",
+        title: "One message, three platforms",
+        desc: "You need the same campaign announcement formatted for Facebook, Twitter/X, and an SMS text blast. Fastest approach?",
+        answers: [
+          { letter:"A", text:'Write three separate prompts from scratch for each platform', pts:25,
+            feedback:"That's three times the work! Claude can do all three in one shot if you ask it right.",
+            tip:"Ask Claude for multiple outputs in a single prompt using numbered lists." },
+          { letter:"B", text:'Write one version and manually edit for each platform', pts:50,
+            feedback:"You're doing the hard work yourself. Claude knows the character limits and conventions for each platform — let it adapt.",
+            tip:"Give Claude the platform constraints and let it optimize automatically." },
+          { letter:"C", text:'"Here\'s our announcement: [message]. Adapt this for: 1) Facebook (180 words, storytelling tone), 2) Twitter/X (under 280 chars, punchy, include a call to action), 3) SMS text blast (under 160 chars, action-first)."', pts:100,
+            feedback:"Perfect! One prompt, three ready-to-post outputs. You gave Claude the source content, the platforms, and the specific constraints for each.",
+            tip:"Claude can format for any platform in one prompt — just list them with their requirements." },
+          { letter:"D", text:'Ask Claude once for each platform separately', pts:75,
+            feedback:"Not bad — three separate prompts will get you there. But one well-structured prompt is faster and keeps consistency across all three.",
+            tip:"Batch related tasks in one prompt to save time and keep voice consistent." }
+        ]
+      },
+      {
+        situationBadge: "🧠 PRO MOVE",
+        title: "Making Claude remember your campaign",
+        desc: "You use Claude Chat daily. How do you make sure it always knows your candidate, key issues, and tone?",
+        answers: [
+          { letter:"A", text:'Just start typing — Claude remembers past conversations', pts:25,
+            feedback:"Important: Claude does NOT retain memory between separate chat sessions by default. Each new chat starts fresh.",
+            tip:"Claude Chat doesn't automatically remember previous conversations. You have to bring the context each time." },
+          { letter:"B", text:'Create a "Campaign Context Block" — a short paragraph with candidate name, key issues, target voters, and tone guidelines — and paste it at the start of every chat session', pts:100,
+            feedback:"This is the pro move! A context block takes 5 seconds to paste and transforms every response. Some volunteers keep it copied on their phone.",
+            tip:"Create a reusable context block: 'Our candidate is [Name], running for [office] in [place]. Key issues: [list]. Tone: [description]. Target voters: [description].' Paste it at the top of every new chat." },
+          { letter:"C", text:'Say "remember this" and list important facts', pts:50,
+            feedback:"In a single session, Claude does remember what you've told it. But the next day in a new chat? It starts fresh. That's why a context block matters.",
+            tip:"Within one session Claude remembers everything. Across sessions, you need to re-provide context." },
+          { letter:"D", text:"Hope Claude figures it out from your questions", pts:25,
+            feedback:"Claude is smart but not psychic! Without context about your campaign, it'll give you generic answers.",
+            tip:"The more context you give Claude about your specific situation, the more specific and useful its answers." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "content",
+    icon: "✍️",
+    name: "Content Factory",
+    desc: "Prompt-powered content",
+    badge: null,
+    earnedBadge: "✍️ Content Creator",
+    scenarios: [
+      {
+        situationBadge: "🚪 FIELD WORK",
+        title: "10 door-knocking openers, please",
+        desc: "You're training new volunteers for a door-knocking weekend. They need varied, natural-sounding openers. What prompt gets you 10 great options fast?",
+        answers: [
+          { letter:"A", text:'"Give me door knocking scripts"', pts:50,
+            feedback:"You'll get something, but probably 10 versions of the same stiff opener. No variety, no local flavor.",
+            tip:"Ask for variation explicitly — Claude will make them samey unless you ask for range." },
+          { letter:"B", text:'"Write 10 door-knocking openers for a Congressional campaign in rural Montana. Each should feel like a real neighbor talking, not a salesperson. Vary the tone: some warm, some curious, some energetic. Keep each under 30 seconds to say out loud."', pts:100,
+            feedback:"Excellent! Location, context, variety, tone range, and a real-world constraint (30 seconds to say). Claude will give you genuinely different options.",
+            tip:"Ask for explicit variety ('vary the tone from X to Y') or Claude will cluster around one approach." },
+          { letter:"C", text:'Ask for one script and manually create 9 variations', pts:25,
+            feedback:"That's 9x the work you need to do. Claude can generate variety at scale — that's one of its superpowers.",
+            tip:"Use Claude for bulk generation tasks: 10 openers, 20 subject lines, 5 speech endings." },
+          { letter:"D", text:'"Write door knocking scripts, make them different from each other"', pts:50,
+            feedback:"Closer! But still missing key details: location, audience, length. 'Different from each other' is a good instinct.",
+            tip:"Add specifics about your campaign context so Claude doesn't generate generic political scripts." }
+        ]
+      },
+      {
+        situationBadge: "💌 FUNDRAISING",
+        title: "Re-engagement fundraising email",
+        desc: "You need an email to donors who gave last cycle but haven't donated yet this cycle. Which prompt wins?",
+        answers: [
+          { letter:"A", text:'"Write a fundraising email"', pts:25,
+            feedback:"The most common prompt — and the one that gets the most generic result. No audience, no goal, no amount, no context.",
+            tip:"Fundraising emails need: target audience, ask amount, urgency reason, tone, and length. Give Claude all five." },
+          { letter:"B", text:'"Write a fundraising email targeting donors who gave last cycle but not yet this cycle. Goal: inspire a $25 repeat gift. Tone: warm and grateful, not guilt-trippy. Include: one specific campaign win from this year, a clear deadline, and 3 subject line options. Length: 175 words max."', pts:100,
+            feedback:"This is a masterclass prompt. Audience (lapsed donors), goal ($25), tone (warm not guilty), content requirements (win, deadline), format (subject lines), and length. Claude will nail it.",
+            tip:"For fundraising emails, specify the ask amount, the emotional tone, and a reason for urgency. These three alone transform results." },
+          { letter:"C", text:'"Write a compelling fundraising email with a clear call to action"', pts:50,
+            feedback:"Better than nothing, but 'compelling' and 'clear CTA' are vague. What's compelling to you? What's the ask? What's the deadline?",
+            tip:"Replace adjectives like 'compelling' with specifics: '$25 ask, urgency: deadline in 3 days, tone: grateful not pushy.'" },
+          { letter:"D", text:'Adapt a fundraising email template from a past campaign', pts:25,
+            feedback:"Templates age badly and often feel generic. Claude can write something fresh and specific to your campaign in 10 seconds.",
+            tip:"Tell Claude about your specific campaign wins and goals — it'll write something no template can match." }
+        ]
+      },
+      {
+        situationBadge: "🏘️ COMMUNITY",
+        title: "Nextdoor post that doesn't look like an ad",
+        desc: "A volunteer wants to share the campaign on Nextdoor but every attempt sounds like a political ad. How do you fix it?",
+        answers: [
+          { letter:"A", text:'"Write a Nextdoor post about our campaign"', pts:50,
+            feedback:"This will get you an ad-sounding post. You haven't told Claude the key constraint: it should NOT sound like an ad.",
+            tip:"Tell Claude what you DON'T want as clearly as what you do want." },
+          { letter:"B", text:'"Write a Nextdoor post for [Volunteer Name] to share about [Candidate]. It should sound like a neighbor talking to neighbors — personal, community-first, not like a campaign ad. Focus on [local issue]. Under 150 words. No slogans."', pts:100,
+            feedback:"You nailed it. Personal voice, community framing, specific issue, word limit, and an explicit constraint (no slogans). This will sound authentic.",
+            tip:"Nextdoor, personal social media, and word-of-mouth content should be written in first person with a specific local issue at the center." },
+          { letter:"C", text:"Tell the volunteer to write their own post", pts:25,
+            feedback:"Volunteers are busy and may not know what to say! Claude can give them a draft they just personalize with their own name.",
+            tip:"Create templates and drafts for volunteers to customize — it multiplies your content output without extra work." },
+          { letter:"D", text:"Share the campaign's generic talking points", pts:25,
+            feedback:"Talking points posted verbatim on Nextdoor will feel robotic. Nextdoor works when posts feel personal and local.",
+            tip:"Adapt your message to the platform and audience — what works in a press release fails on a neighborhood app." }
+        ]
+      },
+      {
+        situationBadge: "🌐 WEB COPY",
+        title: "Website FAQs that actually answer real questions",
+        desc: "You need 8 FAQs for the candidate's website. But voters have REAL concerns, not softballs. What's your prompt?",
+        answers: [
+          { letter:"A", text:'"Write FAQs for our campaign website"', pts:25,
+            feedback:"You'll get 8 softballs: 'What does the candidate stand for?' Claude will play it safe unless you tell it to get real.",
+            tip:"Tell Claude to think like a skeptical or critical voter, not a supporter — you'll get FAQs that actually address real concerns." },
+          { letter:"B", text:'"Write 8 FAQs a skeptical but persuadable voter might ask about [Candidate]. Include tough questions on [issue 1] and [issue 2]. For each, write a direct, honest 2-3 sentence answer that doesn\'t dodge. Use plain language, no jargon."', pts:100,
+            feedback:"Skeptical voter + specific tough issues + direct answers + no dodge = FAQs that actually build trust. This is exactly right.",
+            tip:"The best FAQs answer the questions people are ACTUALLY asking, not the ones you wish they'd ask." },
+          { letter:"C", text:'"Write 8 common voter questions and answers"', pts:50,
+            feedback:"Common questions often means generic questions. Tell Claude to go where it's uncomfortable — that's where FAQs earn trust.",
+            tip:"Ask Claude to 'steelman' criticism of your candidate — it'll help you prepare better answers." },
+          { letter:"D", text:"Copy FAQs from a similar campaign's website", pts:25,
+            feedback:"Every campaign is different. Voters will notice cut-and-paste answers.",
+            tip:"Claude can generate custom FAQs specific to your candidate, district, and the real issues people are asking about." }
+        ]
+      },
+      {
+        situationBadge: "✅ BEST PRACTICE",
+        title: "The golden rule of AI-assisted content",
+        desc: "Your team is using Claude for everything now. Emails, social posts, talking points. What's the one practice that keeps quality high?",
+        answers: [
+          { letter:"A", text:"Use Claude to generate everything and post immediately — it's AI, it's accurate", pts:25,
+            feedback:"Claude is powerful but not infallible. It can misstate facts, misjudge tone, or sound generic. Always review before publishing.",
+            tip:"AI generates; humans verify. Claude is a first-draft tool, not a final-draft tool. A quick read-through catches what AI misses." },
+          { letter:"B", text:"Use Claude for first drafts, then have a human review and personalize before anything goes public", pts:100,
+            feedback:"This is the golden rule. Claude dramatically speeds up your workflow, but a human eye catches factual errors, tone issues, and anything that doesn't sound like your campaign.",
+            tip:"The best AI workflow: Claude drafts (fast) → human reviews (smart) → publish (confident). Never skip the middle step." },
+          { letter:"C", text:"Only use Claude for internal documents — never for external communications", pts:50,
+            feedback:"Too conservative! Claude is excellent for external content when reviewed. You'd be leaving a huge productivity gain on the table.",
+            tip:"External Claude content is fine — as long as a human reviews it before it goes out." },
+          { letter:"D", text:"Let volunteers use Claude however they want without any guidelines", pts:25,
+            feedback:"Without shared guidelines, you'll get inconsistent messaging, potential factual errors, and off-brand content. A simple one-page guide prevents this.",
+            tip:"Create a one-page 'Claude Guidelines for Volunteers' with: what to always include, what to never include, and review steps." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "cowork",
+    icon: "🤝",
+    name: "Cowork War Room",
+    desc: "Collaborate with Claude",
+    badge: null,
+    earnedBadge: "🤝 Cowork Captain",
+    scenarios: [
+      {
+        situationBadge: "🤝 TEAM POWER",
+        title: "Building the campaign message — together",
+        desc: "Your team of 6 needs to develop the core campaign message. Everyone has opinions. How does Claude Cowork change the game?",
+        answers: [
+          { letter:"A", text:"Have everyone email their ideas and compile them yourself later", pts:25,
+            feedback:"You become the bottleneck. 6 people's ideas + you compiling = hours of work. Cowork lets everyone contribute simultaneously.",
+            tip:"Claude Cowork eliminates the 'compilation problem' — Claude synthesizes in real-time while everyone contributes." },
+          { letter:"B", text:"Open a Cowork session, share the link, have everyone contribute their message ideas simultaneously while Claude helps synthesize themes and identify common ground in real time", pts:100,
+            feedback:"This is Cowork's superpower. Real-time collaborative input + AI synthesis = faster consensus with less politics.",
+            tip:"Start a Cowork message-building session by asking Claude to 'Hold all ideas without judging until everyone has shared, then find the themes.'" },
+          { letter:"C", text:"Have one senior staffer write the message and send for feedback via email", pts:25,
+            feedback:"One person's draft limits the creative input. Cowork lets all perspectives shape the message from the start.",
+            tip:"Co-creation from the beginning gets more buy-in than feedback rounds on one person's draft." },
+          { letter:"D", text:"Use a Google Doc with comment threads", pts:50,
+            feedback:"Google Docs are great for documents but don't have AI synthesis. Cowork gives you the doc plus Claude helping in real-time.",
+            tip:"Claude Cowork is like a Google Doc where Claude actively participates — summarizing, synthesizing, and keeping the team on track." }
+        ]
+      },
+      {
+        situationBadge: "✍️ REVISION WARS",
+        title: "Two teammates, two very different drafts",
+        desc: "In your Cowork session, Jamie wants an urgent, high-energy message. Sam wants calm and reassuring. You need ONE direction. What's the best Cowork move?",
+        answers: [
+          { letter:"A", text:"Have Jamie and Sam argue it out", pts:25,
+            feedback:"That's a meeting, not a strategy. Use Claude to make the decision process productive.",
+            tip:"Claude can facilitate creative disagreements by showing options side by side and asking for structured feedback." },
+          { letter:"B", text:"Ask Claude to show both versions fully written, then have the team vote on which resonates more", pts:100,
+            feedback:"Smart! When you see both approaches written out, the decision becomes concrete. Claude makes the abstract debate tangible.",
+            tip:"When a team is split, ask Claude to write both versions fully — seeing them side by side makes the right choice obvious." },
+          { letter:"C", text:"Accept Sam's version because calm is safer", pts:25,
+            feedback:"Making the decision without data isn't strategy. Let Claude show both — maybe Jamie's energy is right for this moment.",
+            tip:"Don't default to 'safe' — test both versions with Claude and make an informed choice." },
+          { letter:"D", text:"Ask Claude to combine the best elements of both into a hybrid version", pts:75,
+            feedback:"Good instinct! A hybrid can work. Even better: see both versions first, THEN ask for a hybrid if neither is quite right.",
+            tip:"The sequence matters: show both → vote or discuss → hybrid if needed. Don't skip straight to blending." }
+        ]
+      },
+      {
+        situationBadge: "💡 COWORK POWER",
+        title: "What makes Cowork different?",
+        desc: "A new volunteer asks: 'Why use Cowork instead of just sharing a Claude Chat link?' What's the real answer?",
+        answers: [
+          { letter:"A", text:"Cowork is faster than regular Claude Chat", pts:50,
+            feedback:"Speed isn't the main benefit. The real power is in collaborative AI synthesis with multiple contributors in one shared space.",
+            tip:"Cowork isn't about speed — it's about shared context. Everyone in the session sees the same AI-assisted conversation." },
+          { letter:"B", text:"In Cowork, multiple people contribute to one shared AI conversation. Claude maintains context across everyone's input, helps synthesize different perspectives, and moves the group toward decisions instead of just accumulating opinions", pts:100,
+            feedback:"Exactly right. The key word is 'synthesis.' Regular chat is linear. Cowork is collaborative with AI as the facilitator.",
+            tip:"Think of Claude Cowork as having an expert facilitator in every team meeting — one who remembers everything said and helps you converge." },
+          { letter:"C", text:"Cowork lets you upload more files", pts:50,
+            feedback:"File sharing is a feature, but it's not what makes Cowork powerful. The AI facilitation of group thinking is the real differentiator.",
+            tip:"Cowork's superpower: Claude tracks the whole conversation, not just the last message. It can synthesize everything everyone has said." },
+          { letter:"D", text:"Cowork has better emoji reactions", pts:25,
+            feedback:"Ha! While fun, that's not why Cowork exists. The real power is AI-facilitated team collaboration.",
+            tip:"Claude Cowork turns chaotic team brainstorms into structured, productive sessions with AI keeping track of everything." }
+        ]
+      },
+      {
+        situationBadge: "🎯 DECISION TIME",
+        title: "8 opinions, zero consensus",
+        desc: "Your Cowork session has 8 people with wildly different ideas about the campaign slogan. You need to move forward. What do you do?",
+        answers: [
+          { letter:"A", text:"The most senior person picks", pts:25,
+            feedback:"Top-down decisions in volunteer teams lose engagement. Use Claude to make the decision process feel fair and data-driven.",
+            tip:"Claude can facilitate democratic decision-making in ways that feel fair to everyone and faster than voting." },
+          { letter:"B", text:'"Here are 8 slogan ideas from our team: [list them]. Find the common themes, identify what values they share, and suggest 3 synthesis options that capture what most people are reaching for"', pts:100,
+            feedback:"Brilliant! This moves from 8 opinions to 3 informed choices. Claude does the synthesis work, the team makes the final call.",
+            tip:"Claude is excellent at finding common ground. Ask it to 'find the underlying values' in different suggestions before collapsing them." },
+          { letter:"C", text:"Take a break and try again tomorrow", pts:25,
+            feedback:"Tomorrow the same people will have the same opinions! Use Claude to move the conversation forward today.",
+            tip:"When a team is stuck, change the input — don't just repeat the same conversation. Ask Claude to reframe the problem." },
+          { letter:"D", text:"Ask Claude to just pick the best one", pts:50,
+            feedback:"Claude can recommend, but the team should decide. More importantly: Claude picking creates less buy-in than the team choosing from synthesized options.",
+            tip:"Ask Claude to synthesize and present options, then let humans decide. You get the best of both AI efficiency and human judgment." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "promptlab",
+    icon: "🔬",
+    name: "Prompt Lab",
+    desc: "Level up your prompts",
+    badge: null,
+    earnedBadge: "🔬 Prompt Pro",
+    scenarios: [
+      {
+        situationBadge: "🔍 SPOT THE PROBLEM",
+        title: "Identify the weak prompt",
+        desc: "A colleague used this prompt and got a useless response: 'Write something about voting.' What's the core problem?",
+        answers: [
+          { letter:"A", text:"The prompt is fine — Claude should figure it out", pts:25,
+            feedback:"Claude is powerful but not a mind reader! 'Write something about voting' could mean a poem, a news article, a persuasion essay, or a legal summary.",
+            tip:"If your prompt could apply to 100 different tasks, it's too vague. Good prompts have one clear purpose." },
+          { letter:"B", text:"The prompt is too vague — it has no audience, no purpose, no length, no tone, and no format specified", pts:100,
+            feedback:"Exactly. Five things missing: who it's for, why you need it, how long it should be, what tone to use, and what format (list, paragraph, script?). Each gap leads to a worse response.",
+            tip:"Diagnose weak prompts with 5 questions: Who is it for? What's the goal? How long? What tone? What format?" },
+          { letter:"C", text:"The prompt is too short", pts:50,
+            feedback:"Length isn't the only issue — you can have a long, vague prompt too. The specific problem is lack of purpose, audience, and format.",
+            tip:"Length isn't the measure of a good prompt — specificity is. One specific sentence beats a vague paragraph." },
+          { letter:"D", text:"The prompt doesn't include an example", pts:50,
+            feedback:"Examples help, but that's not the core problem here. First fix the vagueness — then add an example if you want a specific style.",
+            tip:"Fix vagueness first. Examples are a bonus that fine-tune the output, not a substitute for clear direction." }
+        ]
+      },
+      {
+        situationBadge: "🏆 BEST PROMPT",
+        title: "Pick the winning policy explainer prompt",
+        desc: "You need to explain Medicare expansion to first-time voters. Which prompt gets you the best result?",
+        answers: [
+          { letter:"A", text:'"Explain healthcare policy"', pts:25,
+            feedback:"Healthcare policy is an enormous topic. Claude will give you a textbook overview when you need something personal and specific.",
+            tip:"Broad topics need narrow prompts. Narrow down to: which policy? For whom? What's the point?" },
+          { letter:"B", text:'"In plain language a 25-year-old first-time voter can understand, explain what Medicare expansion means for them personally. Use a real-life example — like what it would mean for their doctor visit or prescription. 150 words max."', pts:100,
+            feedback:"This is the gold standard. Audience (25-year-old first voter), framing (personally relevant), format (real-life example), and a hard word limit. Claude will deliver something usable immediately.",
+            tip:"The more specifically you describe your audience, the more specifically Claude writes for them." },
+          { letter:"C", text:'"Explain healthcare policy simply"', pts:50,
+            feedback:"Simply is better than nothing, but Claude still doesn't know WHO is reading, what ASPECT of healthcare, or what LENGTH you need.",
+            tip:"'Simply' is a style note, not a full direction. Add: who is reading, what specific topic, and how long." },
+          { letter:"D", text:'"Healthcare policy for young voters"', pts:50,
+            feedback:"You've identified an audience! But Claude still doesn't know: what specifically about healthcare? What format? What's the goal — inform, persuade, or both?",
+            tip:"Audience + topic + goal + format = a complete prompt. You've got two — add the other two." }
+        ]
+      },
+      {
+        situationBadge: "🔄 ITERATE",
+        title: "The response wasn't great — now what?",
+        desc: "You got a mediocre response from Claude. What's the single best next step?",
+        answers: [
+          { letter:"A", text:"Accept it and move on — this is what AI produces", pts:25,
+            feedback:"First drafts from Claude are starting points, not endings. A quick refinement prompt almost always dramatically improves the output.",
+            tip:"Treat Claude's first response as a rough draft. Most great Claude outputs come after 1-2 iterations." },
+          { letter:"B", text:'"Diagnose what\'s missing, then write a targeted refinement: This is close but [specific issue]. Please [specific fix] while keeping [what was good]"', pts:100,
+            feedback:"Perfect iteration strategy. Identify what's wrong, ask for a specific fix, and protect what's already working. This is how professionals use Claude.",
+            tip:"Refinement formula: '[What's wrong] → [What to fix] → [What to keep].' This structure consistently improves outputs." },
+          { letter:"C", text:"Try a completely different AI tool", pts:25,
+            feedback:"The problem is almost never the tool — it's the prompt. Invest 30 seconds in a better prompt before switching.",
+            tip:"80% of the time, a mediocre output is a prompt problem, not a tool problem. Fix the prompt first." },
+          { letter:"D", text:"Ask the exact same prompt again", pts:50,
+            feedback:"You might get a slightly different result due to AI variability, but probably not a better one. Refinement prompts are far more reliable than re-rolling.",
+            tip:"Repeating the same prompt gets you the same range of outputs. Changing the prompt gets you a different kind of output." }
+        ]
+      },
+      {
+        situationBadge: "🎭 ROLE PLAY",
+        title: "Using role prompts for expert-level output",
+        desc: "You need Claude to write like a seasoned political speechwriter, not a generic content generator. What's the technique?",
+        answers: [
+          { letter:"A", text:"Just describe what you want and hope Claude writes well", pts:50,
+            feedback:"Claude will write competently, but a role prompt explicitly calibrates the expertise level and approach you're looking for.",
+            tip:"Without a role prompt, Claude defaults to a generalist voice. Role prompts unlock specific expertise." },
+          { letter:"B", text:"Start with: 'Act as an experienced political speechwriter who has written for national campaigns. You understand rhythm, emotional resonance, and how to build to a memorable close.' Then give your actual request", pts:100,
+            feedback:"Role prompts are powerful because they set the expertise frame for everything that follows. Claude will approach your task with the specific skills and knowledge that role would have.",
+            tip:"Role prompts work best when they're specific: not just 'expert writer' but 'speechwriter who knows how to build emotional momentum.'" },
+          { letter:"C", text:"Ask Claude what role it should play", pts:50,
+            feedback:"Interesting approach! Claude can suggest roles, but you usually know better than Claude what expertise you need. Start by telling it the role.",
+            tip:"You can ask Claude 'What role would help you write this best?' as a starting point, then refine based on its suggestion." },
+          { letter:"D", text:"Roles are for creative writing, not campaign work", pts:25,
+            feedback:"Role prompts are incredibly useful for campaign work: speechwriter, opposition researcher, sympathetic skeptical voter, field organizer — all useful roles to assign.",
+            tip:"Campaign role prompts: 'Act as a skeptical independent voter' to test messaging, 'Act as a field organizer' for volunteer training scripts, 'Act as a local journalist' to anticipate coverage angles." }
+        ]
+      },
+      {
+        situationBadge: "🌟 MASTER CLASS",
+        title: "The prompt engineering formula",
+        desc: "A new volunteer asks for ONE rule that will make their Claude prompts dramatically better. What do you tell them?",
+        answers: [
+          { letter:"A", text:"Always write longer prompts — more detail is always better", pts:50,
+            feedback:"Length helps but isn't the principle. A long, vague prompt is worse than a short, specific one.",
+            tip:"Length is a tool, not the rule. Use as many words as the task needs, no more." },
+          { letter:"B", text:"Context + Task + Format + Constraints = a great prompt. Always tell Claude: who it's for, what you need, how to format it, and any limits (length, tone, what to avoid)", pts:100,
+            feedback:"This is the formula. Context tells Claude who's involved. Task tells Claude what to do. Format tells Claude how to present it. Constraints prevent the common failure modes.",
+            tip:"Post this formula somewhere visible: Context + Task + Format + Constraints. It works for 95% of campaign tasks." },
+          { letter:"C", text:"Keep prompts as short as possible — Claude is smart enough to fill in the gaps", pts:25,
+            feedback:"Claude is smart, but 'filling in gaps' means guessing. Gaps in your prompt = guesses in your output.",
+            tip:"Every gap in your prompt is a place where Claude has to guess. Make the important decisions for it." },
+          { letter:"D", text:"Copy successful prompts from other campaigns", pts:25,
+            feedback:"Other campaigns have different candidates, audiences, and needs. Use the formula to build your own prompts — it's faster and more accurate.",
+            tip:"Prompt formulas travel better than specific prompts. Learn the formula, create your own for your campaign's specific context." }
+        ]
+      }
+    ]
+  },
+  {
+    id: "powerLevel",
+    icon: "⚡",
+    name: "Power Level",
+    desc: "Claude Code for data",
+    badge: "ADVANCED",
+    earnedBadge: "⚡ Data Wizard",
+    scenarios: [
+      {
+        situationBadge: "⚡ POWER UP",
+        title: "What can Claude Code do with campaign data?",
+        desc: "You have a spreadsheet of volunteer shifts. What can Claude Code help you with beyond basic formatting?",
+        answers: [
+          { letter:"A", text:"Nothing — Claude Code only works with actual programming code", pts:25,
+            feedback:"Not true! Claude Code can analyze your data, find patterns, create summaries, and generate visualizations — even if you've never written code.",
+            tip:"Claude Code treats your data like a smart analyst would: finding what's hidden, not just organizing what's visible." },
+          { letter:"B", text:"Analyze which shifts have coverage gaps, calculate total volunteer hours by precinct, find which days need more sign-ups, and create a visual summary — all by describing what you want in plain English", pts:100,
+            feedback:"Claude Code can do all of this from a spreadsheet. You describe the analysis, Claude writes the code and runs it.",
+            tip:"Think of Claude Code as your data analyst: tell it what you want to know, not how to compute it." },
+          { letter:"C", text:"Format the spreadsheet more nicely", pts:50,
+            feedback:"Formatting is the smallest thing Claude Code can do with your data. The real power is analysis and pattern detection.",
+            tip:"When you think 'I wish someone could analyze this,' that's the moment to use Claude Code." },
+          { letter:"D", text:"Send automated reminder emails to volunteers", pts:50,
+            feedback:"Email automation requires more infrastructure, but identifying WHO needs a reminder? Claude Code can do that analysis.",
+            tip:"Claude Code excels at the analytical layer: who, what, when, where — the automation layer usually needs additional tools." }
+        ]
+      },
+      {
+        situationBadge: "🚀 NON-TECHIE POWER",
+        title: "I'm not a programmer — is Claude Code for me?",
+        desc: "A volunteer says 'I don't know how to code, so Claude Code isn't for me.' How do you respond?",
+        answers: [
+          { letter:"A", text:"You're right — Claude Code is really for technical users", pts:25,
+            feedback:"Completely wrong! Claude Code is specifically powerful for non-technical users because Claude writes the code — you just describe what you need.",
+            tip:"The target user for Claude Code isn't a programmer — it's someone with a data question and no way to answer it." },
+          { letter:"B", text:"You don't write the code — Claude does. You describe what you need in plain English, Claude writes and runs the code, and you get the result. You're the analyst; Claude is the programmer", pts:100,
+            feedback:"Exactly right. Claude Code democratizes data analysis. If you can describe what you want to know, Claude Code can find it.",
+            tip:"Your job in Claude Code: describe the problem, review the output, ask follow-up questions. Zero coding required." },
+          { letter:"C", text:"You could learn basic Python in a week and then use Claude Code", pts:50,
+            feedback:"Learning Python is great! But you don't need to wait — Claude Code works right now with plain English descriptions.",
+            tip:"Claude Code removes the programming prerequisite. Start using it now, learn to code later if you want to — both paths are valid." },
+          { letter:"D", text:"Stick to Claude Chat for everything — Code is too complicated", pts:25,
+            feedback:"You'd be missing out on powerful capabilities! Claude Code handles data analysis that Chat alone can't match.",
+            tip:"Claude Code and Claude Chat serve different needs: Chat for writing/thinking, Code for data/analysis. Use both." }
+        ]
+      },
+      {
+        situationBadge: "📊 DATA STRATEGY",
+        title: "Finding the highest-priority precincts",
+        desc: "You have a voter file and need to identify which precincts have the most unregistered eligible voters — the highest-opportunity targets. How do you use Claude Code?",
+        answers: [
+          { letter:"A", text:"Hire a data consultant", pts:25,
+            feedback:"Data consultants are expensive and take time. Claude Code can do this analysis in minutes with a good prompt.",
+            tip:"Claude Code can do in minutes what would take a data consultant hours — for free." },
+          { letter:"B", text:"Describe your data structure to Claude Code, ask it to write a script that calculates registration rates by precinct, then sort and filter to find the top 20 highest-opportunity precincts", pts:100,
+            feedback:"This is exactly how to use Claude Code for campaign analytics. Describe → code → run → results. You get a ranked, actionable list.",
+            tip:"Always start by describing your data structure: 'I have a CSV with columns: Name, Address, Precinct, Registered (Y/N), Age.' The more Claude knows about your data, the better its analysis." },
+          { letter:"C", text:"Count the unregistered voters manually in Excel", pts:25,
+            feedback:"For a large voter file, that's hours of work. Claude Code can do this across thousands of records in seconds.",
+            tip:"If a data task would take you more than 10 minutes manually, it's a Claude Code candidate." },
+          { letter:"D", text:"Ask Claude Chat to analyze the voter file", pts:50,
+            feedback:"Claude Chat can help you think about the analysis, but for actually running calculations on data, Claude Code is the right tool.",
+            tip:"Claude Chat: strategy and thinking. Claude Code: computation and data. Match the tool to the task." }
+        ]
+      },
+      {
+        situationBadge: "🔒 DATA SAFETY",
+        title: "The most important rule for campaign data",
+        desc: "You're about to paste your entire voter file into Claude Code — 50,000 rows with names, addresses, and phone numbers. What should you know first?",
+        answers: [
+          { letter:"A", text:"Go for it — Claude keeps all data private automatically", pts:25,
+            feedback:"Important: before pasting any voter data into Claude, understand your campaign's data governance policy and Claude's data handling terms. Never assume.",
+            tip:"Always check your campaign's data policy before pasting voter information into ANY AI tool." },
+          { letter:"B", text:"Voter data is sensitive. Use anonymized or aggregated data for analysis when possible. For strategy questions, use precinct totals rather than individual records. Always follow your campaign's data governance policy and applicable laws", pts:100,
+            feedback:"Data safety is non-negotiable. The golden rule: if you can answer the question with aggregate data instead of individual records, do it.",
+            tip:"Replace names and addresses with anonymized IDs before analysis. You often need the pattern, not the person." },
+          { letter:"C", text:"Only the campaign manager should use Claude Code with voter data", pts:50,
+            feedback:"Restricting access is one safeguard, but the more important principle is data minimization: only use what you need, in the safest form possible.",
+            tip:"Data minimization: share the least sensitive form of data that still answers your question." },
+          { letter:"D", text:"It's fine as long as you don't share the results", pts:25,
+            feedback:"The issue isn't just who sees the results — it's about responsible handling of personal data in AI tools per campaign policy and law.",
+            tip:"Data responsibility applies to the input (what you paste) not just the output (what you share)." }
+        ]
+      }
+    ]
+  }
+];
+
+// =====================================================================
+// GAME STATE
+// =====================================================================
+let gameState = {
+  playerName: "",
+  currentTrack: null,
+  currentScenarioIndex: 0,
+  sessionScore: 0,
+  trackScores: {},
+  earnedBadges: [],
+  completedTracks: [],
+  currentTrackScore: 0,
+};
+
+// =====================================================================
+// SCREEN MANAGEMENT
+// =====================================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + name);
+  if (el) el.classList.add('active');
+
+  if (name === 'tracks') renderTracks();
+  if (name === 'leaderboard') renderLeaderboard();
+}
+
+// =====================================================================
+// SPLASH SCREEN
+// =====================================================================
+function startGame() {
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if (!name) {
+    nameInput.style.borderColor = 'var(--red)';
+    nameInput.placeholder = 'Please enter your name first!';
+    nameInput.focus();
+    return;
+  }
+  gameState.playerName = name;
+  document.getElementById('tracks-heading').textContent = `Choose Your Mission, ${name}!`;
+  showScreen('tracks');
+}
+
+document.getElementById('player-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') startGame();
+});
+
+// =====================================================================
+// STAR BACKGROUND
+// =====================================================================
+(function initStars() {
+  const canvas = document.getElementById('star-canvas');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = Array.from({length: 120}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.8 + 0.3,
+      a: Math.random(),
+      speed: Math.random() * 0.005 + 0.002,
+      phase: Math.random() * Math.PI * 2,
+    }));
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// =====================================================================
+// TRACK SELECT SCREEN
+// =====================================================================
+function renderTracks() {
+  document.getElementById('total-score-display').textContent = gameState.sessionScore;
+  const grid = document.getElementById('tracks-grid');
+  grid.innerHTML = '';
+
+  TRACKS.forEach(track => {
+    const completed = gameState.completedTracks.includes(track.id);
+    const div = document.createElement('div');
+    div.className = 'track-card' + (completed ? ' completed' : '');
+    div.innerHTML = `
+      ${track.badge ? `<div class="track-badge">${track.badge}</div>` : ''}
+      <div class="track-icon">${track.icon}</div>
+      <div class="track-name">${track.name}</div>
+      <div class="track-desc">${track.desc}</div>
+      <div class="track-count">${track.scenarios.length} scenarios</div>
+      <div class="track-play">
+        ${completed
+          ? `<span class="completed-badge">✓ Completed</span>`
+          : ''}
+        <button class="btn btn-primary" style="flex:1;margin-left:${completed?'0.5rem':'0'}" onclick="startTrack('${track.id}')">
+          ${completed ? 'Play Again' : 'Play →'}
+        </button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// =====================================================================
+// SCENARIO SCREEN
+// =====================================================================
+function startTrack(trackId) {
+  const track = TRACKS.find(t => t.id === trackId);
+  if (!track) return;
+  gameState.currentTrack = track;
+  gameState.currentScenarioIndex = 0;
+  gameState.currentTrackScore = 0;
+  renderScenario();
+  showScreen('scenario');
+}
+
+function renderScenario() {
+  const track = gameState.currentTrack;
+  const idx = gameState.currentScenarioIndex;
+  const scenario = track.scenarios[idx];
+  const total = track.scenarios.length;
+
+  // Topbar
+  document.getElementById('topbar-track-name').textContent = `${track.icon} ${track.name}`;
+  document.getElementById('topbar-progress').textContent = `Scenario ${idx + 1} of ${total}`;
+  updateScoreDisplay();
+
+  // Progress bar
+  const pct = (idx / total) * 100;
+  document.getElementById('progress-bar-fill').style.width = pct + '%';
+
+  // Body
+  const body = document.getElementById('scenario-body');
+  body.innerHTML = `
+    <div class="situation-badge">${scenario.situationBadge}</div>
+    <div class="scenario-title">${scenario.title}</div>
+    <div class="scenario-desc">${scenario.desc}</div>
+    <div class="your-move">— Your Move —</div>
+    <div id="answers-container">
+      ${scenario.answers.map((a, i) => `
+        <button class="answer-btn" onclick="selectAnswer(${i})" data-index="${i}">
+          <span class="answer-letter">${a.letter}</span>
+          <span>${a.text}</span>
+        </button>
+      `).join('')}
+    </div>
+    <div id="feedback-container"></div>
+    <button id="btn-next" onclick="nextScenario()"></button>
+  `;
+}
+
+function selectAnswer(answerIndex) {
+  const track = gameState.currentTrack;
+  const scenario = track.scenarios[gameState.currentScenarioIndex];
+  const answer = scenario.answers[answerIndex];
+  const pts = answer.pts;
+  const isLast = gameState.currentScenarioIndex === track.scenarios.length - 1;
+
+  // Disable all buttons
+  document.querySelectorAll('.answer-btn').forEach(btn => {
+    btn.disabled = true;
+    const idx = parseInt(btn.getAttribute('data-index'));
+    const aPts = scenario.answers[idx].pts;
+    if (idx === answerIndex) {
+      if (aPts === 100) btn.classList.add('correct');
+      else if (aPts === 75) btn.classList.add('good');
+      else if (aPts === 50) btn.classList.add('okay');
+      else btn.classList.add('weak');
+    }
+  });
+
+  // Update scores
+  gameState.currentTrackScore += pts;
+  gameState.sessionScore += pts;
+  updateScoreDisplay(true);
+
+  // Score float animation
+  floatScore(pts);
+
+  // Score badge
+  const scoreClass = pts === 100 ? 's100' : pts === 75 ? 's75' : pts === 50 ? 's50' : 's25';
+  const scoreLabel = pts === 100 ? '🔥 +100 pts!' : pts === 75 ? '👍 +75 pts' : pts === 50 ? '✓ +50 pts' : '⚠ +25 pts';
+
+  // Feedback
+  const feedbackEl = document.getElementById('feedback-container');
+  feedbackEl.innerHTML = `
+    <div style="margin: 0.75rem 0;">
+      <span class="score-badge ${scoreClass}">${scoreLabel}</span>
+    </div>
+    <div class="feedback-panel">
+      <div class="feedback-text">${answer.feedback}</div>
+      <div class="pro-tip">
+        <span class="pro-tip-label">Claude Pro Tip 💡</span>
+        ${answer.tip}
+      </div>
+    </div>
+  `;
+
+  // Next button
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.textContent = isLast ? '🎉 Complete Mission!' : 'Next →';
+  nextBtn.style.display = 'block';
+  nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function nextScenario() {
+  const track = gameState.currentTrack;
+  gameState.currentScenarioIndex++;
+  if (gameState.currentScenarioIndex >= track.scenarios.length) {
+    completeMission();
+  } else {
+    renderScenario();
+    document.getElementById('scenario-body').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function updateScoreDisplay(animate = false) {
+  const el = document.getElementById('score-counter');
+  animateCount(el, parseInt(el.textContent) || 0, gameState.sessionScore, 600);
+  if (animate) {
+    el.classList.add('bump');
+    setTimeout(() => el.classList.remove('bump'), 300);
+  }
+  document.getElementById('total-score-display').textContent = gameState.sessionScore;
+}
+
+function animateCount(el, from, to, duration) {
+  const start = performance.now();
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const value = Math.round(from + (to - from) * easeOut(progress));
+    el.textContent = value;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+function floatScore(pts) {
+  const el = document.createElement('div');
+  el.className = 'score-float';
+  el.textContent = '+' + pts;
+  el.style.left = (Math.random() * 60 + 20) + '%';
+  el.style.top = '30%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1300);
+}
+
+// =====================================================================
+// MISSION COMPLETE
+// =====================================================================
+function completeMission() {
+  const track = gameState.currentTrack;
+  const maxPossible = track.scenarios.length * 100;
+  const pct = gameState.currentTrackScore / maxPossible;
+
+  // Stars
+  let stars = pct >= 0.9 ? '⭐⭐⭐' : pct >= 0.7 ? '⭐⭐' : '⭐';
+
+  // Badge
+  const badge = track.earnedBadge;
+  if (!gameState.earnedBadges.includes(badge)) {
+    gameState.earnedBadges.push(badge);
+  }
+  if (!gameState.completedTracks.includes(track.id)) {
+    gameState.completedTracks.push(track.id);
+  }
+  gameState.trackScores[track.id] = (gameState.trackScores[track.id] || 0) + gameState.currentTrackScore;
+
+  // Check for legend badge
+  if (gameState.completedTracks.length === TRACKS.length && !gameState.earnedBadges.includes('🌟 Campaign Legend')) {
+    gameState.earnedBadges.push('🌟 Campaign Legend');
+  }
+
+  // Update UI
+  document.getElementById('stars-display').textContent = stars;
+  document.getElementById('complete-score-display').textContent = `+${gameState.currentTrackScore} pts`;
+  document.getElementById('complete-total').textContent = gameState.sessionScore;
+
+  const badgesHtml = gameState.earnedBadges.map(b => `<span class="mission-badge">${b}</span>`).join(' ');
+  document.getElementById('mission-badge-display').outerHTML = `<div id="mission-badge-display" style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin:0.75rem 0;">${badgesHtml}</div>`;
+
+  showScreen('complete');
+  startConfetti();
+  postToLeaderboard();
+}
+
+// =====================================================================
+// CONFETTI
+// =====================================================================
+function startConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const COLORS = ['#E63946','#FFD166','#2DC653','#4ECDC4','#FFFFFF','#FF6B6B'];
+  const pieces = Array.from({length: 160}, () => ({
+    x: Math.random() * canvas.width,
+    y: -20 - Math.random() * 200,
+    w: 8 + Math.random() * 8,
+    h: 4 + Math.random() * 4,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    angle: Math.random() * Math.PI * 2,
+    spin: (Math.random() - 0.5) * 0.2,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 3,
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.angle += p.spin;
+      p.vy += 0.05; // gravity
+    });
+    frame++;
+    if (frame < 240) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  requestAnimationFrame(draw);
+}
+
+// =====================================================================
+// FIREBASE / LEADERBOARD
+// =====================================================================
+function postToLeaderboard() {
+  const entry = {
+    name: gameState.playerName,
+    score: gameState.sessionScore,
+    badges: gameState.earnedBadges.join(', ') || '—',
+    trackName: gameState.currentTrack.name,
+    timestamp: Date.now(),
+  };
+
+  if (FIREBASE_ENABLED && db) {
+    db.ref('leaderboard').push(entry).catch(e => console.warn("Firebase write error:", e));
+  } else {
+    // Local session storage fallback
+    const local = JSON.parse(sessionStorage.getItem('campaign_hq_scores') || '[]');
+    // Update or add player's best score
+    const existingIdx = local.findIndex(e => e.name === entry.name);
+    if (existingIdx >= 0) {
+      if (entry.score > local[existingIdx].score) local[existingIdx] = entry;
+    } else {
+      local.push(entry);
+    }
+    sessionStorage.setItem('campaign_hq_scores', JSON.stringify(local));
+  }
+}
+
+function renderLeaderboard() {
+  const loading = document.getElementById('lb-loading');
+  const table = document.getElementById('lb-table');
+  const empty = document.getElementById('lb-empty');
+  const localNote = document.getElementById('local-note');
+
+  loading.classList.remove('hidden');
+  table.classList.add('hidden');
+  empty.classList.add('hidden');
+
+  if (FIREBASE_ENABLED && db) {
+    localNote.classList.add('hidden');
+    db.ref('leaderboard')
+      .orderByChild('score')
+      .limitToLast(20)
+      .once('value')
+      .then(snap => {
+        const entries = [];
+        snap.forEach(child => entries.push(child.val()));
+        entries.sort((a, b) => b.score - a.score);
+        renderLbTable(entries);
+      })
+      .catch(() => {
+        renderLbTable([]);
+      });
+  } else {
+    localNote.classList.remove('hidden');
+    const local = JSON.parse(sessionStorage.getItem('campaign_hq_scores') || '[]');
+    local.sort((a, b) => b.score - a.score);
+    renderLbTable(local.slice(0, 20));
+  }
+}
+
+function renderLbTable(entries) {
+  const loading = document.getElementById('lb-loading');
+  const table = document.getElementById('lb-table');
+  const empty = document.getElementById('lb-empty');
+  const body = document.getElementById('lb-body');
+
+  loading.classList.add('hidden');
+
+  if (!entries.length) {
+    empty.classList.remove('hidden');
+    return;
+  }
+
+  table.classList.remove('hidden');
+  body.innerHTML = entries.map((e, i) => {
+    const isMe = e.name === gameState.playerName;
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    const time = e.timestamp ? timeAgo(e.timestamp) : '—';
+    return `<tr class="${isMe ? 'mine' : ''}">
+      <td class="${rankClass}" style="font-weight:800;">${medal}</td>
+      <td>${escHtml(e.name)} ${isMe ? '← you' : ''}</td>
+      <td style="font-weight:800;color:var(--gold)">${e.score.toLocaleString()} pts</td>
+      <td style="color:var(--gray)">${escHtml(e.trackName || '—')}</td>
+      <td style="color:var(--gray);font-size:0.8rem">${time}</td>
+    </tr>`;
+  }).join('');
+}
+
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - ts) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto-refresh leaderboard every 30 seconds when on that screen
+setInterval(() => {
+  if (document.getElementById('screen-leaderboard').classList.contains('active')) {
+    renderLeaderboard();
+  }
+}, 30000);
+
+// =====================================================================
+// INIT
+// =====================================================================
+// Start with splash
+showScreen('splash');
+</script>
+</body>
+</html>
