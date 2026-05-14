@@ -327,64 +327,6 @@
     .quiz-result .score { font-size: 3rem; font-weight: 800; color: var(--accent2); margin: 16px 0; }
     .quiz-result p { color: var(--muted); margin-bottom: 20px; }
 
-    /* ASK CLAUDE (iframe) */
-    .claude-panel {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); overflow: hidden;
-      display: flex; flex-direction: column;
-      max-width: 860px;
-    }
-    .claude-panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 20px; border-bottom: 1px solid var(--border);
-      background: var(--bg);
-    }
-    .claude-panel-header-left { display: flex; align-items: center; gap: 10px; }
-    .chrome-dots { display: flex; gap: 6px; }
-    .chrome-dots span { width: 11px; height: 11px; border-radius: 50%; }
-    .chrome-dots span:nth-child(1) { background: #ff5f57; }
-    .chrome-dots span:nth-child(2) { background: #ffbd2e; }
-    .chrome-dots span:nth-child(3) { background: #28c840; }
-    .panel-url-bar {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 6px; padding: 5px 12px;
-      font-size: 12px; color: var(--muted); font-family: monospace;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .panel-url-bar span { color: var(--green); }
-    .claude-iframe-wrap { position: relative; height: 580px; }
-    .claude-iframe-wrap iframe {
-      width: 100%; height: 100%; border: none; display: block;
-    }
-    .iframe-fallback {
-      position: absolute; inset: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 16px; padding: 40px; text-align: center;
-      background: var(--surface);
-    }
-    .iframe-fallback .fallback-icon { font-size: 3rem; }
-    .iframe-fallback h3 { font-size: 1.2rem; font-weight: 600; }
-    .iframe-fallback p { color: var(--muted); font-size: 0.9rem; max-width: 440px; line-height: 1.7; }
-    .iframe-fallback .context-box {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 10px; padding: 14px 18px;
-      font-size: 13px; color: var(--muted); text-align: left; max-width: 500px; width: 100%;
-    }
-    .iframe-fallback .context-box strong { color: var(--text); }
-
-    .starter-prompts {
-      padding: 16px 20px; border-top: 1px solid var(--border);
-      background: var(--bg);
-    }
-    .starter-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
-    .prompts-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .prompt-chip {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 100px; padding: 6px 14px;
-      font-size: 12px; color: var(--muted); cursor: pointer;
-      transition: all 0.2s;
-    }
-    .prompt-chip:hover { border-color: var(--accent); color: var(--accent2); }
 
     /* ANIMATIONS */
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -416,7 +358,6 @@
     <a href="#modules">Modules</a>
     <a href="#campaign">Campaigns</a>
     <a href="#quiz">Quiz</a>
-    <a href="#ask">Ask Claude</a>
   </div>
 </nav>
 
@@ -1007,52 +948,11 @@
 
 <hr class="divider" />
 
-<!-- ASK CLAUDE (iframe) -->
-<div class="section-wrap" id="ask">
+<div class="section-wrap" id="ask" style="text-align:center;padding-top:56px;padding-bottom:56px;">
   <div class="section-label">Go deeper</div>
-  <h2>Ask Claude Directly</h2>
-  <p class="section-subtitle">Use the Claude interface below to ask any question about Cowork. Claude can elaborate on concepts from the modules, give you examples, or help you think through your own use case.</p>
-
-  <div class="claude-panel">
-    <div class="claude-panel-header">
-      <div class="claude-panel-header-left">
-        <div class="chrome-dots"><span></span><span></span><span></span></div>
-        <div class="panel-url-bar"><span>🔒</span> claude.ai</div>
-      </div>
-    </div>
-    <div class="claude-iframe-wrap">
-      <iframe
-        id="claudeIframe"
-        src="https://claude.ai"
-        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
-        allow="clipboard-write"
-        title="Claude AI"
-        onload="handleIframeLoad(this)"
-        onerror="showFallback()"
-      ></iframe>
-      <div class="iframe-fallback" id="iframeFallback" style="display:none">
-        <div class="fallback-icon">💬</div>
-        <h3>Claude opens in a new tab</h3>
-        <p>Claude.ai doesn't allow embedding in iframes, so click below to open it in a full tab. Copy one of the starter prompts first to kick off your Cowork learning session.</p>
-        <div class="context-box">
-          <strong>Suggested starter prompt — paste this into Claude:</strong><br><br>
-          I'm learning about Claude Cowork using an interactive learning site based on Anthropic's official course. I want to understand how Cowork works in more depth. Can you help me explore [topic from the modules]?
-        </div>
-        <a href="https://claude.ai" target="_blank" class="btn btn-primary" style="margin-top:8px">Open Claude.ai ↗</a>
-      </div>
-    </div>
-    <div class="starter-prompts">
-      <div class="starter-label">Starter prompts — copy one into Claude to begin</div>
-      <div class="prompts-row">
-        <div class="prompt-chip" onclick="copyPrompt(this)">What's the best way to write global instructions?</div>
-        <div class="prompt-chip" onclick="copyPrompt(this)">How are skills different from plugins in Cowork?</div>
-        <div class="prompt-chip" onclick="copyPrompt(this)">What Cowork tasks should I try first?</div>
-        <div class="prompt-chip" onclick="copyPrompt(this)">Is Cowork safe to use with sensitive documents?</div>
-        <div class="prompt-chip" onclick="copyPrompt(this)">How do I share Cowork skills with my team?</div>
-        <div class="prompt-chip" onclick="copyPrompt(this)">Can you walk me through a real multi-app Cowork workflow?</div>
-      </div>
-    </div>
-  </div>
+  <h2>Have more questions?</h2>
+  <p class="section-subtitle" style="margin:0 auto 28px;">Ask Claude directly — it can elaborate on any concept from the modules, walk through a real workflow, or help you think through your own use case.</p>
+  <a href="https://claude.ai" target="_blank" class="btn btn-primary" style="font-size:16px;padding:14px 32px;">Open Claude.ai ↗</a>
 </div>
 
 <footer>
@@ -1226,49 +1126,6 @@ function showResult() {
 function restartQuiz() { currentQ = 0; score = 0; renderQuestion(); }
 renderQuestion();
 
-// ── IFRAME FALLBACK ──
-let iframeLoaded = false;
-function handleIframeLoad(frame) {
-  iframeLoaded = true;
-  // Try to detect if it loaded real content or was blocked
-  try {
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    if (!doc || doc.body.innerHTML === '') showFallback();
-  } catch (e) {
-    // Cross-origin block — this is expected if it loaded successfully from claude.ai
-    // Keep the iframe shown
-  }
-}
-function showFallback() {
-  document.getElementById('claudeIframe').style.display = 'none';
-  document.getElementById('iframeFallback').style.display = 'flex';
-}
-// Fallback timeout — if iframe doesn't confirm load in 6s, show fallback
-setTimeout(() => {
-  const frame = document.getElementById('claudeIframe');
-  if (!frame) return;
-  try {
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    if (!doc || doc.title === '' || doc.body.innerHTML.length < 100) showFallback();
-  } catch (e) {
-    // Cross-origin — iframe is likely loaded correctly, leave it
-  }
-}, 6000);
-
-// ── COPY PROMPT CHIPS ──
-function copyPrompt(chip) {
-  navigator.clipboard.writeText(chip.textContent).then(() => {
-    const orig = chip.textContent;
-    chip.textContent = '✓ Copied!';
-    chip.style.borderColor = 'var(--green)';
-    chip.style.color = 'var(--green)';
-    setTimeout(() => {
-      chip.textContent = orig;
-      chip.style.borderColor = '';
-      chip.style.color = '';
-    }, 1800);
-  });
-}
 </script>
 </body>
 </html>
