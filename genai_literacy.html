@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gen AI Literacy &amp; Fluency Challenge — University of Montana</title>
+<style>
+  :root{
+    --griz-maroon:#70002E;
+    --lubrecht-green:#1D3C34;
+    --wheat:#EFE8D4;
+    --text-primary:#333333;
+    --text-heading:#70002E;
+    --text-secondary:#5c5c5c;
+    --ok-green:#1D3C34;
+    --warn-red:#a3000a;
+    --panel:#ffffff;
+    --bg:#f4f1ea;
+    --border:#c9c2b3;
+    --accent:#70002E;
+    --focus:#70002E;
+    --gold:#8a6d00;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text-primary);
+    line-height:1.55;
+    font-size:17px;
+  }
+  .skip-link{
+    position:absolute;top:-48px;left:0;background:var(--griz-maroon);
+    color:#fff;padding:10px 16px;z-index:200;text-decoration:none;font-weight:600;
+  }
+  .skip-link:focus{top:0;}
+  .wrap{max-width:820px;margin:0 auto;padding:16px;}
+  header.app{
+    background:var(--griz-maroon);color:#fff;padding:14px 16px;
+  }
+  header.app .wrap{padding:0 16px;}
+  header.app h1{font-size:1.15rem;margin:0;font-weight:700;letter-spacing:.2px;}
+  header.app p{margin:2px 0 0;font-size:.85rem;color:#f0e6ea;}
+
+  /* Status bar */
+  .status{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:12px;margin:16px 0;
+  }
+  .stat{flex:1 1 130px;min-width:120px;}
+  .stat .label{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-secondary);font-weight:700;}
+  .stat .value{font-size:1.05rem;font-weight:700;color:var(--text-heading);}
+  .xpbar-track{background:#e6e0d3;border:1px solid var(--border);border-radius:6px;height:12px;overflow:hidden;margin-top:4px;}
+  .xpbar-fill{background:var(--griz-maroon);height:100%;width:0%;transition:width .5s ease;}
+  @media (prefers-reduced-motion: reduce){.xpbar-fill{transition:none;}}
+
+  main{padding-bottom:48px;}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    padding:22px;margin:16px 0;
+  }
+  h2{color:var(--text-heading);font-size:1.35rem;margin:0 0 12px;}
+  h3{color:var(--text-heading);font-size:1.05rem;margin:18px 0 8px;}
+  p{margin:0 0 12px;}
+  .lead{font-size:1.05rem;}
+  .muted{color:var(--text-secondary);font-size:.92rem;}
+  .pill{
+    display:inline-block;background:var(--wheat);color:var(--text-heading);
+    border:1px solid var(--border);border-radius:999px;
+    padding:3px 12px;font-size:.78rem;font-weight:700;margin:0 6px 6px 0;
+  }
+  .pill.diff{background:#eef3f0;color:var(--lubrecht-green);}
+
+  .scenario{
+    background:#faf7ef;border-left:5px solid var(--griz-maroon);
+    border-radius:0 8px 8px 0;padding:12px 16px;margin:0 0 16px;
+  }
+  .scenario .tag{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--griz-maroon);}
+  .prompt-q{font-weight:700;font-size:1.1rem;margin:14px 0;}
+
+  fieldset{border:1px solid var(--border);border-radius:10px;padding:10px 14px 4px;margin:0 0 16px;}
+  legend{font-weight:700;padding:0 6px;color:var(--text-heading);}
+  .opt{
+    display:flex;gap:10px;align-items:flex-start;
+    border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:8px 0;
+    cursor:pointer;background:#fff;
+  }
+  .opt:hover{background:#faf7ef;}
+  .opt input{margin-top:4px;width:18px;height:18px;flex:0 0 auto;}
+  .opt .otext{flex:1;}
+  .opt.reveal-best{border-color:var(--ok-green);background:#eef4f0;}
+  .opt.reveal-weak{border-color:#d9b3b3;background:#fbf1f1;}
+  .verdict{font-weight:700;font-size:.82rem;display:block;margin-bottom:2px;}
+  .verdict.best{color:var(--ok-green);}
+  .verdict.weak{color:var(--warn-red);}
+  .why{font-size:.92rem;color:var(--text-primary);margin-top:4px;}
+
+  label.field-label{display:block;font-weight:700;margin:6px 0 4px;color:var(--text-heading);}
+  textarea{
+    width:100%;min-height:110px;font-family:inherit;font-size:1rem;
+    padding:10px;border:1px solid var(--border);border-radius:8px;resize:vertical;
+  }
+  .hint{font-size:.85rem;color:var(--text-secondary);margin:4px 0 12px;}
+  .charcount{font-variant-numeric:tabular-nums;}
+
+  button{
+    font-family:inherit;font-size:1rem;font-weight:700;cursor:pointer;
+    border-radius:8px;padding:12px 20px;border:2px solid var(--griz-maroon);
+    background:var(--griz-maroon);color:#fff;
+  }
+  button:hover{background:#5a0025;}
+  button.secondary{background:#fff;color:var(--griz-maroon);}
+  button.secondary:hover{background:#faf1f4;}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+
+  :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:2px;}
+
+  .reveal-panel{border-top:2px dashed var(--border);margin-top:20px;padding-top:16px;}
+  .expert{background:#eef4f0;border-radius:8px;padding:12px 16px;margin:8px 0 16px;}
+  .socratic li{margin:6px 0;}
+  .rubric-item{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:6px;}
+  .rubric-item:hover{background:#faf7ef;}
+  .rubric-item input{margin-top:4px;width:18px;height:18px;flex:0 0 auto;}
+
+  .adapt-note{font-size:.9rem;font-weight:700;padding:8px 12px;border-radius:8px;margin:8px 0;}
+  .adapt-up{background:#eef4f0;color:var(--lubrecht-green);}
+  .adapt-down{background:#faf1f4;color:var(--griz-maroon);}
+  .adapt-flat{background:var(--wheat);color:var(--text-heading);}
+
+  .badge-grid{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0;}
+  .badge{
+    display:flex;align-items:center;gap:8px;background:var(--wheat);
+    border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-weight:700;font-size:.9rem;
+    color:var(--text-heading);
+  }
+  .badge .b-emoji{font-size:1.2rem;}
+
+  .toast{
+    position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+    background:var(--lubrecht-green);color:#fff;padding:12px 20px;border-radius:10px;
+    font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:150;max-width:90%;
+  }
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  .radar-desc li{margin:4px 0;}
+  table.summary{width:100%;border-collapse:collapse;margin:12px 0;}
+  table.summary caption{text-align:left;font-weight:700;color:var(--text-heading);margin-bottom:6px;}
+  table.summary th,table.summary td{border:1px solid var(--border);padding:8px 10px;text-align:left;font-size:.95rem;}
+  table.summary th[scope="col"]{background:var(--wheat);color:var(--text-heading);}
+
+  footer.app{color:var(--text-secondary);font-size:.82rem;text-align:center;padding:24px 16px 40px;}
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="app">
+  <div class="wrap">
+    <h1>Gen AI Literacy &amp; Fluency Challenge</h1>
+    <p>Justify your thinking. Test your judgment. Build real AI fluency.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STATUS BAR -->
+  <section class="status" id="statusbar" aria-label="Your progress" hidden>
+    <div class="stat">
+      <div class="label">Fluency Rank</div>
+      <div class="value" id="rank-name">AI Novice</div>
+    </div>
+    <div class="stat">
+      <div class="label">XP to next rank</div>
+      <div class="value"><span id="xp-current">0</span> XP</div>
+      <div class="xpbar-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progress to next rank" id="xpbar">
+        <div class="xpbar-fill" id="xpbar-fill"></div>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="label">Streak</div>
+      <div class="value"><span id="streak">0</span> 🔥</div>
+    </div>
+    <div class="stat">
+      <div class="label">Questions</div>
+      <div class="value"><span id="answered">0</span> / <span id="total">0</span></div>
+    </div>
+  </section>
+
+  <main id="main-content">
+
+    <!-- SCREEN: INTRO -->
+    <section class="card" id="screen-intro" aria-labelledby="intro-h">
+      <h2 id="intro-h" tabindex="-1">Welcome — this is not a normal quiz</h2>
+      <p class="lead">Most quizzes ask you to pick the right answer. This one asks you to <strong>defend it</strong>.</p>
+      <p>For each real-world scenario you'll choose the best response <em>and write why</em>. Then you'll see an expert's reasoning, self-check your justification against a rubric, and get probing follow-up questions to push your thinking further. The difficulty <strong>adapts</strong> to how you do.</p>
+      <h3>How it works</h3>
+      <ol>
+        <li><strong>Read</strong> a scenario you might actually face.</li>
+        <li><strong>Choose</strong> the strongest response and <strong>justify</strong> it in writing.</li>
+        <li><strong>Reveal</strong> the expert reasoning and honestly self-assess your justification.</li>
+        <li><strong>Reflect</strong> on the Socratic follow-ups — no right answer, just better thinking.</li>
+      </ol>
+      <p class="muted">Your progress is saved on this device only. Nothing you write is sent anywhere — it stays in your browser.</p>
+      <div class="btnrow">
+        <button id="btn-start">Start the Challenge</button>
+        <button class="secondary" id="btn-reset-intro" hidden>Reset my progress</button>
+      </div>
+    </section>
+
+    <!-- SCREEN: QUESTION -->
+    <section class="card" id="screen-question" aria-labelledby="q-h" hidden>
+      <h2 id="q-h" tabindex="-1">Scenario</h2>
+      <div id="q-meta"></div>
+      <div class="scenario" id="q-scenario">
+        <span class="tag">Real-world situation</span>
+        <p id="q-scenario-text"></p>
+      </div>
+      <p class="prompt-q" id="q-prompt"></p>
+
+      <form id="q-form">
+        <fieldset id="q-options-fs">
+          <legend>Choose the strongest response</legend>
+          <div id="q-options"></div>
+        </fieldset>
+
+        <label class="field-label" for="q-justify">Justify your choice — why is this the best response?</label>
+        <p class="hint" id="justify-hint">Write at least a sentence or two. Explain your reasoning, not just what you picked. <span class="charcount"><span id="jcount">0</span> characters</span></p>
+        <textarea id="q-justify" aria-describedby="justify-hint" required></textarea>
+
+        <div class="btnrow">
+          <button type="submit" id="btn-reveal" disabled>Reveal &amp; Reflect</button>
+        </div>
+      </form>
+
+      <!-- REVEAL -->
+      <div class="reveal-panel" id="reveal" hidden>
+        <h3 id="reveal-h" tabindex="-1">How your answer holds up</h3>
+        <div id="reveal-options"></div>
+
+        <h3>Expert reasoning</h3>
+        <div class="expert" id="expert-text"></div>
+
+        <form id="rubric-form">
+          <fieldset>
+            <legend>Self-check: which of these did your justification actually make?</legend>
+            <p class="hint">Be honest — this is for your own learning, and it tunes your next question. Checking points you genuinely made earns more XP.</p>
+            <div id="rubric-items"></div>
+          </fieldset>
+        </form>
+
+        <h3>Push your thinking</h3>
+        <ul class="socratic" id="socratic-list"></ul>
+
+        <div class="adapt-note" id="adapt-note" hidden></div>
+
+        <div class="btnrow">
+          <button type="button" id="btn-continue">Continue</button>
+          <button type="button" class="secondary" id="btn-finish">Finish &amp; see my profile</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREEN: SUMMARY -->
+    <section class="card" id="screen-summary" aria-labelledby="sum-h" hidden>
+      <h2 id="sum-h" tabindex="-1">Your AI Fluency Profile</h2>
+      <p class="lead" id="sum-rank"></p>
+      <p id="sum-blurb"></p>
+
+      <h3>Your fluency across the eight domains</h3>
+      <div id="radar-wrap"></div>
+      <div class="sr-only" id="radar-a11y"></div>
+
+      <table class="summary" id="domain-table">
+        <caption>Domain mastery breakdown</caption>
+        <thead>
+          <tr>
+            <th scope="col">Domain</th>
+            <th scope="col">Mastery</th>
+            <th scope="col">What it means</th>
+          </tr>
+        </thead>
+        <tbody id="domain-tbody"></tbody>
+      </table>
+
+      <h3>Badges earned</h3>
+      <div class="badge-grid" id="sum-badges"></div>
+
+      <h3>Where to focus next</h3>
+      <ul id="sum-focus"></ul>
+
+      <div class="btnrow">
+        <button id="btn-continue-more" class="secondary">Keep going — more questions</button>
+        <button id="btn-reset-summary" class="secondary">Start over</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<footer class="app">
+  University of Montana · A practice tool for building generative-AI literacy. Not graded — your reflection is the point.
+</footer>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- DOMAINS ---------------- */
+const DOMAINS = {
+  HOW:      {name:"How AI Works",              short:"How It Works"},
+  PROMPT:   {name:"Effective Prompting",       short:"Prompting"},
+  VERIFY:   {name:"Verification & Hallucination", short:"Verifying"},
+  BIAS:     {name:"Bias & Fairness",           short:"Bias"},
+  PRIVACY:  {name:"Privacy & Data",            short:"Privacy"},
+  INTEGRITY:{name:"Integrity & Appropriate Use", short:"Integrity"},
+  IP:       {name:"IP & Attribution",          short:"IP"},
+  EVAL:     {name:"Critical Evaluation",       short:"Evaluation"}
+};
+const DOMAIN_ORDER = Object.keys(DOMAINS);
+const DIFF_NAME = {1:"Novice", 2:"Practitioner", 3:"Expert"};
+
+/* ---------------- QUESTION BANK ---------------- */
+const QUESTIONS = [
+/* HOW */
+{id:"HOW1",domain:"HOW",diff:1,
+ scenario:"A friend tells you, “The chatbot just looked up the answer on the internet to reply to me.”",
+ prompt:"What is the most accurate correction?",
+ options:[
+  {t:"Correct — it searches Google in real time for every reply.",correct:false,why:"A plain language model doesn’t browse the web for each reply. It generates text from patterns it already learned."},
+  {t:"A standard chatbot predicts likely next words from patterns in its training data — it isn’t looking things up live unless a browsing/search tool is connected.",correct:true,why:"This captures both how generation works and the real exception (attached tools)."},
+  {t:"It keeps a copy of every webpage and pastes the matching paragraph.",correct:false,why:"Models don’t store and retrieve pages verbatim; they generate statistically likely text."},
+  {t:"It reasons like a person and then reports facts it knows.",correct:false,why:"“Knows” overstates it — it produces likely continuations, which can be wrong."}
+ ],
+ expert:"Language models are next-word predictors trained on large text collections. A base model has no live internet access; it produces the most statistically likely continuation of your text. Some products bolt on retrieval or browsing tools — that’s a separate capability from the core model.",
+ rubric:["Distinguished the model’s text generation from live web search","Mentioned predicting likely words/patterns from training data","Noted the exception: a connected browsing/search tool can add live lookup"],
+ socratic:["How could you tell whether a given AI answer used live search or just its training?","If it predicts likely text, what does that imply about brand-new events?"]},
+
+{id:"HOW2",domain:"HOW",diff:2,
+ scenario:"You ask an AI the exact same question twice and get two differently worded answers.",
+ prompt:"Which explanation best fits what happened?",
+ options:[
+  {t:"The model learned something new between your two questions.",correct:false,why:"A deployed model isn’t retraining itself between your messages."},
+  {t:"Generation samples among probable next words, so outputs can vary run-to-run even with identical input.",correct:true,why:"Randomness in sampling (“temperature”) explains normal variation."},
+  {t:"It’s broken — identical inputs must always produce identical outputs.",correct:false,why:"Variation is expected behavior, not a malfunction."},
+  {t:"It remembered you disliked the first answer and changed it.",correct:false,why:"This assumes memory it may not have, and misattributes the cause."}
+ ],
+ expert:"Text generation is probabilistic. A setting often called “temperature” controls how much randomness is allowed, so the same prompt can yield different phrasings. This is normal — not learning, not a bug.",
+ rubric:["Identified randomness/sampling in how text is generated","Did NOT claim the model “learned” mid-conversation","Recognized this is expected, not a malfunction"],
+ socratic:["When would you want low randomness versus high randomness?","Does different wording mean the underlying facts changed?"]},
+
+{id:"HOW3",domain:"HOW",diff:3,
+ scenario:"A vendor pitches you: “Our AI truly understands your documents and knows the truth about your business.”",
+ prompt:"What is the sharpest critical response?",
+ options:[
+  {t:"Sounds great — understanding and knowing truth are exactly what these systems do.",correct:false,why:"This accepts anthropomorphic marketing at face value."},
+  {t:"“Understands” and “knows the truth” are overstatements; it models statistical relationships in text and can produce fluent but false claims, so any truth claim needs grounding and verification.",correct:true,why:"It names the overstatement and demands evidence of accuracy."},
+  {t:"Impossible — AI can never process documents usefully.",correct:false,why:"An over-correction; these tools can be genuinely useful when grounded and checked."},
+  {t:"All that matters is whether the demo looks impressive.",correct:false,why:"A slick demo is not evidence of reliability."}
+ ],
+ expert:"Anthropomorphic claims like “understands” and “knows the truth” hide the fact that outputs are generated, not verified. Trustworthy systems ground answers in retrieved sources and are measured for accuracy. A good buyer asks: how do you measure truthfulness, and what happens when it’s wrong?",
+ rubric:["Flagged the anthropomorphic/overstated language","Explained that fluency is not the same as truth","Asked for grounding, verification, or how accuracy is measured"],
+ socratic:["What single question would test the vendor’s “knows the truth” claim?","How is “sounds confident” different from “is correct”?"]},
+
+/* PROMPT */
+{id:"PROMPT1",domain:"PROMPT",diff:1,
+ scenario:"You type “write about dogs” and get a bland, generic paragraph.",
+ prompt:"What is the best next move?",
+ options:[
+  {t:"Retype the exact same prompt and hope for a better result.",correct:false,why:"Same vague input, same vague output."},
+  {t:"Add context and constraints: audience, purpose, length, tone, and the key points you want covered.",correct:true,why:"Specificity gives the model the signal it needs."},
+  {t:"Assume the AI just can’t write about dogs.",correct:false,why:"The tool is capable; the prompt was underspecified."},
+  {t:"Make the prompt even shorter and vaguer.",correct:false,why:"Less signal produces more generic results."}
+ ],
+ expert:"Vague prompts produce vague output. Specifying who it’s for, what it’s for, the format, the length, and any must-include points turns a generic response into a useful one. Prompting is iterative — you steer.",
+ rubric:["Recognized vagueness as the actual problem","Named specific additions (audience, purpose, format, or constraints)","Framed prompting as something you iterate and steer"],
+ socratic:["Which single detail would change this output the most?","How is prompting like briefing a brand-new intern?"]},
+
+{id:"PROMPT2",domain:"PROMPT",diff:2,
+ scenario:"An AI gives you a long answer that technically responds but misses what you actually needed.",
+ prompt:"Which prompting habit best prevents this?",
+ options:[
+  {t:"Give it a concrete example of the output you want and ask it to match that format.",correct:true,why:"Examples (“few-shot”) and explicit formats steer both structure and content."},
+  {t:"Never provide examples — it should just know.",correct:false,why:"Without a target, the model guesses what you meant."},
+  {t:"Add more exclamation points to signal urgency.",correct:false,why:"Tone doesn’t supply the missing specification."},
+  {t:"Ask ten unrelated questions at once.",correct:false,why:"Bundling dilutes focus and makes output harder to use."}
+ ],
+ expert:"Showing an example of the desired output and specifying the format is one of the most reliable ways to get usable results. It gives the model a pattern to imitate — far more effective than emphatic tone or piling on requests.",
+ rubric:["Identified examples and/or explicit format as the fix","Explained why examples help (a pattern to imitate)","Avoided magical fixes like tone or urgency"],
+ socratic:["What’s the difference between telling it what to do and showing it?","When might one clear example beat a paragraph of instructions?"]},
+
+{id:"PROMPT3",domain:"PROMPT",diff:3,
+ scenario:"You need the AI to solve a multi-step problem, but it keeps leaping to a wrong conclusion.",
+ prompt:"What is the most effective technique?",
+ options:[
+  {t:"Ask it to state its reasoning step by step before the final answer, and to check its own work.",correct:true,why:"Explicit intermediate reasoning improves multi-step accuracy and exposes errors you can catch."},
+  {t:"Demand the final answer immediately with no explanation.",correct:false,why:"Skipping the steps hides exactly where it goes wrong."},
+  {t:"Tell it repeatedly that the answer is “very important.”",correct:false,why:"Emphasis doesn’t create correct reasoning."},
+  {t:"Accept the first answer, since AI is always logical.",correct:false,why:"AI reasoning is fallible and needs checking."}
+ ],
+ expert:"Asking for explicit, step-by-step reasoning and a self-check often improves accuracy on multi-step problems — and, just as important, it makes the reasoning visible so you can spot where it went wrong.",
+ rubric:["Named step-by-step reasoning / showing the work","Connected visible reasoning to catching errors","Recognized AI reasoning is fallible and must be checked"],
+ socratic:["How does seeing the steps help you, not just the model?","Where in the chain would you look first for a mistake?"]},
+
+/* VERIFY */
+{id:"VERIFY1",domain:"VERIFY",diff:1,
+ scenario:"An AI gives you a specific statistic and cites a research paper as the source.",
+ prompt:"What should you do before you use it?",
+ options:[
+  {t:"Trust it — it provided a citation, so the source must be real.",correct:false,why:"AI can generate confident, well-formatted citations that don’t exist."},
+  {t:"Check that the source actually exists and actually says that, because AI can fabricate plausible-looking citations.",correct:true,why:"Verification is the only way to know the citation is real and supports the claim."},
+  {t:"Only worry if the number looks strange.",correct:false,why:"Plausible numbers can still be invented; “seems fine” isn’t verification."},
+  {t:"Delete the citation and keep the statistic.",correct:false,why:"That removes the check without confirming the fact."}
+ ],
+ expert:"Models can hallucinate citations — authors, titles, even journal names — that look real but aren’t, or that exist but don’t support the claim. Always confirm the source exists and actually contains the stated content before relying on it.",
+ rubric:["Recognized that citations can be fabricated","Committed to verifying the source exists AND supports the claim","Did not treat the presence of a citation as proof"],
+ socratic:["Why is a fake citation more dangerous than an obviously wrong answer?","What’s the fastest way to check a citation?"]},
+
+{id:"VERIFY2",domain:"VERIFY",diff:2,
+ scenario:"You ask about something that happened last week, and the AI answers with total confidence.",
+ prompt:"What is the key risk here?",
+ options:[
+  {t:"Its confidence guarantees the answer is accurate.",correct:false,why:"Confidence is a style of the generated text, not proof of accuracy."},
+  {t:"Its training may predate the event, so it can state outdated or invented details in a confident tone.",correct:true,why:"Recency + confident tone is a classic setup for confident errors."},
+  {t:"Recent events are the one thing AI is always right about.",correct:false,why:"The opposite — recent events often fall outside training data."},
+  {t:"Confidence and recency have nothing to do with accuracy.",correct:false,why:"The specific, checkable risk is the training cutoff for recent events."}
+ ],
+ expert:"A confident tone is a property of generated text, not a truth signal. Without a live search tool, recent events fall outside the model’s training data, so it may confidently produce outdated or invented details. Check against a dated, live source.",
+ rubric:["Separated confident tone from actual accuracy","Raised the training-cutoff / recency limitation","Suggested checking against a live, dated source"],
+ socratic:["How would you phrase a follow-up to test whether it really knows?","Why might an AI never say “I don’t know” even when it should?"]},
+
+{id:"VERIFY3",domain:"VERIFY",diff:3,
+ scenario:"A teammate hands in an AI-written summary of a medical study for a group project. It reads smoothly and cites three studies.",
+ prompt:"What is the responsible verification standard here?",
+ options:[
+  {t:"Smooth writing plus citations is good enough for a health topic.",correct:false,why:"Fluency and formatting are not evidence, especially in a high-stakes domain."},
+  {t:"For a high-stakes topic, independently confirm each study exists, check the summary matches the real findings, and flag anything you can’t verify before relying on it.",correct:true,why:"Verification effort should scale with the stakes."},
+  {t:"Rewrite it in your own words so it feels safer.",correct:false,why:"Rewording an unverified claim doesn’t make it true."},
+  {t:"Assume the AI wouldn’t make mistakes about health.",correct:false,why:"High stakes make unchecked reliance riskier, not safer."}
+ ],
+ expert:"Stakes should scale your verification. Health claims call for checking the primary sources exist, confirming the summary faithfully matches the findings, and disclosing what can’t be verified. Fluency and citation formatting are not evidence of accuracy.",
+ rubric:["Tied the depth of verification to the stakes / domain","Specified checking both that sources exist AND that the summary is faithful","Included flagging or disclosing what can’t be verified"],
+ socratic:["How would your standard change for a personal blog vs. a patient handout?","Who is responsible if the summary is wrong — the AI, or the person who submitted it?"]},
+
+/* BIAS */
+{id:"BIAS1",domain:"BIAS",diff:1,
+ scenario:"You ask an AI to “describe a nurse” and “describe a CEO,” and you notice the genders it tends to assume.",
+ prompt:"What is the best explanation?",
+ options:[
+  {t:"The AI holds personal opinions about which jobs suit which people.",correct:false,why:"It has no personal opinions; it reflects patterns in data."},
+  {t:"Models learn statistical patterns from human-created data, so societal biases in that data can surface in outputs.",correct:true,why:"Bias in outputs traces back to bias in training data."},
+  {t:"This never happens with modern AI.",correct:false,why:"Bias is a well-documented, ongoing challenge."},
+  {t:"It’s a random glitch with no underlying cause.",correct:false,why:"It’s a systematic reflection of data, not randomness."}
+ ],
+ expert:"Training data reflects human society, including its stereotypes. Models can reproduce — and sometimes amplify — those patterns unless deliberately mitigated. It isn’t opinion or randomness; it’s an echo of the data.",
+ rubric:["Traced the bias to training data / society, not AI “opinion”","Recognized outputs can reproduce or amplify existing bias","Avoided claiming bias is fully solved or impossible"],
+ socratic:["Whose choices shaped the data the model learned from?","How could this bias cause real harm inside a hiring tool?"]},
+
+{id:"BIAS2",domain:"BIAS",diff:2,
+ scenario:"A hiring team wants to use AI to screen résumés specifically to “remove human bias.”",
+ prompt:"What is the sharpest concern?",
+ options:[
+  {t:"Automation guarantees fairness.",correct:false,why:"Automation can hide bias behind a veneer of objectivity."},
+  {t:"An AI trained on past hiring decisions can inherit and scale the very biases it’s meant to remove, while looking objective.",correct:true,why:"Learning from biased history reproduces that bias at scale."},
+  {t:"AI can’t read résumés at all.",correct:false,why:"It can process them; capability isn’t the issue."},
+  {t:"The only real issue is processing speed.",correct:false,why:"Speed misses the fairness risk entirely."}
+ ],
+ expert:"If past hiring decisions were biased, a model that learns from them replicates the bias — now faster, at scale, and wrapped in a false appearance of neutrality. Fairness must be measured, not assumed just because a machine is doing it.",
+ rubric:["Identified that historical data encodes past bias","Noted the scale and the false appearance of objectivity","Implied a need to audit or measure fairness"],
+ socratic:["Why can automation make bias harder to spot, not easier?","What would you actually measure to check the tool is fair?"]},
+
+{id:"BIAS3",domain:"BIAS",diff:3,
+ scenario:"An AI image tool produces noticeably less accurate results for certain skin tones, names, and dialects than for others.",
+ prompt:"What is the most complete framing of the problem?",
+ options:[
+  {t:"It’s just a technical bug to patch and forget.",correct:false,why:"Calling it a one-off bug understates a systemic fairness issue."},
+  {t:"Uneven performance across groups is a fairness and representation issue rooted in imbalanced data and evaluation, with real-world harms — it needs diverse data, disaggregated testing, and accountability.",correct:true,why:"It names the cause, the harm, and the governance response."},
+  {t:"All models perform equally, so the user must be mistaken.",correct:false,why:"Disparate performance across groups is well documented."},
+  {t:"Performance gaps don’t matter as long as the average is good.",correct:false,why:"A strong average can hide serious harm to specific groups."}
+ ],
+ expert:"Aggregate accuracy can mask very different performance for different groups. Addressing it takes representative data, evaluation broken out by group (not just an average), and real accountability — plus recognizing the downstream harm to under-served people. A single patch rarely fixes a data-and-evaluation problem.",
+ rubric:["Named disparate / uneven performance across groups","Rooted it in data and evaluation, not a random bug","Proposed disaggregated testing, representation, or accountability"],
+ socratic:["Why can a high average score still mask serious harm?","Who should be accountable when a deployed model underperforms for a group?"]},
+
+/* PRIVACY */
+{id:"PRIVACY1",domain:"PRIVACY",diff:1,
+ scenario:"You’re about to paste a spreadsheet with classmates’ names, ID numbers, and grades into a public AI chatbot to summarize it.",
+ prompt:"What is the best action?",
+ options:[
+  {t:"Go ahead — chatbots are private.",correct:false,why:"Inputs to a public tool may be stored or reviewed; they aren’t private."},
+  {t:"Don’t paste others’ identifiable data into a third-party tool; anonymize it or use an approved tool, since that data may be stored or used.",correct:true,why:"Protecting others’ personal data is the responsible and compliant choice."},
+  {t:"Only remove the grades but keep names and IDs.",correct:false,why:"Names and IDs are exactly the identifying data that needs protecting."},
+  {t:"It’s fine as long as you delete the chat afterward.",correct:false,why:"Deletion on your end doesn’t guarantee the provider didn’t retain it."}
+ ],
+ expert:"Pasting other people’s identifiable information into a third-party service can violate their privacy expectations and institutional policy (student records are specifically protected). Anonymize the data, or use a tool your institution has approved with appropriate data agreements.",
+ rubric:["Recognized this is other people’s personal / identifiable data","Chose to anonymize or use an approved tool","Understood the provider may store or use the input"],
+ socratic:["Whose consent would you need before sharing their data?","How are student records specifically protected at a university?"]},
+
+{id:"PRIVACY2",domain:"PRIVACY",diff:2,
+ scenario:"A free AI app’s terms of service say your inputs “may be used to improve our services.”",
+ prompt:"What does that mean for you?",
+ options:[
+  {t:"Nothing — it’s meaningless boilerplate.",correct:false,why:"That clause usually grants real permission to retain and use your inputs."},
+  {t:"Your inputs may be retained and used for training or human review, so avoid entering confidential or personal information you wouldn’t want stored.",correct:true,why:"It reads the clause correctly and changes behavior accordingly."},
+  {t:"It means your data is encrypted and deleted instantly.",correct:false,why:"“Improve our services” implies the opposite of instant deletion."},
+  {t:"Only images are affected, never text.",correct:false,why:"The clause typically covers your inputs broadly, including text."}
+ ],
+ expert:"“Improve our services” often permits the provider to retain your inputs and use them for model training or human review. Treat anything sensitive — confidential, proprietary, or personal — as potentially stored, and don’t enter it.",
+ rubric:["Interpreted the clause as retention / use for training or review","Drew a concrete behavior change (don’t enter sensitive data)","Did not dismiss the terms as meaningless"],
+ socratic:["What’s the difference between a consumer tool and an enterprise agreement here?","What would you check before using a tool with work data?"]},
+
+{id:"PRIVACY3",domain:"PRIVACY",diff:3,
+ scenario:"Your team wants to build a helpful support chatbot using real customer service transcripts.",
+ prompt:"What is the most responsible data approach?",
+ options:[
+  {t:"Use all the raw transcripts as-is — more data is always better.",correct:false,why:"Raw personal data with no safeguards is a privacy and compliance risk."},
+  {t:"Minimize and protect: establish a lawful basis / consent, strip or mask personal data, limit retention, control access, and document how data is used — before building.",correct:true,why:"These are baseline responsible-data practices, applied up front."},
+  {t:"Privacy only matters after launch if someone complains.",correct:false,why:"Safeguards after a breach are too late."},
+  {t:"Anonymizing is pointless because it’s impossible.",correct:false,why:"Imperfect anonymization is still far better than none, and it’s a required practice."}
+ ],
+ expert:"Data minimization, a lawful basis or consent, masking personal data, retention limits, access controls, and documentation are baseline responsible-AI data practices — and they belong before development, not after an incident.",
+ rubric:["Applied data minimization and/or a lawful basis / consent","Specified masking personal data plus retention or access controls","Placed the safeguards before building, not after"],
+ socratic:["What’s the cost of collecting data you don’t actually need?","How could “anonymized” data still re-identify someone?"]},
+
+/* INTEGRITY */
+{id:"INTEGRITY1",domain:"INTEGRITY",diff:1,
+ scenario:"An assignment says: “You may use AI to brainstorm, but you must write the essay yourself.”",
+ prompt:"Which use is clearly allowed?",
+ options:[
+  {t:"Have the AI write the final essay and submit it.",correct:false,why:"The policy explicitly says you must write it yourself."},
+  {t:"Ask the AI for possible angles, then research and write the essay in your own words.",correct:true,why:"Brainstorming assistance is exactly what the policy permits."},
+  {t:"Paste the AI’s essay and change a few words.",correct:false,why:"Lightly editing AI text still isn’t writing it yourself."},
+  {t:"Submit the AI essay under a group member’s name.",correct:false,why:"That’s both unauthorized AI use and misrepresentation."}
+ ],
+ expert:"Brainstorming help is permitted; generating the submitted text is not. The key is matching your action to the specific policy for this assignment — idea-generation is allowed, text-generation is not.",
+ rubric:["Matched the action to the stated policy (brainstorm vs. write)","Distinguished generating ideas from generating the submitted text","Recognized that lightly editing AI text still isn’t “writing it yourself”"],
+ socratic:["Where exactly is the line between “help” and “doing it for you” here?","Why might policies differ from one class to the next?"]},
+
+{id:"INTEGRITY2",domain:"INTEGRITY",diff:2,
+ scenario:"You used AI heavily to draft a report and you’re unsure whether to disclose it.",
+ prompt:"What is the best default?",
+ options:[
+  {t:"Never mention it — disclosure just looks bad.",correct:false,why:"Hiding AI use undermines trust and can violate policy."},
+  {t:"Follow the disclosure policy, and when in doubt be transparent about how and where you used AI.",correct:true,why:"Transparency protects your integrity and lets others judge the work fairly."},
+  {t:"Only disclose if you get caught.",correct:false,why:"“Only if caught” is the opposite of academic integrity."},
+  {t:"Disclosure is only needed for images, not text.",correct:false,why:"Disclosure norms apply to AI-generated text as well."}
+ ],
+ expert:"Transparency is the safe default. Many institutions now require disclosing AI use, and describing your process supports trust and lets readers evaluate the work fairly. “Only if caught” is not an integrity standard.",
+ rubric:["Chose transparency / disclosure as the default","Tied it to policy and to honesty / trust","Rejected the “only if caught” reasoning"],
+ socratic:["What would a fair, specific disclosure statement actually say?","How does undisclosed use affect people who rely on your work?"]},
+
+{id:"INTEGRITY3",domain:"INTEGRITY",diff:3,
+ scenario:"A student argues: “Using AI to write my code is fine — professionals use it, so banning it is unrealistic.”",
+ prompt:"What is the most thoughtful position?",
+ options:[
+  {t:"They’re right — any AI use is always fine.",correct:false,why:"“Always fine” ignores the purpose of a learning task."},
+  {t:"Professional and learning contexts differ: in a course meant to build a skill, offloading it to AI can undermine the goal, even if the same tool is appropriate on the job once you’ve learned the skill.",correct:true,why:"Purpose and context, not the tool alone, decide appropriateness."},
+  {t:"AI is always cheating, in every context.",correct:false,why:"An over-broad claim; professionals appropriately use these tools."},
+  {t:"Only the final syntax matters, not whether you learned anything.",correct:false,why:"In a course, learning is the whole point."}
+ ],
+ expert:"The same tool can be appropriate or not depending on purpose. Courses often exist to build a skill, so offloading that skill defeats the goal — while on the job, once you have the skill, using the tool to move faster can be entirely appropriate. The deciding factor is the learning objective, not the tool.",
+ rubric:["Separated the learning context from the professional context","Named the learning objective as the deciding factor","Avoided absolute “always fine” / “always cheating” framing"],
+ socratic:["What skill is this assignment actually trying to build?","When does relying on AI help you learn versus skip the learning?"]},
+
+/* IP */
+{id:"IP1",domain:"IP",diff:1,
+ scenario:"An AI generates an image “in the style of” a specific living artist for your project.",
+ prompt:"What is the best-informed stance?",
+ options:[
+  {t:"Anything AI makes is automatically free to use for anything.",correct:false,why:"AI output is not automatically free of ethical or legal strings."},
+  {t:"Mimicking a specific living artist raises ethical and possibly legal concerns; check usage rights, don’t pass it off as theirs, and consider credit or licensing.",correct:true,why:"It flags the concern without overclaiming certainty."},
+  {t:"Copying a style is always flatly illegal.",correct:false,why:"An over-statement; the law here is unsettled and nuanced."},
+  {t:"It’s fine as long as nobody notices.",correct:false,why:"“Nobody notices” isn’t an ethical or legal standard."}
+ ],
+ expert:"AI-generated content sits in an evolving legal area. Deliberately imitating a named, living artist raises ethical and potential legal concerns (including rights of publicity), so check usage rights, avoid passing the work off as the artist’s, and consider attribution or licensing.",
+ rubric:["Rejected “AI output is automatically free for anything”","Flagged the ethical / legal concern of imitating a named artist","Considered rights, attribution, or licensing"],
+ socratic:["How is “inspired by a style” different from “copying a work”?","Who might be harmed when AI mimics a specific creator?"]},
+
+{id:"IP2",domain:"IP",diff:2,
+ scenario:"You want to use AI-generated text in a published article.",
+ prompt:"What should you verify first?",
+ options:[
+  {t:"Nothing — AI text has no strings attached.",correct:false,why:"Rights, originality, and disclosure all can apply."},
+  {t:"Check the tool’s terms for usage / ownership rights, make sure the content isn’t copied from a source, and follow the publisher’s AI-disclosure rules.",correct:true,why:"All three checks matter for published work."},
+  {t:"Only that it sounds original.",correct:false,why:"Sounding original doesn’t confirm rights or that it isn’t reproduced."},
+  {t:"That you changed the font.",correct:false,why:"Formatting has nothing to do with rights or attribution."}
+ ],
+ expert:"Your rights depend on the tool’s terms; outputs can inadvertently reproduce training text; and publishers increasingly require disclosure. Verify all three before publishing.",
+ rubric:["Checked the tool’s terms for ownership / usage rights","Guarded against content copied or reproduced from a source","Followed the publisher’s disclosure requirements"],
+ socratic:["Where would you look to learn who “owns” an AI output?","How could AI text accidentally infringe someone’s work?"]},
+
+{id:"IP3",domain:"IP",diff:3,
+ scenario:"A company trained its model on artists’ work scraped from the web without asking. The artists object.",
+ prompt:"What is the most complete analysis?",
+ options:[
+  {t:"If it’s on the internet, it’s automatically fair to use for training.",correct:false,why:"“Publicly visible” is not the same as “licensed for training.”"},
+  {t:"It raises unresolved questions about consent, copyright / fair use, and compensation; “publicly visible” isn’t “licensed,” and reasonable, evolving positions exist on multiple sides.",correct:true,why:"It holds the genuine uncertainty instead of a slogan."},
+  {t:"Training on any data is always illegal.",correct:false,why:"An over-statement; the law is actively being worked out."},
+  {t:"The artists’ concerns don’t matter because AI is progress.",correct:false,why:"Dismissing affected people isn’t analysis."}
+ ],
+ expert:"Web-scraped training raises live questions about consent, copyright and fair use, and compensation that courts and policymakers are actively working through. Availability is not permission, and thoughtful people disagree — the honest answer holds that uncertainty.",
+ rubric:["Separated “publicly visible” from “licensed / consented”","Named more than one live issue (consent, copyright, compensation)","Acknowledged genuine uncertainty instead of a slogan"],
+ socratic:["Why might “it was public” be an insufficient defense?","How would you design a more consent-respecting approach?"]},
+
+/* EVAL */
+{id:"EVAL1",domain:"EVAL",diff:1,
+ scenario:"An AI gives you step-by-step medical advice for a symptom that’s worrying you.",
+ prompt:"What is the best response?",
+ options:[
+  {t:"Follow it exactly — AI is basically a doctor.",correct:false,why:"It isn’t a licensed clinician and lacks your full context."},
+  {t:"Treat it as general information, not personalized medical advice, and consult a qualified professional for anything serious.",correct:true,why:"It uses the tool sensibly without over-relying on it."},
+  {t:"Ignore your symptoms if the AI sounds calm.",correct:false,why:"A calm tone isn’t a clinical assessment."},
+  {t:"Assume it’s wrong just because it’s AI.",correct:false,why:"Blanket dismissal wastes a genuinely useful information source."}
+ ],
+ expert:"AI can offer general information, but it isn’t a licensed clinician, doesn’t know your full situation, and can be wrong. For anything serious, treat it as background and get a professional’s judgment — without swinging to blanket dismissal either.",
+ rubric:["Framed the output as general information, not personalized advice","Escalated to a professional for serious / high-stakes matters","Avoided both blind trust and blanket dismissal"],
+ socratic:["What does a clinician have that the AI doesn’t?","How would you use AI here without over-relying on it?"]},
+
+{id:"EVAL2",domain:"EVAL",diff:2,
+ scenario:"You’re deciding whether to use AI for a task at all.",
+ prompt:"What is the best way to decide?",
+ options:[
+  {t:"Always use AI — it’s faster.",correct:false,why:"“Always” ignores stakes and verifiability."},
+  {t:"Weigh the stakes, your ability to verify the output, and the cost of errors — use it where it helps and you can check it; avoid it where errors are costly and unverifiable.",correct:true,why:"It makes the decision conditional on the right factors."},
+  {t:"Never use AI — it’s untrustworthy.",correct:false,why:"“Never” throws away real value where it’s appropriate."},
+  {t:"Flip a coin.",correct:false,why:"That ignores the actual risk factors."}
+ ],
+ expert:"Real fluency includes knowing when NOT to use AI. Match the tool to the task by weighing the stakes, whether you can verify the output, and the cost of getting it wrong.",
+ rubric:["Made the decision conditional (not always / never)","Weighed stakes, verifiability, and cost of errors","Recognized “when not to use AI” as a real skill"],
+ socratic:["Name a task where you’d refuse to use AI — why?","How does your ability to verify change the decision?"]},
+
+{id:"EVAL3",domain:"EVAL",diff:3,
+ scenario:"An AI assistant confidently completes your task, but you can’t easily tell whether it’s correct.",
+ prompt:"What mindset best protects you?",
+ options:[
+  {t:"Confidence and fluency mean it’s right.",correct:false,why:"That’s automation bias — over-trusting a confident system."},
+  {t:"Stay the accountable human in the loop: fluent, confident output isn’t evidence of correctness, so verify in proportion to the stakes and own the final result.",correct:true,why:"It names the risk and keeps responsibility with you."},
+  {t:"Blame the AI if it turns out wrong later.",correct:false,why:"Accountability for the outcome stays with the human using it."},
+  {t:"Only check it if you happen to have spare time.",correct:false,why:"Verification should scale with stakes, not free time."}
+ ],
+ expert:"Automation bias — over-trusting confident systems — is a core risk of working with AI. Fluent, confident output is not evidence of correctness. You remain the accountable human in the loop, verifying in proportion to the stakes and owning the final result.",
+ rubric:["Named automation bias / the over-trust risk","Kept human accountability for the outcome","Scaled verification to the stakes"],
+ socratic:["Why is confident-but-wrong more dangerous than hesitant-but-wrong?","What’s one verification step you can always afford?"]}
+];
+
+/* ---------------- RANKS ---------------- */
+const RANKS = [
+  {min:0,    name:"AI Novice"},
+  {min:300,  name:"AI Explorer"},
+  {min:750,  name:"AI Practitioner"},
+  {min:1400, name:"AI Analyst"},
+  {min:2300, name:"AI-Fluent"},
+  {min:3500, name:"AI Fluency Guide"}
+];
+
+/* ---------------- STATE ---------------- */
+const STORE_KEY = "genai_literacy_v1";
+let state = loadState();
+
+function freshState(){
+  const dstats = {};
+  DOMAIN_ORDER.forEach(d => dstats[d] = {points:0, max:0, count:0});
+  return {
+    level:1.0, xp:0, streak:0, bestStreak:0,
+    answered:0, seen:[], domain:dstats, badges:[],
+    justCount:0, longestJust:0
+  };
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return freshState();
+    const s = JSON.parse(raw);
+    if(!s || !s.domain) return freshState();
+    return s;
+  }catch(e){ return freshState(); }
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function resetState(){
+  state = freshState();
+  saveState();
+}
+
+/* ---------------- DOM ---------------- */
+const $ = id => document.getElementById(id);
+const screens = {
+  intro:$("screen-intro"), question:$("screen-question"), summary:$("screen-summary")
+};
+let currentQ = null;
+
+/* ---------------- HELPERS ---------------- */
+function announce(msg){ $("sr-status").textContent = msg; }
+
+function rankFor(xp){
+  let r = RANKS[0];
+  for(const cand of RANKS){ if(xp >= cand.min) r = cand; }
+  return r;
+}
+function nextRank(xp){
+  for(const cand of RANKS){ if(xp < cand.min) return cand; }
+  return null;
+}
+
+function updateStatusBar(){
+  $("statusbar").hidden = false;
+  const r = rankFor(state.xp);
+  const nr = nextRank(state.xp);
+  $("rank-name").textContent = r.name;
+  $("xp-current").textContent = state.xp;
+  $("streak").textContent = state.streak;
+  $("answered").textContent = state.answered;
+  $("total").textContent = QUESTIONS.length;
+  let pct = 100;
+  if(nr){
+    const span = nr.min - r.min;
+    pct = Math.max(0, Math.min(100, Math.round(((state.xp - r.min)/span)*100)));
+  }
+  $("xpbar-fill").style.width = pct + "%";
+  const bar = $("xpbar");
+  bar.setAttribute("aria-valuenow", pct);
+  bar.setAttribute("aria-label", nr ? ("Progress to " + nr.name + ": " + pct + " percent") : "Top rank reached");
+}
+
+function showScreen(key){
+  Object.values(screens).forEach(s => s.hidden = true);
+  screens[key].hidden = false;
+  const h = screens[key].querySelector("[tabindex='-1']");
+  if(h) h.focus();
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* difficulty target from adaptive level */
+function targetDiff(){ return Math.max(1, Math.min(3, Math.round(state.level))); }
+
+/* pick next unseen question near target difficulty, prioritizing least-covered domain */
+function pickNextQuestion(){
+  const unseen = QUESTIONS.filter(q => state.seen.indexOf(q.id) === -1);
+  if(unseen.length === 0) return null;
+  const tgt = targetDiff();
+  // sort candidates by |diff-target|, then by domain coverage (fewest answered first)
+  const scored = unseen.map(q => ({
+    q,
+    diffGap: Math.abs(q.diff - tgt),
+    cover: state.domain[q.domain].count
+  }));
+  scored.sort((a,b)=>{
+    if(a.diffGap !== b.diffGap) return a.diffGap - b.diffGap;
+    if(a.cover !== b.cover) return a.cover - b.cover;
+    return 0;
+  });
+  // among the best diffGap+cover tier, rotate a little by picking the first
+  return scored[0].q;
+}
+
+/* ---------------- RENDER QUESTION ---------------- */
+function renderQuestion(q){
+  currentQ = q;
+  currentQ._selected = null;
+  $("q-meta").innerHTML = "";
+  const dpill = document.createElement("span");
+  dpill.className = "pill";
+  dpill.textContent = DOMAINS[q.domain].name;
+  const diffpill = document.createElement("span");
+  diffpill.className = "pill diff";
+  diffpill.textContent = "Difficulty: " + DIFF_NAME[q.diff];
+  $("q-meta").appendChild(dpill);
+  $("q-meta").appendChild(diffpill);
+
+  $("q-scenario-text").textContent = q.scenario;
+  $("q-prompt").textContent = q.prompt;
+
+  // options
+  const wrap = $("q-options");
+  wrap.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const id = "opt-" + i;
+    const label = document.createElement("label");
+    label.className = "opt";
+    label.setAttribute("for", id);
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "answer";
+    input.id = id;
+    input.value = String(i);
+    const span = document.createElement("span");
+    span.className = "otext";
+    span.textContent = opt.t;
+    label.appendChild(input);
+    label.appendChild(span);
+    wrap.appendChild(label);
+    input.addEventListener("change", () => { currentQ._selected = i; updateRevealBtn(); });
+  });
+
+  // reset justify
+  const ta = $("q-justify");
+  ta.value = "";
+  $("jcount").textContent = "0";
+  $("q-form").hidden = false;
+  $("reveal").hidden = true;
+  $("adapt-note").hidden = true;
+  updateRevealBtn();
+
+  updateStatusBar();
+  $("q-h").focus();
+  showScreen("question");
+}
+
+function updateRevealBtn(){
+  const hasSel = currentQ && currentQ._selected !== null;
+  const len = $("q-justify").value.trim().length;
+  $("btn-reveal").disabled = !(hasSel && len >= 15);
+}
+
+/* ---------------- REVEAL ---------------- */
+function doReveal(){
+  const q = currentQ;
+  const sel = q._selected;
+  const correct = q.options[sel].correct;
+
+  // annotate options
+  const rwrap = $("reveal-options");
+  rwrap.innerHTML = "";
+  q.options.forEach((opt, i) => {
+    const div = document.createElement("div");
+    div.className = "opt " + (opt.correct ? "reveal-best" : "reveal-weak");
+    const verdict = document.createElement("span");
+    verdict.className = "verdict " + (opt.correct ? "best" : "weak");
+    let mark = opt.correct ? "✔ Strongest choice" : "✖ Not the strongest";
+    if(i === sel) mark += "  — you chose this";
+    verdict.textContent = mark;
+    const otext = document.createElement("div");
+    otext.className = "otext";
+    const t = document.createElement("div");
+    t.textContent = opt.t;
+    const why = document.createElement("div");
+    why.className = "why";
+    why.textContent = opt.why;
+    otext.appendChild(t);
+    otext.appendChild(why);
+    div.appendChild(verdict);
+    div.appendChild(otext);
+    rwrap.appendChild(div);
+  });
+
+  $("expert-text").textContent = q.expert;
+
+  // rubric self-check
+  const ri = $("rubric-items");
+  ri.innerHTML = "";
+  q.rubric.forEach((crit, i) => {
+    const id = "rub-" + i;
+    const label = document.createElement("label");
+    label.className = "rubric-item";
+    label.setAttribute("for", id);
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = id;
+    cb.className = "rubric-cb";
+    const span = document.createElement("span");
+    span.textContent = crit;
+    label.appendChild(cb);
+    label.appendChild(span);
+    ri.appendChild(label);
+  });
+
+  // socratic
+  const sl = $("socratic-list");
+  sl.innerHTML = "";
+  q.socratic.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s;
+    sl.appendChild(li);
+  });
+
+  $("q-form").hidden = true;
+  $("reveal").hidden = false;
+  $("reveal-h").focus();
+  announce(correct ? "You chose the strongest response. Review the expert reasoning and self-check your justification." :
+                     "That wasn’t the strongest response. Review the expert reasoning and reflect.");
+}
+
+/* ---------------- SCORE & CONTINUE ---------------- */
+function commitAnswer(){
+  const q = currentQ;
+  const sel = q._selected;
+  const correct = q.options[sel].correct;
+  const rubricBoxes = Array.prototype.slice.call(document.querySelectorAll(".rubric-cb"));
+  const checked = rubricBoxes.filter(b => b.checked).length;
+  const justScore = rubricBoxes.length ? (checked / rubricBoxes.length) : 0;
+  const justLen = $("q-justify").value.trim().length;
+
+  // performance p in [0,1]
+  let p;
+  if(correct) p = 0.6 + 0.4 * justScore;      // 0.6 - 1.0
+  else        p = 0.3 * justScore;            // 0.0 - 0.3
+
+  // adaptive level
+  const before = targetDiff();
+  state.level = Math.max(0.5, Math.min(3.5, state.level + (p - 0.55) * 0.9));
+  const after = targetDiff();
+
+  // streak
+  if(correct && justScore >= 0.5){ state.streak += 1; }
+  else { state.streak = 0; }
+  if(state.streak > state.bestStreak) state.bestStreak = state.streak;
+
+  // xp
+  let xpGain = Math.round(q.diff * 60 * p) + (correct ? 20 : 0);
+  if(state.streak >= 2) xpGain += 15;
+  state.xp += xpGain;
+
+  // domain mastery (difficulty-weighted)
+  const ds = state.domain[q.domain];
+  ds.points += p * q.diff;
+  ds.max += q.diff;
+  ds.count += 1;
+
+  // bookkeeping
+  state.answered += 1;
+  if(state.seen.indexOf(q.id) === -1) state.seen.push(q.id);
+  state.justCount += 1;
+  if(justLen > state.longestJust) state.longestJust = justLen;
+
+  // badges
+  const newBadges = checkBadges(q, correct, justScore, justLen);
+
+  saveState();
+  updateStatusBar();
+
+  announce("You earned " + xpGain + " XP. " + (newBadges.length ? "New badge: " + newBadges.map(b=>b.label).join(", ") + "." : ""));
+
+  // adaptive note
+  const note = $("adapt-note");
+  note.hidden = false;
+  if(after > before){ note.className = "adapt-note adapt-up"; note.textContent = "↑ Leveling up — next question moves to " + DIFF_NAME[after] + " difficulty."; }
+  else if(after < before){ note.className = "adapt-note adapt-down"; note.textContent = "↓ Dialing back to " + DIFF_NAME[after] + " difficulty to rebuild the fundamentals."; }
+  else { note.className = "adapt-note adapt-flat"; note.textContent = "Holding at " + DIFF_NAME[after] + " difficulty. +" + xpGain + " XP."; }
+
+  if(newBadges.length) showToast("🏅 " + newBadges.map(b=>b.emoji + " " + b.label).join("   "));
+}
+
+function nextOrEnd(){
+  const q = pickNextQuestion();
+  if(q){ renderQuestion(q); }
+  else { renderSummary(true); }
+}
+
+/* ---------------- BADGES ---------------- */
+const BADGE_DEFS = {
+  first:      {emoji:"👣", label:"First Step"},
+  thinker:    {emoji:"🧠", label:"Deep Thinker"},
+  fire3:      {emoji:"🔥", label:"On Fire"},
+  fire5:      {emoji:"⚡", label:"Unstoppable"},
+  skeptic:    {emoji:"🔍", label:"Healthy Skeptic"},
+  rounded:    {emoji:"🌐", label:"Well-Rounded"}
+};
+DOMAIN_ORDER.forEach(d => {
+  BADGE_DEFS["dom_"+d] = {emoji:"🎯", label:DOMAINS[d].short + " Mastery"};
+});
+
+function hasBadge(id){ return state.badges.indexOf(id) !== -1; }
+function grant(id, list){ if(!hasBadge(id)){ state.badges.push(id); list.push(BADGE_DEFS[id]); } }
+
+function checkBadges(q, correct, justScore, justLen){
+  const earned = [];
+  if(state.answered >= 1) grant("first", earned);
+  if(justLen >= 200) grant("thinker", earned);
+  if(state.streak >= 3) grant("fire3", earned);
+  if(state.streak >= 5) grant("fire5", earned);
+  if(q.domain === "VERIFY" && correct && justScore >= 0.66) grant("skeptic", earned);
+  // domain mastery
+  const ds = state.domain[q.domain];
+  if(ds.count >= 1 && ds.max > 0 && (ds.points/ds.max) >= 0.7) grant("dom_"+q.domain, earned);
+  // well-rounded
+  if(DOMAIN_ORDER.every(d => state.domain[d].count >= 1)) grant("rounded", earned);
+  return earned;
+}
+
+/* ---------------- TOAST ---------------- */
+let toastTimer = null;
+function showToast(msg){
+  let t = document.querySelector(".toast");
+  if(!t){ t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
+  t.textContent = msg;
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ if(t) t.remove(); }, 4000);
+}
+
+/* ---------------- SUMMARY + RADAR ---------------- */
+function domainMastery(d){
+  const ds = state.domain[d];
+  if(!ds || ds.max === 0) return 0;
+  return Math.round((ds.points/ds.max) * 100);
+}
+
+function renderSummary(){
+  updateStatusBar();
+  const r = rankFor(state.xp);
+  $("sum-rank").textContent = "Rank: " + r.name + "  ·  " + state.xp + " XP  ·  best streak " + state.bestStreak + " 🔥";
+
+  const answeredAll = state.answered >= QUESTIONS.length;
+  $("sum-blurb").textContent = answeredAll
+    ? "You’ve worked through every scenario in the bank. Your profile below reflects not just what you got right, but how well you could justify it."
+    : "Here’s where your fluency stands so far. You can keep going for more scenarios any time.";
+
+  drawRadar();
+
+  // domain table
+  const tb = $("domain-tbody");
+  tb.innerHTML = "";
+  DOMAIN_ORDER.forEach(d => {
+    const m = domainMastery(d);
+    const answered = state.domain[d].count;
+    const tr = document.createElement("tr");
+    const th = document.createElement("th"); th.setAttribute("scope","row"); th.textContent = DOMAINS[d].name;
+    const td1 = document.createElement("td");
+    td1.textContent = answered === 0 ? "Not yet tested" : (m + "%");
+    const td2 = document.createElement("td");
+    td2.textContent = answered === 0 ? "Answer a question in this domain to gauge it." : masteryLabel(m);
+    tr.appendChild(th); tr.appendChild(td1); tr.appendChild(td2);
+    tb.appendChild(tr);
+  });
+
+  // badges
+  const bg = $("sum-badges");
+  bg.innerHTML = "";
+  if(state.badges.length === 0){
+    const p = document.createElement("p"); p.className="muted"; p.textContent = "No badges yet — keep going!";
+    bg.appendChild(p);
+  } else {
+    state.badges.forEach(id => {
+      const def = BADGE_DEFS[id]; if(!def) return;
+      const b = document.createElement("span"); b.className = "badge";
+      const e = document.createElement("span"); e.className="b-emoji"; e.setAttribute("aria-hidden","true"); e.textContent = def.emoji;
+      const l = document.createElement("span"); l.textContent = def.label;
+      b.appendChild(e); b.appendChild(l); bg.appendChild(b);
+    });
+  }
+
+  // focus areas
+  const focus = $("sum-focus");
+  focus.innerHTML = "";
+  const tested = DOMAIN_ORDER.filter(d => state.domain[d].count > 0);
+  const weak = tested.map(d => ({d, m:domainMastery(d)})).filter(x => x.m < 70).sort((a,b)=>a.m-b.m).slice(0,3);
+  const untested = DOMAIN_ORDER.filter(d => state.domain[d].count === 0);
+  if(weak.length === 0 && untested.length === 0){
+    const li = document.createElement("li"); li.textContent = "Strong across the board — revisit the Expert-level scenarios to keep sharp."; focus.appendChild(li);
+  }
+  weak.forEach(x => {
+    const li = document.createElement("li");
+    li.textContent = DOMAINS[x.d].name + " (" + x.m + "%): revisit the expert reasoning and try to hit every rubric point next time.";
+    focus.appendChild(li);
+  });
+  untested.forEach(d => {
+    const li = document.createElement("li");
+    li.textContent = DOMAINS[d].name + ": not tested yet — keep going to cover it.";
+    focus.appendChild(li);
+  });
+
+  $("btn-continue-more").hidden = answeredAll;
+  showScreen("summary");
+}
+
+function masteryLabel(m){
+  if(m >= 85) return "Fluent — clear, well-justified judgment.";
+  if(m >= 70) return "Solid — good instincts, tighten the reasoning.";
+  if(m >= 50) return "Developing — right idea, incomplete justification.";
+  return "Emerging — revisit the fundamentals here.";
+}
+
+function drawRadar(){
+  const N = DOMAIN_ORDER.length;
+  const size = 360, cx = size/2, cy = size/2, R = 130;
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", "-50 -10 " + (size+100) + " " + (size+30));
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-labelledby", "radar-title radar-desc-svg");
+  svg.style.maxWidth = "420px";
+  svg.style.display = "block";
+  svg.style.margin = "0 auto";
+
+  const title = document.createElementNS(svgNS,"title");
+  title.setAttribute("id","radar-title");
+  title.textContent = "Radar chart of your fluency across eight AI-literacy domains";
+  svg.appendChild(title);
+  const desc = document.createElementNS(svgNS,"desc");
+  desc.setAttribute("id","radar-desc-svg");
+  desc.textContent = DOMAIN_ORDER.map(d => DOMAINS[d].short + " " + domainMastery(d) + " percent").join(", ");
+  svg.appendChild(desc);
+
+  function pt(i, radius){
+    const ang = (Math.PI*2*i/N) - Math.PI/2;
+    return [cx + radius*Math.cos(ang), cy + radius*Math.sin(ang)];
+  }
+
+  // grid rings
+  [0.25,0.5,0.75,1].forEach(f => {
+    let pts = "";
+    for(let i=0;i<N;i++){ const [x,y]=pt(i, R*f); pts += x.toFixed(1)+","+y.toFixed(1)+" "; }
+    const poly = document.createElementNS(svgNS,"polygon");
+    poly.setAttribute("points", pts.trim());
+    poly.setAttribute("fill","none");
+    poly.setAttribute("stroke","#c9c2b3");
+    poly.setAttribute("stroke-width","1");
+    svg.appendChild(poly);
+  });
+  // spokes + labels
+  for(let i=0;i<N;i++){
+    const [x,y]=pt(i,R);
+    const line = document.createElementNS(svgNS,"line");
+    line.setAttribute("x1",cx); line.setAttribute("y1",cy);
+    line.setAttribute("x2",x.toFixed(1)); line.setAttribute("y2",y.toFixed(1));
+    line.setAttribute("stroke","#c9c2b3"); line.setAttribute("stroke-width","1");
+    svg.appendChild(line);
+    const [lx,ly]=pt(i,R+18);
+    const txt = document.createElementNS(svgNS,"text");
+    txt.setAttribute("x",lx.toFixed(1)); txt.setAttribute("y",ly.toFixed(1));
+    txt.setAttribute("font-size","11"); txt.setAttribute("font-weight","700");
+    txt.setAttribute("fill","#333333");
+    txt.setAttribute("text-anchor", lx < cx-5 ? "end" : (lx > cx+5 ? "start" : "middle"));
+    txt.setAttribute("dominant-baseline", ly < cy-5 ? "auto" : (ly > cy+5 ? "hanging":"middle"));
+    txt.textContent = DOMAINS[DOMAIN_ORDER[i]].short;
+    svg.appendChild(txt);
+  }
+  // data polygon
+  let dpts = "";
+  for(let i=0;i<N;i++){
+    const m = domainMastery(DOMAIN_ORDER[i]) / 100;
+    const [x,y]=pt(i, R*m);
+    dpts += x.toFixed(1)+","+y.toFixed(1)+" ";
+  }
+  const dpoly = document.createElementNS(svgNS,"polygon");
+  dpoly.setAttribute("points", dpts.trim());
+  dpoly.setAttribute("fill","rgba(112,0,46,0.28)");
+  dpoly.setAttribute("stroke","#70002E");
+  dpoly.setAttribute("stroke-width","2.5");
+  svg.appendChild(dpoly);
+  // vertices
+  for(let i=0;i<N;i++){
+    const m = domainMastery(DOMAIN_ORDER[i]) / 100;
+    const [x,y]=pt(i, R*m);
+    const c = document.createElementNS(svgNS,"circle");
+    c.setAttribute("cx",x.toFixed(1)); c.setAttribute("cy",y.toFixed(1)); c.setAttribute("r","3.5");
+    c.setAttribute("fill","#70002E");
+    svg.appendChild(c);
+  }
+
+  const wrap = $("radar-wrap");
+  wrap.innerHTML = "";
+  wrap.appendChild(svg);
+
+  // accessible text summary
+  const a11y = $("radar-a11y");
+  a11y.innerHTML = "Fluency by domain: " + DOMAIN_ORDER.map(d => DOMAINS[d].name + ", " + (state.domain[d].count? domainMastery(d)+" percent" : "not yet tested")).join("; ") + ".";
+}
+
+/* ---------------- EVENTS ---------------- */
+$("btn-start").addEventListener("click", () => {
+  const q = pickNextQuestion();
+  if(q) renderQuestion(q); else renderSummary();
+});
+$("q-justify").addEventListener("input", () => {
+  $("jcount").textContent = $("q-justify").value.trim().length;
+  updateRevealBtn();
+});
+$("q-form").addEventListener("submit", (e) => { e.preventDefault(); doReveal(); });
+$("btn-continue").addEventListener("click", () => { commitAnswer(); nextOrEnd(); });
+$("btn-finish").addEventListener("click", () => { commitAnswer(); renderSummary(); });
+$("btn-continue-more").addEventListener("click", () => { nextOrEnd(); });
+$("btn-reset-summary").addEventListener("click", () => {
+  if(confirm("Start over? This clears your XP, badges, and progress on this device.")){ resetState(); location.reload(); }
+});
+$("btn-reset-intro").addEventListener("click", () => {
+  if(confirm("Reset your progress on this device?")){ resetState(); location.reload(); }
+});
+
+/* ---------------- INIT ---------------- */
+(function init(){
+  if(state.answered > 0){
+    updateStatusBar();
+    $("btn-reset-intro").hidden = false;
+    $("btn-start").textContent = "Continue the Challenge";
+  }
+})();
+
+})();
+</script>
+</body>
+</html>
