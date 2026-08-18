@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="An adaptive, question-driven learning module that trains Rocket League players to analyze their own play by asking better 'why' questions.">
+<meta name="author" content="Michael Cassens">
+<title>The Why Engine — Rocket League Analysis Trainer</title>
+<style>
+  :root{
+    --bg:#0d0d1a;
+    --panel:#12122a;
+    --panel-2:#181835;
+    --border:#2b2b58;
+    --border-soft:#232348;
+    --text:#e8e8f4;         /* 15.2:1 on --panel */
+    --muted:#a8a8c8;        /* 8.0:1 on --panel */
+    --orange:#ffa657;       /* 9.6:1 */
+    --blue:#7cc4ff;         /* 9.9:1 */
+    --green:#5fd6a8;        /* 10.3:1 */
+    --red:#ff8f8f;          /* 7.4:1 */
+    --purple:#c9a6ff;
+    --focus:#ffa657;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text);
+    line-height:1.6; font-size:16.5px;
+  }
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .skip-link{position:absolute;top:-48px;left:0;background:var(--orange);color:#1a0e00;
+    padding:10px 16px;z-index:300;text-decoration:none;font-weight:700;}
+  .skip-link:focus{top:0;}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:3px;}
+
+  .wrap{max-width:900px;margin:0 auto;padding:0 18px;}
+
+  header.app{background:linear-gradient(135deg,#12122a 0%,#1c1c40 50%,#12122a 100%);
+    border-bottom:2px solid var(--orange);padding:26px 0 20px;}
+  header.app h1{font-size:1.5rem;margin:0 0 4px;font-weight:800;letter-spacing:.2px;}
+  header.app h1 .accent{color:var(--orange);}
+  header.app p{margin:0;color:var(--muted);font-size:.9rem;max-width:62ch;}
+
+  nav.tabs{border-bottom:1px solid var(--border);background:var(--panel);position:sticky;top:0;z-index:50;}
+  nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto;}
+  nav.tabs button{
+    background:none;border:none;border-bottom:3px solid transparent;color:var(--muted);
+    font:inherit;font-size:.88rem;font-weight:700;padding:12px 14px;cursor:pointer;white-space:nowrap;
+  }
+  nav.tabs button:hover{color:var(--text);}
+  nav.tabs button[aria-selected="true"]{color:var(--orange);border-bottom-color:var(--orange);}
+
+  main{padding:24px 0 64px;}
+  h2{font-size:1.28rem;margin:0 0 10px;color:var(--orange);}
+  h3{font-size:1.02rem;margin:20px 0 8px;color:var(--blue);}
+  h4{font-size:.92rem;margin:14px 0 6px;color:var(--text);}
+  p{margin:0 0 12px;}
+  a{color:var(--blue);}
+  a:hover{color:var(--orange);}
+  .muted{color:var(--muted);font-size:.9rem;}
+  .lead{font-size:1.03rem;}
+
+  .card{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:20px;margin:0 0 18px;}
+  .card.alt{background:var(--panel-2);}
+
+  /* status strip */
+  .status{display:flex;flex-wrap:wrap;gap:14px;background:var(--panel);border:1px solid var(--border-soft);
+    border-radius:12px;padding:14px 16px;margin:0 0 18px;}
+  .stat{flex:1 1 150px;min-width:140px;}
+  .stat .label{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:800;}
+  .stat .value{font-size:1.02rem;font-weight:700;}
+  .bar{background:#0a0a18;border:1px solid var(--border);border-radius:6px;height:10px;overflow:hidden;margin-top:6px;}
+  .bar > span{display:block;height:100%;background:var(--orange);width:0%;transition:width .45s ease;}
+  @media (prefers-reduced-motion:reduce){.bar > span{transition:none;}}
+
+  .pill{display:inline-block;border:1px solid var(--border);background:#0a0a18;border-radius:999px;
+    padding:3px 11px;font-size:.72rem;font-weight:800;margin:0 6px 6px 0;letter-spacing:.03em;}
+  .pill.t1{color:var(--green);} .pill.t2{color:var(--blue);}
+  .pill.t3{color:var(--purple);} .pill.t4{color:var(--orange);}
+
+  .stem{font-size:1.1rem;font-weight:700;margin:14px 0 6px;}
+  .scenario{background:#0a0a18;border-left:4px solid var(--blue);border-radius:0 8px 8px 0;
+    padding:12px 15px;margin:0 0 14px;}
+  .scenario .tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--blue);display:block;}
+
+  fieldset{border:1px solid var(--border-soft);border-radius:10px;padding:8px 14px 4px;margin:0 0 14px;}
+  legend{font-weight:800;padding:0 6px;font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .opt{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--border-soft);border-radius:9px;
+    padding:11px 13px;margin:9px 0;cursor:pointer;background:#0f0f22;}
+  .opt:hover{background:#16162f;border-color:var(--border);}
+  .opt input{margin-top:5px;width:18px;height:18px;flex:0 0 auto;accent-color:#ffa657;}
+  .opt .otext{flex:1;}
+  .opt.r-best{border-color:var(--green);background:#0d2019;}
+  .opt.r-ok{border-color:var(--blue);background:#0d1a26;}
+  .opt.r-weak{border-color:var(--red);background:#221214;}
+  .verdict{display:block;font-weight:800;font-size:.74rem;text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;}
+  .verdict.best{color:var(--green);} .verdict.ok{color:var(--blue);} .verdict.weak{color:var(--red);}
+  .why{font-size:.92rem;color:var(--muted);margin-top:5px;}
+
+  label.fl{display:block;font-weight:700;margin:12px 0 5px;font-size:.95rem;}
+  textarea,select,input[type="text"]{
+    width:100%;font-family:inherit;font-size:1rem;padding:10px 11px;background:#0a0a18;
+    color:var(--text);border:1px solid var(--border);border-radius:8px;resize:vertical;}
+  textarea{min-height:92px;}
+  .hint{font-size:.86rem;color:var(--muted);margin:5px 0 10px;}
+
+  button.btn{font:inherit;font-size:.95rem;font-weight:700;cursor:pointer;border-radius:9px;
+    padding:11px 18px;border:2px solid var(--orange);background:var(--orange);color:#1a0e00;}
+  button.btn:hover{background:#ffb877;border-color:#ffb877;}
+  button.btn.sec{background:transparent;color:var(--orange);}
+  button.btn.sec:hover{background:#2a1c08;}
+  button.btn.ghost{background:transparent;color:var(--muted);border-color:var(--border);}
+  button.btn.ghost:hover{color:var(--text);border-color:var(--muted);background:#16162f;}
+  button.btn:disabled{opacity:.4;cursor:not-allowed;}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  .reveal{border-top:2px dashed var(--border);margin-top:20px;padding-top:16px;}
+  .takeaway{background:#0d2019;border:1px solid #276b52;border-radius:9px;padding:13px 15px;margin:12px 0;}
+  .takeaway .tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--green);display:block;margin-bottom:3px;}
+  .principle{background:#1a1436;border:1px solid #4a3a80;border-radius:9px;padding:13px 15px;margin:12px 0;}
+  .principle .tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--purple);display:block;margin-bottom:3px;}
+  .hintbox{background:#0d1a26;border:1px solid #2d5d80;border-radius:9px;padding:11px 14px;margin:9px 0;font-size:.94rem;}
+  .hintbox .tag{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--blue);}
+
+  .adapt{font-size:.88rem;font-weight:700;padding:9px 13px;border-radius:9px;margin:10px 0;border:1px solid var(--border);}
+  .adapt.up{background:#0d2019;color:var(--green);border-color:#276b52;}
+  .adapt.down{background:#221214;color:var(--red);border-color:#6b2b2b;}
+  .adapt.flat{background:#0a0a18;color:var(--muted);}
+
+  ul,ol{margin:0 0 12px;padding-left:22px;}
+  li{margin:5px 0;}
+  ul.clean{list-style:none;padding-left:0;}
+
+  .chk{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--border-soft);
+    border-radius:8px;margin:7px 0;background:#0f0f22;cursor:pointer;}
+  .chk:hover{background:#16162f;}
+  .chk input{margin-top:4px;width:18px;height:18px;flex:0 0 auto;accent-color:#5fd6a8;}
+
+  table{width:100%;border-collapse:collapse;margin:10px 0 16px;font-size:.92rem;}
+  caption{text-align:left;font-weight:700;color:var(--muted);font-size:.85rem;padding-bottom:7px;}
+  th,td{border:1px solid var(--border-soft);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:#0a0a18;color:var(--blue);font-size:.82rem;text-transform:uppercase;letter-spacing:.05em;}
+
+  .track-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-soft);}
+  .track-row:last-child{border-bottom:none;}
+  .track-row .tname{flex:1 1 auto;min-width:0;}
+  .track-row .tname b{display:block;font-size:.96rem;}
+  .track-row .tname span{display:block;font-size:.82rem;color:var(--muted);}
+  .track-row .tmeter{flex:0 0 150px;}
+  .mastery{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;}
+  .m-0{color:var(--muted);} .m-1{color:var(--red);} .m-2{color:var(--orange);}
+  .m-3{color:var(--blue);} .m-4{color:var(--green);}
+
+  .res{border:1px solid var(--border-soft);border-radius:10px;padding:13px 15px;margin:10px 0;background:#0f0f22;}
+  .res b{display:block;font-size:.98rem;}
+  .res .rmeta{font-size:.78rem;color:var(--muted);margin:3px 0 6px;}
+
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+  .filters > div{flex:1 1 180px;}
+  .filters label{display:block;font-size:.78rem;font-weight:800;text-transform:uppercase;
+    letter-spacing:.06em;color:var(--muted);margin-bottom:4px;}
+
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--panel-2);
+    border:1px solid var(--orange);color:var(--text);padding:11px 20px;border-radius:9px;
+    font-weight:700;font-size:.92rem;z-index:400;max-width:90vw;}
+  [hidden]{display:none !important;}
+
+  footer.app{border-top:1px solid var(--border-soft);padding:20px 0 40px;color:var(--muted);font-size:.84rem;}
+  @media (max-width:640px){
+    .track-row{flex-wrap:wrap;} .track-row .tmeter{flex:1 1 100%;}
+    header.app h1{font-size:1.25rem;}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="app" role="banner">
+  <div class="wrap">
+    <h1>The <span class="accent">Why</span> Engine <span class="muted" style="font-weight:600;font-size:1rem;">— Rocket League Analysis Trainer</span></h1>
+    <p>Getting better is not about being told what to fix. It is about learning to ask the question that finds it. This module trains the question, and the questions get harder as you do.</p>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Module sections">
+  <div class="wrap" role="tablist">
+    <button role="tab" id="tab-train" aria-controls="panel-train" aria-selected="true" data-panel="train">Train</button>
+    <button role="tab" id="tab-dash" aria-controls="panel-dash" aria-selected="false" data-panel="dash">Progress</button>
+    <button role="tab" id="tab-proto" aria-controls="panel-proto" aria-selected="false" data-panel="proto">Replay Protocols</button>
+    <button role="tab" id="tab-plan" aria-controls="panel-plan" aria-selected="false" data-panel="plan">Practice Plan</button>
+    <button role="tab" id="tab-lib" aria-controls="panel-lib" aria-selected="false" data-panel="lib">Resources</button>
+    <button role="tab" id="tab-about" aria-controls="panel-about" aria-selected="false" data-panel="about">How It Works</button>
+  </div>
+</nav>
+
+<main id="main-content">
+  <div class="wrap">
+
+    <!-- ============ TRAIN ============ -->
+    <section id="panel-train" role="tabpanel" aria-labelledby="tab-train">
+      <h2>Train</h2>
+
+      <!-- intake -->
+      <div class="card" id="intake">
+        <h3 style="margin-top:0;">Calibrate the engine</h3>
+        <p class="muted">Your answers set the starting depth. The engine moves from there based on how you actually perform, not what you claim.</p>
+        <label class="fl" for="in-rank">Your current competitive rank (highest playlist)</label>
+        <select id="in-rank">
+          <option value="1">Bronze / Silver</option>
+          <option value="1.4">Gold</option>
+          <option value="1.9" selected>Platinum</option>
+          <option value="2.4">Diamond</option>
+          <option value="3.0">Champion</option>
+          <option value="3.6">Grand Champion</option>
+          <option value="4.0">Supersonic Legend</option>
+        </select>
+        <label class="fl" for="in-mode">Main playlist</label>
+        <select id="in-mode">
+          <option value="1v1">1v1 Duel</option>
+          <option value="2v2" selected>2v2 Doubles</option>
+          <option value="3v3">3v3 Standard</option>
+        </select>
+        <label class="fl" for="in-review">How often do you watch your own replays?</label>
+        <select id="in-review">
+          <option value="-0.4">Almost never</option>
+          <option value="-0.15" selected>Occasionally, usually right after a bad loss</option>
+          <option value="0.1">Most sessions, informally</option>
+          <option value="0.3">Regularly, with notes or a checklist</option>
+        </select>
+        <div class="btnrow">
+          <button class="btn" id="btn-start">Start training</button>
+        </div>
+      </div>
+
+      <!-- status -->
+      <div class="status" id="status" hidden>
+        <div class="stat">
+          <span class="label">Analysis depth</span>
+          <span class="value" id="s-depth">—</span>
+          <div class="bar"><span id="s-depthbar"></span></div>
+        </div>
+        <div class="stat">
+          <span class="label">Current focus</span>
+          <span class="value" id="s-track">—</span>
+        </div>
+        <div class="stat">
+          <span class="label">Questions answered</span>
+          <span class="value" id="s-count">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Streak</span>
+          <span class="value" id="s-streak">0</span>
+        </div>
+      </div>
+
+      <div id="coachline" class="adapt flat" hidden></div>
+      <div id="question" hidden></div>
+      <div aria-live="polite" aria-atomic="true" class="sr-only" id="live"></div>
+    </section>
+
+    <!-- ============ DASHBOARD ============ -->
+    <section id="panel-dash" role="tabpanel" aria-labelledby="tab-dash" hidden>
+      <h2>Progress</h2>
+      <p class="muted">Mastery is per skill track, and it is capped by the hardest tier you have answered correctly. You cannot reach Mastered by repeatedly getting easy questions right.</p>
+      <div class="card" id="dash-tracks"></div>
+      <h3>Your saved answers</h3>
+      <p class="muted">Everything you type stays in this browser only. Export it if you want to keep it or hand it to a coach.</p>
+      <div class="card" id="dash-notes"></div>
+      <div class="btnrow">
+        <button class="btn sec" id="btn-export">Download my notebook (.txt)</button>
+        <button class="btn ghost" id="btn-reset">Reset all progress</button>
+      </div>
+    </section>
+
+    <!-- ============ PROTOCOLS ============ -->
+    <section id="panel-proto" role="tabpanel" aria-labelledby="tab-proto" hidden>
+      <h2>Replay Protocols</h2>
+      <p class="lead">A protocol is a repeatable procedure you run on a real replay. Analysis without a procedure drifts into watching yourself play. These unlock by depth — the higher tiers assume the lower ones are habits.</p>
+      <div id="proto-list"></div>
+    </section>
+
+    <!-- ============ PLAN ============ -->
+    <section id="panel-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+      <h2>Practice Plan</h2>
+      <p class="lead">Generated from your two weakest tracks and from what motor-learning research says about how practice becomes performance. Regenerate it whenever your progress shifts.</p>
+      <div class="btnrow" style="margin-bottom:16px;">
+        <button class="btn" id="btn-plan">Generate my week</button>
+      </div>
+      <div id="plan-out"></div>
+    </section>
+
+    <!-- ============ LIBRARY ============ -->
+    <section id="panel-lib" role="tabpanel" aria-labelledby="tab-lib" hidden>
+      <h2>Resources</h2>
+      <p class="muted">Filter by what you are actually working on. Availability of channels and third-party tools changes over time — verify anything that looks stale before you rely on it.</p>
+      <div class="filters">
+        <div>
+          <label for="f-track">Skill track</label>
+          <select id="f-track"><option value="all">All tracks</option></select>
+        </div>
+        <div>
+          <label for="f-tier">Depth tier</label>
+          <select id="f-tier">
+            <option value="all">All tiers</option>
+            <option value="1">Tier 1 — Identify</option>
+            <option value="2">Tier 2 — Explain</option>
+            <option value="3">Tier 3 — Evaluate</option>
+            <option value="4">Tier 4 — Model</option>
+          </select>
+        </div>
+      </div>
+      <div id="lib-out"></div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section id="panel-about" role="tabpanel" aria-labelledby="tab-about" hidden>
+      <h2>How It Works</h2>
+      <div class="card">
+        <h3 style="margin-top:0;">The four tiers are a thinking ladder, not a rank ladder</h3>
+        <p>Every question in the bank is tagged to a tier. The tier is not "how good you are at Rocket League" — it is <em>what kind of cognitive work the question demands</em>. A Diamond who has never questioned a habit can be stuck at Tier 1 thinking, and a Gold who reasons carefully can operate at Tier 2.</p>
+        <table>
+          <caption>The four tiers of analytical demand</caption>
+          <thead><tr><th scope="col">Tier</th><th scope="col">Demand</th><th scope="col">The question sounds like</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1 — Identify</th><td>Name what happened, and separate what you saw from what you concluded.</td><td>"What actually went wrong here, as opposed to what I felt went wrong?"</td></tr>
+            <tr><th scope="row">2 — Explain</th><td>Trace the cause through the systems of the game: boost, space, time, rotation.</td><td>"What made that situation unwinnable eight seconds before the shot?"</td></tr>
+            <tr><th scope="row">3 — Evaluate</th><td>Judge a decision on the information available at the time, not on the result.</td><td>"Given what I could perceive at that moment, was there a better option — and could I have executed it?"</td></tr>
+            <tr><th scope="row">4 — Model</th><td>Reason about your own reasoning, and about the opponent reasoning about you.</td><td>"What is my model of this player, how would I know if it's wrong, and what does he think I'm about to do?"</td></tr>
+          </tbody>
+        </table>
+        <h3>How the engine adapts</h3>
+        <ul>
+          <li>Each of the six tracks has its own <b>depth</b> value between 1.0 and 4.0. Answering well pushes that track's depth up; missing pulls it down. Depth moves faster on a miss than on a hit, which keeps you near the edge of what you can actually do.</li>
+          <li>The engine serves the <b>weakest unmastered track</b> most often, so you spend your time where the return is highest, with occasional questions from stronger tracks so they do not decay.</li>
+          <li><b>Mastery is capped by evidence.</b> Reaching Proficient in a track requires correct answers at Tier 3 or above. Mastered requires Tier 4. Grinding Tier 1 questions will plateau you at Familiar, which is the honest result.</li>
+          <li>Hints are a <b>ladder</b>: the first hint reframes the question, the second narrows the field, the third all but answers it. Using hints reduces the credit for that item, because a hinted answer is weaker evidence that you can do it unaided.</li>
+        </ul>
+        <h3>What this module cannot do</h3>
+        <p>There is no AI grading your written answers here — this page is a single HTML file with no server and no model behind it. Free-response items are scored by an explicit rubric that you apply to your own answer after seeing an expert response. That is a real technique (self-explanation with a worked example), and it works, but it depends on your honesty. Every free-response item also has a <b>Copy coaching prompt</b> button that packages your answer, the scenario, and your current depth into a prompt you can paste into an AI assistant that <em>can</em> read and respond to it.</p>
+        <h3>Where the learning-science claims come from</h3>
+        <div id="about-refs"></div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer class="app">
+  <div class="wrap">
+    <p>Built as a self-contained learning module. All progress is stored in your browser's local storage on this device; nothing is uploaded. Rocket League is a trademark of Psyonix LLC; this is an independent educational project with no affiliation.</p>
+  </div>
+</footer>
+
+<script>
+/* ================= DATA ================= */
+const TRACKS = [
+  {id:"diagnose", name:"Root-Cause Diagnosis", blurb:"Separating the symptom you noticed from the cause that produced it."},
+  {id:"decision", name:"Decision Quality",     blurb:"Judging choices by the information available, not by how they turned out."},
+  {id:"space",    name:"Space, Time & Boost",  blurb:"Treating position as a consequence of resources, not a rule you follow."},
+  {id:"mechanics",name:"Mechanical Acquisition",blurb:"Designing practice so that training-ground skill survives contact with a game."},
+  {id:"reads",    name:"Reads & Opponent Modeling", blurb:"Building, testing, and updating a model of the player in front of you."},
+  {id:"process",  name:"Process & Mind",       blurb:"Attention, tilt, session architecture, and knowing when your judgment is unreliable."}
+];
+const TIER_NAME = {1:"Identify", 2:"Explain", 3:"Evaluate", 4:"Model"};
+const BANK = [
+
+/* ---------- TIER 1 — IDENTIFY ---------- */
+{
+  id:"d1", track:"diagnose", tier:1, type:"mc",
+  scenario:"You concede. On the replay you are the last player back, you challenge the ball at the top of your box, you whiff, and the striker rolls it into an empty net. Your immediate reaction is “I whiffed.”",
+  stem:"Which question will teach you the most from this goal?",
+  hints:[
+    "A whiff is the most visible event in that clip. Visible is not the same as causal.",
+    "Ask yourself whether a perfect touch there would have produced a good outcome, or merely a less embarrassing one.",
+    "If winning the challenge cleanly would still have left you out of position with no cover, the whiff was not the problem."
+  ],
+  options:[
+    {t:"Why did I whiff?", v:"ok", why:"Not useless — but it is a question about execution, and it silently assumes challenging there was correct. If the answer is “because I mistimed my jump,” you will go practice timing and concede the same goal next week from a different angle."},
+    {t:"Why was I the only player who could contest, and why did the contest have to happen at the top of my box?", v:"best", why:"This is the question that has a fixable answer. It moves upstream from the whiff to the arrangement of players and boost that made a low-percentage challenge your only option. Fix that and the whiff stops mattering, because you are no longer the last line making desperate contests."},
+    {t:"Why didn't my teammate rotate back to cover me?", v:"weak", why:"It may even be true. But you cannot practice your teammate. Analysis that terminates in someone else's error produces no change in your own play, and it feels productive, which makes it worse than no analysis."},
+    {t:"Why does this keep happening to me?", v:"weak", why:"This is a complaint wearing a question mark. It has no answer that would change your behavior, and it primes you to interpret the next mistake as evidence of a fixed trait rather than a specific correctable pattern."}
+  ],
+  takeaway:"The most visible error in a clip is almost never the earliest one. Diagnosis means walking backward from the goal until you find the moment where you still had good options.",
+  principle:"Root-cause analysis: the failure you can see is the last link in a chain. Ask “and what made that necessary?” until the answer becomes something you actually chose."
+},
+{
+  id:"d2", track:"diagnose", tier:1, type:"mc",
+  scenario:"A friend watches you play and says “you ball chase.” You want to check whether that is true rather than just accept it.",
+  stem:"Which observation from your own replay would actually confirm or refute the claim?",
+  hints:[
+    "You need a measurement of a behavior, not a measurement of a result.",
+    "“Ball chasing” is specifically about what you do in the seconds *after* your own touch.",
+    "Watch for whether you commit again before recovering position or boost."
+  ],
+  options:[
+    {t:"Count how many goals you conceded in the match.", v:"weak", why:"Conceded goals are an outcome with dozens of contributing causes. A match where you rotated perfectly and lost 4–1 to better mechanics would look identical to a match where you chased all game."},
+    {t:"Count how many times you took a second touch on the ball without first recovering boost or position after your previous touch.", v:"best", why:"This is a behavior, it is countable, it is under your control, and it is close to the definition of the thing being claimed. You can compare it across matches and watch it change. That is what makes it a real diagnostic instead of a label."},
+    {t:"Check whether you had the most touches on the scoreboard.", v:"ok", why:"A reasonable proxy, but heavily confounded. In 2v2 the player who wins the kickoff and applies pressure well will often lead in touches while rotating correctly. Touch count measures involvement, not discipline."},
+    {t:"Ask your teammate whether they felt crowded.", v:"ok", why:"Teammate reports are genuinely useful data — they can perceive crowding you cannot see on your own screen. But it is a single subjective account, and it needs the replay to turn it into something specific."}
+  ],
+  takeaway:"Turn every criticism you receive, including your own, into a countable behavior before you accept it. If you cannot state what you would observe, you cannot tell whether the criticism is true or whether you have fixed it.",
+  principle:"Operationalization: a vague trait (“ball chaser”) becomes trainable only when converted into an observable, countable event with a clear definition."
+},
+{
+  id:"s1", track:"space", tier:1, type:"mc",
+  scenario:"You are at 97 boost. On your way upfield you drive slightly off your line to take the full corner boost pad.",
+  stem:"Why is that “free” pickup actually costly?",
+  hints:[
+    "You gained 3 boost. What did you spend?",
+    "There are only six large pads on the field, and they take ten seconds to come back.",
+    "Think about who else on your team was going to need that pad, and when."
+  ],
+  options:[
+    {t:"It wastes boost you could have used, since you can only hold 100.", v:"ok", why:"True but trivial — the wasted 97 is not a resource you had a use for. The real costs are elsewhere, and they are bigger."},
+    {t:"You deviated from your line and you put a 100-boost pad on a ten-second cooldown that your rotating teammate was probably counting on.", v:"best", why:"Both costs are real and both are invisible in the moment. Large pads respawn in ten seconds, and there are only six on the field. Taking one at full boost removes it from your own team's supply during exactly the window when your teammate is rotating through. Meanwhile the path deviation cost you a half-second of positional tempo."},
+    {t:"It denies the pad to the opponent, so it is actually good.", v:"weak", why:"Boost denial is a genuine tactic, but it is a tactic for when you are contesting the opponent's supply in their half or when you are deliberately starving a specific player. Vacuuming your own corner pad at 97 boost while rotating is not denial; the opponent was not going there."},
+    {t:"Nothing — taking boost whenever it is on your path is always correct.", v:"weak", why:"“Always” is the tell. Boost pickups are a routing decision with a cost in time and in team supply. The heuristic you want is: take small pads on your path, take large pads when you need them or when your team can spare them."}
+  ],
+  takeaway:"Boost is a shared, respawning, positional resource. Every pickup is a decision about your route, your team's supply, and the clock — not just about your own meter.",
+  principle:"Resource economics: 6 large pads (100 boost, 10s respawn) and 34 small pads (12 boost, 4s respawn). Small pads are on-path and cheap; large pads are contested and slow to return."
+},
+{
+  id:"m1", track:"mechanics", tier:1, type:"mc",
+  scenario:"You run the same backboard-read training pack 200 times over a week and get your success rate to about 80%. In real matches you still miss the shot almost every time it comes up.",
+  stem:"What is the most likely explanation?",
+  hints:[
+    "Ask what the training pack removed from the situation, not what it taught.",
+    "In the pack, do you know in advance where the ball is coming from?",
+    "There is a well-documented gap between how fast you improve during practice and how much of it you keep afterward."
+  ],
+  options:[
+    {t:"You need more repetitions — 200 is not many.", v:"weak", why:"This is the most common response and it is usually wrong. Doing more of the same blocked repetition deepens a skill that is bound to that exact context: same spawn, same speed, same angle, no defender, no boost pressure, no fatigue. Rep 400 will look like rep 200 in a game."},
+    {t:"The pack removed the variability, uncertainty and pressure that the real situation supplies, so you learned the pack rather than the skill.", v:"best", why:"This is the specificity-of-practice problem. Your 80% is real, but it is 80% at a task whose defining features — knowing the trajectory in advance, having a fixed starting position, facing no contest — are exactly the features the game does not give you. The skill you built does not have a handle the game can grab."},
+    {t:"Training packs do not transfer and are a waste of time.", v:"weak", why:"An overcorrection. Packs are good at isolating a motor pattern early, when the problem genuinely is “my body does not know this movement yet.” The error is staying in the pack after that stage instead of reintroducing variability."},
+    {t:"You lack natural talent for aerial shots.", v:"weak", why:"An untestable explanation that also happens to end the inquiry. Notice that it makes no prediction and suggests no experiment — that is the signature of a bad diagnosis."}
+  ],
+  takeaway:"A training pack is a scaffold, not a rehearsal. Once the movement exists, your job is to put back everything the pack took out: variable entries, a defender, a boost constraint, a clock.",
+  principle:"Specificity of practice + contextual interference: constant, blocked repetition produces fast in-session gains but poor retention and poor transfer. Variable, randomized practice feels worse and transfers better (Shea & Morgan, 1979; Schmidt & Lee)."
+},
+{
+  id:"p1", track:"process", tier:1, type:"mc",
+  scenario:"You lose two ranked games back to back. Both were close. You immediately queue a third.",
+  stem:"What is the strongest reason to expect the third game to go badly?",
+  hints:[
+    "Something has changed between game one and game three, and it is not your mechanics.",
+    "Think about what tilt actually does to your play, mechanically speaking.",
+    "It has more to do with how you choose challenges than with how you hit the ball."
+  ],
+  options:[
+    {t:"Matchmaking will punish you with a worse teammate after a loss streak.", v:"weak", why:"This is a folk theory, and more importantly it is unfalsifiable from inside your own experience — you notice the bad teammates after losses because you are looking for them. Even if it were true, it would give you nothing to act on."},
+    {t:"Frustration shifts your risk threshold: you take challenges and shots you would normally decline, because a decisive play feels better than a patient one.", v:"best", why:"This is the well-documented mechanism, and it is specific enough to catch yourself doing. Tilt rarely degrades your mechanics much. What it degrades is your *selection* — you stop passing up bad challenges, you go for the highlight rather than the reset, you take the 30% shot because the 70% play requires patience you do not currently have."},
+    {t:"You are physically tired after two games.", v:"ok", why:"Fatigue is real over a long session, but after two games it is a weak explanation compared with the change in your decision threshold. Save this hypothesis for hour three."},
+    {t:"Your rank is now inaccurate, so the game is harder.", v:"weak", why:"Two games of MMR movement is noise. This explanation also externalizes the problem, which is precisely what a tilted player wants to do."}
+  ],
+  takeaway:"Tilt is a decision-threshold problem, not a mechanics problem. If you can name the mechanism you can catch it in the act: the moment you notice yourself wanting a decisive play, that wanting is the symptom.",
+  principle:"Affect and risk-taking: negative affect after loss reliably shifts choices toward higher-variance options. The intervention is a rule set in advance (a session cap), not willpower applied in the moment."
+},
+{
+  id:"q1", track:"decision", tier:1, type:"mc",
+  scenario:"With the score tied, you attempt a flip reset in your own half instead of clearing. It works, you carry it up the field and score. Your teammate types “nice”.",
+  stem:"What should you conclude about the decision?",
+  hints:[
+    "Separate the two questions: was it a good play, and did it work?",
+    "Imagine the same decision made ten times. What happens in the other nine?",
+    "The result you got is one sample from a distribution, and you only observed one."
+  ],
+  options:[
+    {t:"It was a good decision — it produced a goal, which is the only measure that matters.", v:"weak", why:"This is resulting: judging a decision by its outcome. In a game with this much variance, a single outcome carries very little information about decision quality. Reasoning this way means you will systematically learn the wrong lessons from your luckiest and unluckiest games."},
+    {t:"It was a bad decision that happened to work, and repeating it will cost you far more than it gains.", v:"ok", why:"Probably correct in most contexts, and the right instinct — but stated too confidently. You have not actually estimated anything. The honest version of this answer includes the conditions under which it might be defensible."},
+    {t:"You cannot judge it from the result. Ask instead: how often does this succeed for me, what happens in the failure case, and was there a lower-variance option available?", v:"best", why:"This is the decision-quality frame. Roughly: if a reset in your own half works for you 1 time in 5, and the 4 failures are conceded goals rather than neutral resets, then it is a badly negative play even though this instance scored. The scoring instance should not touch your estimate very much — you already knew it sometimes works."},
+    {t:"It depends entirely on your rank.", v:"ok", why:"Rank genuinely changes the numbers — punishment for a failed reset is harsher at higher ranks, but your success rate is also higher. Still, this answer stops before doing any of the actual work; it names a variable without using it."}
+  ],
+  takeaway:"Judge the decision by the information you had and the distribution of outcomes it produces, not by the one outcome you observed. The play that worked once is the most dangerous thing in your replay folder.",
+  principle:"Outcome bias, or “resulting” (Baron & Hershey, 1988; popularized by Annie Duke). In high-variance domains, single outcomes are near-worthless evidence about decision quality."
+},
+{
+  id:"r1", track:"reads", tier:1, type:"mc",
+  scenario:"Your opponent has won three kickoffs in a row with a fast diagonal approach and scored off one of them.",
+  stem:"Why is “I need to learn the speed-flip” not the right first response?",
+  hints:[
+    "Losing a kickoff and losing the play after a kickoff are different failures.",
+    "There are ways to make a lost kickoff harmless that do not require winning it.",
+    "What did your positioning look like in the two seconds after each kickoff?"
+  ],
+  options:[
+    {t:"Speed-flips are too hard to learn, so it is not worth trying.", v:"weak", why:"Difficulty is not the objection. The speed-flip is learnable and worth having eventually. The objection is that it is not the thing currently costing you goals."},
+    {t:"Only one of the three lost kickoffs became a goal, so you should first ask what was different about that one — the problem may be your post-kickoff position, not your kickoff speed.", v:"best", why:"Three lost kickoffs, one goal. That ratio is the whole clue: losing the kickoff is survivable and you survived it twice. Something about the third — where your teammate was, whether you had cheated up, whether you rotated back or contested — turned a lost kickoff into a conceded goal. That is a cheaper and more general fix than a new mechanic."},
+    {t:"Kickoffs are random, so nothing can be learned from three of them.", v:"weak", why:"Kickoffs are among the *least* random moments in the game — fixed starting positions, fixed ball position, a known set of approaches. They are one of the best places to build a read."},
+    {t:"You should mirror whatever they do so the kickoff is neutral.", v:"ok", why:"Matching speed is a real answer to a kickoff deficit, and neutralizing rather than winning is often the correct goal. But it is still a fix aimed at the kickoff itself rather than at the failure you actually paid for."}
+  ],
+  takeaway:"Before you learn a mechanic to solve a problem, check whether the problem is the mechanic. Count the times the same failure happened without costing you anything — the difference between those and the costly one is your real lesson.",
+  principle:"Base rates and the discriminating case: when the same event mostly does not hurt you, the cause of the harm lies in what differed, not in the event."
+},
+
+/* ---------- TIER 2 — EXPLAIN ---------- */
+{
+  id:"d3", track:"diagnose", tier:2, type:"mc",
+  scenario:"You review a conceded goal. At the moment of the shot, the situation is clearly lost: two attackers, you alone, no boost. You rewind eight seconds. At that point the score situation is neutral, you have 60 boost, and your teammate is challenging in the opponent's corner.",
+  stem:"What is the most useful thing to look for in those eight seconds?",
+  hints:[
+    "You already know the ending was unwinnable. So the question is when it became unwinnable.",
+    "Look for the moment your options narrowed from several to one.",
+    "That moment usually involves either a commitment or a failure to reposition during someone else's commitment."
+  ],
+  options:[
+    {t:"The exact frame where you first made a mistake.", v:"ok", why:"Close, but it presumes a single discrete mistake exists. Often there is no error at all in those eight seconds — there is a slow accumulation of small concessions, none of which would look wrong in isolation."},
+    {t:"The moment your set of reasonable options dropped from several to one, and what you were doing in the two seconds before that.", v:"best", why:"This is the right unit of analysis. Positions do not become bad suddenly; your *option set* collapses. Finding that collapse point tells you what to change, and it is usually something unremarkable — you followed your teammate's challenge up instead of holding, or you took the near pad instead of the far one and ended up on the wrong side."},
+    {t:"Whether your teammate's challenge in the corner was correct.", v:"weak", why:"You cannot change it, and in this scenario it is also a plausible play. More importantly: your teammate committing is a normal, expected event. Your positioning should be robust to it. A structure that only works when your teammate makes the right read is not a structure."},
+    {t:"Your boost total at each second of the clip.", v:"ok", why:"A genuinely useful trace — boost is often where the collapse originates. But it is a data series, not a question. Use it to answer the option-collapse question rather than instead of it."}
+  ],
+  takeaway:"Goals are conceded at the moment your options narrow, not at the moment the ball crosses the line. Train yourself to find the narrowing.",
+  principle:"Chain-of-events analysis: in dynamic systems, failure is typically the loss of degrees of freedom over time rather than a single discrete error."
+},
+{
+  id:"s2", track:"space", tier:2, type:"mc",
+  scenario:"You shadow defend well. You mirror the dribbler back toward your net, you keep your distance, you do not over-commit. But the possession ends the same way most times: they eventually beat you or force a rushed clear, and you never actually get the ball.",
+  stem:"What is the structural problem with shadow defence that never converts?",
+  hints:[
+    "Shadowing buys time. Ask what the time is being bought for.",
+    "Where is the field running out, and who benefits when it does?",
+    "Consider what your opponent's boost is doing during a long shadow."
+  ],
+  options:[
+    {t:"You are shadowing from too far away.", v:"ok", why:"A frequent and real cause — too much distance means you can never threaten the ball, so the attacker faces no pressure and can take their time. But this is one mechanism among several, and stated alone it invites you to simply hug closer, which creates a different failure."},
+    {t:"Shadowing is a delaying action, and delay only has value if something arrives — a rotating teammate, a boost recovery, or a moment where the attacker's touch is poor. If nothing is scheduled to arrive, you are just walking backward toward your own net.", v:"best", why:"This is the structural answer. Shadow defence trades territory for time. Territory is finite: your net is behind you. So the question is always “what am I buying this time for?” If your teammate is not rotating, if you are not recovering boost while you shadow, and if you have no plan for when to turn and contest, then you have converted a defensible situation into an inevitable one, slowly."},
+    {t:"You should challenge immediately instead of shadowing.", v:"weak", why:"An overcorrection that trades a slow loss for a fast one. Immediate challenges against a controlled dribble are usually beaten, and now you are behind the play with no shadow at all."},
+    {t:"Your teammate should be pushing up to cut the pass.", v:"weak", why:"Again correct-sounding and outside your control. Also: in most of these clips the teammate's absence is precisely the condition that makes the shadow pointless, and your job is to recognize that and change what you are doing."}
+  ],
+  takeaway:"Every defensive action should have an exit condition you can name before you start it: I am shadowing until my teammate reaches the back post, or until I have 40 boost, or until his touch gets away from him. A shadow with no exit condition is a countdown.",
+  principle:"Delay in defensive systems is only valuable when it is spent acquiring something. Name the resource you are buying — time, position, boost, or a teammate — before you commit to the delay."
+},
+{
+  id:"m2", track:"mechanics", tier:2, type:"mc",
+  scenario:"You are trying to build reliable air-roll control. You have two options for the next thirty minutes: run a ring map on repeat, or play free play where you set yourself a rule that every aerial touch must be taken with directional air roll held.",
+  stem:"Which better serves transfer to matches, and why?",
+  hints:[
+    "Think about what each option constrains and what each option leaves free.",
+    "One of these controls the environment; the other controls your technique inside a variable environment.",
+    "Ring maps are famous for producing players who look smooth and cannot hit a ball."
+  ],
+  options:[
+    {t:"The ring map, because it gives more repetitions per minute with immediate feedback.", v:"weak", why:"Reps per minute is the wrong metric — that is optimizing practice efficiency rather than learning. Ring maps also train flight *without a ball*, which removes the single most important perceptual element: reading and intercepting a moving object under time pressure."},
+    {t:"The free play constraint, because it keeps the real perceptual task — read the ball, judge the intercept — while restricting the movement solution so you are forced to develop the control.", v:"best", why:"This is a constraints-led approach. You are not removing the game to isolate the mechanic; you are keeping the game and narrowing the space of allowable solutions so the mechanic becomes the only path. The result is a skill that already comes attached to the perceptual cues it needs in a match. This is also why the practice feels worse: you fail more, and failing more is what makes it stick."},
+    {t:"Neither — you should only practice in real matches.", v:"weak", why:"Match-only practice gives too few reps of any specific situation and punishes experimentation, so you default to what already works. Deliberate constraint work in free play is exactly where new solutions get built."},
+    {t:"The ring map first, then free play, always in that order.", v:"ok", why:"Not unreasonable as a very early sequence — rings can help a player who genuinely cannot hold a line in the air. But the ordering is not a law, and most players who follow it never leave stage one."}
+  ],
+  takeaway:"Prefer practice that constrains your solution while preserving the real perceptual problem. Removing the ball to train flight removes the reason flight is hard.",
+  principle:"Constraints-led approach (Newell, 1986): manipulate task, environment or performer constraints to make the desired coordination pattern emerge, rather than prescribing technique in a stripped-down setting."
+},
+{
+  id:"q2", track:"decision", tier:2, type:"mc",
+  scenario:"An opponent is carrying the ball toward your half at moderate speed. You are the first defender with 45 boost, your teammate is rotating and roughly three seconds from the back post.",
+  stem:"You are deciding whether to challenge. What is the analytically correct way to frame it?",
+  hints:[
+    "A challenge has more than two outcomes.",
+    "Weigh each outcome by how likely it is *and* by how much it costs or gains.",
+    "One of the outcomes is much more common than players expect, and it is not ‘win’ or ‘lose’."
+  ],
+  options:[
+    {t:"Will I win the challenge? If yes, go.", v:"weak", why:"A binary frame, and it ignores cost. Many challenges you would win are still wrong because winning them puts the ball somewhere useless while removing you from the play."},
+    {t:"Estimate three outcomes — I win it, I lose it, or it goes neutral — and weigh each by how likely it is and what the field looks like afterward, including where my teammate will be in three seconds.", v:"best", why:"This is the frame that actually generates the right answer. The neutral outcome is the most common one and the most neglected: a 50-50 that pops the ball up in your defensive third is frequently *worse* than a clean loss, because it leaves both of you committed with the ball still dangerous. Notice that the teammate's three-second arrival is part of the calculation — delaying so the challenge happens with cover changes all three probabilities."},
+    {t:"Never challenge as first defender; always shadow until your teammate arrives.", v:"weak", why:"A rule instead of a read. Permanent passivity lets a competent attacker walk into a shooting position at zero risk, and it is exactly the failure mode described in the shadowing question."},
+    {t:"Challenge if you have more boost than the attacker.", v:"ok", why:"Boost differential genuinely matters — it determines who can recover and who can follow up. But as a single trigger it ignores position, teammate timing, and the state of the attacker's touch, all of which move the numbers more."}
+  ],
+  takeaway:"Score a challenge on three outcomes, not two, and evaluate each one by the field state it produces — not by whether you touched the ball.",
+  principle:"Expected-value reasoning under uncertainty: enumerate outcomes, estimate probabilities, and price each outcome by the resulting state, not by the immediate event."
+},
+{
+  id:"p2", track:"process", tier:2, type:"mc",
+  scenario:"You are trying to improve your awareness of where opponents are. You decide to “pay more attention to the radar” during matches.",
+  stem:"Why does this intention usually fail, and what works better?",
+  hints:[
+    "Attention is a limited budget, and you are already spending all of it.",
+    "Vague intentions do not survive contact with a fast-moving ball.",
+    "Think about *when* you look rather than *how much* you look."
+  ],
+  options:[
+    {t:"It fails because you need to enlarge your radar in settings.", v:"ok", why:"Interface changes can genuinely help, and it is a cheap thing to try. But it does not address the actual constraint, which is that during high-load moments you are not looking at all, regardless of size."},
+    {t:"It fails because “more attention” has no trigger. Attach the look to specific low-load moments — immediately after your touch, while driving to a boost pad, during the ball's flight — so the sampling happens when you have spare capacity.", v:"best", why:"This is the fix that works. Attention is not a dial you turn up; it is allocated moment to moment, and during a contest it is fully committed. The players who seem to have awareness are not looking more, they are looking at scheduled moments when looking is cheap, and then holding that snapshot in memory. “Glance after every touch” is a rule you can obey; “be more aware” is not."},
+    {t:"It fails because awareness is innate and cannot be trained.", v:"weak", why:"Flatly contradicted by how reliably it improves with structured practice. It is also the kind of explanation that ends inquiry, which should make you suspicious of it."},
+    {t:"It fails because you should use ball cam less.", v:"ok", why:"Ball-cam discipline is a real skill and toggling off has legitimate uses — recovering, taking boost, driving to position. But the general prescription “use ball cam less” is not the mechanism; the mechanism is when you sample information."}
+  ],
+  takeaway:"Convert every awareness goal into a trigger plus an action: after X, do Y. Intentions without triggers do not survive a fast game.",
+  principle:"Implementation intentions (Gollwitzer): specifying “when situation X arises, I will do Y” substantially outperforms general goal intentions, because retrieval is cued by the situation rather than by will."
+},
+{
+  id:"r2", track:"reads", tier:2, type:"mc",
+  scenario:"In 2v2, your opponent has spent the last minute repeatedly boost-starved: he keeps arriving at contests with under 20 boost and gets beaten to the ball.",
+  stem:"What is the most valuable read to extract from this pattern?",
+  hints:[
+    "A recurring weakness is not just something to exploit — it is a predictor.",
+    "If you know he will be low on boost, you know where he has to go next.",
+    "The strongest reads let you be somewhere before your opponent decides to go there."
+  ],
+  options:[
+    {t:"He is a weaker player, so you should attack more aggressively overall.", v:"weak", why:"A conclusion about the person rather than about the situation. It also produces a vague behavioral change — “attack more” — which is not something you can execute precisely."},
+    {t:"His next several movements are partly predictable: after a lost contest at low boost he must route to a specific pad or corner, which tells you where he will be and when he cannot contest.", v:"best", why:"This is the read that converts into action. A boost-starved opponent has a constrained option set, and constrained options are predictable options. You now know which windows he cannot contest in, and which pads you can deny or take on the way through to make the starvation persist. You have turned an observation into a prediction with a time and a location."},
+    {t:"You should take every large pad on the map to keep him starved.", v:"ok", why:"Denial is the right family of idea, but executed as a blanket rule it wrecks your own routing and positioning. Denial is worth a detour when it targets the specific pad his current position forces him toward."},
+    {t:"He will probably adapt soon, so the read is not worth using.", v:"weak", why:"Reads have a shelf life, which is a reason to use them now and monitor for the change, not a reason to discard them. Opponents at most ranks do not adapt to a boost problem within one match."}
+  ],
+  takeaway:"A read is only finished when it produces a prediction with a location and a time window. “He is bad at boost” is an observation; “he will be on the far side pad in two seconds and cannot contest the next ball” is a read.",
+  principle:"Opponent modeling: identify the constraint the opponent is operating under, then derive their forced options. Constraints predict behavior more reliably than traits do."
+},
+/* ---------- TIER 3 — EVALUATE ---------- */
+{
+  id:"d4", track:"diagnose", tier:3, type:"mc",
+  scenario:"Reviewing a session, you notice you conceded four goals that all began with you being caught upfield. You conclude “I need to stop over-committing” and resolve to play more conservatively.",
+  stem:"What is wrong with this conclusion, even though the observation is accurate?",
+  hints:[
+    "You counted the times the behavior hurt you. What did you not count?",
+    "Every behavior with a cost also has a benefit, or you would not do it.",
+    "Consider what your scoring would look like in a session where you never got caught upfield."
+  ],
+  options:[
+    {t:"Nothing is wrong — four goals is a clear pattern and conservatism is the fix.", v:"weak", why:"You have measured only the cost side of the ledger. Selective sampling of failures is how players talk themselves into passive play that loses more games than the aggression ever did."},
+    {t:"You sampled only the failures. To evaluate the behavior you also need the times you were upfield and it created a goal, a save-forcing pressure, or a possession — and then compare the rates.", v:"best", why:"This is the correct correction. Being caught upfield is the visible failure mode of offensive pressure, which is also how you generate most of your scoring. Four conceded goals might sit alongside six created ones, in which case the behavior is net positive and the fix is not “less” but “better” — better exit reads, better boost before committing, better selection of which pressures to sustain."},
+    {t:"Four goals is too small a sample to conclude anything.", v:"ok", why:"Sample size is a fair caution, but four instances of the same mechanism in one session is a reasonable signal to investigate. The deeper error here is the missing comparison group, not the count."},
+    {t:"You should have checked whether your teammates were rotating properly first.", v:"weak", why:"Reintroduces the same externalization problem. Also, if your positioning only works with cooperative teammates, that is itself the finding."}
+  ],
+  takeaway:"When you find a pattern in your losses, find the same behavior in your wins before you decide to remove it. Most bad habits are good habits with poor exit conditions.",
+  principle:"Selection on the dependent variable: examining only cases where the outcome occurred cannot establish that the behavior caused it. You need the base rate of the behavior across all outcomes."
+},
+{
+  id:"q3", track:"decision", tier:3, type:"mc",
+  scenario:"On review, you see a moment where a cross-field pass to your teammate would have been a clean goal. You did not see it; you took a contested shot instead, which was saved.",
+  stem:"How should you grade your decision?",
+  hints:[
+    "Ask what was actually available to your senses at that instant.",
+    "Hindsight gives you a top-down view the game never gave you.",
+    "There are two separate failures possible here, and only one of them is a decision failure."
+  ],
+  options:[
+    {t:"Bad decision — the pass was clearly better.", v:"weak", why:"This is hindsight bias. In the replay you have a free camera, a paused clock, and knowledge of the outcome. At the time you had a ball cam, a half-second, and no information about your teammate's position unless you had gathered it earlier."},
+    {t:"Ask two separate questions: was the information available to me at that moment, and if so, was my choice among the options I actually perceived defensible? A perception failure and a judgment failure need different fixes.", v:"best", why:"This is the correct decomposition and it changes what you practice. If your teammate's position was on your radar two seconds earlier and you did not sample it, that is an attention-scheduling problem — fix it with a look trigger. If you did know where they were and still shot, that is a judgment problem — fix it by re-examining your model of when a contested shot beats a pass. Collapsing both into “bad decision” trains neither."},
+    {t:"Good decision — shooting is aggressive and aggression is rewarded.", v:"weak", why:"A rationalization dressed as a principle. Aggression is not self-justifying; the question is which aggressive option was best."},
+    {t:"Unknowable, since you cannot reconstruct what you were thinking.", v:"ok", why:"Genuine epistemic humility, and worth holding onto — but too defeatist. You can partly reconstruct the information environment from the replay: run your own camera angle, check what was on radar, check the timing. That gets you most of the way."}
+  ],
+  takeaway:"Always separate “I could not have known” from “I knew and chose wrong.” They feel the same in review and they require completely different training.",
+  principle:"Hindsight bias and the perception–action distinction. Grade decisions against the information state at the time, and diagnose whether the failure was in acquiring information or in using it."
+},
+{
+  id:"s3", track:"space", tier:3, type:"mc",
+  scenario:"You have the ball in the opponent's corner with control. Your teammate is at midfield with 30 boost. The opponents are both back and settled.",
+  stem:"What is the strongest argument for deliberately giving up possession here?",
+  hints:[
+    "Possession is not automatically good; it has a maintenance cost.",
+    "Consider what the state of the field will be in eight seconds if you keep the ball.",
+    "One team is spending resources holding this pattern and one is recovering them."
+  ],
+  options:[
+    {t:"Because holding possession is boring and low-percentage.", v:"weak", why:"Neither claim is analytically useful, and the second is false — sustained corner pressure at high level is among the most productive things you can do."},
+    {t:"Because with both opponents settled and your teammate short on boost, holding costs you boost and time while the defenders recover theirs — so the position is getting worse for you every second, and a well-placed concession resets it on your terms.", v:"best", why:"This is the resource argument, and it is the real one. Possession against an organized defence with no support is a slowly depreciating asset: you burn boost maintaining it, the defenders regain theirs, and your teammate cannot arrive without abandoning cover. Conceding deliberately — a hard clear to a corner, a shot you know will be saved into a good area — lets you both reset boost and re-form with a chance to attack a disorganized defence instead of a settled one."},
+    {t:"Because you should always pass to your teammate.", v:"ok", why:"Passing is often right, but here your teammate is at 30 boost in midfield — receiving a pass may put them in the same depreciating situation with fewer resources."},
+    {t:"Because giving up possession draws them out.", v:"ok", why:"Sometimes true, and a legitimate secondary benefit. But at settled ranks disciplined defenders do not necessarily commit, so this cannot be the primary justification."}
+  ],
+  takeaway:"Possession is a position you are paying to hold. When the price is rising and the pay-off is not, sell it on your terms rather than losing it on theirs.",
+  principle:"State evaluation over event evaluation: judge a game state by its trajectory and resource flows, not by who currently has the ball."
+},
+{
+  id:"m3", track:"mechanics", tier:3, type:"mc",
+  scenario:"You have two weeks and roughly an hour of practice time per day. You are a solid Champion whose main losses come from getting outplayed in the air on offence.",
+  stem:"You are choosing between learning flip resets and improving your aerial car control and shot placement. What should decide it?",
+  hints:[
+    "Think about opportunity cost, not just about which skill is better.",
+    "How many times per match would each skill actually change the result?",
+    "One of these improves a thing you already do dozens of times a game."
+  ],
+  options:[
+    {t:"Flip resets, because they are the higher skill ceiling and raise your overall level.", v:"weak", why:"“Higher ceiling” is not a decision criterion — every mechanic has a ceiling. And a two-week window is far too short to make a reset match-viable, which means the realistic outcome is fourteen hours spent on something you will not use under pressure."},
+    {t:"Estimate how many times per match each skill would actually change the outcome, multiply by how much it would change it, and account for how long each takes to become reliable under pressure.", v:"best", why:"This is the allocation question done properly. Aerial control and shot placement touch nearly every offensive possession you have — perhaps fifteen to twenty moments per match — and improvements arrive incrementally, so partial progress is still usable. A flip reset might appear in a match once, requires far more hours before it is match-reliable, and partial progress is worth almost nothing. The expected return over two weeks is not close."},
+    {t:"Whichever you enjoy more, since enjoyment sustains practice.", v:"ok", why:"Not a throwaway — adherence genuinely dominates over long horizons, and a plan you abandon returns zero. But over a defined two-week block with a specific competitive weakness, letting enjoyment override the analysis is how players spend years on freestyling and stay Champion."},
+    {t:"Neither — mechanics are not your problem at Champion, decision-making is.", v:"ok", why:"A common and often-true piece of advice, but it is being applied as a slogan here. The scenario specifies losses from being outplayed in the air, which is a mechanical description. Diagnose before you apply the general rule."}
+  ],
+  takeaway:"Choose what to practice by frequency times impact divided by time-to-reliability. Flashy mechanics usually lose badly on that formula, and the ordinary ones usually win.",
+  principle:"Opportunity cost and expected value in skill allocation, combined with the fact that incremental skills pay out during acquisition while threshold skills pay nothing until complete."
+},
+{
+  id:"r3", track:"reads", tier:3, type:"mc",
+  scenario:"You have noticed that a particular opponent always challenges your first touch when you enter their half. You beat them twice with a delay. On the third attempt they hold back and punish your slow entry.",
+  stem:"What does this sequence tell you about how to hold reads?",
+  hints:[
+    "Your model was correct and then stopped being correct. When?",
+    "Your own success is information the opponent also receives.",
+    "Consider what would have told you the change was coming before it cost you."
+  ],
+  options:[
+    {t:"Reads are unreliable at this level and you should not use them.", v:"weak", why:"The read worked twice. Abandoning a tool because it has a shelf life leaves you playing without any model at all, which is strictly worse."},
+    {t:"A read is a hypothesis with a decay rate, and the strongest evidence that it is expiring is your own repeated success with it. Plan the counter before you use it the second time.", v:"best", why:"This is the mature version. Your exploitation is the signal that updates them. So the schedule should be: confirm the pattern, exploit it, and treat the second successful exploitation as notice that the third attempt is likely to be read. Crucially, you can prepare for that — an entry that *starts* like the delay and converts to a fast touch punishes their adaptation, and you only get that if you planned it before the third attempt rather than after."},
+    {t:"You should have varied randomly from the start.", v:"ok", why:"Randomization protects you from being read but also prevents you from fully exploiting an opponent who is not adapting. Against most opponents, exploiting until they adjust earns more than mixing from the beginning."},
+    {t:"The opponent got lucky on the third one.", v:"weak", why:"Possible, but assuming luck whenever your model fails is how models stop improving. Default to “my model updated too slowly” and look for the evidence."}
+  ],
+  takeaway:"Treat every read as a hypothesis with an expiry date, and treat your own success as the clock. Have the counter-adaptation ready before you need it.",
+  principle:"Adaptive opponents make exploitation self-limiting: the act of exploiting a pattern supplies the evidence the opponent needs to change it."
+},
+{
+  id:"p3", track:"process", tier:3, type:"mc",
+  scenario:"Over 40 matches your rank has not moved. You feel you are playing noticeably better than you were a month ago.",
+  stem:"How should you interpret this?",
+  hints:[
+    "Rank measures relative performance against an opponent pool that is also changing.",
+    "Consider what a flat rank while improving would actually imply.",
+    "There is also a possibility that the feeling is wrong, and a way to check."
+  ],
+  options:[
+    {t:"You are not actually improving; the feeling is an illusion.", v:"ok", why:"A real possibility worth taking seriously — perceived improvement often outruns actual improvement, especially when you have been consuming a lot of content. But asserting it without checking is as unfounded as assuming the opposite."},
+    {t:"Rank is a lagging, relative, noisy measure. Track process metrics you control instead — challenge success rate, boost management, first-touch quality — and treat rank as a slow confirmation rather than the signal.", v:"best", why:"Correct on all three counts. Forty matches is a small sample against MMR noise; your opponents at a given rank are also improving; and you may have improved in one dimension while a compensating weakness grew. The actionable part is the second half: measure the specific things you have been training. If your challenge success rate is up and your rank is not, you have a real improvement plus something else holding you back, and now you can look for it."},
+    {t:"Your teammates are holding you back.", v:"weak", why:"Over 40 matches teammate quality largely averages out, and this explanation predicts nothing and suggests no experiment."},
+    {t:"You should grind more matches; volume fixes plateaus.", v:"weak", why:"Volume without changed practice mostly consolidates existing habits, including the ones causing the plateau. Plateaus are usually structural rather than dosage problems."}
+  ],
+  takeaway:"Rank is an outcome measure with a long lag and heavy noise. Steer by process measures you can influence this week and let rank confirm them later.",
+  principle:"Lagging versus leading indicators. Also relevant: subjective improvement is a poor gauge, so pair it with at least one measured behavior."
+},
+
+/* ---------- TIER 4 — MODEL ---------- */
+{
+  id:"d5", track:"diagnose", tier:4, type:"mc",
+  scenario:"You have kept a structured replay journal for two months. Your notes consistently identify “rotation timing” as your main weakness, and you have practiced it deliberately. Your results have not changed.",
+  stem:"What is the most important question to ask now?",
+  hints:[
+    "The diagnostic instrument here is you. What if it is miscalibrated?",
+    "Two months of the same finding could mean a persistent problem — or a persistent blind spot.",
+    "How would you find an error that your own analysis is structurally unable to see?"
+  ],
+  options:[
+    {t:"Why is my rotation timing not improving despite practice?", v:"ok", why:"The obvious next question, and it might be productive. But it accepts the diagnosis, and the diagnosis is now the thing most in need of scrutiny — two months of stable findings from a single observer is exactly the situation where the observer is the problem."},
+    {t:"What would I be unable to see about my own play, and how could I get evidence about it that does not come from me? — for example an outside reviewer, aggregate replay statistics, or reviewing from the opponent's camera.", v:"best", why:"This is the meta-diagnostic move. Self-review has a systematic blind spot: you can only notice failures you have a concept for. If your model of the game lacks a category, that failure mode is invisible to you no matter how carefully you watch, and you will keep finding the errors you already know how to find. The fix must introduce an information source with different biases — another person's review, a statistical view of your replays, or watching the match from the opponent's perspective so you see what your positioning looked like as a threat."},
+    {t:"Should I switch to practicing mechanics instead?", v:"weak", why:"Abandoning the investigation rather than correcting it. If your diagnostic process is unreliable, changing what you practice will not make it reliable."},
+    {t:"Is rotation timing actually a real skill, or a folk concept?", v:"ok", why:"An interestingly skeptical question and worth an occasional airing — many coaching concepts are vaguer than they sound. But it is less productive here than checking your instrument."}
+  ],
+  takeaway:"When your analysis keeps returning the same answer and nothing changes, suspect the analysis. Deliberately import a view that has different blind spots from yours.",
+  principle:"Calibration and the limits of self-assessment: you cannot detect errors your conceptual model has no category for. External or statistical review supplies categories you lack."
+},
+{
+  id:"q4", track:"decision", tier:4, type:"mc",
+  scenario:"You are up 2–1 with 40 seconds left in 2v2. You have possession at midfield with 50 boost. Your teammate is behind you with 80.",
+  stem:"How does the game state change the decision calculus?",
+  hints:[
+    "The value of a goal and the value of a concession are no longer symmetrical.",
+    "Time is now a resource on your side of the ledger.",
+    "But there is a trap in the obvious conservative answer."
+  ],
+  options:[
+    {t:"Play maximally safe: clear the ball long every time and defend deep.", v:"ok", why:"Directionally right about risk, but the specific tactic often backfires. Long clears from midfield hand possession straight back with your team pushed into the net, giving the opponent 40 seconds of uncontested pressure — the highest-variance state available. Safe intent, dangerous implementation."},
+    {t:"The asymmetry now favours consuming time and territory: a goal is worth less to you than a concession costs, so prefer plays that keep the ball in their half and burn clock, even at some cost to your scoring chances.", v:"best", why:"This is the correct reframe. Up one with 40 seconds, a third goal adds relatively little while a concession costs enormously — so you should accept worse scoring odds in exchange for lower variance and clock consumption. Concretely that means keeping the ball in their corner rather than clearing it away, taking the pass that maintains possession over the shot that might be saved into a counter, and using your teammate's 80 boost as insurance rather than as a second attacker."},
+    {t:"Nothing changes — always play the same way, because good habits win.", v:"weak", why:"Consistency of *process* is valuable; indifference to game state is not. Optimal risk depends on score and clock, and refusing to adjust is a decision to be wrong at the margins of every close game."},
+    {t:"Push hard for the third goal to end the game as a contest.", v:"weak", why:"Confuses a psychological goal with an expected-value one. A third goal does not end anything with 40 seconds left, and pushing for it exposes you to precisely the counter that costs you the game."}
+  ],
+  takeaway:"Late-game decision-making is variance management. When ahead, buy certainty with expected value; when behind, sell certainty to buy variance.",
+  principle:"State-dependent expected value: the utility of goals is not linear in score margin or symmetric in time. Optimal risk is a function of the state, not a fixed personality trait."
+},
+{
+  id:"r4", track:"reads", tier:4, type:"mc",
+  scenario:"You are playing an opponent who is clearly your equal and who is clearly reading you. You fake a challenge; he holds. You commit; he punishes.",
+  stem:"What is the correct way to think about the next exchange?",
+  hints:[
+    "He is modeling you, and you know it. That itself is information.",
+    "There is a real cost to trying to out-level someone recursively.",
+    "Sometimes the right answer is to stop trying to be unpredictable and change what the exchange is about."
+  ],
+  options:[
+    {t:"Go one level deeper — do the obvious thing, because he expects you to do the clever thing.", v:"ok", why:"This works occasionally and is fun when it does, but recursive level-guessing has no stable stopping point and your estimate of which level he is on is very noisy. Depending on it is a coin flip you have dressed up as insight."},
+    {t:"Stop trying to win the guessing game and change the terms: mix genuinely unpredictably in the 50-50s while shifting your advantage-seeking to dimensions he is not contesting — boost economy, positioning discipline, the pace you set.", v:"best", why:"This is the right resolution. Against an equal who reads you, the guessing dimension is close to zero-sum and near-random, so the correct play there is genuine mixing — not cleverness, actual unpredictability, which humans are bad at and must be done deliberately. Meanwhile your edge has to come from somewhere else. Boost differentials, positional discipline, and tempo compound over a match and are not resolved by a read. You win by making the guessing game matter less."},
+    {t:"Play more conservatively until he over-extends.", v:"ok", why:"A legitimate tactic against an aggressive equal, and low risk. But against a disciplined opponent it can concede the initiative permanently and let them dictate the whole match."},
+    {t:"Accept that he is better and focus on your own execution.", v:"weak", why:"The scenario says he is your equal who is currently reading you well — a strategic condition, not a verdict on ability. Conceding the strategic layer means playing the rest of the match at a disadvantage you had the option to remove."}
+  ],
+  takeaway:"When a dimension of the game becomes a pure guessing contest against an equal, randomize honestly there and move your effort to the dimensions that compound.",
+  principle:"Second-order modeling and mixed strategies: in recursive belief games, the equilibrium play in the contested dimension is genuine randomization, which frees attention for non-zero-sum dimensions."
+},
+{
+  id:"m4", track:"mechanics", tier:4, type:"mc",
+  scenario:"You have a mechanic that works perfectly in free play and fails roughly half the time in matches, specifically in high-pressure moments late in close games.",
+  stem:"What does this pattern most likely indicate, and what practice addresses it?",
+  hints:[
+    "The motor pattern exists. Something about the match context is interfering with its execution.",
+    "Notice that it fails specifically under pressure, not randomly.",
+    "There is a known effect where attending to your own movement degrades a skill you already own."
+  ],
+  options:[
+    {t:"The mechanic is not learned yet; go back to free play and do more reps.", v:"weak", why:"Contradicted by the evidence — it works perfectly in free play. More reps in the context where it already succeeds cannot address a failure that only appears elsewhere."},
+    {t:"Under pressure you shift to consciously monitoring your own movement, which disrupts an automatic skill. Practice it under manufactured pressure — a stake, a fatigue state, a scoreboard — and with an external focus of attention on the ball's target rather than on your inputs.", v:"best", why:"This is the reinvestment or “choking” pattern, and the two prescriptions follow directly from it. Pressure training reproduces the anxiety conditions so the skill is encoded with them rather than sheltered from them. External focus — attending to where you want the ball to go rather than to what your thumbs are doing — is one of the most reliably replicated findings in motor learning, and it specifically counteracts the conscious-monitoring failure. Together they attack the actual mechanism instead of adding volume."},
+    {t:"You need to warm up longer before ranked.", v:"ok", why:"A warm-up genuinely helps and is nearly free, so keep it. But it does not explain failures that cluster specifically in late-game high-stakes moments rather than early in a session."},
+    {t:"Use it less in matches so you fail less.", v:"weak", why:"Avoidance guarantees the skill never becomes pressure-proof, and the gap widens. It also removes the only situation that could give you diagnostic information."}
+  ],
+  takeaway:"A skill that works in practice and fails under pressure is not underlearned — it is unprotected. Train it with the pressure present and with your attention pointed outward at the effect, not inward at the movement.",
+  principle:"Reinvestment theory (Masters) plus external focus of attention (Wulf): anxiety induces conscious control of automated movement, which degrades it. Pressure training and external attentional focus are the established countermeasures."
+},
+{
+  id:"p4", track:"process", tier:4, type:"mc",
+  scenario:"You want to know whether a change you made to your play three weeks ago actually helped.",
+  stem:"What is the most rigorous approach available to you as a solo player?",
+  hints:[
+    "Before-and-after comparison has a specific weakness here.",
+    "You need a measure that is closer to the change than your rank is.",
+    "You also need to guard against noticing only the evidence that agrees with you."
+  ],
+  options:[
+    {t:"Compare your rank before and after the three weeks.", v:"weak", why:"Rank is too noisy and too distant from the change, three weeks is too short, and everything else about your play also changed during that period. This comparison will produce an answer, and the answer will be uninformative."},
+    {t:"Define in advance a specific behavioral measure tied to the change, sample replays from before and after using the same counting rule, and write down what result would count as failure before you look.", v:"best", why:"This is as close to an experiment as a solo player can get, and each clause is doing work. A specific behavioral measure sits near the change so the signal is not swamped. The same counting rule applied to both periods prevents you from unconsciously grading old clips more harshly. And pre-committing to what would count as failure is the key defence against confirmation bias — without it you will find support for the change no matter what the clips show, because you will keep adjusting what counts as success."},
+    {t:"Go by feel — you know your own play better than any metric.", v:"weak", why:"Self-assessment is exactly the instrument under question, and it is also the one most contaminated by the desire for the change to have worked."},
+    {t:"Ask a higher-ranked player to watch you now and say whether you are good.", v:"ok", why:"External review is valuable and you should get it. But asking about your current state does not answer a question about change, and without a before-sample the reviewer has nothing to compare against."}
+  ],
+  takeaway:"Decide what would count as evidence before you go looking. A test you cannot fail is not a test, and improvement you cannot measure is a story you are telling yourself.",
+  principle:"Pre-registration and falsifiability applied to self-coaching: specify the measure and the failure criterion in advance to prevent post-hoc reinterpretation."
+},
+{
+  id:"s4", track:"space", tier:4, type:"mc",
+  scenario:"Late in a close 2v2, you notice the opposing pair are rotating through the same side of the field and both have been taking the same corner pad on their recovery.",
+  stem:"What is the highest-value way to use this observation?",
+  hints:[
+    "You can act on the ball, or you can act on the resource that determines what they can do about the ball.",
+    "Boost pads are on a fixed respawn timer, and they are on the field whether or not the ball is nearby.",
+    "The goal is to make their next several decisions worse without having to win a contest."
+  ],
+  options:[
+    {t:"Attack down that side, since that is where they will be.", v:"weak", why:"You have turned a resource observation into a positional one, and the positional read is the weaker of the two. Attacking into where both defenders are rotating is exactly the wrong inference."},
+    {t:"Route your own recovery through that corner pad so that their next rotation arrives to an empty pad on a ten-second timer — degrading their next two or three decisions without contesting anything.", v:"best", why:"This is boost denial used precisely rather than as a habit. You know which pad they need and roughly when, so a small detour on a recovery you were making anyway removes it from their supply. The value compounds: a defender arriving with 20 boost instead of 100 cannot challenge, cannot follow up, and is forced into a longer route next time, which you also know. You have degraded their decision quality without ever touching the ball."},
+    {t:"Tell your teammate to cover that side.", v:"ok", why:"Reasonable coordination, but it uses the read defensively and spends a teammate's positioning on it. The read is more valuable used offensively against their resource supply, because that shapes their options rather than merely responding to them."},
+    {t:"Bank the observation and use it for the kickoff after the next goal.", v:"weak", why:"Reads have a shelf life, and a rotation pattern late in a close game is most exploitable right now. Deferring it to a future kickoff wastes the window and assumes a pattern that may not survive a goal."}
+  ],
+  takeaway:"At the top of the ladder, the field is not just positions — it is a resource map with timers on it. The strongest plays available to you are often the ones that make the opponent's next three decisions worse, at no risk to yourself.",
+  principle:"Resource denial as strategic interference: acting on the inputs to an opponent's decision-making is lower variance and more durable than contesting the outputs."
+},
+
+/* ---------- WHY-CHAINS (free response ladders) ---------- */
+{
+  id:"c1", track:"diagnose", tier:1, type:"chain",
+  scenario:"You lose a 2v2. Scrolling the replay, you find that three of the four goals against you were scored while you were in the opponent's half.",
+  stem:"Run the ladder. Each rung asks why the rung above was true. Write short, concrete answers — one or two sentences.",
+  hints:[
+    "Push past “I was out of position.” That is a restatement, not a cause.",
+    "Somewhere in this chain there is a decision you made, not a state you were in.",
+    "Stop when you reach something you could change tomorrow."
+  ],
+  levels:[
+    {q:"Why were you in the opponent's half when the goal was scored?", ph:"e.g. I had followed up my teammate's challenge to look for the rebound."},
+    {q:"Why did you make that choice at that moment — what did you expect to happen?", ph:"e.g. I expected my teammate to win the challenge, so I thought a loose ball was coming."},
+    {q:"Why did you expect that, and what would have told you it was unlikely?", ph:"e.g. I assumed it without looking. Their defender had more boost and a better angle."},
+    {q:"What is the smallest change that would have made this survivable even if you got it wrong?", ph:"e.g. Hold at midfield until the challenge resolves instead of committing past it."}
+  ],
+  expert:[
+    "I pushed up because my teammate challenged and I anticipated a loose ball in the offensive third.",
+    "I committed before the challenge resolved — I was reacting to my teammate's movement rather than to the outcome of the contest.",
+    "That is a habit: my body follows the ball's expected location instead of waiting for information. I did not check the defender's boost or angle, both of which suggested my teammate would lose the contest.",
+    "The fix is not 'push up less'. It is 'do not cross midfield until the 50-50 resolves'. That keeps the aggression and removes the failure mode, because a lost challenge now finds me in a recoverable position instead of behind the play."
+  ],
+  rubric:[
+    "My chain ended at a decision or a habit I control — not at a state ('I was out of position') or at another player.",
+    "At least one rung named a specific piece of information I failed to gather, not just an action I took.",
+    "My final answer preserves the benefit of the original behavior instead of just eliminating it.",
+    "My final answer is specific enough that I would know, watching a replay, whether I did it or not."
+  ],
+  takeaway:"A why-chain is finished when it lands on something you choose, that you could do differently tomorrow, and that you could verify on a replay. 'Be more careful' fails all three tests.",
+  principle:"Root-cause laddering (the '5 whys'). The discipline is not the number of whys but the stopping rule: stop at an actionable, verifiable, controllable cause."
+},
+{
+  id:"c2", track:"space", tier:2, type:"chain",
+  scenario:"A recurring pattern: you arrive at defensive contests with under 25 boost and get overpowered.",
+  stem:"Trace the boost shortage back to its origin. Do not stop at 'I need to collect more boost'.",
+  hints:[
+    "A shortage at time T is caused by spending or routing between T-15 and T.",
+    "Ask where you were driving, not just where the pads are.",
+    "There is usually one specific habitual route that costs you the boost."
+  ],
+  levels:[
+    {q:"Why are you low on boost at the moment of the defensive contest?", ph:"e.g. I spent it on the offensive play and then drove straight back down the middle."},
+    {q:"Why was your recovery route the one you took, rather than one that passed over pads?", ph:"e.g. I take the shortest line back because I feel late."},
+    {q:"Why do you feel late — what is producing the time pressure?", ph:"e.g. I commit deep on offence, so I am always behind the play when possession flips."},
+    {q:"Given that, what changes: your offensive commitment, your recovery routing, or your boost spending on offence? Justify the choice.", ph:"e.g. Routing first — it is the cheapest change and does not cost me offensive pressure."}
+  ],
+  expert:[
+    "I spent boost on an offensive commitment, then recovered on the fastest straight line, which on most maps passes over almost no pads.",
+    "The straight-back route feels correct because I am reacting to urgency. But urgency is what makes it wrong: it guarantees I arrive at the contest fast and empty, which is the worst combination.",
+    "The urgency comes from committing deep without an exit plan, so every turnover starts me behind the play.",
+    "Routing is the cheapest fix and I should make it first: recover through the small pads along the side rather than up the middle. Arriving half a second later with 60 boost beats arriving early with 20. If the shortage persists after that, the real problem is the depth of my offensive commitment, and that is the more expensive fix."
+  ],
+  rubric:[
+    "I identified a specific route or spending pattern, not a general lack of awareness.",
+    "I connected the boost shortage to a decision made earlier in the possession, not only to what happened during recovery.",
+    "I ranked my possible fixes by cost rather than picking the biggest one.",
+    "My chosen fix is a rule I could follow while under time pressure, not something requiring calm deliberation."
+  ],
+  takeaway:"Boost shortages are routing problems disguised as awareness problems. The 34 small pads exist to be collected on your way to somewhere; a recovery line that touches none of them is the actual error.",
+  principle:"Resource flow analysis: trace a deficit backwards through the spending and acquisition decisions that produced it, then intervene at the cheapest point in the chain."
+},
+{
+  id:"c3", track:"mechanics", tier:2, type:"chain",
+  stem:"Pick one mechanic you are currently trying to learn and run it through this ladder. Answer about your real practice, not an ideal version of it.",
+  scenario:"This one uses your own practice as the case study.",
+  hints:[
+    "Be honest about what your practice actually looks like, including how repetitive it is.",
+    "The interesting question is what your practice removes from the game situation.",
+    "A good final answer changes what you do in your next practice session, specifically."
+  ],
+  levels:[
+    {q:"Which mechanic are you working on, and what does your practice for it actually look like right now?", ph:"e.g. Air dribbles. Free play, bouncing the ball off the wall, maybe 20 minutes, same setup each time."},
+    {q:"What does the game supply in this situation that your practice does not?", ph:"e.g. A defender, boost pressure, an unpredictable entry, and the fact that I am tired and behind on the scoreboard."},
+    {q:"Which one of those absences do you think most explains the gap between your practice success and your match success?", ph:"e.g. The unpredictable entry — in practice I always set it up myself."},
+    {q:"Design a practice variation that reintroduces exactly that element while keeping the mechanic trainable.", ph:"e.g. Take the touch from wherever the ball happens to be after a random free-play touch, with no reset allowed."}
+  ],
+  expert:[
+    "Most self-directed mechanic practice is blocked and self-initiated: same entry, same speed, unlimited resets, no consequence for failure.",
+    "The game supplies four things that practice usually strips out — variability of entry, a contesting opponent, resource constraints, and consequence. Each of these changes the skill, not just its difficulty.",
+    "Variability of entry is usually the biggest one, because self-initiated setups let you begin every attempt from the position you are already good at, which quietly narrows the skill to that position.",
+    "A good variation keeps the mechanic as the target but hands control of the starting conditions to something other than you: take the touch from wherever the ball lands, allow no resets, add a boost cap, or set a rule that you must attempt it within three seconds of the ball crossing midfield. Your success rate will drop sharply. That drop is the point — it is the difference between what you could do and what you thought you could do."
+  ],
+  rubric:[
+    "I described my actual practice honestly, including its repetitive parts.",
+    "I named a specific absent element rather than saying 'match pressure' in general.",
+    "My variation reintroduces that element while still letting me attempt the mechanic often enough to learn.",
+    "I expect my success rate to go down in the new version, and I am treating that as a good sign rather than a reason to revert."
+  ],
+  takeaway:"Design practice by asking what it removed. Then put one thing back — the most important one — and accept the drop in success rate as the price of a skill that transfers.",
+  principle:"Contextual interference and desirable difficulties (Bjork): conditions that slow acquisition and depress practice performance frequently improve retention and transfer. Practice performance is not learning."
+},
+{
+  id:"c4", track:"decision", tier:3, type:"chain",
+  scenario:"Choose a goal you conceded in your last session that you feel was your fault. Have the clip in mind, or open it.",
+  stem:"Grade your own decision properly, separating what you knew, what you chose, and what you could execute.",
+  hints:[
+    "Be precise about the moment. Pick one decision, not the whole sequence.",
+    "The hardest rung is the third: distinguishing not knowing from knowing and choosing wrong.",
+    "Only one of the three failure types is fixed by playing better; the others need different training."
+  ],
+  levels:[
+    {q:"State the single decision you are grading, and the moment it happened.", ph:"e.g. At 1:42, with the ball loose at the top of my box, I chose to challenge rather than to retreat to the post."},
+    {q:"What information did you actually have at that instant — on screen and on radar? Be strict: exclude anything you only know from the replay.", ph:"e.g. I could see the ball and one opponent. I did not know where my teammate was; I had not looked in about four seconds."},
+    {q:"Given only that information, was your choice defensible? If it was, the failure was informational, not judgmental. Which was it?", ph:"e.g. Defensible given what I saw — but I should have had the teammate information, so this was an information failure."},
+    {q:"Now the execution question: if you had chosen correctly, could you have executed it reliably? What does that tell you about what to train?", ph:"e.g. Yes, the retreat was easy. So this is purely an information-gathering problem — I need a look trigger, not more practice."}
+  ],
+  expert:[
+    "Grading requires isolating one decision at one instant, because the sequence contains several and they have different causes.",
+    "Reconstructing the actual information state is the step people skip. Watching the replay with a free camera gives you knowledge you did not have, and it makes past decisions look stupider than they were.",
+    "There are three distinct failures and they are trained differently. An information failure means the data was available and you did not sample it — fix it with attentional triggers. A judgment failure means you had the data and weighed it wrongly — fix it by rebuilding the model of when each option is right. An execution failure means you chose well and could not do it — fix it with mechanical practice.",
+    "Most players default to grading everything as a judgment failure, which is why their practice does not fix their mistakes. In review, the honest split usually skews heavily toward information failures, and those are the cheapest of the three to correct."
+  ],
+  rubric:[
+    "I isolated one decision at one moment rather than grading the whole sequence.",
+    "I reconstructed what was actually visible to me and resisted importing replay knowledge.",
+    "I classified the failure as informational, judgmental, or executional — and I can say why it is that one and not the others.",
+    "The training implication I drew matches the failure type I identified."
+  ],
+  takeaway:"Three failure types, three different fixes. Grading everything as 'bad decision' is why deliberate practice so often fails to change match results.",
+  principle:"Hindsight bias control plus a perception–decision–action taxonomy. Diagnose which stage failed before choosing an intervention."
+},
+{
+  id:"c5", track:"reads", tier:4, type:"chain",
+  scenario:"Think of a specific opponent archetype that consistently gives you trouble — not a rank, a style. Fast aggressive challengers, patient shadow defenders, ceiling-pressure players, whatever it is for you.",
+  stem:"Build an explicit opponent model, then find its weakest assumption.",
+  hints:[
+    "A model is only useful if it makes a prediction you could be wrong about.",
+    "The interesting question is not how they beat you but what they need in order to beat you.",
+    "Your final rung should be a testable intervention, with a stated failure condition."
+  ],
+  levels:[
+    {q:"Describe the archetype's behavior as a set of tendencies, as specifically as you can.", ph:"e.g. Challenges my first touch in their half almost always; commits early; recovers fast; rarely plays the second ball."},
+    {q:"What does this style require in order to work — what resources, information, or cooperation from you does it depend on?", ph:"e.g. It requires me to take a predictable first touch, and it requires them to have boost for the recovery."},
+    {q:"Which of those dependencies is easiest for you to remove, and what would removing it look like in play?", ph:"e.g. Predictability of my first touch — I can vary between a delay, a fast push, and a deliberate bounce past them."},
+    {q:"State the test: what will you do, and what result within the next few matches would tell you this model is wrong?", ph:"e.g. If I vary my entry three or more times and they still win the majority of first contests, my model of what they depend on is wrong."}
+  ],
+  expert:[
+    "A useful model is a set of conditional tendencies — 'when X, they do Y' — rather than a personality sketch. Conditionals can be tested; adjectives cannot.",
+    "Every style has dependencies. Aggressive challengers depend on your predictability and on their own boost supply. Patient shadow defenders depend on you entering at a speed they can mirror, and on having a teammate covering the pass. Ceiling-pressure players depend on being given the wall and on your reluctance to contest high.",
+    "Attack the dependency, not the behavior. Trying to out-duel an aggressive challenger plays their game; making your entry unpredictable removes the input their aggression needs. The dependency you should pick is the one cheapest for you to alter, which is usually something about your own behavior rather than something about theirs.",
+    "The failure condition is what separates a model from a story. If you cannot say what result would falsify it, you will interpret every outcome as confirmation — and against a style that troubles you, that is exactly the trap you are already in."
+  ],
+  rubric:[
+    "My description used conditional tendencies ('when X, they do Y') rather than adjectives.",
+    "I identified at least one dependency that involves my own behavior, not only theirs.",
+    "My chosen intervention removes a dependency rather than trying to beat the behavior head-on.",
+    "I stated a concrete result that would tell me the model is wrong, and I would actually accept it as disconfirming."
+  ],
+  takeaway:"An opponent model earns its keep when it names what the opponent needs from you. Take that away and their strength becomes irrelevant without your ever having to beat it directly.",
+  principle:"Falsifiable opponent modeling: represent the opponent as conditional strategies with dependencies, intervene on the dependency, and pre-commit to a disconfirming observation."
+}
+];
+const PROTOCOLS = [
+{
+  id:"pr1", tier:1, track:"diagnose", name:"The Eight-Second Rewind",
+  time:"15 minutes, one replay",
+  why:"Beginners review by watching the whole match, which mostly reproduces the experience of playing it. This protocol forces you to look at the part of the clip where you still had options, instead of the part where the outcome was already decided.",
+  steps:[
+    "Open a replay of a match you lost. Skip directly to the first goal you conceded.",
+    "Watch the goal once at normal speed, from your own camera. Write down your instinctive one-line explanation.",
+    "Rewind eight seconds before the shot. Pause there.",
+    "From the paused frame, write: where is every player, how much boost do you have, and what are your three realistic options?",
+    "Play forward at half speed and mark the exact second where your options dropped to one.",
+    "Write one sentence: what would I do differently at that marked second — not at the goal.",
+    "Repeat for every goal you conceded in the match."
+  ],
+  capture:"For each goal: your instinctive explanation, the option-collapse timestamp, and the one-sentence change. Compare your instinctive explanations against your considered ones at the end — the gap between them is the thing this protocol is training.",
+  cadence:"Once per session, on the losses only."
+},
+{
+  id:"pr2", tier:1, track:"process", name:"The Session Contract",
+  time:"2 minutes before playing, 3 minutes after",
+  why:"Tilt degrades decision quality, not mechanics, and it does so before you notice. A rule written down while calm is the only instrument that reliably beats a decision made while frustrated.",
+  steps:[
+    "Before you queue, write down three things: how many games you will play, one specific thing you are working on, and your stop condition.",
+    "Make the stop condition objective and non-negotiable — for example, 'two losses in a row' or 'the first time I type in chat'.",
+    "Play. After each match, take ten seconds to rate only the thing you are working on, from 1 to 5. Ignore the result.",
+    "When the stop condition triggers, stop. Not one more game.",
+    "After the session, write two lines: what your ratings did over the session, and whether the stop condition fired."
+  ],
+  capture:"Your per-match rating of the focus item, and whether you honoured the stop condition. Over a few weeks, the honesty rate on the stop condition is itself a useful measurement.",
+  cadence:"Every session."
+},
+{
+  id:"pr3", tier:2, track:"decision", name:"The Freeze Frame",
+  time:"20 minutes, one replay",
+  why:"Watching a replay lets you observe your decisions with the answer already visible, which teaches you nothing about deciding. This protocol makes you commit to a choice before seeing the outcome, which is the only way replay review can train judgment.",
+  steps:[
+    "Pick a replay. Set playback to your own camera view.",
+    "Every time possession changes, pause immediately.",
+    "Before unpausing, say out loud or type what you would do and why — one clause each.",
+    "Unpause and watch what you actually did.",
+    "Mark each instance as one of three things: I would now choose the same (agreement), I would choose differently and had the information (judgment gap), or I would choose differently but could not have known (information gap).",
+    "Tally the three categories at the end."
+  ],
+  capture:"The three-way tally. A high judgment-gap count means your model of the game needs work; a high information-gap count means your attention scheduling does. These need completely different practice, and most players guess wrong about which one they have.",
+  cadence:"Once a week."
+},
+{
+  id:"pr4", tier:2, track:"space", name:"The Boost Trace",
+  time:"15 minutes, one replay plus optional stats",
+  why:"Boost is the resource that silently determines which options you have. Most players cannot describe their own boost pattern, which means they cannot change it.",
+  steps:[
+    "Pick a replay. Choose three moments where you lost a contest or arrived late.",
+    "For each, rewind fifteen seconds and write down your boost at that point, and your boost at the moment of the contest.",
+    "Trace the route you drove between those two points. Note every pad you passed within about a car-length of and did not take.",
+    "Identify which single routing change would have given you the most boost for the least time cost.",
+    "Optional: upload the replay to a replay-statistics site and compare your recorded boost usage and time-at-zero-boost against your teammate's and your opponents'.",
+    "Write one routing rule for your next session — for example, 'recover through the side pads, never up the middle'."
+  ],
+  capture:"Three boost traces, the pads missed on each, and one routing rule. Carry the same rule for a full week before writing a new one.",
+  cadence:"Weekly."
+},
+{
+  id:"pr5", tier:3, track:"mechanics", name:"The Constraint Match",
+  time:"One session of matches",
+  why:"Skills built in free play are attached to free-play conditions. A constraint applied inside real matches forces a new solution to emerge while every real perceptual demand is still present — and it does so without you having to think about technique.",
+  steps:[
+    "Pick one constraint that targets a weakness. Examples: no challenge unless you have over 40 boost; every aerial touch taken with directional air roll held; no touch in the offensive third unless a teammate is behind you; you may not use the middle of the field for any recovery.",
+    "Play a full set of matches under that constraint. Do not abandon it when you are losing — losing is the cost of the experiment.",
+    "Expect worse results. You are trading short-term performance for a widened solution space.",
+    "After the set, write down what the constraint forced you to discover that you would not otherwise have tried.",
+    "Drop the constraint for the next session and note which of the new behaviors persisted on their own."
+  ],
+  capture:"The constraint used, what it forced you to discover, and which behaviors survived after removal. The surviving ones are learning; the rest were compliance.",
+  cadence:"One constraint per week, maximum. Stacking them produces noise."
+},
+{
+  id:"pr6", tier:3, track:"reads", name:"The Opponent Dossier",
+  time:"10 minutes during and after a close match",
+  why:"Most players form impressions of opponents and never make them explicit, which means the impressions cannot be tested and do not accumulate. Written conditionals can be checked against what actually happened.",
+  steps:[
+    "During a close match, note one conditional tendency you think you see: 'when I do X, they do Y.'",
+    "Test it deliberately at least twice more in the same match. Note the result of each test.",
+    "After the match, open the replay and check whether the tendency holds across the whole game, including the instances you were not watching for.",
+    "Write the confirmed tendency, the number of confirming and disconfirming instances, and what dependency it reveals.",
+    "Write the counter you would use, and the counter to that counter for when they adapt."
+  ],
+  capture:"One tested conditional with a count of confirming and disconfirming cases. Over time you are building a library of archetype tendencies, not notes on individuals.",
+  cadence:"One per session, on your closest match."
+},
+{
+  id:"pr7", tier:4, track:"diagnose", name:"The Blind-Spot Audit",
+  time:"45 minutes, once a month",
+  why:"Self-review can only find errors you already have a concept for. This protocol deliberately imports views with different biases so that categories you lack can become visible.",
+  steps:[
+    "Take one replay and watch a full two minutes from the opponent's camera. Ask what you looked like as a threat, and when they stopped respecting you.",
+    "Take the same replay and watch two minutes with the camera locked on your teammate. Ask what your positioning offered them, and what it denied them.",
+    "Pull aggregate statistics across your recent replays and look specifically for a metric that surprises you — one where your number differs from what you would have predicted.",
+    "Post one clip, or show one clip to a stronger player, and ask a deliberately open question: 'what do you notice that I have not mentioned?' Do not tell them your own diagnosis first.",
+    "Compare all four sources against your own standing diagnosis from your journal. Write down anything that appears in an outside source and not in your own notes.",
+    "That list is your blind spot. Pick one item from it as next month's focus."
+  ],
+  capture:"The list of things outside sources noticed that your own review never produced. This is the highest-value output in the whole module, and it only appears if you resist stating your diagnosis before asking.",
+  cadence:"Monthly."
+}
+];
+const LIB = [
+/* --- in-game / tools --- */
+{n:"In-game Free Play with a written constraint", k:"Tool", tr:["mechanics","space"], ti:[1,2,3,4],
+ d:"The most underrated practice environment in the game, and the only one that is free-form enough to support constraints-led practice. The value comes entirely from the rule you impose before you start; free play without a stated constraint is warm-up, not practice."},
+{n:"In-game Custom Training packs", k:"Tool", tr:["mechanics"], ti:[1,2],
+ d:"Best used early in learning a movement, when the honest problem is that your body does not know the pattern. Search the in-game browser by category (striker, goalie, aerial, wall play) rather than hunting for specific codes. Leave the pack as soon as the movement exists — staying is the common mistake."},
+{n:"BakkesMod (PC only) — Custom Training Editor and plugin manager", k:"Tool", tr:["mechanics","space"], ti:[2,3,4],
+ d:"A third-party PC modification whose training editor lets you build variable-entry packs and edit shot parameters, which is what turns a blocked pack into a variable one. Note that it is unofficial, PC-only, and its availability and compatibility change with game patches — verify before relying on it."},
+{n:"Replay statistics sites (for example ballchasing.com)", k:"Tool", tr:["space","process","diagnose"], ti:[2,3,4],
+ d:"Upload replays to get aggregate numbers you cannot eyeball: boost collected and wasted, time spent at zero boost, time supersonic, and how your time distributes across defensive, neutral and offensive thirds. The specific value is finding a statistic that contradicts your self-image. Third-party sites come and go — check what is currently active."},
+{n:"Watching a replay from the opponent's camera", k:"Method", tr:["reads","diagnose"], ti:[3,4],
+ d:"Free, built into the game, and almost nobody does it. Seeing what your positioning looked like as a threat from the other side is the fastest way to discover that your 'pressure' was being ignored, or that your rotation was legible."},
+{n:"Steam Workshop training maps (PC only)", k:"Tool", tr:["mechanics"], ti:[1,2],
+ d:"Maps for dribbling, air control, and shot accuracy. Genuinely useful for early motor-pattern work. The standard criticism is real: ring and flight maps train movement with no ball to read, so time spent there past the beginner stage buys smoothness that does not convert into goals."},
+
+/* --- video / coaching --- */
+{n:"Rocket Science (YouTube)", k:"Video", tr:["space","mechanics","decision"], ti:[2,3,4],
+ d:"Explains the game from its physics and mechanics upward — why a technique works rather than how to copy it. The best available source if your goal is to build causal models instead of collecting tips."},
+{n:"SunlessKhan (YouTube)", k:"Video", tr:["decision","process","reads"], ti:[1,2],
+ d:"Accessible concept videos and rank-based breakdowns. Strong for naming patterns you have felt but could not articulate, which is exactly what a beginner analyst needs before diagnosis is possible."},
+{n:"Wayton Pilkin (YouTube)", k:"Video", tr:["decision","space","reads"], ti:[3,4],
+ d:"High-level analysis and tutorials aimed at players who already have the fundamentals. Useful once your questions are about positioning trade-offs and pressure rather than about mechanics."},
+{n:"Kevpert (YouTube) and similar coaching channels", k:"Video", tr:["diagnose","decision"], ti:[2,3],
+ d:"Rank-specific coaching and replay reviews. Watching someone review a player at your own rank is one of the cheapest ways to acquire diagnostic categories you do not yet have."},
+{n:"Thanovic, Sir Timbers and other mechanics channels", k:"Video", tr:["mechanics"], ti:[2,3,4],
+ d:"Step-by-step breakdowns of specific mechanics — air roll control, resets, ceiling play. Use them for the movement decomposition, then design your own variable practice; the tutorials themselves almost always demonstrate in blocked conditions."},
+{n:"Professional and high-level match VODs, watched with one question", k:"Method", tr:["reads","space","decision"], ti:[3,4],
+ d:"Passive viewing of pro play teaches very little because the ball draws your eye. Pick one question before you start — 'where is the second man during offensive pressure', 'what do they do at 30 boost' — and watch only that for ten minutes."},
+{n:"r/RocketLeagueSchool — replay review requests", k:"Community", tr:["diagnose","process"], ti:[1,2,3],
+ d:"Free outside review. Its value depends almost entirely on how you ask: post a specific clip with an open question and do not lead with your own diagnosis, or you will simply get your own opinion back."},
+
+/* --- learning science --- */
+{n:"Peak — Anders Ericsson and Robert Pool", k:"Reading", tr:["mechanics","process"], ti:[2,3],
+ d:"The accessible statement of deliberate practice: specific goals, immediate feedback, working at the edge of ability, and repetition with refinement. Read it with the caveat that Rocket League lacks the coaching infrastructure of the domains Ericsson studied, so you have to build the feedback loop yourself — which is most of what this module is for."},
+{n:"Thinking in Bets — Annie Duke", k:"Reading", tr:["decision","process"], ti:[2,3,4],
+ d:"The clearest treatment of separating decision quality from outcome quality, written for a high-variance competitive domain. Directly applicable to replay review; the chapter on 'resulting' will change how you grade your own play."},
+{n:"Motor Learning and Performance — Richard Schmidt and Timothy Lee", k:"Reading", tr:["mechanics"], ti:[3,4],
+ d:"The textbook behind most of the practice-design claims in this module: contextual interference, specificity of practice, feedback scheduling, and the distinction between practice performance and retention. Dense, but it is the source rather than a summary of a summary."},
+{n:"Robert Bjork on desirable difficulties", k:"Reading", tr:["mechanics","process"], ti:[3,4],
+ d:"The research programme showing that conditions which slow you down during practice — spacing, interleaving, variation, reduced feedback — often improve long-term retention and transfer. The core lesson is that how well practice is going is a poor guide to how much you are learning."},
+{n:"Gabriele Wulf on external focus of attention", k:"Reading", tr:["mechanics"], ti:[3,4],
+ d:"A large and consistently replicated body of work: directing attention to the intended effect (where the ball should go) outperforms directing it to your own movement (what your thumbs are doing), for both immediate performance and retention."},
+{n:"Karl Newell's constraints-led approach", k:"Reading", tr:["mechanics","space"], ti:[3,4],
+ d:"The theoretical basis for constraint games. Rather than prescribing a technique, you manipulate task, environment or performer constraints so that the desired coordination emerges. This is why 'no challenges under 40 boost' teaches more than being told to manage boost better."},
+{n:"Chase and Simon on chunking and expert perception", k:"Reading", tr:["reads","space"], ti:[4],
+ d:"The classic chess studies showing that expert advantage rests on recognising meaningful patterns rather than on faster raw processing. It explains why higher-ranked players appear to have more time: they are perceiving configurations, not individual cars."}
+];
+const ABOUT_REFS = [
+ "Contextual interference and variable practice: Shea &amp; Morgan (1979); Schmidt &amp; Lee, <em>Motor Learning and Performance</em>.",
+ "Desirable difficulties, spacing and interleaving: Bjork &amp; Bjork on the distinction between learning and performance.",
+ "External focus of attention: Wulf's review of the constrained-action hypothesis.",
+ "Constraints-led practice design: Newell (1986), and the ecological-dynamics literature that followed.",
+ "Outcome bias / resulting: Baron &amp; Hershey (1988); Duke, <em>Thinking in Bets</em>.",
+ "Implementation intentions: Gollwitzer on if–then planning.",
+ "Reinvestment and performance under pressure: Masters on conscious processing of automated skill.",
+ "Expert pattern perception: de Groot; Chase &amp; Simon."
+];
+/* ================= ENGINE ================= */
+const KEY = "rl_why_engine_v1";
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&(?![a-z]+;)/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+let S = null;
+function blank(){
+  const d={}, m={};
+  TRACKS.forEach(t=>{ d[t.id]=1.5; m[t.id]=0; });
+  return {started:false, rank:1.9, mode:"2v2", depth:d, mastery:m,
+          topTier:{}, seen:{}, answers:{}, proto:{}, count:0, streak:0, best:0, lastTier:null};
+}
+function load(){
+  try{ const r=localStorage.getItem(KEY); S = r ? Object.assign(blank(), JSON.parse(r)) : blank(); }
+  catch(e){ S = blank(); }
+  TRACKS.forEach(t=>{ if(typeof S.depth[t.id]!=="number") S.depth[t.id]=1.5;
+                      if(typeof S.mastery[t.id]!=="number") S.mastery[t.id]=0; });
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function trackOf(id){ return TRACKS.find(t=>t.id===id); }
+function avgDepth(){ return TRACKS.reduce((a,t)=>a+S.depth[t.id],0)/TRACKS.length; }
+
+/* ---------- mastery ---------- */
+function capFor(tr){
+  const top = S.topTier[tr]||0;
+  return top>=4?100 : top>=3?84 : top>=2?58 : top>=1?45 : 20;
+}
+function masteryLabel(v, tr){
+  if(v<=0) return {t:"Not started", c:"m-0"};
+  if(v<30)  return {t:"Attempted",  c:"m-1"};
+  if(v<60)  return {t:"Familiar",   c:"m-2"};
+  if(v<85)  return {t:"Proficient", c:"m-3"};
+  return {t:"Mastered", c:"m-4"};
+}
+
+/* ---------- item selection ---------- */
+function itemScoreSeen(id){ return S.seen[id] ? S.seen[id].score : null; }
+function pickItem(){
+  const fresh = BANK.filter(i=>!S.seen[i.id]);
+  const weak  = BANK.filter(i=>S.seen[i.id] && S.seen[i.id].score < 0.6);
+  const pool  = fresh.length ? fresh : (weak.length ? weak : BANK.slice());
+
+  // rank tracks by mastery (lowest first), only tracks that still have pool items
+  const avail = {};
+  pool.forEach(i=>{ avail[i.track]=true; });
+  const ranked = TRACKS.filter(t=>avail[t.id]).sort((a,b)=>S.mastery[a.id]-S.mastery[b.id]);
+  if(!ranked.length) return pool[0];
+
+  // 70% weakest track, 30% spread so strong tracks don't decay
+  let track = ranked[0].id;
+  if(ranked.length>1 && Math.random()>0.7){
+    track = ranked[Math.min(ranked.length-1, 1+Math.floor(Math.random()*(ranked.length-1)))].id;
+  }
+  const target = Math.max(1, Math.min(4, Math.round(S.depth[track])));
+  const inTrack = pool.filter(i=>i.track===track);
+  inTrack.sort((a,b)=>{
+    const da=Math.abs(a.tier-target), db=Math.abs(b.tier-target);
+    if(da!==db) return da-db;
+    if(a.type!==b.type) return a.type==="mc" ? -1 : 1;   // lead with MC at a new depth
+    return Math.random()-0.5;
+  });
+  return inTrack[0] || pool[0];
+}
+
+/* ---------- scoring / adaptation ---------- */
+function applyResult(item, raw, hintsUsed){
+  let score = raw;
+  if(score>0) score = Math.max(0.3, score * (1 - 0.15*hintsUsed));
+  const tr = item.track;
+
+  let delta = (score - 0.5) * 0.6;
+  if(score < 0.5) delta *= 1.5;                       // fall faster than you climb
+  if(score >= 0.6 && item.tier > S.depth[tr]) delta += 0.15;   // bonus for clearing above depth
+  S.depth[tr] = Math.max(1, Math.min(4, S.depth[tr] + delta));
+
+  if(score >= 0.6) S.topTier[tr] = Math.max(S.topTier[tr]||0, item.tier);
+  // harder items are worth more, so mastery reflects the depth you have actually demonstrated
+  let m = S.mastery[tr] + (score * (10 + 5*item.tier)) - ((1-score)*9);
+  S.mastery[tr] = Math.max(0, Math.min(capFor(tr), m));
+
+  S.seen[item.id] = {score:score, hints:hintsUsed};
+  S.count++;
+  if(score>=0.6){ S.streak++; S.best=Math.max(S.best,S.streak); } else { S.streak=0; }
+  save();
+  return score;
+}
+
+/* ---------- rendering: status + coach ---------- */
+function renderStatus(){
+  $("status").hidden = false;
+  const d = avgDepth();
+  const t = Math.max(1,Math.min(4,Math.round(d)));
+  $("s-depth").textContent = d.toFixed(1) + " — Tier " + t + ", " + TIER_NAME[t];
+  $("s-depthbar").style.width = (((d-1)/3)*100).toFixed(0) + "%";
+  const weakest = TRACKS.slice().sort((a,b)=>S.mastery[a.id]-S.mastery[b.id])[0];
+  $("s-track").textContent = weakest.name;
+  $("s-count").textContent = S.count;
+  $("s-streak").textContent = S.streak + (S.best>S.streak ? " (best " + S.best + ")" : "");
+}
+function coach(item){
+  const el = $("coachline"); el.hidden=false;
+  const prev = S.lastTier;
+  let cls="flat", msg;
+  if(prev===null){
+    msg = "Starting you at Tier " + item.tier + " — " + TIER_NAME[item.tier] + ". Answer honestly rather than optimistically; the engine calibrates off what you actually do.";
+  } else if(item.tier > prev){
+    cls="up";
+    msg = "Stepping up to Tier " + item.tier + " — " + TIER_NAME[item.tier] + ". " + tierDemand(item.tier);
+  } else if(item.tier < prev){
+    cls="down";
+    msg = "Dropping back to Tier " + item.tier + " — " + TIER_NAME[item.tier] + ". This is the engine rebuilding a foundation, not a punishment. " + tierDemand(item.tier);
+  } else {
+    msg = "Holding at Tier " + item.tier + " — " + TIER_NAME[item.tier] + ". Focus: " + trackOf(item.track).name + ".";
+  }
+  el.className = "adapt " + cls;
+  el.textContent = msg;
+  S.lastTier = item.tier; save();
+}
+function tierDemand(t){
+  return {
+    1:"Name what happened and separate it from what you concluded.",
+    2:"Trace the cause through boost, space and time — not just the visible error.",
+    3:"Judge the decision on the information available at the time, not on the result.",
+    4:"Reason about your own reasoning, and about the opponent reasoning about you."
+  }[t];
+}
+
+/* ---------- rendering: question ---------- */
+let CUR = null, HINTS = 0, ANSWERED = false;
+function nextQuestion(){
+  CUR = pickItem(); HINTS = 0; ANSWERED = false;
+  renderStatus(); coach(CUR);
+  if(CUR.type==="mc") renderMC(CUR); else renderChain(CUR);
+  $("live").textContent = "New question, tier " + CUR.tier + ", " + trackOf(CUR.track).name;
+  $("question").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+function headerFor(i){
+  return '<div><span class="pill t'+i.tier+'">Tier '+i.tier+' &middot; '+TIER_NAME[i.tier]+'</span>'+
+         '<span class="pill">'+esc(trackOf(i.track).name)+'</span>'+
+         (i.type==="chain"?'<span class="pill">Why-chain</span>':'')+'</div>'+
+         (i.scenario?'<div class="scenario"><span class="tag">Scenario</span>'+esc(i.scenario)+'</div>':'');
+}
+function hintBlock(){
+  return '<div id="hints"></div><div class="btnrow"><button class="btn ghost" id="btn-hint">Get a hint</button></div>';
+}
+function wireHints(item){
+  const b=$("btn-hint"); if(!b) return;
+  b.onclick=()=>{
+    if(HINTS >= item.hints.length){ b.disabled=true; return; }
+    const h=document.createElement("div");
+    h.className="hintbox";
+    h.innerHTML='<span class="tag">Hint '+(HINTS+1)+' of '+item.hints.length+'</span><div>'+esc(item.hints[HINTS])+'</div>';
+    $("hints").appendChild(h);
+    HINTS++;
+    b.textContent = HINTS>=item.hints.length ? "No hints left" : "Get another hint ("+(item.hints.length-HINTS)+" left)";
+    if(HINTS>=item.hints.length) b.disabled=true;
+    $("live").textContent="Hint revealed.";
+  };
+}
+
+function renderMC(i){
+  const q=$("question"); q.hidden=false;
+  let h='<div class="card">'+headerFor(i)+'<div class="stem">'+esc(i.stem)+'</div>'+hintBlock()+
+        '<fieldset><legend>Choose one</legend>';
+  i.options.forEach((o,ix)=>{
+    h+='<label class="opt" id="opt'+ix+'"><input type="radio" name="mc" value="'+ix+'">'+
+       '<span class="otext" id="ot'+ix+'">'+esc(o.t)+'</span></label>';
+  });
+  h+='</fieldset><div class="btnrow"><button class="btn" id="btn-submit">Submit answer</button></div>'+
+     '<div id="reveal"></div></div>';
+  q.innerHTML=h;
+  wireHints(i);
+  $("btn-submit").onclick=()=>{
+    const sel=q.querySelector('input[name="mc"]:checked');
+    if(!sel){ $("live").textContent="Select an option first."; alert("Pick an option first."); return; }
+    gradeMC(i, parseInt(sel.value,10));
+  };
+}
+function gradeMC(i, chosen){
+  if(ANSWERED) return; ANSWERED=true;
+  const vmap={best:1, ok:0.5, weak:0};
+  const score=applyResult(i, vmap[i.options[chosen].v], HINTS);
+  i.options.forEach((o,ix)=>{
+    const el=$("opt"+ix);
+    el.classList.add("r-"+o.v);
+    const vl = o.v==="best"?"Strongest answer" : o.v==="ok"?"Partly right" : "Weak answer";
+    $("ot"+ix).innerHTML = '<span class="verdict '+o.v+'">'+vl+(ix===chosen?" &mdash; your choice":"")+'</span>'+
+                           esc(o.t)+'<div class="why">'+esc(o.why)+'</div>';
+    const inp=el.querySelector("input"); inp.disabled=true;
+  });
+  $("btn-submit").disabled=true;
+  const b=$("btn-hint"); if(b) b.disabled=true;
+  $("reveal").innerHTML = revealBlock(i, score) ;
+  wireAfter(i);
+  renderStatus();
+  $("live").textContent = "Answered. Score " + Math.round(score*100) + " percent.";
+}
+function revealBlock(i, score){
+  const pct=Math.round(score*100);
+  let h='<div class="reveal">';
+  h+='<div class="takeaway"><span class="tag">Takeaway</span>'+esc(i.takeaway)+'</div>';
+  h+='<div class="principle"><span class="tag">The principle underneath it</span>'+esc(i.principle)+'</div>';
+  h+='<p class="muted">Credit for this item: <b>'+pct+'%</b>'+(HINTS?' (reduced from hints used)':'')+
+     '. '+trackOf(i.track).name+' depth is now '+S.depth[i.track].toFixed(1)+'.</p>';
+  h+='<div class="btnrow"><button class="btn" id="btn-next">Next question</button>'+
+     '<button class="btn ghost" id="btn-copy">Copy coaching prompt</button></div></div>';
+  return h;
+}
+function wireAfter(i){
+  $("btn-next").onclick=nextQuestion;
+  $("btn-copy").onclick=()=>copyPrompt(i);
+}
+
+/* ---------- chain items ---------- */
+let CHAIN_LVL = 0, CHAIN_ANS = [];
+function renderChain(i){
+  CHAIN_LVL=0; CHAIN_ANS=[];
+  const q=$("question"); q.hidden=false;
+  q.innerHTML='<div class="card">'+headerFor(i)+'<div class="stem">'+esc(i.stem)+'</div>'+
+              hintBlock()+'<div id="rungs"></div><div id="reveal"></div></div>';
+  wireHints(i);
+  addRung(i);
+}
+function addRung(i){
+  const lv=i.levels[CHAIN_LVL];
+  const wrap=document.createElement("div");
+  wrap.innerHTML='<label class="fl" for="rung'+CHAIN_LVL+'">Why '+(CHAIN_LVL+1)+' of '+i.levels.length+': '+esc(lv.q)+'</label>'+
+    '<textarea id="rung'+CHAIN_LVL+'" placeholder="'+esc(lv.ph)+'"></textarea>'+
+    '<div class="btnrow"><button class="btn" id="rb'+CHAIN_LVL+'">'+
+      (CHAIN_LVL===i.levels.length-1 ? "Finish and compare" : "Go deeper") + '</button></div>';
+  $("rungs").appendChild(wrap);
+  const lvIdx=CHAIN_LVL;
+  $("rb"+lvIdx).onclick=()=>{
+    const val=$("rung"+lvIdx).value.trim();
+    if(val.length<12){ alert("Write at least a sentence — the value of this exercise is in articulating it."); return; }
+    CHAIN_ANS.push(val);
+    $("rung"+lvIdx).readOnly=true; $("rb"+lvIdx).disabled=true;
+    CHAIN_LVL++;
+    if(CHAIN_LVL < i.levels.length){ addRung(i); $("rung"+CHAIN_LVL).focus(); }
+    else revealChain(i);
+  };
+  if(lvIdx>0) $("rung"+lvIdx).focus();
+}
+function revealChain(i){
+  S.answers[i.id]={stem:i.stem, levels:i.levels.map(l=>l.q), ans:CHAIN_ANS.slice()};
+  save();
+  let h='<div class="reveal"><h3 style="margin-top:0;">An expert chain on the same case</h3>';
+  h+='<p class="muted">Yours will not match this, and it should not — your case is your own. Read it for the <em>shape</em> of the reasoning, then grade yourself against the rubric.</p><ol>';
+  i.expert.forEach(e=>{ h+='<li>'+esc(e)+'</li>'; });
+  h+='</ol><h3>Grade your own chain</h3><p class="muted">Check only what is honestly true of what you wrote. Your credit is the fraction you check.</p><div id="rub">';
+  i.rubric.forEach((r,ix)=>{
+    h+='<label class="chk"><input type="checkbox" id="rb_c'+ix+'"><span>'+esc(r)+'</span></label>';
+  });
+  h+='</div><div class="btnrow"><button class="btn" id="btn-score">Record my score</button></div><div id="postscore"></div></div>';
+  $("reveal").innerHTML=h;
+  $("btn-score").onclick=()=>{
+    if(ANSWERED) return; ANSWERED=true;
+    let n=0; i.rubric.forEach((r,ix)=>{ if($("rb_c"+ix).checked) n++; });
+    const raw=n/i.rubric.length;
+    const score=applyResult(i, raw, HINTS);
+    i.rubric.forEach((r,ix)=>{ $("rb_c"+ix).disabled=true; });
+    $("btn-score").disabled=true;
+    S.answers[i.id].self=n+"/"+i.rubric.length;
+    save();
+    $("postscore").innerHTML=revealBlock(i, score);
+    wireAfter(i);
+    renderStatus();
+    $("live").textContent="Recorded. "+n+" of "+i.rubric.length+" rubric points.";
+  };
+}
+
+/* ---------- AI coaching prompt ---------- */
+function copyPrompt(i){
+  const t=trackOf(i.track);
+  let p="You are coaching a Rocket League player on ANALYSIS, not on mechanics tips.\n\n";
+  p+="Their self-reported rank: "+$("in-rank").options[$("in-rank").selectedIndex].text+". Main playlist: "+S.mode+".\n";
+  p+="Current analytical depth in this skill area ("+t.name+"): "+S.depth[i.track].toFixed(1)+" out of 4, where 4 means they can reason about their own reasoning and model opponents.\n\n";
+  p+="SCENARIO: "+(i.scenario||"(the player's own play)")+"\n\nQUESTION: "+i.stem+"\n\n";
+  if(i.type==="chain" && CHAIN_ANS.length){
+    p+="THEIR WHY-CHAIN:\n";
+    i.levels.forEach((l,ix)=>{ p+= (ix+1)+". "+l.q+"\n   ANSWER: "+(CHAIN_ANS[ix]||"(blank)")+"\n"; });
+  } else {
+    p+="(This was a multiple-choice item; the player has already seen the model answer.)\n";
+  }
+  p+="\nTHE PRINCIPLE BEING TAUGHT: "+i.principle+"\n\n";
+  p+="Please do the following:\n";
+  p+="1. Identify the weakest link in their reasoning and say specifically why it is weak.\n";
+  p+="2. Ask them ONE follow-up question that would push their analysis one level deeper. Do not answer it for them.\n";
+  p+="3. Name one thing they could observe in their next replay that would test whether their conclusion is right.\n";
+  p+="4. Do not give generic advice such as 'rotate better' or 'watch pro replays'. Everything must be specific to what they wrote.\n";
+  navigator.clipboard.writeText(p).then(()=>toast("Coaching prompt copied — paste it into an AI assistant."))
+    .catch(()=>{ window.prompt("Copy this prompt:", p); });
+}
+function toast(m){
+  const d=document.createElement("div"); d.className="toast"; d.setAttribute("role","status"); d.textContent=m;
+  document.body.appendChild(d); setTimeout(()=>d.remove(), 3200);
+}
+
+/* ---------- dashboard ---------- */
+function renderDash(){
+  let h="";
+  TRACKS.forEach(t=>{
+    const v=S.mastery[t.id], lab=masteryLabel(v,t.id), cap=capFor(t.id);
+    h+='<div class="track-row"><div class="tname"><b>'+esc(t.name)+'</b><span>'+esc(t.blurb)+'</span>'+
+       '<span class="mastery '+lab.c+'">'+lab.t+' &middot; depth '+S.depth[t.id].toFixed(1)+
+       (cap<100?' &middot; capped at '+cap+'% until you clear a Tier '+((S.topTier[t.id]||0)+1)+' item':'')+
+       '</span></div>'+
+       '<div class="tmeter"><div class="bar" role="progressbar" aria-valuenow="'+Math.round(v)+
+       '" aria-valuemin="0" aria-valuemax="100" aria-label="'+esc(t.name)+' mastery"><span style="width:'+v+'%"></span></div></div></div>';
+  });
+  $("dash-tracks").innerHTML=h;
+
+  const ids=Object.keys(S.answers);
+  if(!ids.length){ $("dash-notes").innerHTML='<p class="muted">Nothing yet. Written answers from why-chain items and replay protocols will collect here.</p>'; }
+  else{
+    let n="";
+    ids.forEach(id=>{
+      const a=S.answers[id];
+      n+='<h4>'+esc(a.stem)+(a.self?' <span class="muted">(self-graded '+esc(a.self)+')</span>':'')+'</h4><ol>';
+      (a.ans||[]).forEach((x,ix)=>{ n+='<li><span class="muted">'+esc((a.levels||[])[ix]||"")+'</span><br>'+esc(x)+'</li>'; });
+      n+='</ol>';
+    });
+    $("dash-notes").innerHTML=n;
+  }
+}
+
+/* ---------- protocols ---------- */
+function renderProtos(){
+  const d=avgDepth();
+  let h="";
+  PROTOCOLS.forEach(p=>{
+    const locked = p.tier > Math.round(d)+1;
+    if(!S.proto[p.id]) S.proto[p.id]={steps:p.steps.map(()=>false), notes:""};
+    const st=S.proto[p.id];
+    const done=st.steps.filter(Boolean).length;
+    h+='<div class="card'+(locked?' alt':'')+'">'+
+       '<span class="pill t'+p.tier+'">Tier '+p.tier+'</span><span class="pill">'+esc(trackOf(p.track).name)+'</span>'+
+       '<span class="pill">'+esc(p.time)+'</span>'+
+       '<h3 style="margin-top:8px;">'+esc(p.name)+'</h3>';
+    if(locked){
+      h+='<p class="muted">Available once your average depth reaches about '+(p.tier-1)+'.0. It assumes the lower-tier protocols have become habits. You can still read it below.</p>';
+    }
+    h+='<p><b>Why this protocol exists.</b> '+esc(p.why)+'</p><h4>Procedure</h4><div id="ps_'+p.id+'">';
+    p.steps.forEach((s,ix)=>{
+      h+='<label class="chk"><input type="checkbox" data-p="'+p.id+'" data-i="'+ix+'"'+(st.steps[ix]?" checked":"")+'><span>'+esc(s)+'</span></label>';
+    });
+    h+='</div><h4>What to capture</h4><p>'+esc(p.capture)+'</p>'+
+       '<p class="muted"><b>Cadence:</b> '+esc(p.cadence)+' &nbsp;&middot;&nbsp; Steps completed: <span id="pc_'+p.id+'">'+done+'/'+p.steps.length+'</span></p>'+
+       '<label class="fl" for="pn_'+p.id+'">Your notes from running this protocol</label>'+
+       '<textarea id="pn_'+p.id+'" data-pn="'+p.id+'" placeholder="What did you find? Be specific — timestamps, counts, the one sentence you wrote.">'+esc(st.notes||"")+'</textarea>'+
+       '</div>';
+  });
+  $("proto-list").innerHTML=h;
+  $("proto-list").querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.onchange=()=>{
+      const pid=cb.dataset.p, ix=parseInt(cb.dataset.i,10);
+      S.proto[pid].steps[ix]=cb.checked; save();
+      const p=PROTOCOLS.find(x=>x.id===pid);
+      $("pc_"+pid).textContent=S.proto[pid].steps.filter(Boolean).length+"/"+p.steps.length;
+    };
+  });
+  $("proto-list").querySelectorAll('textarea[data-pn]').forEach(ta=>{
+    ta.onchange=()=>{ S.proto[ta.dataset.pn].notes=ta.value; save(); toast("Notes saved locally."); };
+  });
+}
+
+/* ---------- practice plan ---------- */
+function renderPlan(){
+  const ranked=TRACKS.slice().sort((a,b)=>S.mastery[a.id]-S.mastery[b.id]);
+  const w1=ranked[0], w2=ranked[1], strong=ranked[ranked.length-1];
+  const d=avgDepth(), t=Math.max(1,Math.min(4,Math.round(d)));
+  const proto=PROTOCOLS.filter(p=>p.tier<=Math.max(1,t)).sort((a,b)=>b.tier-a.tier);
+  const pA=proto.find(p=>p.track===w1.id) || proto[0];
+  const pB=proto.find(p=>p.track===w2.id && p.id!==(pA&&pA.id)) || proto[1] || proto[0];
+
+  const constraints = {
+    space:"No challenge unless you are above 40 boost. If you are below it, shadow and recover through side pads instead.",
+    diagnose:"After every goal conceded, say out loud the one moment your options collapsed, before the kickoff starts.",
+    decision:"Before every challenge as last defender, name the neutral outcome out loud. If you cannot, do not challenge.",
+    mechanics:"Every aerial touch this session is taken with directional air roll held, including the ones where it is inconvenient.",
+    reads:"Each match, commit to one written conditional about an opponent and test it at least twice.",
+    process:"Hard stop after two consecutive losses. No exceptions, including 'the next one will be fine'."
+  };
+
+  let h='<div class="card"><h3 style="margin-top:0;">Your week</h3>'+
+    '<p>Built for depth <b>'+d.toFixed(1)+'</b> (Tier '+t+', '+TIER_NAME[t]+'). Weakest tracks: <b>'+esc(w1.name)+'</b> and <b>'+esc(w2.name)+
+    '</b>. Strongest: '+esc(strong.name)+', which gets maintenance only.</p>'+
+    '<table><caption>Weekly structure — roughly 45 to 60 minutes per active day</caption>'+
+    '<thead><tr><th scope="col">Day</th><th scope="col">Analysis block</th><th scope="col">Practice block</th><th scope="col">Play block</th></tr></thead><tbody>';
+  const days=[
+    ["Mon", "Run <b>"+esc(pA?pA.name:"the Eight-Second Rewind")+"</b> on your last loss.", "20 min constrained free play. Constraint: "+esc(constraints[w1.id]), "3 matches under the same constraint."],
+    ["Tue", "None — protect the day for practice.", "25 min variable practice on your current mechanic. No resets, no self-set entries.", "4 matches, normal play. Note nothing."],
+    ["Wed", "Run <b>"+esc(pB?pB.name:"the Freeze Frame")+"</b>.", "15 min free play, second constraint: "+esc(constraints[w2.id]), "3 matches."],
+    ["Thu", "Rest day for analysis.", "Rest or light free play.", "Optional casual only. Spacing is part of the plan, not a gap in it."],
+    ["Fri", "Answer 5 questions in this module. Do not skip the ones that drop a tier.", "20 min mechanic practice with an external focus cue: aim at a target on the wall, not at your inputs.", "4 matches."],
+    ["Sat", "Watch 10 minutes of high-level play with <b>one</b> written question.", "Constraint match set: pick one constraint and hold it through losses.", "5 matches."],
+    ["Sun", "Weekly review: reread your notes and write the single behavior you will carry into next week.", "None.", "Free choice."]
+  ];
+  days.forEach(r=>{ h+='<tr><th scope="row">'+r[0]+'</th><td>'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td></tr>'; });
+  h+='</tbody></table>';
+
+  h+='<h3>Why the plan is shaped this way</h3><ul>'+
+    '<li><b>Analysis before play, never after a loss streak.</b> Review while calm produces different conclusions than review while frustrated, and only one of them is usable.</li>'+
+    '<li><b>Thursday is deliberate.</b> Spacing improves retention even though it feels like lost ground. A week with a gap beats a week without one at equal total hours.</li>'+
+    '<li><b>Only two constraints all week.</b> Stacking constraints produces noise you cannot attribute. One change, one week, one measurement.</li>'+
+    '<li><b>Practice blocks are variable, not blocked.</b> Your success rate during them should be visibly worse than in your comfortable routine. If it is not, the practice is too easy to be teaching you anything.</li>'+
+    '<li><b>Play blocks are for the constraint, not for rank.</b> Expect to lose some of these. That cost is the tuition.</li>'+
+    '</ul>';
+  h+='<h3>Your measurement for the week</h3>'+
+    '<p>Pick one number before you start and count it the same way every day: challenge success rate, times below 20 boost at a defensive contest, or option-collapse moments per match. Write down now what result would tell you the constraint <em>did not</em> work — otherwise you will conclude that it did.</p>'+
+    '<div class="btnrow"><button class="btn ghost" id="btn-planprompt">Copy this plan as an AI coaching prompt</button></div></div>';
+  $("plan-out").innerHTML=h;
+  $("btn-planprompt").onclick=()=>{
+    let p="I am a Rocket League player at depth "+d.toFixed(1)+"/4 in analytical skill. My weakest areas are "+w1.name+" and "+w2.name+".\n";
+    p+="My planned constraints this week are:\n1. "+constraints[w1.id]+"\n2. "+constraints[w2.id]+"\n\n";
+    p+="Critique this plan. Specifically: is the constraint actually going to force the behavior change I want, or can I satisfy it while continuing the same habit? Suggest one sharper constraint and one concrete thing to count.";
+    navigator.clipboard.writeText(p).then(()=>toast("Plan prompt copied.")).catch(()=>window.prompt("Copy:", p));
+  };
+}
+
+/* ---------- library ---------- */
+function renderLib(){
+  const tf=$("f-track").value, tif=$("f-tier").value;
+  const out=LIB.filter(r=>(tf==="all"||r.tr.indexOf(tf)>=0) && (tif==="all"||r.ti.indexOf(parseInt(tif,10))>=0));
+  if(!out.length){ $("lib-out").innerHTML='<p class="muted">No resources match that combination. Widen one of the filters.</p>'; return; }
+  let h="";
+  out.forEach(r=>{
+    h+='<div class="res"><b>'+esc(r.n)+'</b><div class="rmeta">'+esc(r.k)+' &middot; tiers '+r.ti.join(", ")+
+       ' &middot; '+r.tr.map(x=>esc(trackOf(x).name)).join(", ")+'</div>'+esc(r.d)+'</div>';
+  });
+  $("lib-out").innerHTML=h;
+}
+
+/* ---------- export / reset ---------- */
+function exportNotes(){
+  let out="THE WHY ENGINE — Rocket League analysis notebook\n";
+  out+="Exported from local browser storage.\n\n";
+  out+="Questions answered: "+S.count+"   Best streak: "+S.best+"\n\nDEPTH AND MASTERY BY TRACK\n";
+  TRACKS.forEach(t=>{
+    out+="  "+t.name+": depth "+S.depth[t.id].toFixed(1)+"/4, mastery "+Math.round(S.mastery[t.id])+
+         "% ("+masteryLabel(S.mastery[t.id],t.id).t+")\n";
+  });
+  out+="\nWHY-CHAIN ANSWERS\n";
+  const ids=Object.keys(S.answers);
+  if(!ids.length) out+="  (none yet)\n";
+  ids.forEach(id=>{
+    const a=S.answers[id];
+    out+="\n  "+a.stem+(a.self?"  [self-graded "+a.self+"]":"")+"\n";
+    (a.ans||[]).forEach((x,ix)=>{ out+="   "+(ix+1)+". "+((a.levels||[])[ix]||"")+"\n      "+x+"\n"; });
+  });
+  out+="\nPROTOCOL NOTES\n";
+  let any=false;
+  PROTOCOLS.forEach(p=>{
+    const st=S.proto[p.id];
+    if(st && (st.notes || st.steps.some(Boolean))){
+      any=true;
+      out+="\n  "+p.name+" — "+st.steps.filter(Boolean).length+"/"+p.steps.length+" steps\n";
+      if(st.notes) out+="   "+st.notes.replace(/\n/g,"\n   ")+"\n";
+    }
+  });
+  if(!any) out+="  (none yet)\n";
+  const blob=new Blob([out],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="why-engine-notebook.txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast("Notebook downloaded.");
+}
+
+/* ---------- tabs / init ---------- */
+function showPanel(name){
+  ["train","dash","proto","plan","lib","about"].forEach(p=>{
+    $("panel-"+p).hidden = (p!==name);
+    const b=document.querySelector('[data-panel="'+p+'"]');
+    b.setAttribute("aria-selected", p===name ? "true":"false");
+  });
+  if(name==="dash") renderDash();
+  if(name==="proto") renderProtos();
+  if(name==="lib") renderLib();
+}
+function init(){
+  load();
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.onclick=()=>showPanel(b.dataset.panel);
+  });
+  const sel=$("f-track");
+  TRACKS.forEach(t=>{ const o=document.createElement("option"); o.value=t.id; o.textContent=t.name; sel.appendChild(o); });
+  $("f-track").onchange=renderLib; $("f-tier").onchange=renderLib;
+  $("btn-plan").onclick=renderPlan;
+  $("btn-export").onclick=exportNotes;
+  $("btn-reset").onclick=()=>{
+    if(confirm("This erases your depth, mastery, written answers and protocol notes on this device. There is no undo. Continue?")){
+      localStorage.removeItem(KEY); S=blank(); location.reload();
+    }
+  };
+  $("about-refs").innerHTML='<ul>'+ABOUT_REFS.map(r=>'<li>'+r+'</li>').join("")+'</ul>';
+
+  $("btn-start").onclick=()=>{
+    const base=parseFloat($("in-rank").value)+parseFloat($("in-review").value);
+    S.rank=parseFloat($("in-rank").value);
+    S.mode=$("in-mode").value;
+    S.started=true;
+    TRACKS.forEach(t=>{ S.depth[t.id]=Math.max(1, Math.min(4, base)); });
+    S.lastTier=null;
+    save();
+    $("intake").hidden=true;
+    nextQuestion();
+  };
+
+  if(S.started){
+    $("in-rank").value = String(S.rank);
+    if(!$("in-rank").value) $("in-rank").value = "1.9";
+    $("in-mode").value = S.mode || "2v2";
+    $("intake").hidden=true;
+    renderStatus();
+    nextQuestion();
+  }
+}
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Why Series &mdash; Esports Analysis Trainers Index</title>
+    <meta name="author" content="University of Montana" />
+    <meta name="description" content="Index of The Why Series: mastery-based esports analysis trainers for Valorant, Fortnite, Rocket League, League of Legends, Overwatch 2, Apex Legends, Marvel Rivals, and Super Smash Bros." />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        background: #0d0d1a;
+        color: #e8e8f4;
+        min-height: 100vh;
+        padding: 0 0 56px;
+        line-height: 1.5;
+      }
+
+      /* Skip link (WCAG 2.4.1) */
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        background: #00c8a8;
+        color: #0d0d1a;
+        font-weight: 700;
+        padding: 12px 20px;
+        z-index: 100;
+        border-radius: 0 0 6px 0;
+      }
+      .skip-link:focus {
+        left: 0;
+      }
+
+      /* Visible focus indicator everywhere (WCAG 2.4.7) */
+      a:focus-visible,
+      input:focus-visible,
+      button:focus-visible {
+        outline: 3px solid #ffd54f;
+        outline-offset: 3px;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #12122a 0%, #1a1a3e 50%, #12122a 100%);
+        border-bottom: 2px solid #00c8a8;
+        text-align: center;
+        padding: 40px 20px 30px;
+        margin-bottom: 28px;
+      }
+      .header h1 {
+        font-size: 2.1rem;
+        font-weight: 800;
+        color: #4fe3c8;
+        margin-bottom: 8px;
+      }
+      .header .tagline {
+        color: #c2c2dc;
+        font-size: 1rem;
+        max-width: 620px;
+        margin: 0 auto;
+      }
+
+      .container {
+        max-width: 1040px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      .topbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+      .filter-field label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #c2c2dc;
+        margin-bottom: 6px;
+      }
+      .filter-field input {
+        background: #12122a;
+        border: 1px solid #4a4a74;
+        border-radius: 8px;
+        color: #e8e8f4;
+        font-size: 0.95rem;
+        font-family: inherit;
+        padding: 10px 14px;
+        min-width: 280px;
+      }
+      .filter-field .hint {
+        font-size: 0.78rem;
+        color: #a8a8c8;
+        margin-top: 6px;
+      }
+      .backlink {
+        color: #7fd4ff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-decoration: underline;
+      }
+      .backlink:hover { color: #b3e6ff; }
+
+      h2.section-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #ff8f9a;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #35356a;
+        margin-bottom: 18px;
+      }
+
+      ul.grid {
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .card {
+        display: block;
+        height: 100%;
+        background: #12122a;
+        border: 1px solid #35356a;
+        border-left: 4px solid var(--accent, #00c8a8);
+        border-radius: 10px;
+        padding: 18px 20px;
+        text-decoration: none;
+        color: #e8e8f4;
+        transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+      }
+      .card:hover,
+      .card:focus-visible {
+        transform: translateY(-3px);
+        border-color: #6d6da0;
+        border-left-color: var(--accent, #00c8a8);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+      .card-game {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--accent-text, #4fe3c8);
+        margin-bottom: 6px;
+      }
+      .card-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .card-desc {
+        font-size: 0.85rem;
+        color: #a8a8c8;
+        line-height: 1.55;
+      }
+      .card-meta {
+        font-size: 0.75rem;
+        color: #c2c2dc;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      .no-results {
+        color: #c2c2dc;
+        font-size: 0.95rem;
+        padding: 20px 0;
+      }
+      [hidden] { display: none !important; }
+
+      footer {
+        max-width: 1040px;
+        margin: 40px auto 0;
+        padding: 20px;
+        border-top: 1px solid #35356a;
+        color: #a8a8c8;
+        font-size: 0.82rem;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to the trainer list</a>
+
+    <header class="header">
+      <h1>The Why Series</h1>
+      <p class="tagline">
+        Mastery-based analysis trainers that teach competitive decision-making.
+        Pick a game to start &mdash; each trainer adapts to your role and gets
+        harder as your reasoning improves.
+      </p>
+    </header>
+
+    <div class="container">
+      <div class="topbar">
+        <div class="filter-field">
+          <label for="game-filter">Filter trainers by name</label>
+          <input
+            type="text"
+            id="game-filter"
+            autocomplete="off"
+            placeholder="e.g. Valorant"
+            aria-describedby="filter-hint"
+          />
+          <p class="hint" id="filter-hint">
+            Optional. Type part of a game name to narrow the list below.
+          </p>
+        </div>
+      </div>
+
+      <main id="main">
+        <h2 class="section-title">Analysis Trainers (8 games)</h2>
+
+        <ul class="grid" id="card-grid">
+          <li>
+            <a
+              class="card"
+              style="--accent: #ff4655; --accent-text: #ff8f9a"
+              href="valorant_why.html"
+              data-name="valorant why range tactical shooter"
+            >
+              <span class="card-game">Valorant</span>
+              <span class="card-name">The Why Range</span>
+              <span class="card-desc"
+                >Tactical-shooter reasoning across 8 skill tracks &mdash; economy,
+                utility timing, site execution and retakes. Adapts to your agent
+                role and rank.</span
+              >
+              <span class="card-meta">8 skill tracks &middot; Adaptive difficulty</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #00b4ff; --accent-text: #7fd4ff"
+              href="fortnite_why.html"
+              data-name="fortnite why loop battle royale build zero build"
+            >
+              <span class="card-game">Fortnite</span>
+              <span class="card-name">The Why Loop</span>
+              <span class="card-desc"
+                >Nine skill tracks covering rotations, storm math, loadout
+                priority and endgame positioning. Adapts to Build or Zero
+                Build.</span
+              >
+              <span class="card-meta">9 skill tracks &middot; Build &amp; Zero Build</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #f5a623; --accent-text: #ffc65c"
+              href="rocket_league_why.html"
+              data-name="rocket league why engine car soccer"
+            >
+              <span class="card-game">Rocket League</span>
+              <span class="card-name">The Why Engine</span>
+              <span class="card-desc"
+                >Adaptive trainer for rotation, boost economy, and challenge
+                timing. Questions get more sophisticated as your reasoning
+                improves.</span
+              >
+              <span class="card-meta">Adaptive difficulty</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #c89b3c; --accent-text: #e0bc6d"
+              href="league_of_legends_why.html"
+              data-name="league of legends why lab moba lol"
+            >
+              <span class="card-game">League of Legends</span>
+              <span class="card-name">The Why Lab</span>
+              <span class="card-desc"
+                >Nine skill tracks on wave state, vision inference, and
+                objective trades. Adapts to the role you actually play.</span
+              >
+              <span class="card-meta">9 skill tracks &middot; Role-aware</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #f99e1a; --accent-text: #ffb84d"
+              href="overwatch2_why.html"
+              data-name="overwatch 2 why range hero shooter ow2"
+            >
+              <span class="card-game">Overwatch 2</span>
+              <span class="card-name">The Why Range</span>
+              <span class="card-desc"
+                >Nine skills with concept briefs, adaptive questions, and mixed
+                mastery challenges on ult economy, cooldown trades and map
+                control.</span
+              >
+              <span class="card-meta">9 skills &middot; Concept briefs included</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #da292a; --accent-text: #ff8a8b"
+              href="apex_legends_why.html"
+              data-name="apex legends why drop battle royale"
+            >
+              <span class="card-game">Apex Legends</span>
+              <span class="card-name">The Why Drop</span>
+              <span class="card-desc"
+                >Nine skill tracks built for battle-royale variance &mdash;
+                third-party reads, ring positioning and disengage decisions. It
+                gets harder as you do.</span
+              >
+              <span class="card-meta">9 skill tracks &middot; Adaptive difficulty</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #e62429; --accent-text: #ff8f92"
+              href="marvel_rivals_why.html"
+              data-name="marvel rivals why lab hero shooter"
+            >
+              <span class="card-game">Marvel Rivals</span>
+              <span class="card-name">The Why Lab</span>
+              <span class="card-desc"
+                >Eight skill tracks on team-up synergies, dive timing and
+                Vanguard/Duelist/Strategist tradeoffs. Adapts to your
+                role.</span
+              >
+              <span class="card-meta">8 skill tracks &middot; Role-aware</span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              class="card"
+              style="--accent: #8e6fe0; --accent-text: #b9a3f0"
+              href="smash_bros_why.html"
+              data-name="super smash bros why lab platform fighter melee ultimate"
+            >
+              <span class="card-game">Super Smash Bros.</span>
+              <span class="card-name">The Why Lab</span>
+              <span class="card-desc"
+                >Eight skill tracks on stage control, conditioning, ledge
+                options and rage/percent math. Adapts to your character
+                archetype.</span
+              >
+              <span class="card-meta">8 skill tracks &middot; Archetype-aware</span>
+            </a>
+          </li>
+        </ul>
+
+        <p class="no-results" id="no-results" hidden role="status">
+          No trainers match that filter. Clear the filter box to see all 8 games.
+        </p>
+      </main>
+    </div>
+
+    <footer>
+      <p>
+        Every trainer runs entirely in your browser &mdash; no login, no install.
+        Progress is kept for the session you are in.
+      </p>
+    </footer>
+
+    <script>
+      (function () {
+        var input = document.getElementById('game-filter');
+        var items = Array.prototype.slice.call(
+          document.querySelectorAll('#card-grid > li')
+        );
+        var empty = document.getElementById('no-results');
+
+        input.addEventListener('input', function () {
+          var q = input.value.trim().toLowerCase();
+          var shown = 0;
+          items.forEach(function (li) {
+            var link = li.querySelector('.card');
+            var hay = (
+              link.getAttribute('data-name') +
+              ' ' +
+              link.textContent
+            ).toLowerCase();
+            var match = q === '' || hay.indexOf(q) !== -1;
+            li.hidden = !match;
+            if (match) shown++;
+          });
+          empty.hidden = shown !== 0;
+        });
+      })();
+    </script>
+  </body>
+</html>
