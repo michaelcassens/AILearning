@@ -1,0 +1,2829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Timberkin &mdash; A Northwest Pocket Companion</title>
+<style>
+  :root {
+    --bg: #0c1410;
+    --bg2: #101c16;
+    --surface: #16241c;
+    --surface2: #1e3227;
+    --border: #2c4a38;
+    --accent: #6ee7a0;
+    --accent2: #7cc4f5;
+    --gold: #f2c14e;
+    --berry: #d9738f;
+    --text: #e6efe8;
+    --muted: #8ba396;
+    --danger: #f08a7a;
+    --shell1: #f4e6c8;
+    --shell2: #d9c39a;
+    --shell3: #b8a077;
+    --lcd-frame: #3b4a3c;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background:
+      radial-gradient(1100px 600px at 50% -10%, #1b3326 0%, transparent 60%),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ---------- header ---------- */
+  .topbar {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #14211a, #0e1813);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .brand h1 {
+    font-size: 1.35rem; font-weight: 800; letter-spacing: 1.5px;
+    background: linear-gradient(100deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .brand span { font-size: 0.76rem; color: var(--muted); }
+  .topbar-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  button {
+    font-family: inherit; font-size: 0.8rem; cursor: pointer;
+    background: var(--surface2); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 12px; transition: background .15s, border-color .15s, transform .1s;
+  }
+  button:hover:not(:disabled) { background: #26402f; border-color: #3d6349; }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid var(--accent2); outline-offset: 2px;
+  }
+  .btn-primary { background: #24503a; border-color: #3f7d5b; font-weight: 600; }
+  .btn-primary:hover:not(:disabled) { background: #2d6349; }
+
+  /* ---------- layout ---------- */
+  .wrap {
+    max-width: 1220px; margin: 0 auto; padding: 22px 20px 60px;
+    display: grid; grid-template-columns: minmax(320px, 430px) 1fr; gap: 26px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+
+  /* ---------- the device ---------- */
+  .device-col { position: sticky; top: 14px; }
+  @media (max-width: 900px) { .device-col { position: static; } }
+
+  .lanyard {
+    width: 26px; height: 26px; margin: 0 auto -12px;
+    border: 5px solid #8d9a8f; border-radius: 50%;
+    background: transparent; position: relative; z-index: 0;
+  }
+
+  .device {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 400px; margin: 0 auto;
+    aspect-ratio: 5 / 6;
+    padding: 8% 7% 6%;
+    border-radius: 50% 50% 44% 44% / 40% 40% 60% 60%;
+    background:
+      radial-gradient(120% 90% at 28% 12%, rgba(255,255,255,.75) 0%, rgba(255,255,255,0) 38%),
+      linear-gradient(160deg, var(--shell1) 0%, var(--shell2) 55%, var(--shell3) 100%);
+    box-shadow:
+      inset 0 -14px 26px rgba(120,95,55,.45),
+      inset 0 10px 20px rgba(255,255,255,.55),
+      0 22px 46px rgba(0,0,0,.55);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .device.theme-moss { --shell1:#dcefd2; --shell2:#a8cfa0; --shell3:#7fae7c; }
+  .device.theme-berry { --shell1:#fbdce6; --shell2:#e9aec3; --shell3:#c78aa2; }
+  .device.theme-slate { --shell1:#dfe6ee; --shell2:#aab7c6; --shell3:#8593a4; }
+  .device.theme-dusk  { --shell1:#e2dcf2; --shell2:#b3a8d6; --shell3:#8e82b4; }
+
+  /* icon rails printed on the shell */
+  .rail {
+    display: flex; justify-content: center; gap: 3.5%;
+    width: 92%; margin: 2% 0;
+  }
+  .icon-btn {
+    flex: 1 1 0; aspect-ratio: 1; max-width: 44px; min-width: 26px;
+    padding: 3px; border-radius: 7px;
+    background: rgba(90,70,40,.10); border: 1px solid rgba(90,70,40,.22);
+    display: grid; place-items: center;
+  }
+  .icon-btn svg { width: 100%; height: 100%; display: block; }
+  .icon-btn svg rect { fill: #5c4a2c; }
+  .icon-btn:hover { background: rgba(90,70,40,.2); border-color: rgba(90,70,40,.4); }
+  .icon-btn[aria-pressed="true"] {
+    background: #3d5c44; border-color: #24402c;
+    box-shadow: 0 0 0 2px rgba(61,92,68,.35);
+  }
+  .icon-btn[aria-pressed="true"] svg rect { fill: #d9f2dd; }
+  .icon-btn.alerting { animation: nudge .9s ease-in-out infinite; }
+  @keyframes nudge { 0%,100%{transform:none} 50%{transform:translateY(-3px)} }
+
+  /* the LCD */
+  .lcd-frame {
+    width: 92%; padding: 9px; border-radius: 10px;
+    background: linear-gradient(180deg, #46573f, #2f3c2b);
+    box-shadow: inset 0 3px 8px rgba(0,0,0,.6), 0 2px 0 rgba(255,255,255,.35);
+  }
+  .lcd-shell {
+    position: relative; border-radius: 4px; overflow: hidden;
+    background: #93ab6d;
+  }
+  canvas#lcd {
+    display: block; width: 100%; height: auto;
+    image-rendering: pixelated; image-rendering: -moz-crisp-edges;
+  }
+  .lcd-glass {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(150deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,0) 42%);
+  }
+  .scanlines::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 1px, transparent 1px 3px);
+  }
+
+  /* A / B / C buttons */
+  .pad { display: flex; gap: 7%; justify-content: center; width: 82%; margin-top: 4%; }
+  .pad-btn {
+    flex: 1 1 0; aspect-ratio: 1; max-width: 62px;
+    border-radius: 50%; border: none; padding: 0;
+    font-weight: 800; font-size: 0.72rem; letter-spacing: .5px; color: #4a3a1e;
+    background: radial-gradient(120% 120% at 32% 26%, #ffffff 0%, #ead9b1 42%, #bda275 100%);
+    box-shadow: 0 5px 0 #8f7a4e, 0 9px 14px rgba(0,0,0,.4);
+    display: grid; place-items: center; line-height: 1.05;
+  }
+  .pad-btn small { display: block; font-size: 0.52rem; font-weight: 700; opacity: .75; }
+  .pad-btn:hover { background: radial-gradient(120% 120% at 32% 26%, #fff 0%, #f2e3c0 42%, #c8ae80 100%); }
+  .pad-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #8f7a4e, 0 4px 8px rgba(0,0,0,.4); }
+  .speaker {
+    width: 34%; height: 8px; margin-top: 4%;
+    background: repeating-linear-gradient(90deg, rgba(90,70,40,.35) 0 3px, transparent 3px 7px);
+    border-radius: 4px;
+  }
+
+  /* ---------- panels ---------- */
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px; margin-bottom: 16px;
+  }
+  .panel h2 {
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.4px;
+    color: var(--accent); margin-bottom: 12px; display: flex; gap: 8px;
+    align-items: center; justify-content: space-between;
+  }
+  .panel h2 .tag { color: var(--muted); letter-spacing: .6px; text-transform: none; font-weight: 500; }
+
+  /* stage / interaction panel */
+  #stage { border-color: #3f7d5b; }
+  #stage.urgent { border-color: var(--gold); }
+  .stage-line { font-size: 0.95rem; margin-bottom: 6px; }
+  .stage-line strong { color: var(--gold); }
+  .stage-said {
+    border-left: 3px solid var(--accent2); padding: 6px 0 6px 12px;
+    margin: 10px 0; font-style: italic; color: #cfe4f5; font-size: 0.95rem;
+  }
+  .stage-note { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+  .choices { display: grid; gap: 8px; margin-top: 12px; }
+  .choice {
+    text-align: left; padding: 10px 13px; font-size: 0.87rem; line-height: 1.45;
+    border-radius: 9px; background: var(--surface2);
+  }
+  .choice b { color: var(--accent); font-weight: 700; }
+  .choice.wide { grid-column: 1 / -1; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* meters */
+  .meters { display: grid; gap: 9px; }
+  .meter-row { display: grid; grid-template-columns: 92px 1fr 42px; gap: 10px; align-items: center; }
+  .meter-label { font-size: 0.76rem; color: var(--muted); }
+  .track { height: 12px; border-radius: 6px; background: #0e1a13; border: 1px solid var(--border); overflow: hidden; }
+  .fill { height: 100%; width: 0; transition: width .4s ease; }
+  .fill.good { background: linear-gradient(90deg, #3f8f63, var(--accent)); }
+  .fill.mid  { background: linear-gradient(90deg, #8a7a2e, var(--gold)); }
+  .fill.low  { background: linear-gradient(90deg, #8a4137, var(--danger)); }
+  .meter-num { font-size: 0.74rem; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+  .pip { width: 7px; height: 7px; border-radius: 2px; background: #2b4436; }
+  .pip.on { background: var(--accent); }
+
+  .chipline { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .chip {
+    font-size: 0.68rem; padding: 3px 9px; border-radius: 20px;
+    background: #12241a; border: 1px solid var(--border); color: var(--muted);
+  }
+  .chip.hot { border-color: var(--gold); color: var(--gold); }
+  .chip.cool { border-color: var(--accent2); color: var(--accent2); }
+  .chip.bad { border-color: var(--danger); color: var(--danger); }
+
+  /* skills */
+  .skill { padding: 9px 0; border-bottom: 1px dashed #24382c; }
+  .skill:last-child { border-bottom: none; }
+  .skill-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+  .skill-name { font-size: 0.87rem; font-weight: 600; }
+  .skill-name.locked { color: #5f7568; font-weight: 500; }
+  .skill-teach { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+  .skill-fits { font-size: 0.7rem; color: #6f8b7c; margin-top: 3px; }
+
+  /* log */
+  #log { max-height: 300px; overflow-y: auto; font-size: 0.83rem; }
+  .log-e { padding: 7px 0; border-bottom: 1px dashed #21362a; display: flex; gap: 9px; }
+  .log-e:last-child { border-bottom: none; }
+  .log-t { color: #5f7568; font-size: 0.7rem; min-width: 52px; font-variant-numeric: tabular-nums; padding-top: 2px; }
+  .log-x { flex: 1; }
+  .log-e.k-good .log-x { color: #bfeacf; }
+  .log-e.k-teach .log-x { color: #cfe4f5; }
+  .log-e.k-warn .log-x { color: #f3d79c; }
+  .log-e.k-bad .log-x { color: #f4b3a8; }
+
+  /* self check-in */
+  .moods { display: flex; gap: 7px; flex-wrap: wrap; }
+  .mood-btn { font-size: 1.05rem; padding: 7px 11px; line-height: 1; }
+  .mood-btn[aria-pressed="true"] { background: #24503a; border-color: var(--accent); }
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 42px; margin-top: 12px; }
+  .spark i {
+    display: block; flex: 1 1 0; min-width: 4px; border-radius: 2px 2px 0 0;
+    background: #2b4436;
+  }
+  .spark i.v1 { background: #8a4137; } .spark i.v2 { background: #8a6a37; }
+  .spark i.v3 { background: #7e8a37; } .spark i.v4 { background: #4f8f5e; }
+  .spark i.v5 { background: var(--accent); }
+
+  /* resources */
+  .res { font-size: 0.82rem; color: var(--muted); }
+  .res b { color: var(--text); }
+  .res ul { margin: 8px 0 0 18px; }
+  .res li { margin-bottom: 5px; }
+  a { color: var(--accent2); }
+
+  details.teach { margin-top: 6px; }
+  details.teach summary {
+    cursor: pointer; font-size: 0.8rem; color: var(--accent2); padding: 5px 0;
+  }
+  details.teach .body { font-size: 0.83rem; color: var(--muted); padding: 6px 0 2px; }
+  details.teach .body p { margin-bottom: 8px; }
+  details.teach .body b { color: var(--text); }
+
+  /* settings */
+  .setgrid { display: grid; gap: 10px; }
+  .setrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 0.83rem; }
+  select, input[type="text"] {
+    font-family: inherit; font-size: 0.8rem; padding: 6px 9px;
+    background: #0e1a13; color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px;
+  }
+  input[type="checkbox"] { width: 17px; height: 17px; accent-color: #3f7d5b; }
+
+  /* onboarding */
+  .modal-bg {
+    position: fixed; inset: 0; z-index: 60; display: grid; place-items: center;
+    background: rgba(4,10,7,.86); padding: 20px; overflow-y: auto;
+  }
+  .modal-bg[hidden] { display: none; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 24px; max-width: 700px; width: 100%;
+  }
+  .modal h2 { font-size: 1.15rem; margin-bottom: 6px; color: var(--accent); letter-spacing: 0; text-transform: none; }
+  .modal p.sub { font-size: 0.86rem; color: var(--muted); margin-bottom: 18px; }
+  .picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .pick {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 10px; border-radius: 12px; background: var(--surface2);
+    border: 2px solid var(--border);
+  }
+  .pick[aria-pressed="true"] { border-color: var(--accent); background: #24503a; }
+  .pick canvas { width: 72px; height: 72px; image-rendering: pixelated; }
+  .pick-name { font-size: 0.86rem; font-weight: 700; }
+  .pick-desc { font-size: 0.7rem; color: var(--muted); text-align: center; line-height: 1.4; }
+  .namerow { display: flex; gap: 10px; align-items: center; margin: 18px 0 6px; flex-wrap: wrap; }
+  .namerow label { font-size: 0.84rem; color: var(--muted); }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+  .footnote { font-size: 0.74rem; color: #5f7568; text-align: center; padding: 6px 20px 0; }
+
+  /* high contrast + reduced motion */
+  body.hc { --muted: #b9cfc2; --border: #6f8f7c; --surface: #08110c; --surface2: #12241a; }
+  body.hc .log-t { color: #9db3a6; }
+  body.hc .skill-name.locked { color: #9db3a6; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  }
+  body.nomotion * { animation: none !important; transition: none !important; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <h1>TIMBERKIN</h1>
+    <span>A Northwest pocket companion &mdash; care, resilience, and learning to speak up</span>
+  </div>
+  <div class="topbar-tools">
+    <label class="setrow" style="gap:6px">
+      <span style="color:var(--muted);font-size:.76rem">Speed</span>
+      <select id="speedSel" aria-label="Simulation speed">
+        <option value="1">Real time (1&times;)</option>
+        <option value="20">Quick (20&times;)</option>
+        <option value="120">Classroom demo (120&times;)</option>
+        <option value="900">Fast-forward (900&times;)</option>
+      </select>
+    </label>
+    <button id="soundBtn" aria-pressed="true">&#128266; Sound on</button>
+    <button id="helpBtn">How to play</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ LEFT: the device ============ -->
+  <div class="device-col">
+    <div class="lanyard" aria-hidden="true"></div>
+    <div class="device" id="device">
+
+      <div class="rail" id="railTop" role="group" aria-label="Care actions"></div>
+
+      <div class="lcd-frame">
+        <div class="lcd-shell scanlines" id="lcdShell">
+          <canvas id="lcd" width="112" height="84" role="img"
+                  aria-label="Pixel screen showing your companion"></canvas>
+          <div class="lcd-glass" aria-hidden="true"></div>
+        </div>
+      </div>
+
+      <div class="rail" id="railBottom" role="group" aria-label="Menus"></div>
+
+      <div class="pad">
+        <button class="pad-btn" id="btnA">A<small>NEXT</small></button>
+        <button class="pad-btn" id="btnB">B<small>PICK</small></button>
+        <button class="pad-btn" id="btnC">C<small>BACK</small></button>
+      </div>
+      <div class="speaker" aria-hidden="true"></div>
+    </div>
+    <p class="footnote">Keyboard: <b>A</b> / arrow keys cycle &middot; <b>B</b> or Enter selects &middot; <b>C</b> or Esc goes back</p>
+  </div>
+
+  <!-- ============ RIGHT: panels ============ -->
+  <div class="info-col">
+
+    <div class="panel" id="stage">
+      <h2>Right now <span class="tag" id="stageTag"></span></h2>
+      <div id="stageBody"></div>
+      <div class="choices" id="stageChoices"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Wellbeing <span class="tag" id="vitalsTag"></span></h2>
+      <div class="meters" id="meters"></div>
+      <div class="chipline" id="chips"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Journal <span class="tag">newest first</span></h2>
+      <div id="log" aria-live="polite" aria-atomic="false"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Coping skills <span class="tag" id="skillTag"></span></h2>
+      <div id="skills"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Your own check-in <span class="tag">private, stays on this device</span></h2>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:10px" id="selfPrompt">
+        You just checked on someone else. How are <em>you</em> doing today?
+      </p>
+      <div class="moods" id="moods" role="group" aria-label="How are you today"></div>
+      <div class="spark" id="spark" aria-hidden="true"></div>
+      <p style="font-size:.72rem;color:#5f7568;margin-top:6px">Last 14 days</p>
+      <div id="selfEcho" class="stage-note"></div>
+    </div>
+
+    <div class="panel">
+      <h2>If this stops being a game</h2>
+      <div class="res">
+        <b>Timberkin is a toy, not treatment.</b> It models coping skills that real clinicians teach, but it
+        can't assess anyone and it isn't a substitute for a person. If you or a student is struggling:
+        <ul>
+          <li><b>988</b> &mdash; Suicide &amp; Crisis Lifeline (call or text, 24/7, US)</li>
+          <li><b>Text HOME to 741741</b> &mdash; Crisis Text Line</li>
+          <li><b>UM Curry Health Center Counseling</b> &mdash; (406) 243-4711</li>
+          <li>Montana Crisis Text Line: <b>text MT to 741741</b></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Settings</h2>
+      <div class="setgrid">
+        <div class="setrow"><label for="lcdSel">Screen mode</label>
+          <select id="lcdSel">
+            <option value="color">Color LCD</option>
+            <option value="mono">Classic mono LCD</option>
+          </select></div>
+        <div class="setrow"><label for="shellSel">Shell color</label>
+          <select id="shellSel">
+            <option value="">Sandstone</option>
+            <option value="theme-moss">Moss</option>
+            <option value="theme-berry">Huckleberry</option>
+            <option value="theme-slate">Glacier</option>
+            <option value="theme-dusk">Dusk</option>
+          </select></div>
+        <div class="setrow"><label for="scanChk">Scanline texture</label>
+          <input type="checkbox" id="scanChk" checked></div>
+        <div class="setrow"><label for="hcChk">High contrast text</label>
+          <input type="checkbox" id="hcChk"></div>
+        <div class="setrow"><label for="motionChk">Reduce motion</label>
+          <input type="checkbox" id="motionChk"></div>
+        <div class="setrow"><label for="renameInp">Companion's name</label>
+          <input type="text" id="renameInp" maxlength="12" size="10"></div>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button id="exportBtn">Export save</button>
+        <button id="resetBtn">Start over</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>For educators &amp; the curious</h2>
+      <details class="teach">
+        <summary>What each mechanic is actually teaching</summary>
+        <div class="body">
+          <p><b>Resilience is not the absence of hard things.</b> Timberkin's resilience meter only rises
+          through <em>supported challenge</em>: practicing a coping skill that fits the feeling, letting the
+          animal attempt something first with you nearby, or recovering after a rough stretch. A day with no
+          challenge at all produces no growth.</p>
+          <p><b>Rescue has a cost.</b> Handing over a treat to fix a <em>feeling</em> (rather than hunger)
+          spikes mood, then drops it lower than before, and pushes the animal toward a "waiting to be
+          rescued" state where it stops trying things on its own. Three of those in a row and resilience
+          drops. This is deliberate: over-functioning for someone teaches them they can't.</p>
+          <p><b>Neglect has a different cost.</b> Chronically unmet needs lead to a withdrawn state &mdash;
+          not death. There is no game over. Repair takes patient, small, consistent care over time, which is
+          how rupture and repair actually works.</p>
+          <p><b>Communication is the difficulty setting.</b> At low Voice the animal can only emit a "!" and
+          you must infer the need from posture, scene, and time of day. Every reflective-listening response
+          raises Voice, and at high Voice it states its feeling <em>and</em> its need in a sentence, and
+          begins asking for help unprompted. Teaching a creature to name what's wrong is what makes caring
+          for it possible &mdash; the game makes that literal.</p>
+          <p><b>Fit matters more than effort.</b> Each distress event has an underlying feeling. Breathing
+          helps a racing alarm; it does very little for defeat. Movement discharges restless anger; it won't
+          touch loneliness. Picking the wrong skill isn't punished, but the journal explains why it didn't
+          land, which is how skill vocabulary gets built.</p>
+          <p><b>Sitting with it is a real option.</b> "Sit With It" is always available and is sometimes the
+          best move. Not every feeling is a problem to be solved.</p>
+          <p><b>Independence is the reward.</b> Stock the cache, teach the skills, and the animal feeds
+          itself, self-soothes, tidies up, and weathers your absence. High resilience means you can close the
+          tab for three days and come back to a companion that kept its own fire going.</p>
+          <p style="color:#8ba396"><b>Suggested classroom use:</b> set Speed to <em>Classroom demo</em>, run
+          two devices side by side &mdash; one played "rescue every feeling with treats," one played "coach and
+          practice" &mdash; and compare the resilience curves and the journals after a simulated week.</p>
+        </div>
+      </details>
+      <details class="teach">
+        <summary>Northwest field notes</summary>
+        <div class="body" id="fieldNotes"></div>
+      </details>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============ onboarding ============ -->
+<div class="modal-bg" id="onboard" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+    <h2 id="obTitle">Something small is at the edge of the clearing</h2>
+    <p class="sub">
+      Pick a companion. It runs on your real clock, so it will get hungry, sleepy, and out of sorts whether
+      you're watching or not &mdash; and it can learn to handle some of that itself, if you teach it how.
+    </p>
+    <div class="picks" id="picks" role="group" aria-label="Choose a companion"></div>
+    <div class="namerow">
+      <label for="nameInp">Name it</label>
+      <input type="text" id="nameInp" maxlength="12" size="12">
+      <button id="diceBtn" title="Suggest a name">&#127922; Suggest</button>
+    </div>
+    <p class="stage-note" id="pickDesc"></p>
+    <div class="row" style="margin-top:16px">
+      <button class="btn-primary" id="startBtn">Take it home</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="helpModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <h2 id="helpTitle">How to play</h2>
+    <div class="res" style="font-size:.87rem">
+      <p style="margin-bottom:10px">The eight icons around the screen are your actions. Press <b>A</b> to move
+      between them and <b>B</b> to choose, like the original handheld &mdash; or just click an icon.</p>
+      <ul>
+        <li><b>Feed</b> &mdash; a real meal fills hunger. A <em>treat</em> is a quick mood bump with a price.
+          <em>Stock the cache</em> lets your companion feed itself later.</li>
+        <li><b>Play</b> &mdash; builds bond and burns restless energy.</li>
+        <li><b>Tidy</b> &mdash; clean up messes. Left alone they drag wellbeing down.</li>
+        <li><b>Lights</b> &mdash; your companion sleeps at night. Turn the lights off so it can.</li>
+        <li><b>Check in</b> &mdash; the heart of the game. Notice, ask, listen. This is how Voice grows.</li>
+        <li><b>Skills</b> &mdash; practice a coping skill together. Pick one that <em>fits</em> the feeling.</li>
+        <li><b>Vitals</b> &mdash; the numbers, plus tree rings: one ring per day, colored by how that day went.</li>
+        <li><b>Notes</b> &mdash; what your companion has learned and can now do alone.</li>
+      </ul>
+      <p style="margin-top:10px">There is no way to lose. There are better and worse ways to help.</p>
+    </div>
+    <div class="row" style="margin-top:16px"><button class="btn-primary" id="helpClose">Got it</button></div>
+  </div>
+</div>
+
+<p class="sr-only" id="announcer" role="status" aria-live="polite"></p>
+
+<script>
+/* ==========================================================================
+   TIMBERKIN
+   A Tamagotchi-style companion sim about resilience and communication.
+   Single file, no dependencies. Save lives in localStorage.
+   ========================================================================== */
+'use strict';
+
+const SAVE_KEY = 'timberkin_save_v1';
+const SELF_KEY = 'timberkin_self_v1';
+const $  = s => document.querySelector(s);
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const now = () => Date.now();
+
+/* ==========================================================================
+   1. 4x6 BITMAP FONT
+   Each glyph is 6 rows of 4 bits; bit 3 is the leftmost pixel.
+   ========================================================================== */
+const FONT = {
+  'A':[6,9,9,15,9,9],    'B':[14,9,14,9,9,14],  'C':[7,8,8,8,8,7],
+  'D':[14,9,9,9,9,14],   'E':[15,8,14,8,8,15],  'F':[15,8,14,8,8,8],
+  'G':[7,8,11,9,9,7],    'H':[9,9,15,9,9,9],    'I':[14,4,4,4,4,14],
+  'J':[3,1,1,1,9,6],     'K':[9,10,12,12,10,9], 'L':[8,8,8,8,8,15],
+  'M':[9,15,15,9,9,9],   'N':[9,13,13,11,11,9], 'O':[6,9,9,9,9,6],
+  'P':[14,9,9,14,8,8],   'Q':[6,9,9,9,6,3],     'R':[14,9,9,14,10,9],
+  'S':[7,8,6,1,1,14],    'T':[15,6,6,6,6,6],    'U':[9,9,9,9,9,6],
+  'V':[9,9,9,9,6,6],     'W':[9,9,9,15,15,9],   'X':[9,9,6,6,9,9],
+  'Y':[9,9,6,6,6,6],     'Z':[15,1,2,4,8,15],
+  '0':[6,9,11,13,9,6],   '1':[2,6,2,2,2,7],     '2':[14,1,6,8,8,15],
+  '3':[14,1,6,1,1,14],   '4':[9,9,15,1,1,1],    '5':[15,8,14,1,1,14],
+  '6':[6,8,14,9,9,6],    '7':[15,1,2,2,4,4],    '8':[6,9,6,9,9,6],
+  '9':[6,9,9,7,1,6],
+  ' ':[0,0,0,0,0,0],     '.':[0,0,0,0,0,4],     ',':[0,0,0,0,4,8],
+  '!':[4,4,4,4,0,4],     '?':[14,1,6,4,0,4],    ':':[0,4,0,0,4,0],
+  '-':[0,0,14,0,0,0],    "'":[4,4,0,0,0,0],     '/':[1,2,2,4,4,8],
+  '+':[0,4,14,4,0,0],    '%':[9,2,4,9,0,0],     '(':[2,4,4,4,4,2],
+  ')':[4,2,2,2,2,4],     '*':[0,10,4,10,0,0],   '=':[0,14,0,14,0,0],
+  '@':[0,10,15,15,6,4],  /* heart */
+  '^':[4,14,4,4,0,0],    '_':[0,0,4,4,14,4],    '>':[8,4,2,4,8,0],
+  '<':[2,4,8,4,2,0],     '"':[10,10,0,0,0,0],   '#':[0,4,14,4,0,0]
+};
+
+/* ==========================================================================
+   2. SPRITES  (16x16 char maps; '.' = transparent, digits index the palette)
+   ========================================================================== */
+const S = (...rows) => rows;
+
+const SPRITES = {
+  bear: [
+    /* kit */ S(
+      '................','................','....2......2....','...222....222...',
+      '...232....232...','....22222222....','...2222222222...','...2222222222...',
+      '...2224444222...','...2224444222...','....22444422....','.....222222.....',
+      '....22333322....','....22333322....','....222..222....','....111..111....'),
+    /* yearling */ S(
+      '....2......2....','...222....222...','...232....232...','...2222222222...',
+      '..222222222222..','..222222222222..','..222222222222..','..222244442222..',
+      '..222244442222..','...2224444222...','....22222222....','...2222222222...',
+      '...2223333222...','...2223333222...','...2222..2222...','...1111..1111...'),
+    /* guardian */ S(
+      '...2........2...','..222......222..','..232......232..','..222222222222..',
+      '.22222222222222.','.22222222222222.','.22222222222222.','.22224444442222.',
+      '.22224444442222.','..222444444222..','...2222222222...','..333333333333..',
+      '.22233333333222.','.22233333333222.','.2222......2222.','.1111......1111.')
+  ],
+  moose: [
+    S('................','..2..........2..','..22........22..','..22.222222.22..',
+      '...2.222222.2...','.....222222.....','.....222222.....','.....233332.....',
+      '....23333332....','....23333332....','.....233332.....','......2222......',
+      '.....222222.....','....22222222....','....22....22....','....11....11....'),
+    S('.2............2.','.22..........22.','.22..222222..22.','..2..222222..2..',
+      '.....222222.....','....22222222....','....22222222....','....23333332....',
+      '....23333332....','.....333333.....','.....233332.....','......2222......',
+      '...2222222222...','...2222222222...','...22......22...','...11......11...'),
+    S('..3..2....2..3..','..33.2....2.33..','.333........333.','..33..2222..33..',
+      '.22..222222..22.','.22..222222..22.','....22222222....','....22222222....',
+      '....23333332....','....23333332....','.....333333.....','.....233332.....',
+      '...2222222222...','..222222222222..','..222......222..','..111......111..')
+  ],
+  lion: [
+    S('................','...2........2...','...22......22...','...232....232...',
+      '....22222222....','...2222222222...','...2222222222...','...2233333322...',
+      '...2233333322...','....22333322....','.....222222.....','....22222222....',
+      '....21222122....','....22222222....','....222..222....','....111..111....'),
+    S('..2..........2..','..22........22..','..232......232..','..222222222222..',
+      '..222222222222..','..222222222222..','..222222222222..','..223333333322..',
+      '..223333333322..','...2233333322...','....22222222....','...2212212122...',
+      '..222222222222..','..212212212122..','..2222....2222..','..1111....1111..'),
+    S('..2..........2..','..22........22..','..232......232..','..222222222222..',
+      '.22222222222222.','.22222222222222.','.22222222222222.','.22233333333222.',
+      '.22233333333222.','..223333333322..','...2233333322...','....22222222....',
+      '..333333333333..','..222222222222..','..2222....2222..','..1111....1111..')
+  ],
+  squirrel: [
+    S('....2...2.......','...222.222......','...2222222......','..222222222.....',
+      '..222222222.....','..222222222..33.','..223333322.3333','..223333322.3333',
+      '...2333332..3333','...2222222..333.','...4444444.333..','...4444444.33...',
+      '...4444444......','...2222222......','...22...22......','...11...11......'),
+    S('...2.....2......','..222...222.....','..2222222.......','.222222222..33..',
+      '.222222222.3333.','.222222222.3333.','.223333322.33333','.223333322.33333',
+      '..23333322..3333','..2222222...333.','..44444444.333..','..44444444.33...',
+      '..44444444......','..22222222......','..222...222.....','..111...111.....'),
+    S('..2.....2.......','.222...222....3.','.2222222....3333','2222222222.33333',
+      '2222222222.33333','2222222222.33333','2233333322.33333','2233333322.33333',
+      '.23333332..33333','.22222222...3333','.444444444.333..','.444444444.33...',
+      '.444444444......','.22222222.......','.2222.2222......','.1111.1111......')
+  ]
+};
+
+/* palettes: index 1..4 map to colors; 1=dark line, 2=main, 3=light, 4=belly */
+const SPECIES = {
+  bear: {
+    label: 'Black Bear Cub',
+    blurb: 'Curious, food-motivated, braver than it looks. Learns fast when it feels safe.',
+    pal: { '1':'#2a1a12', '2':'#6b4a2f', '3':'#a87b4f', '4':'#f0dcc0' },
+    monoInk: '#2f3a24',
+    names: ['Bramble','Huckle','Moss','Tobin','Juniper','Cobble'],
+    face: [ {ex:[4,9],ey:6,mx:7,my:9}, {ex:[4,9],ey:5,mx:7,my:9}, {ex:[4,10],ey:5,mx:7,my:9} ],
+    note: 'Black bears in western Montana spend late summer in a feeding frenzy called hyperphagia &mdash; up to 20,000 calories a day in huckleberries. A cub that trusts its adult explores farther from the den.'
+  },
+  moose: {
+    label: 'Moose Calf',
+    blurb: 'All legs and nerves. Startles easily, settles deeply once it knows the routine.',
+    pal: { '1':'#241a12', '2':'#5a4030', '3':'#b9a189', '4':'#d8c6ae' },
+    monoInk: '#2f3a24',
+    names: ['Willow','Tamarack','Bog','Sedge','Marsh','Alder'],
+    face: [ {ex:[5,9],ey:5,mx:7,my:8}, {ex:[5,9],ey:6,mx:7,my:8}, {ex:[5,9],ey:7,mx:7,my:9} ],
+    note: 'Moose calves stay with the cow about a year, then get driven off right before the next calf arrives. Independence is not optional for them &mdash; it is scheduled.'
+  },
+  lion: {
+    label: 'Mountain Lion Kit',
+    blurb: 'Watchful and proud. Slow to ask for anything, which is exactly the lesson.',
+    pal: { '1':'#3a2415', '2':'#c08a4e', '3':'#ecd3ad', '4':'#f3e6cf' },
+    monoInk: '#2f3a24',
+    names: ['Ember','Cinder','Rimrock','Sage','Ash','Quill'],
+    face: [ {ex:[4,9],ey:6,mx:7,my:8}, {ex:[4,9],ey:5,mx:7,my:8}, {ex:[4,10],ey:6,mx:7,my:9} ],
+    note: 'Mountain lion kits are born with spots and blue eyes, both of which fade by about six months. They practice stalking on their siblings long before it matters.'
+  },
+  squirrel: {
+    label: 'Pine Squirrel',
+    blurb: 'Loud, fast, hoards everything. Great at asking &mdash; terrible at resting.',
+    pal: { '1':'#3a1a0e', '2':'#b5502a', '3':'#e0a06a', '4':'#f6ece0' },
+    monoInk: '#2f3a24',
+    names: ['Pip','Chatter','Cone','Scree','Fern','Twitch'],
+    face: [ {ex:[3,7],ey:4,mx:5,my:7}, {ex:[2,7],ey:4,mx:5,my:7}, {ex:[2,7],ey:4,mx:5,my:7} ],
+    note: 'Red squirrels build middens &mdash; central caches of cones that can outlive the squirrel that made it. They also scold everything that walks past, which is its own kind of communication.'
+  }
+};
+
+const STAGE_NAMES = ['Kit', 'Yearling', 'Guardian'];
+
+/* ==========================================================================
+   3. FEELINGS, SKILLS, EVENTS
+   ========================================================================== */
+const FEELINGS = {
+  overwhelmed: { word:'OVERWHELMED', cue:'ears flat, eyes darting, everything at once' },
+  anxious:     { word:'ANXIOUS',     cue:'shifting weight, watching the exit' },
+  scared:      { word:'SCARED',      cue:'tucked low, very still, quick breath' },
+  frustrated:  { word:'FRUSTRATED',  cue:'stomping, short huffs, trying the same thing again' },
+  lonely:      { word:'LONELY',      cue:'facing away, closer to you than usual' },
+  sad:         { word:'SAD',         cue:'slow, heavy, uninterested in the good stuff' },
+  restless:    { word:'RESTLESS',    cue:'pacing the same six steps, can not settle' },
+  defeated:    { word:'DEFEATED',    cue:'sat down mid-task, will not look up' },
+  depleted:    { word:'DEPLETED',    cue:'moving like everything costs double' }
+};
+
+const SKILLS = [
+  { id:'sit', name:'Sit With It', engine:'wait', start:true,
+    fits:['overwhelmed','anxious','scared','frustrated','lonely','sad','restless','defeated','depleted'],
+    partial:true,
+    teach:'Some feelings do not need fixing, just company. Staying present without solving is a skill, and it is the one that builds trust fastest.',
+    self:'let the feeling be there and did not panic about it',
+    lcd:'STAY CLOSE' },
+  { id:'breath', name:'Belly Breathing', engine:'timing', start:true,
+    fits:['overwhelmed','anxious','scared','restless','depleted'],
+    teach:'A long exhale is the one voluntary lever on the nervous system. In for 4, hold 2, out for 6 tells the body the alarm can stand down.',
+    self:'took three slow belly breaths until its shoulders dropped',
+    lcd:'BREATHE' },
+  { id:'ground', name:'Paws on the Ground', engine:'senses',
+    fits:['anxious','scared','overwhelmed'],
+    teach:'Grounding pulls attention out of the spiral and into the room: name what you can see, hear, smell, feel, taste. Fear lives in the future; senses only work in the present.',
+    self:'pressed its paws down and named five things it could sense',
+    lcd:'GROUND' },
+  { id:'shake', name:'Shake It Out', engine:'timing',
+    fits:['restless','frustrated','anxious'],
+    teach:'Stress hormones are physical and need a physical exit. Animals shake off a near-miss within seconds. Movement finishes what fear started.',
+    self:'shook itself hard from nose to tail and let the buzz go',
+    lcd:'SHAKE' },
+  { id:'name', name:'Name It to Tame It', engine:'choice',
+    fits:['sad','frustrated','lonely','defeated','overwhelmed'],
+    teach:'Putting an accurate word on a feeling measurably lowers its intensity. Vague dread is bigger than named dread, every time.',
+    self:'found the word for what it was feeling instead of just feeling it',
+    lcd:'NAME IT' },
+  { id:'ask', name:'Ask for Help', engine:'sentence',
+    fits:['lonely','defeated','scared','overwhelmed'],
+    teach:'Asking well is a learnable form: name the feeling, name the need, make one clear request. Hinting is not asking, and neither is enduring quietly.',
+    self:'came and asked for what it needed, out loud, in order',
+    lcd:'ASK' },
+  { id:'rest', name:'Rest Without Guilt', engine:'wait',
+    fits:['depleted','sad','overwhelmed'],
+    teach:'Rest is not a reward for finishing. Being depleted is information, not a character flaw, and the answer to it is boring and physical.',
+    self:'stopped, without earning it first, and rested',
+    lcd:'REST' },
+  { id:'light', name:'Look for Light', engine:'spot',
+    fits:['sad','lonely','depleted'],
+    teach:'Low mood narrows attention to what is wrong. Deliberately finding three good things does not cancel the bad ones; it widens the frame enough to move.',
+    self:'went and found three good things on its own',
+    lcd:'FIND GOOD' },
+  { id:'small', name:'Try Again Small', engine:'choice',
+    fits:['defeated','frustrated'],
+    teach:'After a failure the task has to shrink before it can be attempted. One step small enough to be boring is the only reliable way back in.',
+    self:'broke the hard thing into one small step and tried that',
+    lcd:'ONE STEP' }
+];
+const SKILL = {}; SKILLS.forEach(s => SKILL[s.id] = s);
+
+const EVENTS = [
+  { id:'thunder',  feeling:'scared',      text:'Thunder came down the valley and shook the den.' },
+  { id:'smoke',    feeling:'depleted',    text:'Smoke haze settled over everything. The air tastes like a campfire.' },
+  { id:'branch',   feeling:'defeated',    text:'The good berries were on the high branch. Four tries, no berries.' },
+  { id:'creek',    feeling:'anxious',     text:'The creek crossing looks wider today than it did yesterday.' },
+  { id:'others',   feeling:'lonely',      text:'The other young ones already had a group by the time it got there.' },
+  { id:'dream',   feeling:'scared',      text:'Woke up fast from a bad dream about deep water.' },
+  { id:'loud',     feeling:'overwhelmed', text:'Jays, wind, water, and everything at once. Too much today.' },
+  { id:'log',      feeling:'frustrated',  text:'Slipped off the log balance four times in a row.' },
+  { id:'frost',    feeling:'anxious',     text:'First frost. Nothing smells familiar anymore.' },
+  { id:'heavy',    feeling:'sad',         text:'Slept fine. Still heavy for no reason it can point to.' },
+  { id:'penned',   feeling:'restless',    text:'Wants to run and there is nowhere in particular to run to.' },
+  { id:'cache',    feeling:'frustrated',  text:'Cached food somewhere clever and now cannot find it.' },
+  { id:'truck',    feeling:'scared',      text:'A truck rumbled past close to the den and kept going.' },
+  { id:'gray',     feeling:'sad',         text:'Sixth gray day of rain. The light has not changed in a week.' },
+  { id:'outgrown', feeling:'anxious',     text:'Outgrew the old den. The new one does not feel like anything yet.' },
+  { id:'molt',     feeling:'restless',    text:'Coat is coming in wrong and everything itches.' },
+  { id:'shadow',   feeling:'scared',      text:'Something big moved on the ridge. It did not come closer.' },
+  { id:'quiet',    feeling:'lonely',      text:'It has been a very quiet stretch. Nobody has come by at all.' }
+];
+
+const GOOD_EVENTS = [
+  'found a huckleberry patch nobody else had touched.',
+  'spent twenty minutes watching a dipper work the creek.',
+  'made a friend at the water and came back pleased with itself.',
+  'found a warm flat rock and used it correctly.',
+  'got all the way across the log balance on the first try.',
+  'napped in a sunbeam with no notes.',
+  'heard an elk bugle way off and did not startle.',
+  'dug up a cache it had actually remembered.'
+];
+
+const WEATHERS = {
+  clear: { label:'CLEAR',  note:'Bright and still.',                       mood: 2 },
+  rain:  { label:'RAIN',   note:'Steady western rain.',                    mood:-1 },
+  snow:  { label:'SNOW',   note:'Big slow flakes.',                        mood: 0 },
+  smoke:  { label:'SMOKE',  note:'Wildfire haze in the valley.',            mood:-2 },
+  wind:  { label:'WIND',   note:'A chinook is pushing through.',           mood:-1 },
+  fog:   { label:'FOG',    note:'Valley fog, everything close and quiet.', mood: 0 }
+};
+
+/* reflective-listening archetypes for the check-in */
+const OPENERS = [
+  { kind:'reflect', text:'"Your ears are back and you have not moved in a while. What is going on?"',
+    why:'Naming what you observe and then asking an open question. This is the move that builds Voice.' },
+  { kind:'reflect', text:'"Something is off today. I am not going anywhere &mdash; tell me when you are ready."',
+    why:'Presence plus an invitation, with no deadline attached. Builds Voice and bond.' },
+  { kind:'reflect', text:'"That looked hard. Do you want to tell me about it, or just sit for a minute?"',
+    why:'Validating, then offering a real choice. Choice is what makes it safe to answer honestly.' },
+  { kind:'dismiss', text:'"You are fine. Come on, up you get."',
+    why:'Dismissing. It ends the conversation and teaches that signals do not get answered.' },
+  { kind:'dismiss', text:'"It is not a big deal, do not be dramatic."',
+    why:'Minimizing. The feeling does not shrink; the willingness to mention it does.' },
+  { kind:'fix',     text:'"Here &mdash; have a treat, that will help."',
+    why:'Fixing a feeling with food. It works for about a minute, and it teaches waiting instead of coping.' },
+  { kind:'compare', text:'"The other cubs handle this without any fuss."',
+    why:'Comparing. Shame is a terrible teacher and an excellent way to end disclosure.' }
+];
+
+/* ==========================================================================
+   4. STATE
+   ========================================================================== */
+let st = null;
+let self_ = { moods: [], shownRes: false };
+
+function freshState(species, name) {
+  const t = now();
+  return {
+    v: 1, species, name,
+    bornAt: t, lastTick: t, lastSave: t,
+    stage: 0,
+    needs: { fed: 78, rested: 80, clean: 92, bond: 40 },
+    resilience: 12, voice: 8,
+    skills: SKILLS.reduce((o, s) => (o[s.id] = { unlocked: !!s.start, mastery: s.start ? 1 : 0 }, o), {}),
+    soothes: [], neglectMin: 0,
+    waiting: 0,            /* minutes of "waiting to be rescued" */
+    withdrawn: false,
+    event: null,           /* {id, feeling, at, escalated} */
+    messes: [],
+    asleep: false, lightsOff: false,
+    cache: 0,
+    weather: 'clear', weatherAt: t,
+    lastEventAt: t, lastGoodAt: t, lastAskAt: 0,
+    days: [],              /* {d:'YYYY-MM-DD', w: 0..100} */
+    log: [],
+    settings: { lcd:'color', shell:'', scan:true, hc:false, nomotion:false, sound:true, speed:1 },
+    seen: {}, helped: 0, coached: 0, practiced: 0
+  };
+}
+
+function save() {
+  if (!st) return;
+  st.lastSave = now();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(st)); } catch (e) {}
+}
+function saveSelf() {
+  try { localStorage.setItem(SELF_KEY, JSON.stringify(self_)); } catch (e) {}
+}
+function load() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw) { const o = JSON.parse(raw); if (o && o.v === 1 && SPECIES[o.species]) st = o; }
+    const rs = localStorage.getItem(SELF_KEY);
+    if (rs) self_ = Object.assign(self_, JSON.parse(rs));
+  } catch (e) { st = null; }
+}
+
+/* ==========================================================================
+   5. DERIVED VALUES
+   ========================================================================== */
+const sp = () => SPECIES[st.species];
+const ageDays = () => (now() - st.bornAt) / 86400000;
+const dayKey = (t = now()) => new Date(t).toISOString().slice(0, 10);
+
+function wellbeing() {
+  const n = st.needs;
+  return clamp(
+    n.fed * .22 + n.rested * .2 + n.clean * .14 + n.bond * .18 +
+    st.resilience * .18 + st.voice * .08, 0, 100);
+}
+
+function moodTier() {
+  if (st.withdrawn) return 'withdrawn';
+  const w = wellbeing();
+  if (st.event) return w > 62 ? 'coping' : 'struggling';
+  if (w >= 74) return 'thriving';
+  if (w >= 55) return 'okay';
+  if (w >= 36) return 'low';
+  return 'struggling';
+}
+
+/* single source of truth for time of day, so the sky, sleep logic and
+   energy drain can never disagree with each other */
+let hourOverride = null;                 /* set from the console to test dusk/night */
+function hourNow(t = now()) { return hourOverride === null ? new Date(t).getHours() : hourOverride; }
+function isNight(t = now()) { const h = hourNow(t); return h >= 21 || h < 6; }
+
+/* what the animal can say, given Voice */
+function voiceLevel() {
+  if (st.voice >= 85) return 3;   /* full sentence + proactive asking */
+  if (st.voice >= 58) return 2;   /* feeling word + need */
+  if (st.voice >= 30) return 1;   /* one word */
+  return 0;                       /* signal only */
+}
+
+function neediest() {
+  const n = st.needs;
+  const list = [['fed', n.fed], ['rested', n.rested], ['clean', n.clean], ['bond', n.bond]];
+  list.sort((a, b) => a[1] - b[1]);
+  return list[0];
+}
+
+function saysAbout() {
+  /* the text the animal produces about its current situation */
+  const lv = voiceLevel();
+  const nm = st.name;
+  if (st.event) {
+    const f = FEELINGS[st.event.feeling];
+    if (lv === 0) return { text:'!', note:`${nm} cannot tell you what is wrong yet. Look at the cue: ${f.cue}. Guess, or check in and start building its Voice.` };
+    if (lv === 1) return { text:`"...${f.word.toLowerCase()}."`, note:'One word is all it has right now. Better than a "!".' };
+    if (lv === 2) return { text:`"I feel ${f.word.toLowerCase()}. I do not want to be alone with it."`, note:'Feeling plus need. Enough to act on.' };
+    return { text:`"I feel ${f.word.toLowerCase()} &mdash; ${st.event.text.toLowerCase().replace(/\.$/, '')}. Could we do something about it together?"`,
+             note:'Full sentence, unprompted, with a request at the end. This is what all that listening bought you.' };
+  }
+  const [key, val] = neediest();
+  const label = { fed:'hungry', rested:'tired', clean:'grubby and it is bothering me', bond:'a little lonely' }[key];
+  if (val > 45) return { text: lv >= 2 ? '"I am alright, honestly."' : '"..."', note:'Nothing pressing. This is the best time to practice a skill &mdash; the ones learned calm are the ones available in a storm.' };
+  if (lv === 0) return { text:'!', note:`No words yet. ${nm} is signalling something. Check the meters and the scene.` };
+  if (lv === 1) return { text:`"${label.split(' ')[0]}."`, note:'One word.' };
+  return { text:`"I am ${label}."`, note:'Says the need plainly.' };
+}
+</script>
+<script>
+/* ==========================================================================
+   6. RENDERING  (112 x 84 logical pixels)
+   ========================================================================== */
+const cv = $('#lcd'), cx = cv.getContext('2d');
+const W = 112, H = 84;
+let frame = 0, anim = { shake:0, flash:0, hop:0 };
+
+const MONO = { bg:'#93ab6d', ink:'#2f3a24', dim:'#6d8352' };
+const COLOR = {
+  daySky:'#8fc3e8', duskSky:'#e8a778', nightSky:'#2a3557',
+  ground:'#4e7a3e', groundNight:'#1f3a2c', dirt:'#6b5334',
+  ink:'#22301f', tree:'#2f6b3c', tree2:'#255a32', star:'#f4f2d8',
+  panel:'#1d2a1c', panelInk:'#cfe8b8', warn:'#f2c14e', bad:'#e0705f', good:'#7fdf9e'
+};
+const mono = () => st && st.settings.lcd === 'mono';
+
+function px(x, y, c) { cx.fillStyle = c; cx.fillRect(x | 0, y | 0, 1, 1); }
+function rect(x, y, w, h, c) { cx.fillStyle = c; cx.fillRect(x | 0, y | 0, w | 0, h | 0); }
+
+function ink(fallback) { return mono() ? MONO.ink : fallback; }
+
+function text(str, x, y, c) {
+  str = String(str).toUpperCase();
+  cx.fillStyle = c || ink(COLOR.ink);
+  let cxp = x;
+  for (const ch of str) {
+    const g = FONT[ch] || FONT['?'];
+    for (let r = 0; r < 6; r++) {
+      const bits = g[r];
+      for (let b = 0; b < 4; b++) if (bits & (8 >> b)) cx.fillRect(cxp + b, y + r, 1, 1);
+    }
+    cxp += 5;
+  }
+  return cxp;
+}
+const textW = s => String(s).length * 5 - 1;
+function textC(str, y, c) { text(str, Math.round((W - textW(str)) / 2), y, c); }
+
+/* ---- creature ---- */
+function drawSprite(rows, ox, oy, scale, pal, tint) {
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    for (let c = 0; c < row.length; c++) {
+      const ch = row[c];
+      if (ch === '.') continue;
+      let col;
+      if (mono()) col = (ch === '1') ? MONO.ink : (ch === '3' || ch === '4') ? MONO.dim : MONO.ink;
+      else col = pal[ch] || '#000';
+      if (mono() && (ch === '2')) col = MONO.ink;
+      if (tint) col = tint;
+      cx.fillStyle = col;
+      cx.fillRect(ox + c * scale, oy + r * scale, scale, scale);
+    }
+  }
+}
+
+function drawFace(ox, oy, scale, expr) {
+  const f = sp().face[st.stage], pal = sp().pal;
+  const dark = mono() ? MONO.ink : '#141414';
+  const glint = mono() ? MONO.bg : '#ffffff';
+  const skin = mono() ? MONO.bg : (pal['3'] || pal['2']);
+  const P = (x, y, c) => { cx.fillStyle = c; cx.fillRect(ox + x * scale, oy + y * scale, scale, scale); };
+
+  for (const ex of f.ex) {
+    /* clear a 2x2 socket so expressions read cleanly on any body */
+    P(ex, f.ey, skin); P(ex + 1, f.ey, skin);
+    P(ex, f.ey + 1, skin); P(ex + 1, f.ey + 1, skin);
+    if (expr === 'closed' || expr === 'sleep') {
+      P(ex, f.ey + 1, dark); P(ex + 1, f.ey + 1, dark);
+    } else if (expr === 'happy') {
+      P(ex, f.ey + 1, dark); P(ex + 1, f.ey, dark);
+    } else if (expr === 'sad') {
+      P(ex, f.ey, dark); P(ex + 1, f.ey + 1, dark);
+    } else if (expr === 'worry') {
+      P(ex, f.ey - 1, dark);
+      P(ex, f.ey + 1, dark); P(ex + 1, f.ey + 1, dark);
+    } else if (expr === 'wide') {
+      P(ex, f.ey, dark); P(ex + 1, f.ey, dark);
+      P(ex, f.ey + 1, dark); P(ex + 1, f.ey + 1, dark);
+    } else { /* open */
+      P(ex, f.ey, dark); P(ex + 1, f.ey, dark);
+      P(ex, f.ey + 1, dark); P(ex + 1, f.ey + 1, glint);
+    }
+  }
+  /* mouth */
+  const mx = f.mx, my = f.my;
+  const m = mono() ? MONO.ink : '#3a2018';
+  if (expr === 'happy') { P(mx - 1, my, m); P(mx, my + 1, m); P(mx + 1, my, m); }
+  else if (expr === 'sad' || expr === 'worry') { P(mx - 1, my + 1, m); P(mx, my, m); P(mx + 1, my + 1, m); }
+  else if (expr === 'eat') { P(mx - 1, my, m); P(mx, my, mono() ? MONO.ink : '#c4586a'); P(mx + 1, my, m); P(mx, my + 1, m); }
+  else if (expr === 'sleep') { P(mx, my, m); }
+  else { P(mx - 1, my, m); P(mx, my, m); }
+}
+
+function expressionNow() {
+  if (st.asleep) return 'sleep';
+  if (st.withdrawn) return 'sad';
+  if (mode === 'game' && mg && mg.expr) return mg.expr;
+  if (st.event) {
+    const f = st.event.feeling;
+    if (f === 'scared' || f === 'anxious') return 'worry';
+    if (f === 'overwhelmed' || f === 'restless') return 'wide';
+    return 'sad';
+  }
+  const t = moodTier();
+  if (t === 'thriving') return frame % 160 < 20 ? 'closed' : 'happy';
+  if (t === 'okay') return frame % 200 < 14 ? 'closed' : 'open';
+  if (t === 'low') return 'sad';
+  if (t === 'struggling') return 'sad';
+  return 'open';
+}
+
+/* ---- environment ---- */
+function skyColor() {
+  if (mono()) return MONO.bg;
+  const h = hourNow();
+  if (isNight()) return COLOR.nightSky;
+  if (h < 8 || h >= 19) return COLOR.duskSky;
+  return COLOR.daySky;
+}
+
+function drawScene() {
+  const night = isNight();
+  rect(0, 0, W, H, skyColor());
+
+  /* stars at night */
+  if (night && !mono()) {
+    for (let i = 0; i < 16; i++) {
+      const x = (i * 37 + 11) % W, y = 11 + (i * 19 + 5) % 26;
+      if ((frame + i * 13) % 200 < 150) px(x, y, COLOR.star);
+    }
+    /* moon */
+    rect(88, 13, 8, 8, '#f3efd0'); rect(86, 15, 4, 4, COLOR.nightSky);
+  } else if (!mono()) {
+    rect(92, 12, 9, 9, '#fbe9a0'); /* sun */
+  }
+
+  /* ridgeline */
+  const ridge = mono() ? MONO.dim : (night ? '#1b2a3f' : '#3f6b57');
+  for (let x = 0; x < W; x++) {
+    const y = 40 + Math.round(6 * Math.sin(x / 17)) + Math.round(3 * Math.sin(x / 6 + 2));
+    rect(x, y, 1, 22, ridge);
+  }
+  /* conifers */
+  const tc = mono() ? MONO.ink : (night ? COLOR.tree2 : COLOR.tree);
+  const trees = [8, 20, 96, 104, 84];
+  for (const tx of trees) {
+    for (let r = 0; r < 7; r++) rect(tx - r, 38 + r * 2, r * 2 + 1, 2, tc);
+    rect(tx, 52, 1, 4, mono() ? MONO.ink : COLOR.dirt);
+  }
+
+  /* ground */
+  rect(0, 56, W, H - 56, mono() ? MONO.bg : (night ? COLOR.groundNight : COLOR.ground));
+  for (let x = 0; x < W; x += 3) px(x, 56, mono() ? MONO.dim : (night ? '#2c4c3a' : '#5f8f4a'));
+  if (mono()) for (let x = 0; x < W; x += 2) px(x, 57, MONO.dim);
+
+  /* den mouth */
+  const dc = mono() ? MONO.ink : (night ? '#101a24' : '#2c2318');
+  for (let r = 0; r < 9; r++) rect(6 + Math.max(0, 3 - r), 47 + r, 16 - Math.max(0, 3 - r) * 2, 1, dc);
+
+  /* grass tufts + a huckleberry bush so the ground is not empty */
+  const gc = mono() ? MONO.dim : (night ? '#356047' : '#77a856');
+  [26, 38, 62, 74, 88, 100].forEach((x, i) => {
+    const y = 62 + (i % 3) * 5;
+    px(x, y, gc); px(x - 1, y + 1, gc); px(x + 1, y + 1, gc); px(x, y + 1, gc);
+  });
+  const bush = mono() ? MONO.ink : (night ? '#20402f' : '#356b39');
+  rect(96, 64, 9, 5, bush); rect(98, 62, 5, 2, bush);
+  if (!mono()) { px(98, 65, '#6b3f6e'); px(102, 66, '#6b3f6e'); px(100, 63, '#6b3f6e'); }
+
+  /* weather */
+  drawWeather(night);
+}
+
+function drawWeather(night) {
+  const w = st.weather;
+  const c = mono() ? MONO.dim : '#cfe4f5';
+  if (w === 'rain') {
+    for (let i = 0; i < 26; i++) {
+      const x = (i * 29 + frame * 2) % W;
+      const y = (i * 17 + frame * 4) % 58;
+      rect(x, y, 1, 2, c);
+    }
+  } else if (w === 'snow') {
+    for (let i = 0; i < 22; i++) {
+      const x = (i * 31 + Math.round(3 * Math.sin((frame + i * 20) / 30))) % W;
+      const y = (i * 13 + frame) % 58;
+      px(x, y, mono() ? MONO.dim : '#ffffff');
+    }
+  } else if (w === 'smoke') {
+    if (!mono()) { cx.fillStyle = 'rgba(184,140,96,0.30)'; cx.fillRect(0, 0, W, H); }
+    else for (let x = 0; x < W; x += 4) for (let y = 0; y < 58; y += 4) px((x + frame / 8 | 0) % W, y, MONO.dim);
+  } else if (w === 'wind') {
+    for (let i = 0; i < 8; i++) {
+      const y = 12 + i * 5, x = (frame * 3 + i * 23) % (W + 24) - 24;
+      rect(x, y, 7, 1, mono() ? MONO.dim : 'rgba(255,255,255,.5)');
+    }
+  } else if (w === 'fog') {
+    if (!mono()) { cx.fillStyle = 'rgba(226,236,240,0.28)'; cx.fillRect(0, 30, W, 30); }
+  }
+}
+
+function drawMesses() {
+  for (const m of st.messes) {
+    const c = mono() ? MONO.ink : '#6b5334';
+    rect(m.x, m.y, 4, 3, c);
+    rect(m.x + 1, m.y - 1, 2, 1, c);
+    if (!mono()) px(m.x + 1, m.y + 1, '#4a3a22');
+    /* flies once it has sat a while */
+    if (m.age > 40) {
+      const fx = m.x + 2 + Math.round(2 * Math.sin(frame / 7 + m.x));
+      const fy = m.y - 4 + Math.round(2 * Math.cos(frame / 9 + m.x));
+      px(fx, fy, mono() ? MONO.ink : '#1c1c1c');
+    }
+  }
+}
+
+function drawStatusStrip() {
+  const bg = mono() ? MONO.bg : 'rgba(10,17,12,.86)';
+  rect(0, 0, W, 9, bg);
+  rect(0, 9, W, 1, mono() ? MONO.dim : 'rgba(10,17,12,.5)');
+  const items = [
+    ['FD', st.needs.fed], ['RS', st.needs.rested],
+    ['CL', st.needs.clean], ['@', st.needs.bond]
+  ];
+  let x = 2;
+  for (const [lab, v] of items) {
+    const c = mono() ? MONO.ink : (v < 25 ? COLOR.bad : v < 50 ? COLOR.warn : COLOR.panelInk);
+    x = text(lab, x, 2, c) + 1;
+    rect(x, 3, 12, 3, mono() ? MONO.dim : 'rgba(0,0,0,.45)');
+    rect(x, 3, Math.round(12 * v / 100), 3, c);
+    x += 15;
+  }
+  /* resilience marker, far right */
+  const rc = mono() ? MONO.ink : (st.resilience > 60 ? COLOR.good : st.resilience > 30 ? COLOR.warn : COLOR.bad);
+  rect(W - 4, 8 - Math.round(6 * st.resilience / 100), 3, Math.max(1, Math.round(6 * st.resilience / 100)), rc);
+}
+
+function drawBubble(str) {
+  if (!str) return;
+  const lines = wrapPx(str, 20);
+  const h = lines.length * 8 + 6;
+  const w = Math.max(...lines.map(textW)) + 8;
+  const x = Math.round((W - w) / 2), y = 64 - h + 8;
+  rect(x, y, w, h, mono() ? MONO.bg : '#f4f6e8');
+  cx.strokeStyle = ink(COLOR.ink);
+  cx.lineWidth = 1; cx.strokeRect(x + .5, y + .5, w - 1, h - 1);
+  rect(x + w / 2 - 2, y + h, 2, 2, mono() ? MONO.bg : '#f4f6e8');
+  lines.forEach((L, i) => text(L, x + 4, y + 4 + i * 8, ink('#22301f')));
+}
+function wrapPx(str, maxChars) {
+  const words = String(str).toUpperCase().split(' ');
+  const out = []; let line = '';
+  for (const w of words) {
+    if ((line + ' ' + w).trim().length > maxChars) { if (line) out.push(line); line = w; }
+    else line = (line ? line + ' ' : '') + w;
+  }
+  if (line) out.push(line);
+  return out.slice(0, 3);
+}
+
+function drawZs(ox, oy) {
+  for (let i = 0; i < 3; i++) {
+    const p = ((frame / 3 + i * 20) % 60) / 60;
+    if (p > .9) continue;
+    const y = oy - p * 16, x = ox + Math.sin(p * 6) * 4 + i * 3;
+    text('Z', Math.round(x), Math.round(y), ink('#f4f6e8'));
+  }
+}
+
+/* ---- LCD screens ---- */
+function drawVitals() {
+  rect(0, 0, W, H, mono() ? MONO.bg : COLOR.panel);
+  textC(st.name.toUpperCase(), 3, ink(COLOR.panelInk));
+  const rows = [
+    ['FED', st.needs.fed], ['RESTED', st.needs.rested], ['CLEAN', st.needs.clean],
+    ['BOND', st.needs.bond], ['GRIT', st.resilience], ['VOICE', st.voice]
+  ];
+  rows.forEach(([lab, v], i) => {
+    const y = 13 + i * 9;
+    text(lab, 3, y, ink(COLOR.panelInk));
+    const bx = 36, bw = 52;
+    rect(bx, y, bw, 5, mono() ? MONO.dim : '#0e1a13');
+    const c = mono() ? MONO.ink : (v < 25 ? COLOR.bad : v < 50 ? COLOR.warn : COLOR.good);
+    rect(bx, y, Math.max(1, Math.round(bw * v / 100)), 5, c);
+    text(String(Math.round(v)), 92, y, ink(COLOR.panelInk));
+  });
+  text(STAGE_NAMES[st.stage].toUpperCase() + ' ' + ageDays().toFixed(1) + 'D', 3, 70, ink(COLOR.panelInk));
+  text(WEATHERS[st.weather].label, 72, 70, ink(COLOR.panelInk));
+  text('C=BACK  B=RINGS', 3, 78, mono() ? MONO.dim : '#7f9a6c');
+}
+
+function drawRings() {
+  rect(0, 0, W, H, mono() ? MONO.bg : COLOR.panel);
+  textC('TREE RINGS', 3, ink(COLOR.panelInk));
+  const cxp = 56, cyp = 38;
+  const days = st.days.slice(-12);
+  if (!days.length) textC('COME BACK TOMORROW', 36, ink(COLOR.panelInk));
+  days.forEach((d, i) => {
+    const r = 3 + i * 2;
+    const c = mono() ? (d.w > 55 ? MONO.ink : MONO.dim)
+      : d.w >= 74 ? COLOR.good : d.w >= 55 ? '#a8d96b' : d.w >= 36 ? COLOR.warn : COLOR.bad;
+    cx.strokeStyle = c; cx.lineWidth = 1;
+    cx.beginPath(); cx.arc(cxp + .5, cyp + .5, r, 0, Math.PI * 2); cx.stroke();
+  });
+  text('ONE RING PER DAY', 3, 72, mono() ? MONO.dim : '#7f9a6c');
+  text('C=BACK', 3, 78, mono() ? MONO.dim : '#7f9a6c');
+}
+
+function drawNotes() {
+  rect(0, 0, W, H, mono() ? MONO.bg : COLOR.panel);
+  textC('LEARNED', 3, ink(COLOR.panelInk));
+  const un = SKILLS.filter(s => st.skills[s.id].unlocked);
+  un.slice(0, 7).forEach((s, i) => {
+    const y = 13 + i * 9;
+    text(s.lcd, 3, y, ink(COLOR.panelInk));
+    const m = st.skills[s.id].mastery;
+    for (let p = 0; p < 3; p++)
+      rect(80 + p * 6, y + 1, 4, 4, p < m ? (mono() ? MONO.ink : COLOR.good) : (mono() ? MONO.dim : '#2b4436'));
+  });
+  text('C=BACK', 3, 78, mono() ? MONO.dim : '#7f9a6c');
+}
+
+function drawMenuOverlay() {
+  const it = MENU[sel];
+  rect(0, 64, W, 20, mono() ? MONO.bg : 'rgba(12,20,14,.82)');
+  cx.strokeStyle = ink(COLOR.panelInk); cx.strokeRect(.5, 64.5, W - 1, 19);
+  textC(it.lcd, 68, ink(COLOR.panelInk));
+  textC('B=DO  A=NEXT', 76, mono() ? MONO.dim : '#9fbf88');
+}
+
+/* main draw */
+function draw() {
+  frame++;
+  cx.clearRect(0, 0, W, H);
+  if (!st) return;
+
+  if (mode === 'vitals') { drawVitals(); return; }
+  if (mode === 'rings')  { drawRings(); return; }
+  if (mode === 'notes')  { drawNotes(); return; }
+  if (mode === 'game')   { drawMiniGame(); return; }
+
+  drawScene();
+  drawMesses();
+
+  /* the creature */
+  const rows = SPRITES[st.species][st.stage];
+  const scale = 2;
+  let bx = 40, by = 22;
+  const t = moodTier();
+  /* idle bob */
+  if (!st.asleep) {
+    const speed = t === 'thriving' ? 24 : t === 'okay' ? 34 : 60;
+    by += (Math.floor(frame / speed) % 2 === 0) ? 0 : 1;
+    if (st.event && st.event.feeling === 'restless') bx += Math.round(6 * Math.sin(frame / 14));
+    if (anim.hop > 0) { by -= Math.round(4 * Math.sin((1 - anim.hop / 30) * Math.PI)); anim.hop--; }
+    if (anim.shake > 0) { bx += (frame % 4 < 2 ? -1 : 1) * 2; anim.shake--; }
+  } else {
+    by += 8; /* lying down-ish */
+  }
+  if (st.withdrawn) { bx = 12; by = 26; }
+
+  drawSprite(rows, bx, by, scale, sp().pal);
+  drawFace(bx, by, scale, expressionNow());
+  if (st.asleep) drawZs(bx + 30, by + 4);
+
+  /* signal / bubble */
+  if (mode === 'scene') {
+    let bub = null;
+    if (st.asleep) bub = null;
+    else if (st.withdrawn) bub = '...';
+    else if (st.event) {
+      const lv = voiceLevel();
+      bub = lv === 0 ? '!' : lv === 1 ? FEELINGS[st.event.feeling].word
+          : lv === 2 ? 'I FEEL ' + FEELINGS[st.event.feeling].word
+          : 'CAN WE DO SOMETHING ABOUT THIS TOGETHER?';
+    } else if (st.pendingAsk) {
+      bub = st.pendingAsk;
+    } else {
+      const [k, v] = neediest();
+      if (v < 45) bub = voiceLevel() === 0 ? '!' : { fed:'HUNGRY', rested:'TIRED', clean:'ITS MESSY', bond:'LONELY' }[k];
+      else if (isNight() && !st.lightsOff) bub = 'CANT SLEEP';
+    }
+    if (bub) drawBubble(bub);
+  }
+
+  drawStatusStrip();
+  if (mode === 'menu') drawMenuOverlay();
+
+  if (anim.flash > 0) {
+    anim.flash--;
+    cx.fillStyle = 'rgba(255,255,255,' + (anim.flash / 20) + ')';
+    cx.fillRect(0, 0, W, H);
+  }
+}
+</script>
+<script>
+/* ==========================================================================
+   7. SOUND  (tiny square-wave beeper)
+   ========================================================================== */
+let ac = null;
+function beep(freq, ms, type) {
+  if (!st || !st.settings.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'square'; o.frequency.value = freq;
+    g.gain.value = .04;
+    o.connect(g); g.connect(ac.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + ms / 1000);
+    o.stop(ac.currentTime + ms / 1000);
+  } catch (e) {}
+}
+const sfx = {
+  move:  () => beep(560, 40),
+  ok:    () => { beep(700, 60); setTimeout(() => beep(950, 80), 70); },
+  good:  () => { beep(700, 60); setTimeout(() => beep(880, 60), 70); setTimeout(() => beep(1150, 110), 140); },
+  bad:   () => { beep(280, 90); setTimeout(() => beep(200, 130), 90); },
+  alert: () => { beep(880, 70); setTimeout(() => beep(880, 70), 130); setTimeout(() => beep(880, 70), 260); },
+  eat:   () => { beep(420, 50); setTimeout(() => beep(500, 50), 60); setTimeout(() => beep(600, 60), 120); },
+  breath:() => beep(330, 200, 'sine')
+};
+
+/* ==========================================================================
+   8. LOGGING
+   ========================================================================== */
+function logAdd(txt, kind) {
+  /* collapse an immediately repeated line (common during offline catch-up) */
+  const head = st.log[0];
+  if (head && head.x === txt) {
+    head.n = (head.n || 1) + 1;
+    head.t = now();
+    renderLog();
+    return;
+  }
+  st.log.unshift({ t: now(), x: txt, k: kind || '' });
+  if (st.log.length > 140) st.log.length = 140;
+  renderLog();
+  announce(txt.replace(/<[^>]+>/g, ''));
+}
+let annTimer = null;
+function announce(msg) {
+  clearTimeout(annTimer);
+  annTimer = setTimeout(() => { $('#announcer').textContent = msg; }, 120);
+}
+
+/* ==========================================================================
+   9. SIMULATION
+   ========================================================================== */
+const RATE = {           /* per real hour at 1x */
+  fed: 11, rested: 8, restedNightAwake: 20, restedSleep: -26,
+  clean: 6.5, bond: 3.2, resilienceDrift: .45, voiceDrift: .5
+};
+
+function selfCareFactor() {
+  /* how much the animal can hold its own line, 0..1 */
+  const mastered = SKILLS.filter(s => st.skills[s.id].mastery >= 2).length;
+  return clamp(st.resilience / 130 + mastered * .04, 0, .8);
+}
+
+function tick(dtHours) {
+  if (!st || dtHours <= 0) return;
+  const scf = selfCareFactor();
+  const ease = 1 - .65 * scf;          /* resilient animals decay slower */
+  const floor = 16 * scf;              /* and hold a floor on their own */
+  const night = isNight();
+
+  /* --- sleep state --- */
+  if (night && st.lightsOff && !st.asleep && st.needs.rested < 92) {
+    st.asleep = true;
+    logAdd(`${st.name} curled up and went to sleep.`, '');
+  }
+  if (st.asleep && (!night || !st.lightsOff || st.needs.rested >= 99)) {
+    if (!night || !st.lightsOff) {
+      st.asleep = false;
+      logAdd(`${st.name} woke up.`, '');
+    }
+  }
+
+  /* --- needs --- */
+  const n = st.needs;
+  n.fed = Math.max(floor * .5, n.fed - RATE.fed * dtHours * ease * (st.asleep ? .45 : 1));
+  if (st.asleep) n.rested = clamp(n.rested - RATE.restedSleep * dtHours, 0, 100);
+  else n.rested = Math.max(floor * .5, n.rested - (night ? RATE.restedNightAwake : RATE.rested) * dtHours * ease);
+  n.clean = Math.max(0, n.clean - RATE.clean * dtHours * (st.asleep ? .5 : 1));
+  n.bond  = Math.max(floor, n.bond - RATE.bond * dtHours * ease);
+
+  st.resilience = clamp(st.resilience - RATE.resilienceDrift * dtHours, 0, 100);
+  st.voice = clamp(st.voice - RATE.voiceDrift * dtHours, 0, 100);
+
+  /* --- self-feeding from the cache --- */
+  if (n.fed < 34 && st.cache > 0 && scf > .28 && !st.waiting && !st.asleep) {
+    st.cache--; n.fed = clamp(n.fed + 34, 0, 100);
+    st.resilience = clamp(st.resilience + 1.5, 0, 100);
+    logAdd(`${st.name} went to the cache and fed itself. That is what the cache is for.`, 'good');
+  }
+
+  /* --- messes --- */
+  const wantMesses = n.clean < 22 ? 3 : n.clean < 48 ? 2 : n.clean < 72 ? 1 : 0;
+  while (st.messes.length < wantMesses)
+    st.messes.push({ x: 20 + Math.floor(Math.random() * 70), y: 62 + Math.floor(Math.random() * 14), age: 0 });
+  st.messes.forEach(m => m.age += dtHours * 60);
+  /* self-tidying */
+  if (st.messes.length && scf > .45 && Math.random() < dtHours * .5 && !st.asleep) {
+    st.messes.pop();
+    n.clean = clamp(n.clean + 18, 0, 100);
+    logAdd(`${st.name} tidied up after itself without being asked.`, 'good');
+  }
+
+  /* --- weather --- */
+  if (now() - st.weatherAt > (2 + Math.random() * 3) * 3600000 / spd()) {
+    const m = new Date().getMonth();
+    const pool = (m >= 10 || m <= 2) ? ['snow','snow','fog','clear','wind']
+      : (m >= 6 && m <= 8) ? ['clear','clear','smoke','wind','rain']
+      : ['rain','rain','fog','clear','wind'];
+    const w = pick(pool);
+    if (w !== st.weather) {
+      st.weather = w; st.weatherAt = now();
+      logAdd(`Weather turned: ${WEATHERS[w].note}`, '');
+      if (WEATHERS[w].mood < 0) st.needs.bond = clamp(st.needs.bond + WEATHERS[w].mood, 0, 100);
+    }
+  }
+
+  /* --- coddle window decay --- */
+  st.soothes = st.soothes.filter(t => now() - t < 3600000 / spd());
+  if (st.waiting > 0) {
+    st.waiting = Math.max(0, st.waiting - dtHours * 60);
+    if (st.waiting === 0) logAdd(`${st.name} started trying things on its own again.`, 'good');
+  }
+
+  /* --- neglect / withdrawal --- */
+  const lowCount = ['fed','rested','clean','bond'].filter(k => n[k] < 25).length;
+  if (lowCount >= 2) st.neglectMin += dtHours * 60;
+  else st.neglectMin = Math.max(0, st.neglectMin - dtHours * 90);
+  if (!st.withdrawn && st.neglectMin > 300) {
+    st.withdrawn = true; st.event = null;
+    logAdd(`${st.name} has gone quiet and moved to the back of the den. It is not sulking &mdash; it stopped expecting an answer. Small, steady care will bring it back. There is no losing here.`, 'bad');
+    sfx.bad();
+  }
+  if (st.withdrawn && wellbeing() > 52 && st.neglectMin < 60) {
+    st.withdrawn = false;
+    st.resilience = clamp(st.resilience + 6, 0, 100);
+    logAdd(`${st.name} came back to the front of the den on its own. Repair after a rupture builds more trust than never rupturing would have.`, 'teach');
+    sfx.good();
+  }
+  if (st.withdrawn && st.neglectMin > 900) {
+    st.withdrawn = false; st.neglectMin = 0;
+    Object.keys(n).forEach(k => n[k] = Math.max(n[k], 55));
+    st.messes.length = 0;
+    logAdd(`A ranger stopped by, topped up the food and water, and cleaned the den. Nobody is in trouble. Sometimes the right move is letting someone else step in.`, 'teach');
+  }
+
+  /* --- distress events --- */
+  if (!st.event && !st.asleep && !st.withdrawn &&
+      now() - st.lastEventAt > 40 * 60000 / spd() &&
+      Math.random() < dtHours * .55) {
+    startEvent();
+  }
+  /* escalate or self-resolve */
+  if (st.event) {
+    const mins = (now() - st.event.at) / 60000 * spd();
+    const fit = SKILLS.filter(s => st.skills[s.id].unlocked && st.skills[s.id].mastery >= 2 && s.fits.includes(st.event.feeling) && s.id !== 'sit');
+    if (fit.length && !st.waiting && Math.random() < dtHours * 1.6) {
+      const s = pick(fit);
+      logAdd(`On its own: ${st.name} ${s.self}. It did not need you for that one.`, 'good');
+      st.resilience = clamp(st.resilience + 3.5, 0, 100);
+      st.needs.bond = clamp(st.needs.bond + 2, 0, 100);
+      clearEvent(true);
+    } else if (mins > 90 && !st.event.escalated) {
+      st.event.escalated = true;
+      st.needs.bond = clamp(st.needs.bond - 7, 0, 100);
+      logAdd(`The ${FEELINGS[st.event.feeling].word.toLowerCase()} has been sitting there a while now with no answer.`, 'warn');
+      sfx.alert();
+    } else if (mins > 260) {
+      st.resilience = clamp(st.resilience - 2, 0, 100);
+      clearEvent(false);
+      logAdd(`${st.name} gave up on that one and went quiet about it. Unanswered signals stop being sent.`, 'bad');
+    }
+  }
+
+  /* --- proactive asking (high Voice + ask mastery) --- */
+  if (!st.pendingAsk && st.skills.ask.mastery >= 2 && st.voice >= 70 && !st.asleep && !st.withdrawn &&
+      now() - st.lastAskAt > 3 * 3600000 / spd() && Math.random() < dtHours * .4) {
+    const [k] = neediest();
+    st.pendingAsk = pick([
+      'CAN YOU SIT WITH ME?', 'COULD WE PLAY?', 'I NEED SOMETHING', 'CAN I ASK YOU FOR HELP?'
+    ]);
+    st.lastAskAt = now();
+    logAdd(`${st.name} came over and asked for something out loud, unprompted. That is the whole point of teaching Ask for Help.`, 'teach');
+    sfx.ok();
+  }
+
+  /* --- good moments --- */
+  if (!st.event && !st.asleep && !st.withdrawn && wellbeing() > 58 &&
+      now() - st.lastGoodAt > 2.5 * 3600000 / spd() && Math.random() < dtHours * .5) {
+    st.lastGoodAt = now();
+    st.needs.bond = clamp(st.needs.bond + 4, 0, 100);
+    logAdd(`${st.name} ${pick(GOOD_EVENTS)}`, 'good');
+    anim.hop = 30;
+  }
+
+  /* --- day rings + growth --- */
+  const dk = dayKey();
+  const last = st.days[st.days.length - 1];
+  if (!last || last.d !== dk) {
+    st.days.push({ d: dk, w: Math.round(wellbeing()) });
+    if (st.days.length > 400) st.days.shift();
+    if (last) checkGrowth();
+  } else {
+    last.w = Math.round(last.w * .8 + wellbeing() * .2);
+  }
+}
+
+function checkGrowth() {
+  const need = [2, 5][st.stage];
+  if (need === undefined) return;
+  const recent = st.days.slice(-4);
+  const avg = recent.reduce((a, b) => a + b.w, 0) / Math.max(1, recent.length);
+  if (ageDays() >= need) {
+    if (avg >= 52 && st.resilience >= 25 + st.stage * 15) {
+      st.stage++;
+      st.needs.bond = clamp(st.needs.bond + 6, 0, 100);
+      logAdd(`${st.name} grew. It is a ${STAGE_NAMES[st.stage].toLowerCase()} now &mdash; bigger, steadier, and able to handle more of its own day.`, 'good');
+      sfx.good(); anim.flash = 20; anim.hop = 30;
+    } else if (!st.seen['growthWait_' + st.stage]) {
+      st.seen['growthWait_' + st.stage] = 1;
+      logAdd(`${st.name} is old enough to grow but not steady enough yet. Growth here is not just time &mdash; it needs a stretch of decent days and some practiced grit.`, 'teach');
+    }
+  }
+}
+
+function startEvent() {
+  const e = pick(EVENTS);
+  st.event = { id: e.id, feeling: e.feeling, text: e.text, at: now(), escalated: false };
+  st.lastEventAt = now();
+  logAdd(`<b>${st.name}:</b> ${e.text}`, 'warn');
+  sfx.alert();
+  renderStage();
+}
+function clearEvent(good) {
+  st.event = null;
+  st.lastEventAt = now();
+  if (good) anim.hop = 30;
+  renderStage();
+}
+
+function spd() { return st ? Number(st.settings.speed) || 1 : 1; }
+
+/* ---- offline catch-up ---- */
+function catchUp() {
+  const dt = now() - st.lastTick;
+  st.lastTick = now();
+  if (dt < 4000) return;
+  const hoursRaw = dt / 3600000;
+  const hours = Math.min(hoursRaw, 72);         /* never punish a long absence too hard */
+  const scf = selfCareFactor();
+  /* run in chunks so events/messes behave */
+  let left = hours;
+  const savedSpeed = st.settings.speed; st.settings.speed = 1;
+  while (left > 0) { const c = Math.min(1, left); tick(c); left -= c; }
+  st.settings.speed = savedSpeed;
+  if (hoursRaw > 2) {
+    const h = Math.round(hoursRaw);
+    if (scf > .45)
+      logAdd(`You were gone about ${h} hours. ${st.name} kept its own fire going &mdash; fed itself from the cache, handled a couple of things alone. That is what the grit is for.`, 'good');
+    else if (scf > .2)
+      logAdd(`You were gone about ${h} hours. ${st.name} managed some of it alone and struggled with the rest.`, '');
+    else
+      logAdd(`You were gone about ${h} hours. ${st.name} does not have the skills to hold its own line yet, so it just waited. Teaching them is how you buy slack.`, 'teach');
+  }
+}
+</script>
+<script>
+/* ==========================================================================
+   10. MENU + ICONS
+   ========================================================================== */
+const ICONS = {
+  /* 8x8 pixel glyphs as bit rows */
+  feed:  [0x18,0x24,0x7E,0xFF,0xFF,0xFF,0x7E,0x3C],
+  play:  [0x3C,0x42,0x99,0xA5,0xA5,0x99,0x42,0x3C],
+  clean: [0x03,0x07,0x0E,0x1C,0x38,0x7C,0xFE,0xFE],
+  light: [0x18,0x3C,0x7E,0x7E,0x3C,0x18,0x18,0x3C],
+  chat:  [0x7E,0xFF,0xC3,0xFF,0xFF,0x7E,0x0C,0x18],
+  skill: [0x66,0xFF,0xFF,0xFF,0x7E,0x3C,0x18,0x18],
+  vitals:[0x81,0xC3,0xE7,0xFF,0x3C,0x3C,0x3C,0x3C],
+  notes: [0xFE,0x82,0xBA,0x82,0xBA,0x82,0xBA,0xFE]
+};
+
+const MENU = [
+  { id:'feed',   lcd:'FEED',     label:'Feed',     rail:'top' },
+  { id:'play',   lcd:'PLAY',     label:'Play',     rail:'top' },
+  { id:'clean',  lcd:'TIDY UP',  label:'Tidy up',  rail:'top' },
+  { id:'light',  lcd:'LIGHTS',   label:'Lights',   rail:'top' },
+  { id:'chat',   lcd:'CHECK IN', label:'Check in', rail:'bottom' },
+  { id:'skill',  lcd:'SKILLS',   label:'Skills',   rail:'bottom' },
+  { id:'vitals', lcd:'VITALS',   label:'Vitals',   rail:'bottom' },
+  { id:'notes',  lcd:'NOTES',    label:'Notes',    rail:'bottom' }
+];
+
+let sel = 4;                 /* selected menu icon */
+let mode = 'scene';          /* scene | menu | vitals | rings | notes | game */
+let mg = null;               /* active minigame */
+
+function iconSVG(bits) {
+  let r = '<svg viewBox="0 0 8 8" aria-hidden="true">';
+  for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++)
+    if (bits[y] & (128 >> x)) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+  return r + '</svg>';
+}
+
+function buildRails() {
+  ['top','bottom'].forEach(which => {
+    const host = which === 'top' ? $('#railTop') : $('#railBottom');
+    host.innerHTML = '';
+    MENU.forEach((m, i) => {
+      if (m.rail !== which) return;
+      const b = document.createElement('button');
+      b.className = 'icon-btn';
+      b.type = 'button';
+      b.dataset.i = i;
+      b.setAttribute('aria-pressed', 'false');
+      b.setAttribute('aria-label', m.label);
+      b.title = m.label;
+      b.innerHTML = iconSVG(ICONS[m.id]);
+      b.addEventListener('click', () => { sel = i; sfx.move(); activate(); });
+      host.appendChild(b);
+    });
+  });
+}
+
+function refreshRails() {
+  document.querySelectorAll('.icon-btn').forEach(b => {
+    const i = Number(b.dataset.i);
+    b.setAttribute('aria-pressed', String(i === sel && mode === 'menu'));
+    const m = MENU[i];
+    let alert = false;
+    if (!st) alert = false;
+    else if (m.id === 'chat') alert = !!st.event || !!st.pendingAsk;
+    else if (m.id === 'feed') alert = st.needs.fed < 30;
+    else if (m.id === 'clean') alert = st.messes.length > 0;
+    else if (m.id === 'light') alert = isNight() && !st.lightsOff;
+    else if (m.id === 'play') alert = st.needs.bond < 30;
+    b.classList.toggle('alerting', alert && !st.settings.nomotion);
+  });
+}
+
+/* A / B / C */
+function btnA() {
+  if (mode === 'game') return;
+  if (mode !== 'menu') { mode = 'menu'; }
+  else sel = (sel + 1) % MENU.length;
+  sfx.move(); refreshRails();
+}
+function btnB() {
+  if (mode === 'game') { mgTap(); return; }
+  if (mode === 'vitals') { mode = 'rings'; sfx.move(); return; }
+  if (mode === 'rings' || mode === 'notes') { mode = 'scene'; sfx.move(); return; }
+  if (mode !== 'menu') { mode = 'menu'; refreshRails(); sfx.move(); return; }
+  activate();
+}
+function btnC() {
+  if (mode === 'game') { abortGame(); return; }
+  mode = 'scene'; sfx.move(); refreshRails(); renderStage();
+}
+
+function activate() {
+  const m = MENU[sel];
+  mode = 'menu'; refreshRails();
+  if (m.id === 'vitals') { mode = 'vitals'; sfx.ok(); return; }
+  if (m.id === 'notes')  { mode = 'notes'; sfx.ok(); return; }
+  if (m.id === 'light')  { toggleLights(); return; }
+  if (m.id === 'clean')  { doClean(); return; }
+  if (m.id === 'feed')   { showFeedMenu(); return; }
+  if (m.id === 'play')   { showPlayMenu(); return; }
+  if (m.id === 'chat')   { startCheckIn(); return; }
+  if (m.id === 'skill')  { showSkillMenu(); return; }
+}
+
+/* ==========================================================================
+   11. ACTIONS
+   ========================================================================== */
+function toggleLights() {
+  st.lightsOff = !st.lightsOff;
+  sfx.ok();
+  if (st.lightsOff) {
+    logAdd(`Lights off.` + (isNight() ? ` ${st.name} settled down.` : ` It is not night yet, so ${st.name} just blinked at you in the dark.`), '');
+    if (isNight()) st.asleep = true;
+  } else {
+    logAdd('Lights on.' + (st.asleep ? ` ${st.name} woke up, unimpressed.` : ''), '');
+    st.asleep = false;
+  }
+  renderAll();
+}
+
+function doClean() {
+  if (!st.messes.length) {
+    logAdd('Nothing to clean up right now.', '');
+    sfx.move(); return;
+  }
+  const k = st.messes.length;
+  st.messes.length = 0;
+  st.needs.clean = 100;
+  st.needs.bond = clamp(st.needs.bond + 2, 0, 100);
+  sfx.ok(); anim.flash = 14;
+  logAdd(`Cleaned up ${k === 1 ? 'the mess' : 'all ' + k + ' messes'}. The den smells like pine again.`, 'good');
+  renderAll();
+}
+
+function feed(kind) {
+  if (st.asleep) { logAdd(`${st.name} is asleep. Food can wait.`, ''); return; }
+  if (kind === 'cache') {
+    st.cache += 3;
+    st.needs.bond = clamp(st.needs.bond + 1, 0, 100);
+    st.resilience = clamp(st.resilience + 2, 0, 100);
+    sfx.ok();
+    logAdd(`Stocked the cache (${st.cache} portions). ${st.name} can feed itself from this when you are not around &mdash; if it has the grit to remember it is there.`, 'teach');
+    renderAll(); return;
+  }
+  if (kind === 'meal') {
+    if (st.needs.fed > 92) { logAdd(`${st.name} is full and turned its head away. Full is a real answer.`, ''); sfx.move(); renderAll(); return; }
+    st.needs.fed = clamp(st.needs.fed + 38, 0, 100);
+    st.needs.bond = clamp(st.needs.bond + 3, 0, 100);
+    sfx.eat(); anim.hop = 24;
+    logAdd(`Fed ${st.name} a proper meal.` + (st.weather === 'smoke' ? ' It ate slower than usual in the haze.' : ''), 'good');
+    renderAll(); return;
+  }
+  /* treat */
+  const emotional = !!st.event;
+  const notHungry = st.needs.fed > 68;
+  st.needs.fed = clamp(st.needs.fed + 9, 0, 100);
+  st.needs.bond = clamp(st.needs.bond + 5, 0, 100);
+  sfx.eat(); anim.hop = 24;
+  if (emotional || notHungry) {
+    st.soothes.push(now());
+    if (emotional) {
+      /* the crash: mood up now, worse in a moment */
+      const feelingWord = FEELINGS[st.event.feeling].word.toLowerCase();
+      clearEvent(false);
+      setTimeout(() => {
+        if (!st) return;
+        st.needs.bond = clamp(st.needs.bond - 9, 0, 100);
+        st.resilience = clamp(st.resilience - 3, 0, 100);
+        logAdd(`The treat wore off and the ${feelingWord} came back a size bigger. Nothing got named, so nothing got smaller.`, 'bad');
+        renderAll();
+      }, 9000);
+      logAdd(`Gave ${st.name} a treat instead of dealing with the feeling. It brightened up immediately.`, 'warn');
+    } else {
+      logAdd(`Gave ${st.name} a treat. It was not hungry, but it was happy about it.`, '');
+    }
+    if (st.soothes.length >= 3 && !st.waiting) {
+      st.waiting = 150;
+      st.resilience = clamp(st.resilience - 8, 0, 100);
+      logAdd(`<b>${st.name} has stopped trying things.</b> Three feelings in a row got solved with food, so now it sits and waits for you to arrive with something. Treats feel good fast &mdash; they just do not teach it what to do next time.`, 'bad');
+      sfx.bad();
+    }
+  } else {
+    logAdd(`Gave ${st.name} a treat. It was genuinely hungry, so this is just food.`, '');
+  }
+  renderAll();
+}
+
+function play(kind) {
+  if (st.asleep) { logAdd(`${st.name} is asleep.`, ''); return; }
+  if (st.needs.rested < 18) {
+    logAdd(`${st.name} is too tired to play. Being tired is information, not laziness.`, 'teach');
+    sfx.move(); return;
+  }
+  st.needs.rested = clamp(st.needs.rested - 6, 0, 100);
+  st.needs.bond = clamp(st.needs.bond + (kind === 'explore' ? 14 : 10), 0, 100);
+  st.needs.fed = clamp(st.needs.fed - 3, 0, 100);
+  anim.hop = 30; sfx.good();
+  if (kind === 'explore') {
+    st.resilience = clamp(st.resilience + 2.5, 0, 100);
+    logAdd(`Took ${st.name} somewhere new. It was nervous for the first minute and then forgot to be. Mild, chosen challenge is exactly what grows grit.`, 'teach');
+    if (st.event && ['restless','frustrated'].includes(st.event.feeling)) {
+      logAdd(`Moving around took the edge off the ${FEELINGS[st.event.feeling].word.toLowerCase()}.`, 'good');
+      clearEvent(true);
+    }
+  } else {
+    logAdd(`Played pinecone toss with ${st.name}. Simple and good.`, 'good');
+    if (st.event && st.event.feeling === 'restless') clearEvent(true);
+  }
+  renderAll();
+}
+
+/* ==========================================================================
+   12. HTML STAGE PANEL  (dialogue lives here, readable + screen-readable)
+   ========================================================================== */
+let flow = null;   /* current interactive flow */
+
+function stageHTML(html, choices, opts) {
+  opts = opts || {};
+  $('#stageBody').innerHTML = html;
+  const host = $('#stageChoices');
+  host.innerHTML = '';
+  (choices || []).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'choice' + (c.wide ? ' wide' : '') + (c.primary ? ' btn-primary' : '');
+    b.innerHTML = c.text;
+    b.addEventListener('click', c.on);
+    host.appendChild(b);
+  });
+  $('#stage').classList.toggle('urgent', !!opts.urgent);
+  $('#stageTag').textContent = opts.tag || '';
+}
+
+function renderStage() {
+  if (flow) return;                 /* a flow owns the panel while active */
+  if (!st) return;
+  const nm = st.name;
+  const said = saysAbout();
+  let head = '';
+  const tier = moodTier();
+
+  if (st.withdrawn) {
+    head = `<div class="stage-line"><strong>${nm}</strong> is at the back of the den, facing away.</div>
+      <div class="stage-note">Withdrawn. Not a fail state and not permanent. Small consistent care &mdash; food, quiet, cleaning up, lights off at night &mdash; brings it back. Repair counts for more than never breaking.</div>`;
+  } else if (st.asleep) {
+    head = `<div class="stage-line"><strong>${nm}</strong> is asleep. Rested is climbing.</div>
+      <div class="stage-note">Leave the lights off. Sleep is the cheapest intervention there is.</div>`;
+  } else if (st.event) {
+    head = `<div class="stage-line"><strong>${nm}</strong> &mdash; ${st.event.text}</div>
+      <div class="stage-said">${said.text}</div>
+      <div class="stage-note">${said.note}</div>
+      <div class="stage-note">Body language: ${FEELINGS[st.event.feeling].cue}.</div>`;
+  } else if (st.pendingAsk) {
+    head = `<div class="stage-line"><strong>${nm}</strong> came over and asked for something.</div>
+      <div class="stage-said">"${st.pendingAsk.toLowerCase()}"</div>
+      <div class="stage-note">It asked, out loud, before things got bad. Answering an ask is how you keep asks coming.</div>`;
+  } else {
+    const line = {
+      thriving:  `<strong>${nm}</strong> is doing well. Nothing needs you this minute.`,
+      okay:      `<strong>${nm}</strong> is alright.`,
+      low:       `<strong>${nm}</strong> is a bit flat today.`,
+      struggling:`<strong>${nm}</strong> is having a rough one.`,
+      coping:    `<strong>${nm}</strong> is working through something.`
+    }[tier] || `<strong>${nm}</strong>.`;
+    head = `<div class="stage-line">${line}</div>
+      <div class="stage-said">${said.text}</div>
+      <div class="stage-note">${said.note}</div>`;
+  }
+
+  const ch = [];
+  if (st.pendingAsk) {
+    ch.push({ text:'<b>Answer the ask</b> &mdash; give it what it asked for', primary:true, on: answerAsk });
+    ch.push({ text:'Not right now', on: () => {
+      st.pendingAsk = null; st.voice = clamp(st.voice - 4, 0, 100);
+      st.needs.bond = clamp(st.needs.bond - 3, 0, 100);
+      logAdd(`Waved off the ask. Not fatal, but asks that get nothing come less often.`, 'warn');
+      renderAll();
+    }});
+  } else if (st.event) {
+    ch.push({ text:'<b>Check in</b> &mdash; notice, ask, and listen', primary:true, on: startCheckIn });
+    ch.push({ text:'Practice a coping skill together', on: showSkillMenu });
+    ch.push({ text:'Let it try first, stay nearby', on: coachAttempt });
+  } else if (!st.asleep && !st.withdrawn) {
+    ch.push({ text:'Check in anyway', on: startCheckIn });
+    if (st.needs.fed < 60) ch.push({ text:'Feed a proper meal', on: () => feed('meal') });
+    if (st.needs.bond < 70) ch.push({ text:'Play together', on: () => play('toss') });
+    if (st.messes.length) ch.push({ text:'Tidy up the den', on: doClean });
+    if (isNight() && !st.lightsOff) ch.push({ text:'Turn the lights off so it can sleep', on: toggleLights });
+  } else if (st.withdrawn) {
+    ch.push({ text:'Sit quietly nearby, ask for nothing', primary:true, on: sitWithWithdrawn });
+    ch.push({ text:'Put out food and water', on: () => feed('meal') });
+    if (st.messes.length) ch.push({ text:'Clean the den', on: doClean });
+  }
+
+  stageHTML(head, ch, {
+    urgent: !!st.event || st.withdrawn,
+    tag: st.withdrawn ? 'withdrawn' : st.asleep ? 'asleep' : tier
+  });
+}
+
+function answerAsk() {
+  const a = st.pendingAsk; st.pendingAsk = null;
+  st.voice = clamp(st.voice + 7, 0, 100);
+  st.needs.bond = clamp(st.needs.bond + 9, 0, 100);
+  st.resilience = clamp(st.resilience + 2, 0, 100);
+  st.helped++;
+  sfx.good(); anim.hop = 30;
+  logAdd(`Answered the ask. ${st.name} learned that asking works, which is the only reason anyone keeps doing it.`, 'good');
+  renderAll();
+}
+
+function sitWithWithdrawn() {
+  st.needs.bond = clamp(st.needs.bond + 6, 0, 100);
+  st.neglectMin = Math.max(0, st.neglectMin - 70);
+  st.voice = clamp(st.voice + 2, 0, 100);
+  sfx.ok();
+  logAdd(`Sat near ${st.name} without asking anything of it. It did not react. Do it again tomorrow anyway &mdash; that is how it works.`, 'teach');
+  renderAll();
+}
+
+function coachAttempt() {
+  if (!st.event) return;
+  const f = st.event.feeling;
+  const known = SKILLS.filter(s => st.skills[s.id].unlocked && s.id !== 'sit' && s.fits.includes(f));
+  const best = known.sort((a, b) => st.skills[b.id].mastery - st.skills[a.id].mastery)[0];
+  st.coached++;
+  if (st.waiting) {
+    logAdd(`${st.name} looked at you and waited. It has learned that you will handle it, so it is not going to try. That takes a while to undo.`, 'bad');
+    st.needs.bond = clamp(st.needs.bond - 2, 0, 100);
+    renderAll(); return;
+  }
+  if (best && st.skills[best.id].mastery >= 1) {
+    const m = st.skills[best.id].mastery;
+    const succeed = Math.random() < .35 + m * .25;
+    if (succeed) {
+      st.skills[best.id].mastery = Math.min(3, m + (Math.random() < .5 ? 1 : 0));
+      st.resilience = clamp(st.resilience + 8, 0, 100);
+      st.needs.bond = clamp(st.needs.bond + 4, 0, 100);
+      sfx.good(); anim.hop = 30;
+      logAdd(`You stayed close and did not step in. ${st.name} ${best.self}. <b>This is the single biggest source of grit in the game</b> &mdash; not doing it for them, while not leaving.`, 'good');
+      clearEvent(true);
+    } else {
+      st.resilience = clamp(st.resilience + 3, 0, 100);
+      st.needs.bond = clamp(st.needs.bond + 2, 0, 100);
+      logAdd(`${st.name} tried ${best.name.toLowerCase()} and it did not quite land. It still counts &mdash; a failed attempt with you there beats a rescue.`, 'teach');
+      renderStage();
+    }
+  } else {
+    st.needs.bond = clamp(st.needs.bond - 1, 0, 100);
+    logAdd(`${st.name} tried to handle it and had nothing to reach for. You cannot expect independence in a skill nobody taught. Practice it together first, then let it try.`, 'teach');
+    renderStage();
+  }
+  renderAll();
+}
+
+/* ==========================================================================
+   13. SUBMENUS
+   ========================================================================== */
+function showFeedMenu() {
+  flow = 'feed'; sfx.ok();
+  stageHTML(
+    `<div class="stage-line">What are you giving <strong>${st.name}</strong>?</div>
+     <div class="stage-note">Fed: ${Math.round(st.needs.fed)}%. Cache: ${st.cache} portion${st.cache === 1 ? '' : 's'}.
+     ${st.event ? '<b style="color:var(--gold)">There is an unresolved feeling right now.</b> Food will not touch it.' : ''}</div>`,
+    [
+      { text:'<b>A proper meal</b> &mdash; greens, fish, huckleberries', primary:true, on: () => { flow = null; feed('meal'); } },
+      { text:'<b>A treat</b> &mdash; fast, sweet, and it works for about a minute', on: () => { flow = null; feed('treat'); } },
+      { text:`<b>Stock the cache</b> &mdash; so ${st.name} can feed itself later`, on: () => { flow = null; feed('cache'); } },
+      { text:'Never mind', on: () => { flow = null; renderStage(); } }
+    ], { tag: 'feeding' });
+}
+
+function showPlayMenu() {
+  flow = 'play'; sfx.ok();
+  stageHTML(
+    `<div class="stage-line">Doing something together with <strong>${st.name}</strong>.</div>
+     <div class="stage-note">Bond: ${Math.round(st.needs.bond)}%. Rested: ${Math.round(st.needs.rested)}%.</div>`,
+    [
+      { text:'<b>Pinecone toss</b> &mdash; easy, familiar, good for bond', primary:true, on: () => { flow = null; play('toss'); } },
+      { text:'<b>Go somewhere new</b> &mdash; a little scary, builds grit', on: () => { flow = null; play('explore'); } },
+      { text:'Never mind', on: () => { flow = null; renderStage(); } }
+    ], { tag: 'play' });
+}
+
+function showSkillMenu() {
+  flow = 'skill'; sfx.ok();
+  const f = st.event ? st.event.feeling : null;
+  const unlocked = SKILLS.filter(s => st.skills[s.id].unlocked);
+  const locked = SKILLS.filter(s => !st.skills[s.id].unlocked);
+  /* offer to learn a fitting skill when nothing unlocked fits */
+  const fittingUnlocked = f ? unlocked.filter(s => s.id !== 'sit' && s.fits.includes(f)) : [];
+  const learnable = f ? locked.filter(s => s.fits.includes(f)) : locked;
+
+  const ch = unlocked.map(s => ({
+    text: `<b>${s.name}</b>${f && s.fits.includes(f) && s.id !== 'sit' ? ' &mdash; <span style="color:var(--accent)">fits this feeling</span>' : ''}` +
+          `<br><span style="color:var(--muted);font-size:.79rem">${s.teach}</span>`,
+    on: () => startSkill(s.id)
+  }));
+  if (f && !fittingUnlocked.length && learnable.length) {
+    const s = learnable[0];
+    ch.unshift({ text:`<b>Teach a new skill: ${s.name}</b> &mdash; nothing ${st.name} knows fits ${FEELINGS[f].word.toLowerCase()} yet<br><span style="color:var(--muted);font-size:.79rem">${s.teach}</span>`,
+      primary:true, on: () => { unlockSkill(s.id, true); startSkill(s.id); } });
+  }
+  ch.push({ text:'Never mind', on: () => { flow = null; renderStage(); } });
+
+  stageHTML(
+    `<div class="stage-line">Practice something with <strong>${st.name}</strong>.</div>
+     ${f ? `<div class="stage-note">The feeling underneath right now is <b>${FEELINGS[f].word.toLowerCase()}</b>. Pick a skill that actually fits it &mdash; a mismatch is not punished, but it does not help much either.</div>`
+          : `<div class="stage-note">Nothing is wrong right now, which is the best time to practice. Skills learned calm are the ones available in a storm.</div>`}`,
+    ch, { tag:'skills' });
+}
+
+function unlockSkill(id, quiet) {
+  if (st.skills[id].unlocked) return;
+  st.skills[id].unlocked = true;
+  st.skills[id].mastery = 0;
+  const s = SKILL[id];
+  logAdd(`<b>New skill: ${s.name}.</b> ${s.teach}`, 'teach');
+  sfx.good();
+  renderSkills();
+}
+</script>
+<script>
+/* ==========================================================================
+   14. MINI-GAMES  (5 engines shared across 9 skills)
+   ========================================================================== */
+const SENSES = [
+  { q:'SOMETHING YOU CAN SEE',   good:['LICHEN ON THE ROCK','THE CREEK GLINTING','A JAY ON A SNAG'],   bad:['TOMORROW','WHAT THEY THINK'] },
+  { q:'SOMETHING YOU CAN HEAR',  good:['WATER OVER STONE','WIND IN THE PINES','YOUR OWN BREATH'],      bad:['A WORRY','LAST WEEK'] },
+  { q:'SOMETHING YOU CAN SMELL', good:['WET FIR NEEDLES','WOODSMOKE','COLD DIRT'],                     bad:['A BAD MEMORY','THE FUTURE'] },
+  { q:'SOMETHING YOU CAN FEEL',  good:['GROUND UNDER PAWS','SUN ON YOUR BACK','COOL AIR'],             bad:['DREAD','EMBARRASSMENT'] },
+  { q:'SOMETHING YOU CAN TASTE', good:['CREEK WATER','A HUCKLEBERRY','PINE ON THE AIR'],               bad:['REGRET','NOTHING AT ALL'] }
+];
+
+const LIGHT_SPOTS = [
+  'THE SUNBEAM ON THE FLAT ROCK','A HUCKLEBERRY NOBODY GOT','THE DIPPER WORKING THE CREEK',
+  'WARM DIRT BY THE DEN','SNOW ON THE HIGH RIDGE','AN OLD FRIEND ACROSS THE MEADOW',
+  'THE SMELL OF RAIN COMING','YOUR OWN PAWS, WHICH WORK FINE'
+];
+const LIGHT_DECOYS = [
+  'EVERYTHING THAT WENT WRONG','THE THING YOU CANNOT FIX','WHAT MIGHT HAPPEN LATER'
+];
+
+const SMALL_STEPS = {
+  branch: { q:'The berries are too high. What is the smallest next step?',
+    good:'REACH THE LOWEST BRANCH ONLY', bads:['CLIMB THE WHOLE TREE NOW','GIVE UP ON BERRIES','TRY THE EXACT SAME JUMP AGAIN'] },
+  log:    { q:'Four falls off the log. What is the smallest next step?',
+    good:'WALK THE FIRST TWO STEPS ONLY', bads:['RUN THE WHOLE LOG FASTER','NEVER GO NEAR THE LOG','DO IT WITH EYES CLOSED'] },
+  creek:  { q:'The crossing looks too wide. What is the smallest next step?',
+    good:'PUT ONE PAW IN THE SHALLOWS', bads:['JUMP FOR THE FAR BANK','WAIT UNTIL IT IS NOT SCARY','CROSS AT THE DEEPEST PART'] },
+  generic:{ q:'It is too big to face at once. What is the smallest next step?',
+    good:'DO THE FIRST BORING PIECE', bads:['DO ALL OF IT RIGHT NOW','WAIT FOR MOTIVATION','DO A DIFFERENT EASIER THING INSTEAD'] }
+};
+
+const ASK_SLOTS = [
+  { label:'NAME THE FEELING', good:['I FEEL SCARED','I FEEL ALONE','I FEEL STUCK'], bad:['I AM FINE','NOTHING IS WRONG','FORGET IT'] },
+  { label:'NAME THE NEED',    good:['I NEED COMPANY','I NEED A MINUTE','I NEED HELP WITH THIS'], bad:['I NEED YOU TO GUESS','I NEED NOTHING','I NEED TO BE LEFT ALONE FOREVER'] },
+  { label:'MAKE THE REQUEST', good:['COULD YOU SIT WITH ME?','WOULD YOU COME LOOK?','CAN WE TRY IT TOGETHER?'], bad:['NEVER MIND','I GUESS NOT','WHATEVER'] }
+];
+
+function startSkill(id) {
+  const s = SKILL[id];
+  flow = 'game';
+  mg = { id, s, step: 0, score: 0, tries: 0, expr: 'open', t0: now(), data: {} };
+  st.practiced++;
+  if (s.engine === 'timing')      initTiming();
+  else if (s.engine === 'senses') initSenses();
+  else if (s.engine === 'choice') initChoice();
+  else if (s.engine === 'spot')   initSpot();
+  else if (s.engine === 'sentence') initSentence();
+  else initWait();
+  mode = 'game';
+  refreshRails();
+}
+
+function abortGame() {
+  if (!mg) { mode = 'scene'; flow = null; renderStage(); return; }
+  logAdd(`Stopped ${mg.s.name.toLowerCase()} partway through.`, '');
+  mg = null; mode = 'scene'; flow = null; sfx.move(); renderStage();
+}
+
+/* ---- engine: TIMING (breath, shake) ---- */
+function initTiming() {
+  const breath = mg.id === 'breath';
+  mg.kind = 'timing';
+  mg.cycles = breath ? 4 : 1;
+  mg.phase = 0;
+  mg.phases = breath ? [['IN', 4000], ['HOLD', 2000], ['OUT', 6000]] : [['SHAKE', 6000]];
+  mg.phaseStart = now();
+  mg.hits = 0; mg.needed = breath ? mg.cycles * 3 : 22;
+  mg.expr = breath ? 'closed' : 'wide';
+  mg.taps = 0;
+  stageHTML(
+    `<div class="stage-line">${breath ? 'Breathing with' : 'Shaking it out with'} <strong>${st.name}</strong>.</div>
+     <div class="stage-note">${breath
+       ? 'Watch the ring on the screen. Press <b>B</b> (or Space) once at the end of each phase &mdash; in for four, hold for two, out for six. Slow is the point.'
+       : 'Press <b>B</b> (or Space) fast for six seconds to shake the buzz out. Stress hormones are physical and need a physical exit.'}</div>`,
+    [{ text:'Stop', on: abortGame }], { tag: mg.s.name.toLowerCase() });
+}
+
+function mgTap() {
+  if (!mg) return;
+  if (mg.kind === 'timing') {
+    if (mg.id === 'shake') { mg.taps++; anim.shake = 3; if (mg.taps % 4 === 0) beep(300 + mg.taps * 8, 25); return; }
+    const el = now() - mg.phaseStart, dur = mg.phases[mg.phase][1];
+    const err = Math.abs(el - dur) / dur;
+    if (err < .28) { mg.hits++; sfx.ok(); } else { beep(240, 70); }
+    nextPhase();
+    return;
+  }
+  if (mg.kind === 'wait') return;
+}
+
+function nextPhase() {
+  mg.phase++;
+  if (mg.phase >= mg.phases.length) {
+    mg.phase = 0; mg.cycles--;
+    if (mg.cycles <= 0) { finishTiming(); return; }
+  }
+  mg.phaseStart = now();
+  mg.expr = mg.phases[mg.phase][0] === 'OUT' ? 'happy' : 'closed';
+  if (mg.id === 'breath') sfx.breath();
+}
+
+function finishTiming() {
+  let q;
+  if (mg.id === 'shake') q = clamp(mg.taps / 24, 0, 1);
+  else q = clamp(mg.hits / mg.needed, 0, 1);
+  finishSkill(q);
+}
+
+/* ---- engine: SENSES (ground) ---- */
+function initSenses() {
+  mg.kind = 'choice';
+  mg.queue = SENSES.slice();
+  mg.expr = 'worry';
+  nextSense();
+}
+function nextSense() {
+  if (!mg.queue.length) { finishSkill(clamp(mg.score / 5, 0, 1)); return; }
+  const s = mg.queue.shift();
+  const good = new Set(s.good);
+  const uniq = shuffle([...shuffle(s.good.slice()).slice(0, 2), pick(s.bad)]);
+  mg.lcdLine = s.q;
+  stageHTML(
+    `<div class="stage-line">Paws on the ground with <strong>${st.name}</strong>.</div>
+     <div class="stage-note">${s.q.toLowerCase()} &mdash; pick the one that is actually here, right now. Fear lives in the future; senses only work in the present.</div>`,
+    uniq.map(o => ({ text: o.toLowerCase().replace(/^./, c => c.toUpperCase()), on: () => {
+      if (good.has(o)) { mg.score++; sfx.ok(); mg.expr = 'open'; }
+      else { sfx.bad(); mg.expr = 'worry'; }
+      nextSense();
+    }})).concat([{ text:'Stop', on: abortGame }]),
+    { tag:'grounding' });
+}
+
+/* ---- engine: SPOT (look for light) ---- */
+function initSpot() {
+  mg.kind = 'choice'; mg.need = 3; mg.expr = 'sad';
+  mg.pool = shuffle(LIGHT_SPOTS.slice()).slice(0, 4);
+  mg.decoys = shuffle(LIGHT_DECOYS.slice()).slice(0, 2);
+  nextSpot();
+}
+function nextSpot() {
+  if (mg.score >= 3) { finishSkill(1); return; }
+  if (mg.tries >= 6) { finishSkill(clamp(mg.score / 3, 0, 1)); return; }
+  const opts = shuffle([...mg.pool.slice(0, 3), pick(mg.decoys)]);
+  mg.lcdLine = 'FIND 3 GOOD THINGS ' + mg.score + '/3';
+  stageHTML(
+    `<div class="stage-line">Looking for light with <strong>${st.name}</strong>.</div>
+     <div class="stage-note">Found ${mg.score} of 3. Low mood narrows attention to what is wrong. This does not cancel the bad things &mdash; it just widens the frame enough to move.</div>`,
+    opts.map(o => ({ text: o.toLowerCase().replace(/^./, c => c.toUpperCase()), on: () => {
+      mg.tries++;
+      if (mg.decoys.includes(o)) { sfx.bad(); mg.expr = 'sad'; }
+      else { mg.score++; sfx.ok(); mg.expr = 'happy'; mg.pool = mg.pool.filter(p => p !== o); if (mg.pool.length < 3) mg.pool.push(pick(LIGHT_SPOTS)); }
+      nextSpot();
+    }})).concat([{ text:'Stop', on: abortGame }]),
+    { tag:'savouring' });
+}
+
+/* ---- engine: CHOICE (name it, try again small) ---- */
+function initChoice() {
+  mg.kind = 'choice';
+  if (mg.id === 'name') {
+    const f = st.event ? st.event.feeling : pick(Object.keys(FEELINGS));
+    mg.answer = FEELINGS[f].word;
+    const others = shuffle(Object.keys(FEELINGS).filter(k => k !== f)).slice(0, 3).map(k => FEELINGS[k].word);
+    mg.opts = shuffle([mg.answer, ...others]);
+    mg.expr = 'sad';
+    mg.lcdLine = 'WHICH WORD FITS?';
+    stageHTML(
+      `<div class="stage-line">Naming it with <strong>${st.name}</strong>.</div>
+       <div class="stage-said">${FEELINGS[f].cue}.</div>
+       <div class="stage-note">Which word actually fits what you are seeing? An accurate label measurably lowers the intensity. Vague dread is always bigger than named dread.</div>`,
+      mg.opts.map(o => ({ text: o.charAt(0) + o.slice(1).toLowerCase(), on: () => {
+        const right = o === mg.answer;
+        if (right) sfx.good(); else sfx.bad();
+        finishSkill(right ? 1 : .25, right ? null
+          : `Close, but the word did not fit. "${o.toLowerCase()}" and "${mg.answer.toLowerCase()}" call for different things, which is exactly why the word matters.`);
+      }})).concat([{ text:'Stop', on: abortGame }]),
+      { tag:'naming' });
+  } else {
+    const key = st.event && SMALL_STEPS[st.event.id] ? st.event.id : 'generic';
+    const S2 = SMALL_STEPS[key];
+    mg.answer = S2.good;
+    mg.opts = shuffle([S2.good, ...S2.bads]);
+    mg.expr = 'sad';
+    mg.lcdLine = 'SMALLEST STEP?';
+    stageHTML(
+      `<div class="stage-line">Trying again small with <strong>${st.name}</strong>.</div>
+       <div class="stage-note">${S2.q} After a failure the task has to shrink before it can be attempted again. One step small enough to be boring is the only reliable way back in.</div>`,
+      mg.opts.map(o => ({ text: o.toLowerCase().replace(/^./, c => c.toUpperCase()), on: () => {
+        const right = o === mg.answer;
+        if (right) sfx.good(); else sfx.bad();
+        finishSkill(right ? 1 : .2, right ? null
+          : 'That step is still too big, or it avoids the thing entirely. Shrink it until it is almost embarrassingly small, then do that.');
+      }})).concat([{ text:'Stop', on: abortGame }]),
+      { tag:'one step' });
+  }
+}
+
+/* ---- engine: SENTENCE (ask for help) ---- */
+function initSentence() {
+  mg.kind = 'choice'; mg.built = []; mg.slot = 0; mg.expr = 'worry';
+  nextSlot();
+}
+function nextSlot() {
+  if (mg.slot >= ASK_SLOTS.length) {
+    const q = clamp(mg.score / 3, 0, 1);
+    finishSkill(q, q === 1 ? null : 'A request built out of hints and shrugs is not a request. Feeling, need, ask &mdash; in that order, out loud.');
+    return;
+  }
+  const s = ASK_SLOTS[mg.slot];
+  /* two distinct good phrasings plus one bad one, so the slot always offers three */
+  const goods = new Set(s.good);
+  const uniq = shuffle([...shuffle(s.good.slice()).slice(0, 2), pick(s.bad)]);
+  mg.lcdLine = s.label;
+  stageHTML(
+    `<div class="stage-line">Building an ask with <strong>${st.name}</strong>.</div>
+     <div class="stage-said">${mg.built.length ? mg.built.join(' ') : '&hellip;'}</div>
+     <div class="stage-note">Step ${mg.slot + 1} of 3: <b>${s.label.toLowerCase()}</b>. Asking well is a form you can learn &mdash; name the feeling, name the need, make one clear request. Hinting is not asking. Neither is enduring quietly.</div>`,
+    uniq.map(o => ({ text: o.charAt(0) + o.slice(1).toLowerCase(), on: () => {
+      if (goods.has(o)) { mg.score++; sfx.ok(); mg.built.push(o.toLowerCase() + (mg.slot < 2 ? ',' : '')); mg.expr = 'open'; }
+      else { sfx.bad(); mg.built.push(o.toLowerCase()); mg.expr = 'worry'; }
+      mg.slot++; nextSlot();
+    }})).concat([{ text:'Stop', on: abortGame }]),
+    { tag:'asking' });
+}
+
+/* ---- engine: WAIT (sit with it, rest) ---- */
+function initWait() {
+  mg.kind = 'wait';
+  mg.secs = mg.id === 'rest' ? 20 : 15;
+  mg.until = now() + mg.secs * 1000;
+  mg.expr = mg.id === 'rest' ? 'sleep' : 'closed';
+  mg.lcdLine = mg.id === 'rest' ? 'RESTING' : 'STAYING';
+  const label = mg.id === 'rest' ? 'Resting' : 'Sitting with it';
+  stageHTML(
+    `<div class="stage-line">${label} with <strong>${st.name}</strong>.</div>
+     <div class="stage-note">${mg.id === 'rest'
+       ? 'Do nothing for twenty seconds. No task, no earning it. Being depleted is information, not a character flaw, and the answer to it is boring and physical.'
+       : 'Stay here for fifteen seconds and do not solve anything. Some feelings do not need fixing, just company. This is the skill that builds trust fastest.'}</div>
+     <div class="stage-note" id="waitCount"></div>`,
+    [{ text:'Leave early', on: () => {
+      const done = 1 - (mg.until - now()) / (mg.secs * 1000);
+      finishSkill(clamp(done * .6, 0, .6), 'Left partway through. Presence that keeps checking the door is only partly presence.');
+    }}], { tag: mg.id === 'rest' ? 'rest' : 'presence' });
+}
+
+/* ---- finish + reward ---- */
+function finishSkill(quality, note) {
+  const s = mg.s, id = mg.id;
+  const f = st.event ? st.event.feeling : null;
+  const fits = !f ? .55 : s.fits.includes(f) ? (s.partial ? .8 : 1) : .2;
+  mg = null; mode = 'scene'; flow = null;
+
+  const sk = st.skills[id];
+  const gain = quality * fits;
+
+  /* mastery */
+  if (quality >= .7) {
+    const before = sk.mastery;
+    sk.mastery = Math.min(3, sk.mastery + (quality >= .9 ? 1 : (Math.random() < .5 ? 1 : 0)));
+    if (sk.mastery > before && sk.mastery === 3)
+      logAdd(`<b>${st.name} has ${s.name} down cold.</b> It will now use this one by itself, without being prompted.`, 'teach');
+    else if (sk.mastery > before)
+      logAdd(`${st.name} is getting the hang of ${s.name.toLowerCase()} (${sk.mastery}/3).`, 'good');
+  }
+
+  st.resilience = clamp(st.resilience + 11 * gain, 0, 100);
+  st.needs.bond = clamp(st.needs.bond + 6 * quality, 0, 100);
+  st.voice = clamp(st.voice + (id === 'ask' || id === 'name' ? 7 : 2) * quality, 0, 100);
+  if (id === 'rest') st.needs.rested = clamp(st.needs.rested + 12, 0, 100);
+  if (id === 'shake') st.needs.rested = clamp(st.needs.rested - 4, 0, 100);
+
+  /* messaging */
+  if (note) logAdd(note, 'teach');
+  if (f) {
+    if (fits >= .8) {
+      if (quality >= .6) {
+        logAdd(`Practiced ${s.name.toLowerCase()} together and it fit the ${FEELINGS[f].word.toLowerCase()}. ${st.name} came down a level. Grit +${Math.round(11 * gain)}.`, 'good');
+        clearEvent(true); sfx.good(); anim.hop = 30;
+      } else {
+        logAdd(`Right skill for the ${FEELINGS[f].word.toLowerCase()}, rough execution. Some help, and the practice still counts.`, 'teach');
+      }
+    } else {
+      logAdd(`${s.name} does not do much for ${FEELINGS[f].word.toLowerCase()} &mdash; it is built for ${s.fits.slice(0, 2).join(' and ')}. Not a wasted effort, but fit matters more than effort here.`, 'teach');
+    }
+  } else {
+    logAdd(`Practiced ${s.name.toLowerCase()} with nothing wrong. Skills learned calm are the ones available in a storm. Grit +${Math.round(11 * gain)}.`, 'good');
+  }
+  /* unlock the next skill as capacity grows */
+  maybeUnlockByGrowth();
+  renderAll();
+}
+
+function maybeUnlockByGrowth() {
+  const order = ['ground','name','shake','ask','rest','light','small'];
+  const gates = [18, 28, 38, 48, 58, 68, 78];
+  for (let i = 0; i < order.length; i++) {
+    if (!st.skills[order[i]].unlocked && st.resilience >= gates[i]) { unlockSkill(order[i]); return; }
+  }
+}
+
+/* ---- minigame rendering on the LCD ---- */
+function drawMiniGame() {
+  drawScene();
+  const rows = SPRITES[st.species][st.stage];
+  let bx = 40, by = 24;
+  if (mg && mg.kind === 'timing' && mg.id === 'shake') bx += (frame % 4 < 2 ? -2 : 2);
+  drawSprite(rows, bx, by, 2, sp().pal);
+  drawFace(bx, by, 2, mg ? mg.expr : 'open');
+
+  if (!mg) return;
+
+  if (mg.kind === 'timing' && mg.id === 'breath') {
+    const [label, dur] = mg.phases[mg.phase];
+    const el = clamp((now() - mg.phaseStart) / dur, 0, 1.4);
+    const grow = label === 'IN' ? el : label === 'OUT' ? 1 - el : 1;
+    const r = 5 + clamp(grow, 0, 1) * 16;
+    cx.strokeStyle = ink('#f4f6e8'); cx.lineWidth = 1;
+    cx.beginPath(); cx.arc(88.5, 34.5, Math.max(2, r), 0, Math.PI * 2); cx.stroke();
+    rect(0, 64, W, 20, mono() ? MONO.bg : 'rgba(12,20,14,.82)');
+    textC(label + '  ' + (mg.cycles) + ' LEFT', 68, ink('#cfe8b8'));
+    textC(el > 1 ? 'NOW PRESS B' : 'HOLD...', 76, ink(el > 1 ? '#f2c14e' : '#9fbf88'));
+    if (el >= 1.35) { nextPhase(); }
+  } else if (mg.kind === 'timing' && mg.id === 'shake') {
+    const left = Math.max(0, (mg.phaseStart + 6000 - now()) / 1000);
+    rect(0, 64, W, 20, mono() ? MONO.bg : 'rgba(12,20,14,.82)');
+    textC('PRESS B FAST!', 68, ink('#cfe8b8'));
+    const w = Math.round(clamp(mg.taps / 24, 0, 1) * 90);
+    rect(11, 76, 90, 5, mono() ? MONO.dim : '#0e1a13');
+    rect(11, 76, Math.max(1, w), 5, mono() ? MONO.ink : COLOR.good);
+    if (left <= 0) finishTiming();
+  } else if (mg.kind === 'wait') {
+    const left = Math.max(0, Math.ceil((mg.until - now()) / 1000));
+    rect(0, 64, W, 20, mono() ? MONO.bg : 'rgba(12,20,14,.82)');
+    textC(mg.lcdLine, 68, ink('#cfe8b8'));
+    textC(left + ' SECONDS', 76, ink('#9fbf88'));
+    const wc = $('#waitCount');
+    if (wc) wc.textContent = left + ' seconds left. Doing nothing on purpose.';
+    if (mg.id === 'sit' && frame % 40 === 0) beep(300, 60, 'sine');
+    if (left <= 0) finishSkill(1);
+  } else {
+    rect(0, 64, W, 20, mono() ? MONO.bg : 'rgba(12,20,14,.82)');
+    const lines = wrapPx(mg.lcdLine || mg.s.lcd, 21);
+    lines.slice(0, 2).forEach((L, i) => textC(L, 68 + i * 8, ink('#cfe8b8')));
+  }
+  drawStatusStrip();
+}
+</script>
+<script>
+/* ==========================================================================
+   15. CHECK-IN FLOW  (the communication core)
+   ========================================================================== */
+function startCheckIn() {
+  flow = 'checkin'; sfx.ok();
+  if (st.withdrawn) {
+    stageHTML(
+      `<div class="stage-line">You crouch down. <strong>${st.name}</strong> does not turn around.</div>
+       <div class="stage-note">There is no conversation available here yet. Withdrawal is not answered by better questions, it is answered by showing up repeatedly with no agenda.</div>`,
+      [{ text:'Sit quietly nearby and ask for nothing', primary:true, on: () => { flow = null; sitWithWithdrawn(); } },
+       { text:'Back off for now', on: () => { flow = null; renderStage(); } }], { tag:'withdrawn', urgent:true });
+    return;
+  }
+  if (st.asleep) {
+    flow = null;
+    logAdd(`${st.name} is asleep. Let it be.`, '');
+    renderStage(); return;
+  }
+
+  const opts = shuffle([
+    pick(OPENERS.filter(o => o.kind === 'reflect')),
+    pick(OPENERS.filter(o => o.kind === 'dismiss')),
+    pick(OPENERS.filter(o => o.kind === 'fix')),
+    pick(OPENERS.filter(o => o.kind === 'compare'))
+  ]);
+
+  const cue = st.event ? FEELINGS[st.event.feeling].cue : 'nothing dramatic, just the ordinary read on it';
+  stageHTML(
+    `<div class="stage-line">Checking in with <strong>${st.name}</strong>.</div>
+     <div class="stage-note">What you can see: ${cue}. Voice is at ${Math.round(st.voice)} of 100 &mdash;
+     ${['it cannot put words to anything yet','it can manage a single word','it can name a feeling and a need','it can tell you the whole thing in a sentence'][voiceLevel()]}.</div>
+     <div class="stage-note">How you open this determines whether it tells you anything next time.</div>`,
+    opts.map(o => ({ text: o.text, on: () => resolveOpener(o) }))
+        .concat([{ text:'Not now', on: () => { flow = null; renderStage(); } }]),
+    { tag:'check-in', urgent: !!st.event });
+}
+
+function resolveOpener(o) {
+  const nm = st.name;
+  if (o.kind === 'reflect') {
+    st.voice = clamp(st.voice + 9, 0, 100);
+    st.needs.bond = clamp(st.needs.bond + 7, 0, 100);
+    st.resilience = clamp(st.resilience + 2, 0, 100);
+    sfx.good();
+    logAdd(`Opened with reflective listening. <b>Voice +9.</b> ${o.why}`, 'teach');
+    checkInReply();
+    return;
+  }
+  if (o.kind === 'fix') {
+    flow = null;
+    logAdd(`Reached for a treat instead of a question. ${o.why}`, 'warn');
+    feed('treat');
+    return;
+  }
+  /* dismiss / compare */
+  st.voice = clamp(st.voice - 7, 0, 100);
+  st.needs.bond = clamp(st.needs.bond - 6, 0, 100);
+  sfx.bad();
+  logAdd(`<b>Voice -7.</b> ${o.why}`, 'bad');
+  flow = null;
+  stageHTML(
+    `<div class="stage-line"><strong>${nm}</strong> stopped talking and looked at the ground.</div>
+     <div class="stage-note">${o.why} You can try again &mdash; nothing here is permanent &mdash; but the next opening will be a little smaller.</div>`,
+    [{ text:'Try again, properly', primary:true, on: startCheckIn },
+     { text:'Leave it', on: () => { flow = null; renderStage(); } }], { tag:'check-in', urgent:true });
+}
+
+function checkInReply() {
+  const said = saysAbout();
+  const f = st.event ? st.event.feeling : null;
+  const unlocked = SKILLS.filter(s => st.skills[s.id].unlocked);
+  const fitting = f ? unlocked.filter(s => s.fits.includes(f) && s.id !== 'sit') : [];
+  const locked = f ? SKILLS.filter(s => !st.skills[s.id].unlocked && s.fits.includes(f)) : [];
+
+  const ch = [];
+  ch.push({ text:'<b>Sit with it</b> &mdash; stay, solve nothing', primary:!f || !fitting.length, on: () => { flow = null; startSkill('sit'); } });
+  if (f && fitting.length) {
+    const best = fitting.sort((a, b) => st.skills[b.id].mastery - st.skills[a.id].mastery)[0];
+    ch.unshift({ text:`<b>Practice ${best.name}</b> together &mdash; it fits ${FEELINGS[f].word.toLowerCase()}`, primary:true, on: () => { flow = null; startSkill(best.id); } });
+  }
+  if (f && !fitting.length && locked.length) {
+    ch.unshift({ text:`<b>Teach ${locked[0].name}</b> &mdash; nothing ${st.name} knows fits this yet`, primary:true, on: () => { flow = null; unlockSkill(locked[0].id); startSkill(locked[0].id); } });
+  }
+  if (f) ch.push({ text:'<b>Let it try first</b>, stay nearby &mdash; coach, do not rescue', on: () => { flow = null; coachAttempt(); } });
+  ch.push({ text:'Browse all the skills', on: () => { flow = null; showSkillMenu(); } });
+  ch.push({ text:'That is enough for now', on: () => { flow = null; renderStage(); } });
+
+  stageHTML(
+    `<div class="stage-line"><strong>${st.name}</strong> answered.</div>
+     <div class="stage-said">${said.text}</div>
+     <div class="stage-note">${said.note}</div>
+     ${f ? `<div class="stage-note">Underneath it: <b>${FEELINGS[f].word.toLowerCase()}</b>. Now the question is what to do with it &mdash; and doing nothing together is a real option.</div>` : ''}`,
+    ch, { tag:'listening', urgent: !!f });
+  maybeSelfPrompt();
+}
+
+/* ==========================================================================
+   16. THE PLAYER'S OWN CHECK-IN
+   ========================================================================== */
+const MOOD_FACES = [
+  { v:1, e:'&#128546;', label:'Rough' },
+  { v:2, e:'&#128533;', label:'Low' },
+  { v:3, e:'&#128528;', label:'Flat' },
+  { v:4, e:'&#128578;', label:'Alright' },
+  { v:5, e:'&#128512;', label:'Good' }
+];
+
+function renderMoods() {
+  const host = $('#moods'); host.innerHTML = '';
+  const today = self_.moods.find(m => m.d === dayKey());
+  MOOD_FACES.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'mood-btn'; b.type = 'button';
+    b.innerHTML = m.e;
+    b.title = m.label;
+    b.setAttribute('aria-label', m.label);
+    b.setAttribute('aria-pressed', String(!!today && today.v === m.v));
+    b.addEventListener('click', () => logSelf(m.v));
+    host.appendChild(b);
+  });
+  /* sparkline */
+  const sk = $('#spark'); sk.innerHTML = '';
+  const days = [];
+  for (let i = 13; i >= 0; i--) days.push(dayKey(now() - i * 86400000));
+  days.forEach(d => {
+    const m = self_.moods.find(x => x.d === d);
+    const i = document.createElement('i');
+    i.style.height = m ? (12 + m.v * 6) + 'px' : '3px';
+    if (m) i.className = 'v' + m.v;
+    sk.appendChild(i);
+  });
+}
+
+function logSelf(v) {
+  const d = dayKey();
+  const ex = self_.moods.find(m => m.d === d);
+  if (ex) ex.v = v; else self_.moods.push({ d, v });
+  if (self_.moods.length > 400) self_.moods.shift();
+  saveSelf(); renderMoods();
+  const lines = {
+    1:'Logged. That is a hard one to press. The same skills you have been teaching apply to you &mdash; and a person is better than a game right now.',
+    2:'Logged. Low is allowed to just be low. If it has been a stretch of these, tell someone real.',
+    3:'Logged. Flat counts as data.',
+    4:'Logged. Good to know.',
+    5:'Logged. Worth noticing on purpose &mdash; that is Look for Light, applied to you.'
+  };
+  $('#selfEcho').innerHTML = lines[v];
+  const recent = self_.moods.slice(-3).filter(m => m.v <= 2);
+  if (recent.length >= 2 && !self_.shownRes) {
+    self_.shownRes = true; saveSelf();
+    $('#selfEcho').innerHTML += ' <b>Two low days close together.</b> The resources below are there for exactly this, and using them early is the point of them.';
+  }
+  beep(660, 60);
+}
+
+function maybeSelfPrompt() {
+  const has = self_.moods.some(m => m.d === dayKey());
+  $('#selfPrompt').innerHTML = has
+    ? 'Logged for today. You can change it if the day changed.'
+    : 'You just checked on someone else. How are <em>you</em> doing today? One tap, private, stays on this device.';
+}
+
+/* ==========================================================================
+   17. HTML PANEL RENDERING
+   ========================================================================== */
+function renderMeters() {
+  const rows = [
+    ['Fed', st.needs.fed], ['Rested', st.needs.rested], ['Clean', st.needs.clean],
+    ['Bond', st.needs.bond], ['Resilience', st.resilience], ['Voice', st.voice]
+  ];
+  const host = $('#meters'); host.innerHTML = '';
+  rows.forEach(([lab, v]) => {
+    const cls = v >= 55 ? 'good' : v >= 28 ? 'mid' : 'low';
+    const d = document.createElement('div');
+    d.className = 'meter-row';
+    d.innerHTML = `<span class="meter-label">${lab}</span>
+      <span class="track"><span class="fill ${cls}" style="width:${clamp(v, 0, 100)}%"></span></span>
+      <span class="meter-num">${Math.round(v)}</span>`;
+    host.appendChild(d);
+  });
+  $('#vitalsTag').textContent =
+    `${STAGE_NAMES[st.stage]} · ${ageDays().toFixed(1)} days · ${WEATHERS[st.weather].label.toLowerCase()}`;
+
+  /* chips */
+  const chips = [];
+  const t = moodTier();
+  chips.push({ t: t, c: t === 'thriving' ? 'cool' : t === 'struggling' || t === 'withdrawn' ? 'bad' : '' });
+  if (st.asleep) chips.push({ t:'asleep' });
+  if (isNight()) chips.push({ t: st.lightsOff ? 'lights off' : 'lights on at night', c: st.lightsOff ? '' : 'hot' });
+  chips.push({ t:`cache ${st.cache}` });
+  if (st.messes.length) chips.push({ t:`${st.messes.length} mess${st.messes.length > 1 ? 'es' : ''}`, c:'hot' });
+  if (st.waiting > 0) chips.push({ t:'waiting to be rescued', c:'bad' });
+  if (st.soothes.length) chips.push({ t:`${st.soothes.length}/3 soothe-with-food`, c:'hot' });
+  const mastered = SKILLS.filter(s => st.skills[s.id].mastery >= 2).length;
+  if (mastered) chips.push({ t:`${mastered} skill${mastered > 1 ? 's' : ''} it can use alone`, c:'cool' });
+  if (st.days.length) chips.push({ t:`${st.days.length} day ring${st.days.length > 1 ? 's' : ''}` });
+  $('#chips').innerHTML = chips.map(c => `<span class="chip ${c.c || ''}">${c.t}</span>`).join('');
+}
+
+function renderSkills() {
+  const host = $('#skills'); host.innerHTML = '';
+  const f = st.event ? st.event.feeling : null;
+  SKILLS.forEach(s => {
+    const k = st.skills[s.id];
+    const d = document.createElement('div');
+    d.className = 'skill';
+    const pips = [0, 1, 2].map(i => `<span class="pip ${i < k.mastery ? 'on' : ''}"></span>`).join('');
+    d.innerHTML = `
+      <div class="skill-head">
+        <span class="skill-name ${k.unlocked ? '' : 'locked'}">${s.name}${k.unlocked ? '' : ' &mdash; not taught yet'}</span>
+        <span class="pips" title="Mastery ${k.mastery} of 3" aria-label="Mastery ${k.mastery} of 3">${pips}</span>
+      </div>
+      ${k.unlocked ? `<div class="skill-teach">${s.teach}</div>` : ''}
+      <div class="skill-fits">Fits: ${s.id === 'sit' ? 'anything, partly' : s.fits.join(', ')}${f && s.fits.includes(f) && k.unlocked ? ' &nbsp;·&nbsp; <b style="color:var(--accent)">fits right now</b>' : ''}</div>`;
+    host.appendChild(d);
+  });
+  const un = SKILLS.filter(s => st.skills[s.id].unlocked).length;
+  const auto = SKILLS.filter(s => st.skills[s.id].mastery >= 2).length;
+  $('#skillTag').textContent = `${un}/${SKILLS.length} taught · ${auto} usable alone`;
+}
+
+function renderLog() {
+  const host = $('#log'); host.innerHTML = '';
+  st.log.slice(0, 60).forEach(e => {
+    const d = document.createElement('div');
+    d.className = 'log-e k-' + (e.k || 'plain');
+    const dt = new Date(e.t);
+    const hh = String(dt.getHours()).padStart(2, '0'), mm = String(dt.getMinutes()).padStart(2, '0');
+    const times = e.n > 1 ? ` <span style="color:#5f7568">&times;${e.n}</span>` : '';
+    d.innerHTML = `<span class="log-t">${hh}:${mm}</span><span class="log-x">${e.x}${times}</span>`;
+    host.appendChild(d);
+  });
+}
+
+function renderAll() {
+  if (!st) return;
+  renderMeters(); renderSkills(); renderStage(); refreshRails(); maybeSelfPrompt();
+  $('#renameInp').value = st.name;
+  save();
+}
+
+/* ==========================================================================
+   18. SETTINGS + ONBOARDING + LOOP
+   ========================================================================== */
+function applySettings() {
+  const s = st.settings;
+  $('#device').className = 'device ' + (s.shell || '');
+  $('#lcdShell').classList.toggle('scanlines', !!s.scan);
+  document.body.classList.toggle('hc', !!s.hc);
+  document.body.classList.toggle('nomotion', !!s.nomotion);
+  $('#lcdSel').value = s.lcd; $('#shellSel').value = s.shell;
+  $('#scanChk').checked = !!s.scan; $('#hcChk').checked = !!s.hc;
+  $('#motionChk').checked = !!s.nomotion; $('#speedSel').value = String(s.speed);
+  $('#soundBtn').setAttribute('aria-pressed', String(!!s.sound));
+  $('#soundBtn').innerHTML = s.sound ? '&#128266; Sound on' : '&#128263; Sound off';
+  $('#lcdShell').style.background = s.lcd === 'mono' ? MONO.bg : '#8fc3e8';
+}
+
+function wireSettings() {
+  $('#lcdSel').addEventListener('change', e => { st.settings.lcd = e.target.value; applySettings(); save(); });
+  $('#shellSel').addEventListener('change', e => { st.settings.shell = e.target.value; applySettings(); save(); });
+  $('#scanChk').addEventListener('change', e => { st.settings.scan = e.target.checked; applySettings(); save(); });
+  $('#hcChk').addEventListener('change', e => { st.settings.hc = e.target.checked; applySettings(); save(); });
+  $('#motionChk').addEventListener('change', e => { st.settings.nomotion = e.target.checked; applySettings(); refreshRails(); save(); });
+  $('#speedSel').addEventListener('change', e => {
+    st.settings.speed = Number(e.target.value); save();
+    logAdd(`Speed set to ${st.settings.speed}× real time.`, '');
+  });
+  $('#soundBtn').addEventListener('click', () => {
+    st.settings.sound = !st.settings.sound; applySettings(); save();
+    if (st.settings.sound) sfx.ok();
+  });
+  $('#renameInp').addEventListener('change', e => {
+    const v = e.target.value.trim().slice(0, 12);
+    if (v) { const old = st.name; st.name = v; logAdd(`Renamed ${old} to ${v}.`, ''); renderAll(); }
+  });
+  $('#helpBtn').addEventListener('click', () => { $('#helpModal').hidden = false; $('#helpClose').focus(); });
+  $('#helpClose').addEventListener('click', () => { $('#helpModal').hidden = true; });
+  $('#exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(st, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `timberkin-${st.name.toLowerCase()}-${dayKey()}.json`;
+    a.click();
+    logAdd('Exported a save file.', '');
+  });
+  $('#resetBtn').addEventListener('click', () => {
+    if (!confirm('Start over with a new companion? This clears the current one and its journal.')) return;
+    localStorage.removeItem(SAVE_KEY);
+    st = null;
+    openOnboard();
+  });
+  $('#btnA').addEventListener('click', btnA);
+  $('#btnB').addEventListener('click', btnB);
+  $('#btnC').addEventListener('click', btnC);
+  document.addEventListener('keydown', e => {
+    if (!st) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
+    const k = e.key.toLowerCase();
+    if (k === 'a' || k === 'arrowright' || k === 'arrowdown') { e.preventDefault(); btnA(); }
+    else if (k === 'b' || k === 'enter' || k === ' ') { e.preventDefault(); btnB(); }
+    else if (k === 'c' || k === 'escape') { e.preventDefault(); btnC(); }
+    else if (k === 'arrowleft' || k === 'arrowup') { e.preventDefault(); sel = (sel + MENU.length - 1) % MENU.length; mode = 'menu'; sfx.move(); refreshRails(); }
+  });
+  window.addEventListener('beforeunload', () => { if (st) { st.lastTick = now(); save(); } });
+  document.addEventListener('visibilitychange', () => {
+    if (!st) return;
+    if (document.hidden) { st.lastTick = now(); save(); }
+    /* coming back: replay the hidden stretch at real time, then redraw */
+    else { catchUp(); renderAll(); }
+  });
+}
+
+/* ---- onboarding ---- */
+let obPick = 'bear';
+function openOnboard() {
+  const host = $('#picks'); host.innerHTML = '';
+  Object.entries(SPECIES).forEach(([id, s]) => {
+    const b = document.createElement('button');
+    b.className = 'pick'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(id === obPick));
+    b.dataset.id = id;
+    b.innerHTML = `<canvas width="32" height="32"></canvas>
+      <span class="pick-name">${s.label}</span><span class="pick-desc">${s.blurb}</span>`;
+    b.addEventListener('click', () => {
+      obPick = id;
+      document.querySelectorAll('.pick').forEach(p => p.setAttribute('aria-pressed', String(p.dataset.id === id)));
+      $('#nameInp').value = pick(s.names);
+      $('#pickDesc').innerHTML = s.note;
+      beep(620, 50);
+    });
+    host.appendChild(b);
+    drawPortrait(b.querySelector('canvas').getContext('2d'), id, 1, 2);
+  });
+  $('#nameInp').value = pick(SPECIES[obPick].names);
+  $('#pickDesc').innerHTML = SPECIES[obPick].note;
+  $('#onboard').hidden = false;
+  $('#startBtn').focus();
+}
+
+function wireOnboard() {
+  $('#diceBtn').addEventListener('click', () => { $('#nameInp').value = pick(SPECIES[obPick].names); beep(700, 60); });
+  $('#startBtn').addEventListener('click', () => {
+    const nm = ($('#nameInp').value || '').trim().slice(0, 12) || pick(SPECIES[obPick].names);
+    st = freshState(obPick, nm);
+    $('#onboard').hidden = true;
+    applySettings(); buildRails();
+    logAdd(`${nm} the ${SPECIES[obPick].label.toLowerCase()} came home. It cannot tell you what it needs yet &mdash; only that it needs something. Check in often and it will learn the words.`, 'teach');
+    logAdd(`Two skills to start with: <b>Sit With It</b> and <b>Belly Breathing</b>. The rest get taught when a feeling calls for them.`, 'teach');
+    sfx.good();
+    renderAll();
+  });
+}
+
+/* Draws a sprite plus a plain open-eyed face into any 2D context.
+   Used by the species picker, which is not attached to the LCD canvas. */
+function drawPortrait(g, id, stage, scale) {
+  const s = SPECIES[id], rows = SPRITES[id][stage], f = s.face[stage];
+  const P = (x, y, c) => { g.fillStyle = c; g.fillRect(x * scale, y * scale, scale, scale); };
+  for (let r = 0; r < rows.length; r++) for (let q = 0; q < rows[r].length; q++) {
+    const ch = rows[r][q];
+    if (ch !== '.') P(q, r, s.pal[ch] || '#000');
+  }
+  const skin = s.pal['3'] || s.pal['2'];
+  for (const ex of f.ex) {
+    P(ex, f.ey, skin); P(ex + 1, f.ey, skin);
+    P(ex, f.ey + 1, skin); P(ex + 1, f.ey + 1, skin);
+    P(ex, f.ey, '#141414'); P(ex + 1, f.ey, '#141414');
+    P(ex, f.ey + 1, '#141414'); P(ex + 1, f.ey + 1, '#ffffff');
+  }
+  P(f.mx - 1, f.my, '#3a2018'); P(f.mx, f.my, '#3a2018');
+}
+
+/* ---- misc ---- */
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+function renderFieldNotes() {
+  $('#fieldNotes').innerHTML = Object.values(SPECIES)
+    .map(s => `<p><b>${s.label}.</b> ${s.note}</p>`).join('') +
+    `<p><b>Why the northwest.</b> Everything here is western Montana and the inland northwest: huckleberry hyperphagia, wildfire smoke in August, chinook winds, valley fog, first frost. The weather is not decoration &mdash; smoke and gray stretches actually push mood down, and the journal says so, because some hard things are external and are nobody's fault.</p>`;
+}
+
+/* sprite sanity check (dev aid) */
+(function validateSprites() {
+  let bad = 0;
+  for (const [id, stages] of Object.entries(SPRITES))
+    stages.forEach((rows, si) => {
+      if (rows.length !== 16) { console.warn('sprite rows', id, si, rows.length); bad++; }
+      rows.forEach((r, ri) => { if (r.length !== 16) { console.warn('sprite row width', id, si, ri, r.length, r); bad++; } });
+    });
+  if (!bad) console.log('sprites ok');
+})();
+
+/* ---- main loop ----
+   The simulation advances off the wall clock, not off accumulated frame deltas.
+   requestAnimationFrame is throttled or stopped entirely in a background tab, so
+   summing frame times would silently lose every minute the tab spent hidden.
+   Reading now() - lastTick instead means a throttled tab just takes a bigger
+   step when it wakes up. Steps larger than LOOP_CAP_MS mean the tab really was
+   asleep; that gap belongs to catchUp(), which replays it at 1x real time
+   rather than multiplying it by the demo speed. */
+const LOOP_CAP_MS = 5000;
+let lastSaveAt = 0;
+function loop() {
+  if (st) {
+    const elapsed = now() - st.lastTick;
+    if (elapsed >= 1000) {
+      st.lastTick = now();
+      let hours = (Math.min(elapsed, LOOP_CAP_MS) / 3600000) * spd();
+      /* chunk big demo-speed steps so events, messes and weather still behave */
+      while (hours > 0) { const c = Math.min(0.5, hours); tick(c); hours -= c; }
+      renderMeters(); refreshRails();
+      if (!flow) renderStage();
+      if (now() - lastSaveAt > 10000) { lastSaveAt = now(); save(); }
+    }
+    draw();
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ---- boot ---- */
+function boot() {
+  renderFieldNotes();
+  wireSettings(); wireOnboard(); renderMoods();
+  load();
+  if (st) {
+    applySettings(); buildRails(); catchUp();
+    logAdd(`Back at the den. ${st.name} is a ${STAGE_NAMES[st.stage].toLowerCase()}, ${ageDays().toFixed(1)} days old.`, '');
+    renderAll();
+  } else {
+    applySettingsFallback(); openOnboard();
+  }
+  requestAnimationFrame(loop);
+}
+function applySettingsFallback() {
+  $('#device').className = 'device';
+  buildRails();
+}
+boot();
+</script>
+</body>
+</html>
