@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="University of Montana — AI Learning" />
+  <meta name="description" content="Star Collector: an optimized, fully commented p5.js arcade sketch used to teach game-loop performance, object pooling and frame-rate independence." />
+  <title>Star Collector — p5.js Optimization Demo</title>
+  <style>
+    :root {
+      --sky:        #0A0E1A;   /* page + canvas background        */
+      --panel:      #121829;   /* cards and code panels           */
+      --edge:       #2C3752;   /* decorative hairlines            */
+      --edge-bold:  #5A6B99;   /* component borders — 3.7:1 on sky*/
+      --text:       #E8ECF5;   /* body text  — 16.3:1 on --sky    */
+      --muted:      #AEB9D0;   /*             — 9.8:1 on --sky    */
+      --gold:       #FFCE54;   /* headings   — 13.0:1 on --sky    */
+      --red:        #F9423A;   /* accents only, never body text   */
+      --maroon:     #70002E;   /* UM Griz Maroon — button fill    */
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--sky);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 0 16px 48px;
+    }
+
+    /* Keyboard users must be able to jump past the header. */
+    .skip-link {
+      position: absolute; top: -48px; left: 0;
+      background: var(--maroon); color: #FFFFFF;
+      padding: 10px 18px; z-index: 100; text-decoration: none;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* Never remove focus rings — replace them with something louder. */
+    a:focus-visible, button:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+      border-radius: 3px;
+    }
+
+    header, main, footer { max-width: 780px; margin: 0 auto; }
+
+    header { padding: 32px 0 8px; }
+
+    h1 {
+      font-size: 30px; line-height: 1.2; color: var(--gold);
+      letter-spacing: 1px;
+    }
+    .tagline { color: var(--muted); margin-top: 6px; }
+
+    h2 {
+      font-size: 21px; color: var(--gold);
+      margin: 36px 0 10px; padding-bottom: 6px;
+      border-bottom: 1px solid var(--edge);
+    }
+    h3 { font-size: 17px; color: var(--text); margin: 20px 0 6px; }
+
+    p, li { margin-bottom: 8px; }
+    ul, ol { padding-left: 22px; }
+
+    a { color: var(--gold); }
+    a:hover { text-decoration: none; }
+
+    /* ── Game ─────────────────────────────────────────────────── */
+    .game {
+      margin-top: 16px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    #sketch-holder { line-height: 0; }
+
+    #sketch-holder canvas {
+      display: block;
+      width: 420px; max-width: 100%; height: auto;
+      border: 2px solid var(--edge-bold);
+      border-radius: 6px;
+      /* Stop a drag on the canvas from scrolling the page on touch. */
+      touch-action: none;
+    }
+
+    /* Visible mirror of the on-canvas HUD. Canvas pixels are invisible
+       to screen readers, so the same numbers live here as real text. */
+    #readout {
+      margin-top: 12px;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid var(--edge-bold);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 15px;
+    }
+
+    .controls { margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+    button {
+      font: inherit; font-size: 15px;
+      background: var(--maroon); color: #FFFFFF;   /* 12.15:1 */
+      border: 2px solid var(--red);
+      border-radius: 6px;
+      padding: 9px 20px;
+      cursor: pointer;
+      min-height: 44px;                            /* comfortable tap target */
+    }
+    button:hover:not(:disabled) { background: #8A0039; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; border-color: var(--edge-bold); }
+
+    /* Screen-reader-only announcements. */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--edge);
+      border-left: 4px solid var(--gold);
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+
+    code {
+      font-family: "SF Mono", Consolas, "Courier New", monospace;
+      font-size: 0.92em;
+      background: #1B2338;
+      color: #F2E3B8;          /* 12.2:1 on #1B2338 */
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    kbd {
+      font-family: inherit; font-size: 0.85em;
+      background: #1B2338; color: var(--text);
+      border: 1px solid var(--edge); border-bottom-width: 2px;
+      border-radius: 4px; padding: 1px 7px;
+    }
+
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 15px; }
+    caption { text-align: left; color: var(--muted); padding-bottom: 8px; }
+    th, td { border: 1px solid var(--edge); padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { background: #1B2338; color: var(--gold); }
+
+    footer {
+      margin-top: 44px; padding-top: 16px;
+      border-top: 1px solid var(--edge);
+      color: var(--muted); font-size: 14px;
+    }
+
+    noscript p { border-left: 4px solid var(--red); }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <header role="banner">
+    <h1>Star Collector</h1>
+    <p class="tagline">
+      A p5.js arcade sketch rebuilt to show what optimizing a game loop actually looks like.
+    </p>
+  </header>
+
+  <main id="main-content">
+    <h2>Play</h2>
+
+    <noscript>
+      <p class="panel">This game needs JavaScript. The rest of the page — how the
+      game works and what was optimized — still reads normally without it.</p>
+    </noscript>
+
+    <div class="game">
+      <!-- p5 injects the canvas here (see setup() in js/star_collector.js). -->
+      <div id="sketch-holder"></div>
+
+      <!-- Live text mirror of the canvas HUD. aria-live is off here on
+           purpose: it updates four times a second, which would flood a
+           screen reader. Event announcements go to #sr-status instead. -->
+      <p id="readout" aria-live="off">Score 0 · Time 60s · Combo ×1 · Best 0</p>
+
+      <div class="controls">
+        <button type="button" id="btn-start">Start game</button>
+        <button type="button" id="btn-pause" aria-pressed="false" disabled>Pause</button>
+      </div>
+
+      <!-- Polite announcements: round start, pause, milestones, final score. -->
+      <p class="sr-only" id="sr-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    </div>
+
+    <h2>How to play</h2>
+    <ul>
+      <li><strong>Move:</strong> <kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd>
+          or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>, or drag anywhere on the playfield.</li>
+      <li><strong>Start / restart:</strong> <kbd>Enter</kbd> or the Start button.</li>
+      <li><strong>Pause:</strong> <kbd>P</kbd> or <kbd>Space</kbd>. The game also pauses itself if you switch tabs.</li>
+      <li><strong>Scoring:</strong> collect stars for 60 seconds. Pickups within 1.6 seconds
+          of each other raise the multiplier to a maximum of ×5.</li>
+    </ul>
+
+    <table>
+      <caption>What each object does. Every object is told apart by shape as well as colour.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Object</th>
+          <th scope="col">Shape</th>
+          <th scope="col">Effect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Star</th>
+          <td>Small white circle</td>
+          <td>1 point × combo</td>
+        </tr>
+        <tr>
+          <th scope="row">Gold star</th>
+          <td>Large spinning five-point star</td>
+          <td>5 points × combo</td>
+        </tr>
+        <tr>
+          <th scope="row">Asteroid</th>
+          <td>Lumpy tumbling rock</td>
+          <td>Costs 3 seconds and resets the combo</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>What changed from the original sketch</h2>
+    <p>
+      The starting point was the standard classroom sketch: a player circle, fifty
+      star circles, and a collision check inside <code>draw()</code>. Everything below is
+      commented in place in
+      <a href="js/star_collector.js">the sketch source, js/star_collector.js</a>.
+    </p>
+
+    <h3>Bugs that were fixed</h3>
+    <ol>
+      <li><strong>Removing while looping forward.</strong> <code>stars.splice(i, 1)</code>
+          inside a <code>for</code> loop shifts every later star down one index, so the
+          star immediately after a collected one is skipped that frame. This version
+          recycles stars instead of removing them, so the array length never changes.</li>
+      <li><strong>The game emptied out.</strong> Collected stars were gone forever;
+          after about a minute there was nothing left to play with. Stars are now
+          returned to the bottom of the screen with a fresh type, size and speed.</li>
+      <li><strong>Diagonals were faster.</strong> Holding two arrow keys moved the player
+          5 pixels on each axis — about 7.07 pixels of travel, 41% faster than a straight
+          line. Diagonal input is now scaled by 1&nbsp;/&nbsp;√2.</li>
+      <li><strong>The player could leave the canvas.</strong> Position is clamped with
+          <code>constrain()</code>.</li>
+      <li><strong>Stars popped into view.</strong> Respawning at <code>y = height</code> made
+          the top half of a star appear instantly; respawning below the edge lets it slide in.</li>
+    </ol>
+
+    <h3>Performance work</h3>
+    <ul>
+      <li><strong>No square roots in collision.</strong> <code>dist()</code> computes a square
+          root that is then thrown away by a comparison. Comparing squared distances
+          against a cached squared radius gives the same answer for less work.</li>
+      <li><strong>Object pooling.</strong> Stars and particles are allocated once at
+          startup and reused. Nothing calls <code>new</code> during play, so the garbage
+          collector has no reason to interrupt a frame.</li>
+      <li><strong>Frame-rate independence.</strong> Speeds are in pixels per <em>second</em>
+          and multiplied by <code>deltaTime</code>, so the game plays the same on a 30&nbsp;Hz
+          laptop and a 144&nbsp;Hz monitor. The delta is clamped so a backgrounded tab
+          cannot resume and teleport everything off screen.</li>
+      <li><strong>Pre-rendered background.</strong> The gradient and 220 dust specks are
+          drawn once into an off-screen <code>p5.Graphics</code> buffer and blitted with a
+          single <code>image()</code> call each frame.</li>
+      <li><strong>Batched fills.</strong> Changing fill colour is the expensive part of a
+          2D canvas draw, so the sketch loops the star array three times — once per
+          colour — instead of calling <code>fill()</code> once per object. Particles fade by
+          shrinking rather than by changing alpha, for the same reason.</li>
+      <li><strong>Precomputed geometry.</strong> The ten vertices of the gold star are
+          computed once at load time, not every frame.</li>
+      <li><strong>Lower pixel density.</strong> <code>pixelDensity(1)</code> avoids drawing four
+          to nine times as many pixels on a high-DPI display.</li>
+    </ul>
+
+    <h3>Accessibility work</h3>
+    <ul>
+      <li>The score, timer and combo are mirrored as real text below the canvas,
+          because canvas pixels are invisible to a screen reader.</li>
+      <li>Round start, pause, countdown milestones and the final score are announced
+          through a polite live region — meaningful moments only, not every frame.</li>
+      <li>Object types are distinguished by shape as well as colour, and the timer is
+          shown as a number as well as a coloured bar.</li>
+      <li>Only the four movement keys have their default behaviour suppressed, so
+          <kbd>Tab</kbd> and browser shortcuts keep working — there is no keyboard trap.</li>
+      <li>Decorative motion (particles, pulsing, screen shake) is switched off when the
+          operating system asks for reduced motion. Motion the game depends on stays.</li>
+    </ul>
+
+    <h3>Try it yourself</h3>
+    <p>
+      Open <a href="js/star_collector.js">js/star_collector.js</a> and change one constant
+      at a time — <code>STAR_COUNT</code>, <code>PLAYER_SPEED</code>, <code>ROUND_SECONDS</code>, or a
+      row of the <code>KINDS</code> table. Adding a fourth kind of object means adding one
+      row to that table and one drawing pass; that is the point of storing the rules as
+      data rather than as branching code.
+    </p>
+
+    <p><a href="index.html">Back to the AI Learning index</a></p>
+  </main>
+
+  <footer role="contentinfo">
+    <p>University of Montana — AI Learning. Built with p5.js 1.9.3.</p>
+  </footer>
+
+  <script src="libs/p5.min.js"></script>
+  <script src="js/star_collector.js"></script>
+</body>
+</html>
