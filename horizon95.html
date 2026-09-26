@@ -1,0 +1,1358 @@
+<title>Horizon 95 Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=JetBrains+Mono:wght@400;500&family=Public+Sans:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#EFF3F1; --surface:#FFFFFF; --surface-2:#E6ECE9; --ink:#14201B; --muted:#55665E; --line:#D3DCD8;
+  --accent:#1D6A58; --accent-ink:#FFFFFF; --accent-soft:#D5EAE3; --band:#2F5E8C;
+  --good:#1F6E45; --warn:#8F5B0E; --bad:#B42318; --good-soft:#DCEFE3; --warn-soft:#F6E7CC; --bad-soft:#F8DDD9;
+  --c-us:#1D6A58; --c-intl:#2F5E8C; --c-bond:#8C7B22; --c-muni:#C29A3A; --c-cash:#7E8E88; --c-single:#A5462F; --c-re:#6B4D96;
+  --f-display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1412; --surface:#161F1C; --surface-2:#1E2925; --ink:#E4EBE8; --muted:#94A49D; --line:#2B3833;
+    --accent:#52B79D; --accent-ink:#0B1411; --accent-soft:#1D3A32; --band:#7EA9D8;
+    --good:#5CBF84; --warn:#E3AA4B; --bad:#F0776B; --good-soft:#193427; --warn-soft:#3A2D14; --bad-soft:#3D1D1A;
+    --c-us:#52B79D; --c-intl:#7EA9D8; --c-bond:#CDBB57; --c-muni:#E7C473; --c-cash:#9AABA4; --c-single:#E0785E; --c-re:#A98BD6;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1412; --surface:#161F1C; --surface-2:#1E2925; --ink:#E4EBE8; --muted:#94A49D; --line:#2B3833;
+  --accent:#52B79D; --accent-ink:#0B1411; --accent-soft:#1D3A32; --band:#7EA9D8;
+  --good:#5CBF84; --warn:#E3AA4B; --bad:#F0776B; --good-soft:#193427; --warn-soft:#3A2D14; --bad-soft:#3D1D1A;
+  --c-us:#52B79D; --c-intl:#7EA9D8; --c-bond:#CDBB57; --c-muni:#E7C473; --c-cash:#9AABA4; --c-single:#E0785E; --c-re:#A98BD6;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5;padding-inline:16px;padding-block:0 48px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+h2{font-size:22px;font-weight:700}
+h3{font-size:16px;font-weight:600}
+p{margin:0}
+.num,td.n,input.n,.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+small,.hint{color:var(--muted);font-size:12px}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding-block:14px;border-bottom:1px solid var(--line);max-width:1440px;margin-inline:auto}
+.brand{display:flex;align-items:baseline;gap:10px;flex:1 1 280px;min-width:0}
+.brand h1{font-size:24px;font-weight:700;white-space:nowrap}
+.brand h1 span{color:var(--accent)}
+.brand input{flex:1;min-width:0;border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 8px;font-weight:500;color:var(--muted)}
+.brand input:hover,.brand input:focus{border-color:var(--line);background:var(--surface);color:var(--ink)}
+.status{font-size:12px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.small{padding:3px 9px;font-size:12px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--bad);border-color:transparent}
+.btn[data-armed]{background:var(--bad);border-color:var(--bad);color:#fff}
+
+.banner{max-width:1440px;margin:12px auto 0;background:var(--warn-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:var(--r);padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.banner b{color:var(--warn)}
+
+/* layout */
+.layout{max-width:1440px;margin:16px auto 0;display:grid;gap:20px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:1080px){
+  .layout{grid-template-columns:minmax(0,1fr) minmax(360px,440px)}
+  .results{grid-column:2;grid-row:1;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 92px);overflow:auto}
+  .inputs{grid-column:1;grid-row:1}
+}
+.tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+.tab{border:0;background:transparent;padding:9px 12px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.panel{padding-top:18px;display:grid;gap:18px}
+.sec{display:grid;gap:12px}
+.lede{color:var(--muted);max-width:68ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:grid;gap:12px}
+.card-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.grid{display:grid;gap:10px 14px}
+.g2{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.g3{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.g4{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.fld{display:grid;gap:4px;min-width:0}
+.fld>span{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input[type=number],input[type=text],select,textarea{width:100%;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+input:hover,select:hover,textarea:hover{border-color:color-mix(in srgb,var(--accent) 50%,var(--line))}
+textarea{font-family:var(--f-mono);font-size:12px;min-height:90px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.spacer{flex:1}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:4px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td input,td select{padding:4px 6px}
+td.n,th.n{text-align:right;white-space:nowrap}
+td.sym input{font-family:var(--f-mono);font-weight:500;text-transform:uppercase;width:92px}
+.w-num{width:110px}.w-yr{width:78px}.w-pct{width:70px}
+tfoot td{font-weight:600;background:var(--surface-2)}
+
+/* summary */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.stat{background:var(--surface);padding:10px 12px;display:grid;gap:2px}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.stat b{font-family:var(--f-mono);font-size:17px;font-weight:500}
+.alloc{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.alloc i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.note{font-size:12px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;max-width:72ch}
+.warnline{font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:6px 10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.idle{background:var(--surface-2);color:var(--muted)}
+.chip{display:inline-block;font-size:12px;border:1px dashed var(--warn);color:var(--warn);border-radius:999px;padding:1px 9px;cursor:pointer;background:transparent}
+
+/* results */
+.results{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:16px;align-content:start}
+.gauge{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.ring{width:118px;height:118px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ring .v b{font-family:var(--f-display);font-size:34px;font-weight:700;line-height:1}
+.ring .v small{display:block;font-size:11px}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.stale{font-size:12px;color:var(--warn)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.kpi span{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.kpi b{font-family:var(--f-mono);font-weight:500;font-size:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:12px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+#chart{width:100%;min-height:240px}
+#chart svg{display:block;width:100%;height:auto}
+#chart text{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.slider{display:grid;grid-template-columns:120px 1fr 64px;gap:10px;align-items:center;font-size:13px}
+.slider output{font-family:var(--f-mono);text-align:right}
+input[type=range]{accent-color:var(--accent);width:100%}
+details summary{cursor:pointer;font-weight:600}
+.cmp td,.cmp th{font-size:12px}
+.bar{height:8px;border-radius:4px;background:var(--accent)}
+.bar.bg{background:var(--surface-2);width:100%}
+.disclaimer{font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px;z-index:20}
+.modal .card{max-width:640px;width:100%}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <h1>Horizon<span>95</span></h1>
+    <input id="plan-name" data-path="meta.name" data-type="text" aria-label="Plan name" placeholder="Plan name">
+  </div>
+  <span class="status" id="save-status">Saved in this browser</span>
+  <button class="btn primary" data-act="run">Run simulation</button>
+</header>
+<div class="banner" id="example-banner" hidden>
+  <span><b>Example numbers.</b> This isn't your data. Edit any field or import your plan file from <b>Save &amp; share</b>.</span>
+  <button class="btn small" data-act="tab" data-tab="share">Import plan file</button>
+</div>
+
+<main class="layout">
+  <aside class="results" id="results" aria-live="polite"></aside>
+  <section class="inputs">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <div class="panel" id="panel"></div>
+  </section>
+</main>
+<div id="modal-root"></div>
+
+<script>
+(() => {
+'use strict';
+/* ---------- helpers ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => 'i' + Math.random().toString(36).slice(2, 9);
+const num = v => { const n = typeof v === 'number' ? v : parseFloat(String(v ?? '').replace(/[$,\s]/g, '')); return isFinite(n) ? n : 0; };
+const blank = v => v === '' || v === null || v === undefined;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const usd0 = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+function money(v, compact) {
+  if (!isFinite(v)) return '—';
+  if (compact) {
+    const a = Math.abs(v), s = v < 0 ? '-' : '';
+    if (a >= 1e6) return s + '$' + (a / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'M';
+    if (a >= 1e4) return s + '$' + Math.round(a / 1e3) + 'K';
+  }
+  return usd0.format(Math.round(v));
+}
+const pct = (v, d = 0) => (v * 100).toFixed(d) + '%';
+
+/* ---------- model constants ---------- */
+const CLASSES = [
+  { k: 'us', label: 'US stocks', mean: 9.0, sd: 17 },
+  { k: 'intl', label: 'International stocks', mean: 8.0, sd: 19 },
+  { k: 'bond', label: 'Taxable bonds', mean: 4.5, sd: 6 },
+  { k: 'muni', label: 'Municipal bonds', mean: 3.5, sd: 5 },
+  { k: 'cash', label: 'Cash / money market', mean: 3.2, sd: 1 },
+  { k: 'single', label: 'Concentrated stock', mean: 5.0, sd: 28 },
+  { k: 're', label: 'Real estate', mean: 4.0, sd: 9 },
+];
+const CI = Object.fromEntries(CLASSES.map((c, i) => [c.k, i]));
+const CORR = [
+  [1, .8, .1, .1, 0, .5, .3],
+  [.8, 1, .1, .1, 0, .4, .3],
+  [.1, .1, 1, .7, .2, 0, .1],
+  [.1, .1, .7, 1, .2, 0, .1],
+  [0, 0, .2, .2, 1, 0, 0],
+  [.5, .4, 0, 0, 0, 1, .2],
+  [.3, .3, .1, .1, 0, .2, 1],
+];
+const SYMBOL_CLASS = {
+  TSM: 'intl', DFIV: 'intl', EFG: 'intl', IVLU: 'intl', SPEM: 'intl', XCEM: 'intl', DFIEX: 'intl', DFCEX: 'intl', VXUS: 'intl', VEA: 'intl', VWO: 'intl', IEFA: 'intl', EFA: 'intl',
+  DFAPX: 'bond', DFEQX: 'bond', VCOBX: 'bond', BND: 'bond', AGG: 'bond', VBTLX: 'bond', BNDX: 'bond', SCHP: 'bond', VGIT: 'bond',
+  LMUB: 'muni', MUB: 'muni', VTEB: 'muni', SUB: 'muni',
+  SGOV: 'cash', BIL: 'cash', VMFXX: 'cash', SPAXX: 'cash', SWVXX: 'cash',
+  BUSE: 'single', VNQ: 're', SCHH: 're',
+};
+const ACCT_TYPES = [['roth', 'Roth IRA'], ['deferred', 'SEP / traditional IRA'], ['taxable', 'Taxable brokerage']];
+const BUDGET_KINDS = [['general', 'General'], ['healthcare', 'Healthcare'], ['housing', 'Housing'], ['insurance', 'Insurance'], ['tax', 'Other taxes'], ['other', 'Other']];
+const RMD_DIV = { 72: 27.4, 73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1, 80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2, 87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1, 94: 9.5, 95: 8.9, 96: 8.4, 97: 7.8, 98: 7.3, 99: 6.8, 100: 6.4 };
+const rmdDiv = a => a < 72 ? 27.4 : a > 100 ? 6.4 : RMD_DIV[Math.floor(a)];
+
+/* ---------- default + example plan ---------- */
+function defaults() {
+  return {
+    app: 'horizon95', version: 1,
+    meta: { name: 'Untitled plan', isExample: false },
+    household: { p1Name: 'Person 1', p1Birth: '', p2Name: 'Person 2', p2Birth: '', startYear: new Date().getFullYear(), horizonAge: 95, horizonWho: 'younger' },
+    incomes: [], accounts: [], cash: [], cashFloor: 0, options: [], properties: [], budget: [],
+    taxes: { mode: 'rate', fedRate: 14, stateRate: 5, cgRate: 20, fedFixed: 0, stateFixed: 0, wdRate: 24, penalty: true },
+    healthcare: { pre65: 12000, post65: 7000, ltcCost: 100000, ltcAge: 85, ltcYears: 3 },
+    vehicles: { on: true, count: 2, price: 48000, tradeIn: 25, minYears: 5, maxYears: 10, firstYear: new Date().getFullYear() + 1, stopAge: 85 },
+    remodel: { on: false, propId: '', cost: 0, year: new Date().getFullYear() + 1, source: 'taxable', loanRate: 7.5, loanYears: 10, valueAdd: 50 },
+    assumptions: {
+      trials: 2000, inflMean: 2.8, inflSd: 1.2, hcExtra: 2.5, missingBasisPct: 30, rmdAge: 75, seed: 20260926,
+      classes: Object.fromEntries(CLASSES.map(c => [c.k, { mean: c.mean, sd: c.sd }])),
+    },
+    whatif: { spend: 0, ret: 0 },
+  };
+}
+function exampleState() {
+  const s = defaults();
+  const y = new Date().getFullYear();
+  s.meta = { name: 'Example household', isExample: true };
+  s.household = { p1Name: 'Partner A', p1Birth: 1966, p2Name: 'Partner B', p2Birth: 1968, startYear: y, horizonAge: 95, horizonWho: 'younger' };
+  const inc = (name, amount, start, end, mode, growth, note) => ({ id: uid(), name, amount, start, end, mode, growth, taxable: true, note: note || '' });
+  s.incomes = [
+    inc('CTC', 60000, y, y + 5, 'infl', 0),
+    inc('Busey dividend', 40000, y, '', 'fixed', 2, 'Shares × annual dividend per share'),
+    inc('University', 95000, y, y + 4, 'infl', 0),
+    inc('Security investment', 0, y, '', 'infl', 0, 'Only cash from accounts not listed on the Accounts tab'),
+    inc('Business income: Fish Creek', 30000, y, y + 9, 'infl', 0),
+    inc('Business income: Silverleaf', 20000, y, y + 9, 'infl', 0),
+    inc('Social Security: Partner A', 38000, 2034, '', 'infl', 0, 'Claim at 68'),
+    inc('Social Security: Partner B', 30000, 2036, '', 'infl', 0, 'Claim at 68'),
+  ];
+  const h = (sym, qty, price, basis) => ({ id: uid(), sym, cls: SYMBOL_CLASS[sym] || 'us', qty, price, basis });
+  s.accounts = [
+    { id: uid(), name: 'Roth IRA: Partner A', type: 'roth', owner: 'Partner A', contrib: 0, contribEnd: '', holdings: [h('VTI', 300, 379.77, ''), h('VOO', 60, 710.79, '')] },
+    { id: uid(), name: 'Roth IRA: Partner B', type: 'roth', owner: 'Partner B', contrib: 0, contribEnd: '', holdings: [h('SCHG', 1500, 36.26, ''), h('VCOBX', 2000, 17.28, '')] },
+    { id: uid(), name: 'SEP IRA', type: 'deferred', owner: 'Partner A', contrib: 20000, contribEnd: y + 4, holdings: [h('VFIAX', 400, 716.28, ''), h('DFAPX', 15000, 9.82, ''), h('DFIEX', 3000, 22.69, '')] },
+    { id: uid(), name: 'E-Trade (outside entity)', type: 'taxable', owner: '', contrib: 0, contribEnd: '', holdings: [h('AAPL', 100, 341.07, 12000), h('MSFT', 60, 516.17, 21000), h('NVDA', 150, 225.07, 3000), h('BUSE', 5000, 30.09, 90000)] },
+  ];
+  s.cash = [{ id: uid(), name: 'High-yield savings', balance: 80000, rate: 4.0 }, { id: uid(), name: 'Regular bank accounts', balance: 20000, rate: 0.1 }];
+  s.cashFloor = 25000;
+  s.options = [{ id: uid(), name: 'Deferred stock options', units: 3000, strike: 25, price: 32, year: y + 2, growth: 6, vol: 30, taxRate: 37 }];
+  const p = (name, value, mortgage, payment, payoff, propTax, insurance, maintPct, appr, rent) => ({ id: uid(), name, value, mortgage, payment, payoff, propTax, insurance, maintPct, appr, rent, saleYear: '', sellCost: 6 });
+  s.properties = [
+    p('Home', 650000, 180000, 21600, y + 10, 6200, 2400, 1, 4, 0),
+    p('Cabin', 350000, 0, 0, '', 3100, 1500, 1, 4, 0),
+    p('Rental', 300000, 120000, 11000, y + 14, 2900, 1400, 1.5, 3.5, 24000),
+    p('Lot', 120000, 0, 0, '', 900, 0, 0, 3, 0),
+  ];
+  const b = (item, category, amount, kind) => ({ id: uid(), item, category, amount, kind, start: '', end: '' });
+  s.budget = [
+    b('Groceries', 'Food', 14400, 'general'), b('Dining out', 'Food', 6000, 'general'),
+    b('Utilities', 'Home', 7200, 'housing'), b('Phone & internet', 'Home', 2400, 'housing'),
+    b('Fuel & auto maintenance', 'Transportation', 5000, 'general'), b('Auto insurance', 'Insurance', 2200, 'insurance'),
+    b('Umbrella policy', 'Insurance', 600, 'insurance'), b('Travel', 'Lifestyle', 12000, 'general'),
+    b('Gifts & giving', 'Lifestyle', 6000, 'general'), b('Household & clothing', 'Home', 6000, 'general'),
+    b('Hobbies', 'Lifestyle', 4000, 'general'), b('Subscriptions', 'Lifestyle', 1200, 'general'),
+    b('Dental & vision', 'Health', 2400, 'healthcare'), b('Prescriptions', 'Health', 1800, 'healthcare'),
+  ];
+  s.remodel = { on: true, propId: s.properties[0].id, cost: 150000, year: y + 1, source: 'taxable', loanRate: 7.5, loanYears: 10, valueAdd: 50 };
+  return s;
+}
+function normalize(raw) {
+  const d = defaults();
+  const s = Object.assign({}, d, raw || {});
+  for (const k of ['meta', 'household', 'taxes', 'healthcare', 'vehicles', 'remodel', 'assumptions', 'whatif']) s[k] = Object.assign({}, d[k], (raw || {})[k] || {});
+  s.assumptions.classes = Object.assign({}, d.assumptions.classes, ((raw || {}).assumptions || {}).classes || {});
+  for (const c of CLASSES) s.assumptions.classes[c.k] = Object.assign({ mean: c.mean, sd: c.sd }, s.assumptions.classes[c.k]);
+  for (const k of ['incomes', 'accounts', 'cash', 'options', 'properties', 'budget']) s[k] = Array.isArray(s[k]) ? s[k] : [];
+  const withId = o => (o && typeof o === 'object' ? (o.id ? o : Object.assign(o, { id: uid() })) : { id: uid() });
+  s.incomes = s.incomes.map(o => Object.assign({ name: '', amount: 0, start: '', end: '', mode: 'infl', growth: 0, taxable: true, note: '' }, withId(o)));
+  s.accounts = s.accounts.map(a => {
+    a = Object.assign({ name: 'Account', type: 'taxable', owner: '', contrib: 0, contribEnd: '', holdings: [] }, withId(a));
+    a.holdings = (Array.isArray(a.holdings) ? a.holdings : []).map(h => Object.assign({ sym: '', cls: 'us', qty: 0, price: 0, basis: '' }, withId(h)));
+    return a;
+  });
+  s.cash = s.cash.map(o => Object.assign({ name: '', balance: 0, rate: 0 }, withId(o)));
+  s.options = s.options.map(o => Object.assign({ name: '', units: 0, strike: 0, price: 0, year: '', growth: 6, vol: 30, taxRate: 37 }, withId(o)));
+  s.properties = s.properties.map(o => Object.assign({ name: '', value: 0, mortgage: 0, payment: 0, payoff: '', propTax: 0, insurance: 0, maintPct: 1, appr: 4, rent: 0, saleYear: '', sellCost: 6 }, withId(o)));
+  s.budget = s.budget.map(o => Object.assign({ item: '', category: '', amount: 0, kind: 'general', start: '', end: '' }, withId(o)));
+  return s;
+}
+
+/* ---------- persistence ---------- */
+const LS_KEY = 'horizon95.plan.v1', LS_TAB = 'horizon95.tab';
+function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } }
+let state;
+try { const raw = lsGet(LS_KEY); state = raw ? normalize(JSON.parse(raw)) : exampleState(); } catch { state = exampleState(); }
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  $('#save-status').textContent = 'Saving…';
+  saveTimer = setTimeout(() => { $('#save-status').textContent = lsSet(LS_KEY, JSON.stringify(state)) ? 'Saved in this browser' : 'Not saved (browser storage blocked). Export to keep changes.'; }, 400);
+}
+function getPath(obj, path) { return path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj); }
+function setPath(obj, path, val) {
+  const ks = path.split('.'); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) o = o[ks[i]];
+  o[ks[ks.length - 1]] = val;
+}
+
+/* ---------- field builders ---------- */
+const fid = p => 'f-' + p.replace(/\./g, '-');
+function inp(path, { type = 'number', ph = '', cls = '', step = 'any', label = '' } = {}) {
+  const v = getPath(state, path);
+  const val = blank(v) ? '' : v;
+  const aria = label ? ` aria-label="${esc(label)}"` : '';
+  if (type === 'text') return `<input id="${fid(path)}" type="text" class="${cls}" data-path="${path}" data-type="text" value="${esc(val)}" placeholder="${esc(ph)}"${aria}>`;
+  return `<input id="${fid(path)}" type="number" step="${step}" inputmode="decimal" class="${cls}" data-path="${path}" data-type="${type}" value="${esc(val)}" placeholder="${esc(ph)}"${aria}>`;
+}
+function sel(path, options, label = '') {
+  const v = getPath(state, path);
+  return `<select id="${fid(path)}" data-path="${path}" data-type="text"${label ? ` aria-label="${esc(label)}"` : ''}>${options.map(([k, t]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>`;
+}
+function chk(path, label = '') {
+  return `<input id="${fid(path)}" type="checkbox" data-path="${path}" data-type="bool"${getPath(state, path) ? ' checked' : ''}${label ? ` aria-label="${esc(label)}"` : ''}>`;
+}
+const fld = (label, control, hint) => `<label class="fld"><span>${label}</span>${control}${hint ? `<small>${hint}</small>` : ''}</label>`;
+const dd = (key, cls = '') => `<b class="${cls}" data-d="${key}"></b>`;
+
+/* ---------- derived numbers ---------- */
+function totals(s = state) {
+  const t = { roth: 0, deferred: 0, taxable: 0, basis: 0, cls: new Array(CLASSES.length).fill(0), accts: [], missingBasis: 0 };
+  const mb = num(s.assumptions.missingBasisPct) / 100;
+  s.accounts.forEach(a => {
+    let v = 0;
+    a.holdings.forEach(h => {
+      const hv = num(h.qty) * num(h.price); v += hv; t.cls[CI[h.cls] ?? 0] += hv;
+      if (a.type === 'taxable') { if (blank(h.basis)) { t.basis += hv * mb; if (hv > 0) t.missingBasis++; } else t.basis += num(h.basis); }
+    });
+    t.accts.push(v); t[a.type] = (t[a.type] || 0) + v;
+  });
+  t.cash = s.cash.reduce((x, c) => x + num(c.balance), 0);
+  t.invest = t.roth + t.deferred + t.taxable;
+  t.liquid = t.invest + t.cash;
+  t.reValue = s.properties.reduce((x, p) => x + num(p.value), 0);
+  t.reDebt = s.properties.reduce((x, p) => x + num(p.mortgage), 0);
+  t.opts = s.options.reduce((x, o) => x + num(o.units) * Math.max(0, num(o.price) - num(o.strike)), 0);
+  t.nw = t.liquid + t.reValue - t.reDebt + t.opts;
+  t.budget = { general: 0, healthcare: 0, all: 0 };
+  s.budget.forEach(b => { const a = num(b.amount); t.budget.all += a; if (b.kind === 'healthcare') t.budget.healthcare += a; else t.budget.general += a; });
+  return t;
+}
+function ages(s = state) {
+  const h = s.household, start = num(h.startYear);
+  const b1 = num(h.p1Birth), b2 = num(h.p2Birth);
+  const hasP2 = b2 > 0;
+  let hb = h.horizonWho === 'p1' ? b1 : h.horizonWho === 'p2' ? (b2 || b1) : Math.max(b1, b2 || 0);
+  const endYear = hb + num(h.horizonAge || 95);
+  return { start, b1, b2, hasP2, hb, endYear, N: Math.max(1, endYear - start + 1), ok: b1 > 1900 && start > 1900 && endYear >= start };
+}
+// Deterministic first-year cash flow (today's dollars, no market randomness)
+function yearOne(s = state) {
+  const A = ages(s), Y = A.start, a1 = Y - A.b1, a2 = Y - A.b2;
+  let income = 0, ord = 0, spend = 0, housing = 0, health = 0;
+  s.incomes.forEach(i => { if (inRange(Y, i.start, i.end)) { income += num(i.amount); if (i.taxable) ord += num(i.amount); } });
+  s.budget.forEach(b => { if (inRange(Y, b.start, b.end)) { const a = num(b.amount); spend += a; if (b.kind === 'healthcare') health += a; } });
+  const hc = s.healthcare;
+  const people = A.hasP2 ? [a1, a2] : [a1];
+  people.forEach(a => { const c = a < 65 ? num(hc.pre65) : num(hc.post65); spend += c; health += c; });
+  s.properties.forEach(p => {
+    if (!blank(p.saleYear) && Y >= num(p.saleYear)) return;
+    const c = num(p.propTax) + num(p.insurance) + num(p.value) * num(p.maintPct) / 100 + ((!blank(p.payoff) && Y <= num(p.payoff)) || (blank(p.payoff) && num(p.mortgage) > 0) ? num(p.payment) : 0);
+    spend += c; housing += c; income += num(p.rent); ord += num(p.rent);
+  });
+  s.accounts.forEach(a => { if (num(a.contrib) > 0 && (blank(a.contribEnd) || Y <= num(a.contribEnd))) spend += num(a.contrib); });
+  const T = s.taxes;
+  const tax = T.mode === 'fixed' ? num(T.fedFixed) + num(T.stateFixed) : ord * (num(T.fedRate) + num(T.stateRate)) / 100;
+  return { income, spend, tax, gap: income - spend - tax, health, general: spend - health, housing };
+}
+function inRange(Y, a, b) { return (blank(a) || Y >= num(a)) && (blank(b) || Y <= num(b)); }
+
+function derivedMap() {
+  const t = totals(), A = ages(), y1 = yearOne();
+  const m = {};
+  state.accounts.forEach((a, i) => { m['acct-' + i] = money(t.accts[i]); a.holdings.forEach((h, j) => { m[`hv-${i}-${j}`] = money(num(h.qty) * num(h.price)); }); });
+  Object.assign(m, {
+    'tot-roth': money(t.roth, 1), 'tot-deferred': money(t.deferred, 1), 'tot-taxable': money(t.taxable, 1), 'tot-cash': money(t.cash, 1),
+    'tot-invest': money(t.invest, 1), 'tot-re': money(t.reValue - t.reDebt, 1), 'tot-opts': money(t.opts, 1), 'tot-nw': money(t.nw, 1),
+    'tot-basis': money(t.basis, 1), 'tot-gain': money(t.taxable - t.basis, 1),
+    'bud-all': money(t.budget.all), 'bud-month': money(t.budget.all / 12), 'bud-general': money(t.budget.general), 'bud-health': money(t.budget.healthcare),
+    'inc-total': money(state.incomes.reduce((x, i) => x + (inRange(A.start, i.start, i.end) ? num(i.amount) : 0), 0)),
+    'cash-total': money(t.cash),
+    'y1-income': money(y1.income), 'y1-spend': money(y1.spend), 'y1-tax': money(y1.tax),
+    'y1-gap': (y1.gap >= 0 ? 'Surplus ' : 'Draw from savings ') + money(Math.abs(y1.gap)),
+    'y1-general': money(y1.general), 'y1-health': money(y1.health), 'y1-housing': money(y1.housing),
+    'horizon': A.ok ? `${A.start} to ${A.endYear} · ${A.N} years` : 'Add birth years on the Household tab',
+  });
+  state.properties.forEach((p, i) => { m['eq-' + i] = money(num(p.value) - num(p.mortgage)); });
+  state.options.forEach((o, i) => { m['ov-' + i] = money(num(o.units) * Math.max(0, num(o.price) - num(o.strike))); });
+  // healthcare projection at mean inflation, today's dollars
+  const hcx = num(state.assumptions.hcExtra) / 100, hc = state.healthcare;
+  [75, 85].forEach(age => {
+    const Y = A.b1 + age, yrs = Math.max(0, Y - A.start);
+    const people = A.hasP2 ? [age, Y - A.b2] : [age];
+    let c = people.reduce((x, a) => x + (a < 65 ? num(hc.pre65) : num(hc.post65)), 0) + t.budget.healthcare;
+    if (age >= num(hc.ltcAge) && age < num(hc.ltcAge) + num(hc.ltcYears)) c += num(hc.ltcCost);
+    m['hc-' + age] = A.ok ? money(c * Math.pow(1 + hcx, yrs)) : '—';
+  });
+  m['html:alloc'] = allocBar(t.cls);
+  return m;
+}
+function allocBar(cls) {
+  const tot = cls.reduce((a, b) => a + b, 0) || 1;
+  const bars = CLASSES.map((c, i) => cls[i] > 0 ? `<i style="width:${(cls[i] / tot * 100).toFixed(2)}%;background:var(--c-${c.k})" title="${esc(c.label)} ${pct(cls[i] / tot)}"></i>` : '').join('');
+  const leg = CLASSES.map((c, i) => cls[i] > 0 ? `<span><i style="background:var(--c-${c.k})"></i>${esc(c.label)} ${pct(cls[i] / tot)}</span>` : '').join('');
+  return `<div class="alloc" role="img" aria-label="Allocation across asset classes">${bars}</div><div class="legend">${leg}</div>`;
+}
+function refreshDerived() {
+  const m = derivedMap();
+  $$('[data-d]').forEach(el => { const v = m[el.dataset.d]; if (v !== undefined) el.textContent = v; });
+  $$('[data-dhtml]').forEach(el => { const v = m['html:' + el.dataset.dhtml]; if (v !== undefined) el.innerHTML = v; });
+  $('#example-banner').hidden = !state.meta.isExample;
+  renderMissing();
+}
+
+/* ---------- tabs ---------- */
+const TABS = [
+  ['household', 'Household'], ['income', 'Income'], ['accounts', 'Accounts'], ['cash', 'Cash & options'],
+  ['realestate', 'Real estate'], ['budget', 'Budget & taxes'], ['health', 'Healthcare'], ['bigticket', 'Vehicles & remodel'],
+  ['assumptions', 'Assumptions'], ['share', 'Save & share'],
+];
+let currentTab = lsGet(LS_TAB) || 'accounts';
+if (!TABS.some(t => t[0] === currentTab)) currentTab = 'accounts';
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(([k, t]) => `<button class="tab" role="tab" id="tab-${k}" aria-selected="${k === currentTab}" data-act="tab" data-tab="${k}">${t}</button>`).join('');
+}
+function renderPanel() {
+  const R = { household: rHousehold, income: rIncome, accounts: rAccounts, cash: rCash, realestate: rRealEstate, budget: rBudget, health: rHealth, bigticket: rBigTicket, assumptions: rAssumptions, share: rShare };
+  $('#panel').innerHTML = R[currentTab]();
+  $('#plan-name').value = state.meta.name || '';
+  refreshDerived();
+}
+
+function rHousehold() {
+  return `<div class="sec">
+    <h2>Household</h2>
+    <p class="lede">Birth years set the timeline. Income streams, budget lines and sales use calendar years, so you can check each one against a date.</p>
+    <div class="card"><div class="grid g4">
+      ${fld('Person 1', inp('household.p1Name', { type: 'text' }))}
+      ${fld('Birth year', inp('household.p1Birth', { type: 'int', ph: 'e.g. 1966' }))}
+      ${fld('Person 2', inp('household.p2Name', { type: 'text' }))}
+      ${fld('Birth year', inp('household.p2Birth', { type: 'int', ph: 'blank if single' }))}
+    </div>
+    <div class="grid g3">
+      ${fld('First plan year', inp('household.startYear', { type: 'int' }))}
+      ${fld('Plan through age', inp('household.horizonAge', { type: 'int' }))}
+      ${fld('Whose age', sel('household.horizonWho', [['younger', 'Younger person'], ['p1', 'Person 1'], ['p2', 'Person 2']]))}
+    </div>
+    <p>Plan runs ${dd('horizon')}</p></div>
+    <p class="note">"Success" means the cash and investment accounts cover every year's spending and taxes through this age. Real estate is counted in net worth. It only helps pay the bills if you set a sale year for a property.</p>
+  </div>`;
+}
+
+function rIncome() {
+  const rows = state.incomes.map((s, i) => `<tr>
+    <td>${inp(`incomes.${i}.name`, { type: 'text', label: 'Income name' })}</td>
+    <td>${inp(`incomes.${i}.amount`, { cls: 'w-num', label: 'Annual amount' })}</td>
+    <td>${inp(`incomes.${i}.start`, { type: 'int', cls: 'w-yr', ph: 'now', label: 'Start year' })}</td>
+    <td>${inp(`incomes.${i}.end`, { type: 'int', cls: 'w-yr', ph: 'never', label: 'End year' })}</td>
+    <td>${sel(`incomes.${i}.mode`, [['infl', 'Inflation'], ['fixed', 'Fixed %']], 'Growth')}</td>
+    <td>${inp(`incomes.${i}.growth`, { cls: 'w-pct', label: 'Fixed growth %' })}</td>
+    <td style="text-align:center">${chk(`incomes.${i}.taxable`, 'Taxable')}</td>
+    <td>${inp(`incomes.${i}.note`, { type: 'text', ph: 'note', label: 'Note' })}</td>
+    <td><button class="btn ghost small" data-act="del" data-list="incomes" data-i="${i}" aria-label="Remove">✕</button></td></tr>`).join('');
+  return `<div class="sec">
+    <div class="card-head"><h2>Income streams</h2><button class="btn" data-act="add-income">Add income stream</button></div>
+    <p class="lede">Enter amounts per year, before tax. Leave the start year blank to start now and the end year blank to run for life. "Inflation" rises with the simulated inflation rate. "Fixed %" rises at the rate you type, and 0 keeps it flat.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Stream</th><th class="n">$ / year</th><th>Start</th><th>End</th><th>Grows with</th><th>Fixed %</th><th>Taxable</th><th>Note</th><th></th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="9" class="hint">No income streams yet.</td></tr>'}</tbody>
+      <tfoot><tr><td>Total this year</td><td class="n">${dd('inc-total', 'mono')}</td><td colspan="7"></td></tr></tfoot>
+    </table></div>
+    <p class="note">Don't also list interest, dividends or growth from accounts on the Accounts tab here. Those returns are already in the simulation, so listing them would count them twice. The Busey dividend is the exception: the concentrated-stock return assumption is price growth only, so the dividend belongs here.</p>
+  </div>`;
+}
+
+function rAccounts() {
+  const cards = state.accounts.map((a, i) => {
+    const rows = a.holdings.map((h, j) => `<tr>
+      <td class="sym">${inp(`accounts.${i}.holdings.${j}.sym`, { type: 'text', label: 'Symbol' })}</td>
+      <td>${sel(`accounts.${i}.holdings.${j}.cls`, CLASSES.map(c => [c.k, c.label]), 'Asset class')}</td>
+      <td>${inp(`accounts.${i}.holdings.${j}.qty`, { cls: 'w-num', label: 'Quantity' })}</td>
+      <td>${inp(`accounts.${i}.holdings.${j}.price`, { cls: 'w-num', label: 'Price' })}</td>
+      <td class="n mono">${dd(`hv-${i}-${j}`)}</td>
+      ${a.type === 'taxable' ? `<td>${inp(`accounts.${i}.holdings.${j}.basis`, { cls: 'w-num', ph: 'unknown', label: 'Total cost basis' })}</td>` : ''}
+      <td><button class="btn ghost small" data-act="del-holding" data-a="${i}" data-h="${j}" aria-label="Remove holding">✕</button></td></tr>`).join('');
+    return `<div class="card">
+      <div class="card-head">
+        <div class="row" style="flex:1 1 320px">${inp(`accounts.${i}.name`, { type: 'text', label: 'Account name' })}</div>
+        <div class="row">${sel(`accounts.${i}.type`, ACCT_TYPES, 'Account type')}<b class="mono" data-d="acct-${i}"></b>
+        <button class="btn ghost small" data-act="del-account" data-i="${i}">Delete account</button></div>
+      </div>
+      <div class="grid g3">
+        ${fld('Owner', inp(`accounts.${i}.owner`, { type: 'text' }))}
+        ${fld('Contribution $ / year', inp(`accounts.${i}.contrib`))}
+        ${fld('Contribute through year', inp(`accounts.${i}.contribEnd`, { type: 'int', ph: 'none' }))}
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Symbol</th><th>Asset class</th><th class="n">Qty</th><th class="n">Price $</th><th class="n">Value</th>${a.type === 'taxable' ? '<th class="n">Cost basis (total) $</th>' : ''}<th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="7" class="hint">No holdings yet. Add them one at a time or paste a list.</td></tr>`}</tbody>
+      </table></div>
+      <div class="row">
+        <button class="btn small" data-act="add-holding" data-a="${i}">Add holding</button>
+        <details style="flex:1 1 100%"><summary class="hint">Paste holdings</summary>
+          <div class="sec" style="margin-top:8px">
+            <p class="hint">One per line: <span class="mono">SYMBOL  QTY  PRICE  [TOTAL COST BASIS]</span>. Separate the columns with tabs or spaces. Copying rows from a spreadsheet works.</p>
+            <textarea id="paste-${a.id}" aria-label="Pasted holdings"></textarea>
+            <div class="row"><button class="btn small" data-act="paste" data-a="${i}">Add pasted rows</button></div>
+          </div></details>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="sec">
+    <div class="card-head"><h2>Securities accounts</h2><button class="btn" data-act="add-account">Add account</button></div>
+    <div class="stats">
+      <div class="stat"><span>Roth</span>${dd('tot-roth')}</div>
+      <div class="stat"><span>SEP / traditional</span>${dd('tot-deferred')}</div>
+      <div class="stat"><span>Taxable</span>${dd('tot-taxable')}</div>
+      <div class="stat"><span>Unrealized gain</span>${dd('tot-gain')}</div>
+    </div>
+    <div data-dhtml="alloc"></div>
+    <p class="note">Each account is rebalanced back to its current mix every year. Taxable accounts track cost basis, so selling shares triggers capital-gains tax on the gain. Blank cost basis is assumed to be a share of value set on the Assumptions tab.</p>
+    ${cards}
+  </div>`;
+}
+
+function rCash() {
+  const cash = state.cash.map((c, i) => `<tr>
+    <td>${inp(`cash.${i}.name`, { type: 'text', label: 'Account' })}</td>
+    <td>${inp(`cash.${i}.balance`, { cls: 'w-num', label: 'Balance' })}</td>
+    <td>${inp(`cash.${i}.rate`, { cls: 'w-pct', label: 'Interest %' })}</td>
+    <td><button class="btn ghost small" data-act="del" data-list="cash" data-i="${i}" aria-label="Remove">✕</button></td></tr>`).join('');
+  const opts = state.options.map((o, i) => `<tr>
+    <td>${inp(`options.${i}.name`, { type: 'text', label: 'Grant' })}</td>
+    <td>${inp(`options.${i}.units`, { cls: 'w-num', label: 'Units' })}</td>
+    <td>${inp(`options.${i}.strike`, { cls: 'w-num', label: 'Strike' })}</td>
+    <td>${inp(`options.${i}.price`, { cls: 'w-num', label: 'Current share price' })}</td>
+    <td>${inp(`options.${i}.year`, { type: 'int', cls: 'w-yr', label: 'Exercise year' })}</td>
+    <td>${inp(`options.${i}.growth`, { cls: 'w-pct', label: 'Expected growth %' })}</td>
+    <td>${inp(`options.${i}.vol`, { cls: 'w-pct', label: 'Volatility %' })}</td>
+    <td>${inp(`options.${i}.taxRate`, { cls: 'w-pct', label: 'Tax rate %' })}</td>
+    <td class="n mono">${dd('ov-' + i)}</td>
+    <td><button class="btn ghost small" data-act="del" data-list="options" data-i="${i}" aria-label="Remove">✕</button></td></tr>`).join('');
+  return `<div class="sec">
+    <div class="card-head"><h2>Bank accounts</h2><button class="btn" data-act="add-cash">Add bank account</button></div>
+    <div class="tw"><table>
+      <thead><tr><th>Account</th><th class="n">Balance $</th><th class="n">APY %</th><th></th></tr></thead>
+      <tbody>${cash || '<tr><td colspan="4" class="hint">No bank accounts yet.</td></tr>'}</tbody>
+      <tfoot><tr><td>Total</td><td class="n">${dd('cash-total', 'mono')}</td><td colspan="2"></td></tr></tfoot>
+    </table></div>
+    <div class="grid g3">${fld('Keep at least this much in cash', inp('cashFloor'), 'Today’s dollars. Surpluses refill cash to this level first. Investments are sold before cash drops below it.')}</div>
+  </div>
+  <div class="sec">
+    <div class="card-head"><h2>Deferred stock options</h2><button class="btn" data-act="add-opt">Add grant</button></div>
+    <p class="lede">Each grant is exercised in its exercise year at the simulated share price. The gain above the strike price is taxed at your rate, and the rest is added to the taxable account. The share price moves with its own volatility and follows the US market about half the time.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Grant</th><th class="n">Units</th><th class="n">Strike $</th><th class="n">Price now $</th><th>Exercise</th><th class="n">Growth %</th><th class="n">Vol %</th><th class="n">Tax %</th><th class="n">Value now</th><th></th></tr></thead>
+      <tbody>${opts || '<tr><td colspan="10" class="hint">No grants.</td></tr>'}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function rRealEstate() {
+  const cards = state.properties.map((p, i) => `<div class="card">
+    <div class="card-head"><div style="flex:1 1 260px">${inp(`properties.${i}.name`, { type: 'text', label: 'Property name' })}</div>
+      <div class="row"><span class="hint">Equity</span><b class="mono" data-d="eq-${i}"></b><button class="btn ghost small" data-act="del-prop" data-i="${i}">Delete property</button></div></div>
+    <div class="grid g4">
+      ${fld('Market value $', inp(`properties.${i}.value`))}
+      ${fld('Mortgage balance $', inp(`properties.${i}.mortgage`))}
+      ${fld('Mortgage payment $ / yr', inp(`properties.${i}.payment`), 'Principal and interest')}
+      ${fld('Payoff year', inp(`properties.${i}.payoff`, { type: 'int', ph: 'none' }))}
+      ${fld('Property tax $ / yr', inp(`properties.${i}.propTax`))}
+      ${fld('Insurance $ / yr', inp(`properties.${i}.insurance`))}
+      ${fld('Upkeep % of value', inp(`properties.${i}.maintPct`))}
+      ${fld('Appreciation % / yr', inp(`properties.${i}.appr`))}
+      ${fld('Rental income $ / yr', inp(`properties.${i}.rent`))}
+      ${fld('Sell in year', inp(`properties.${i}.saleYear`, { type: 'int', ph: 'keep' }))}
+      ${fld('Selling costs %', inp(`properties.${i}.sellCost`))}
+    </div></div>`).join('');
+  return `<div class="sec">
+    <div class="card-head"><h2>Real estate</h2><button class="btn" data-act="add-prop">Add property</button></div>
+    <div class="stats"><div class="stat"><span>Total equity</span>${dd('tot-re')}</div><div class="stat"><span>Net worth</span>${dd('tot-nw')}</div></div>
+    <p class="note">Property tax and insurance go here, not in the budget. Both rise with inflation, and upkeep is a percentage of the property's simulated value. Selling a property adds the proceeds, after selling costs and the mortgage, to the taxable account and ends its costs. This version doesn't calculate capital-gains tax on a property sale.</p>
+    ${cards}
+  </div>`;
+}
+
+function rBudget() {
+  const rows = state.budget.map((b, i) => `<tr>
+    <td>${inp(`budget.${i}.item`, { type: 'text', label: 'Item' })}</td>
+    <td>${inp(`budget.${i}.category`, { type: 'text', label: 'Category' })}</td>
+    <td>${sel(`budget.${i}.kind`, BUDGET_KINDS, 'Type')}</td>
+    <td>${inp(`budget.${i}.amount`, { cls: 'w-num', label: 'Annual amount' })}</td>
+    <td>${inp(`budget.${i}.start`, { type: 'int', cls: 'w-yr', ph: 'now', label: 'Start year' })}</td>
+    <td>${inp(`budget.${i}.end`, { type: 'int', cls: 'w-yr', ph: 'never', label: 'End year' })}</td>
+    <td><button class="btn ghost small" data-act="del" data-list="budget" data-i="${i}" aria-label="Remove">✕</button></td></tr>`).join('');
+  const T = state.taxes;
+  const dup = state.budget.filter(b => /federal|state income|property tax|income tax|homeowner|home insurance/i.test(b.item + ' ' + b.category));
+  return `<div class="sec">
+    <h2>Taxes</h2>
+    <div class="card">
+      <div class="row">${fld('How to figure income tax', sel('taxes.mode', [['rate', 'Effective rate on taxable income'], ['fixed', 'Fixed dollar amounts']]))}</div>
+      ${T.mode === 'fixed' ? `<div class="grid g3">
+          ${fld('Federal income tax $ / yr', inp('taxes.fedFixed'))}
+          ${fld('State income tax $ / yr', inp('taxes.stateFixed'))}
+          ${fld('Tax on SEP withdrawals %', inp('taxes.wdRate'), 'Added on top when the plan draws from the SEP')}
+        </div>` : `<div class="grid g3">
+          ${fld('Federal effective rate %', inp('taxes.fedRate'), 'Last year’s total federal tax ÷ taxable income')}
+          ${fld('State effective rate %', inp('taxes.stateRate'))}
+        </div>`}
+      <div class="grid g3">
+        ${fld('Capital gains rate % (fed + state)', inp('taxes.cgRate'), 'Applied to the gain part of taxable-account sales')}
+        <label class="fld"><span>Early withdrawal penalty</span><span class="row">${chk('taxes.penalty')} <small>Add 10% on SEP draws before 59½</small></span></label>
+      </div>
+      <p class="hint">Property taxes and property insurance are entered on each property on the Real estate tab.</p>
+    </div>
+  </div>
+  <div class="sec">
+    <div class="card-head"><h2>Itemized budget</h2>
+      <div class="row">
+        ${sel('meta.uploadMode', [['replace', 'Upload replaces budget'], ['append', 'Upload adds to budget']], 'Upload mode')}
+        <label class="btn" for="budget-file">Upload spreadsheet</label>
+        <input id="budget-file" type="file" accept=".csv,.xlsx,.xls,.tsv,.txt" hidden>
+        <button class="btn" data-act="template">Get template</button>
+        <button class="btn" data-act="add-budget">Add line</button>
+      </div></div>
+    <p class="lede">Enter amounts per year in today's dollars. Healthcare lines rise with healthcare inflation and everything else with general inflation. The upload reads CSV or Excel files with columns like <span class="mono">Item, Category, Amount, Frequency</span>. Monthly amounts are multiplied by 12.</p>
+    <div id="upload-msg"></div>
+    ${dup.length ? `<p class="warnline">${dup.length} line${dup.length > 1 ? 's look' : ' looks'} like income tax, property tax or home insurance (${esc(dup.slice(0, 3).map(b => b.item).join(', '))}). Those are already covered above and on the Real estate tab. Delete the lines, or set those fields to 0, so they aren't counted twice.</p>` : ''}
+    <div class="stats">
+      <div class="stat"><span>Budget / year</span>${dd('bud-all')}</div>
+      <div class="stat"><span>Per month</span>${dd('bud-month')}</div>
+      <div class="stat"><span>General</span>${dd('bud-general')}</div>
+      <div class="stat"><span>Healthcare lines</span>${dd('bud-health')}</div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Item</th><th>Category</th><th>Type</th><th class="n">$ / year</th><th>Start</th><th>End</th><th></th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" class="hint">No budget lines yet. Upload a spreadsheet or add lines.</td></tr>'}</tbody>
+    </table></div>
+    <div class="row">${state.budget.length ? '<button class="btn ghost small" data-act="clear-budget">Clear all lines</button>' : ''}</div>
+    <div class="card">
+      <h3>First-year check (${esc(state.household.startYear)})</h3>
+      <div class="stats">
+        <div class="stat"><span>Income</span>${dd('y1-income')}</div>
+        <div class="stat"><span>All spending</span>${dd('y1-spend')}</div>
+        <div class="stat"><span>Income tax</span>${dd('y1-tax')}</div>
+        <div class="stat"><span>Result</span>${dd('y1-gap')}</div>
+      </div>
+      <p class="hint">All spending covers the budget, healthcare plan, property costs, mortgages and account contributions. It leaves out vehicles and the remodel, which only happen in certain years.</p>
+    </div>
+  </div>`;
+}
+
+function rHealth() {
+  return `<div class="sec">
+    <h2>Healthcare</h2>
+    <p class="lede">Healthcare gets its own inflation rate: general inflation plus the extra percentage below. These costs are per person and come on top of any budget lines marked Healthcare.</p>
+    <div class="card"><div class="grid g3">
+      ${fld('Before 65: premiums + out of pocket $ / person / yr', inp('healthcare.pre65'), 'Marketplace or COBRA before Medicare')}
+      ${fld('65 and over: Medicare B, D, supplement + out of pocket $ / person / yr', inp('healthcare.post65'))}
+      ${fld('Healthcare inflation above general %', inp('assumptions.hcExtra'))}
+    </div></div>
+    <div class="card"><h3>Long-term care reserve</h3><div class="grid g3">
+      ${fld('Annual cost $ (today)', inp('healthcare.ltcCost'))}
+      ${fld('Starting at Person 1 age', inp('healthcare.ltcAge', { type: 'int' }))}
+      ${fld('Number of years', inp('healthcare.ltcYears', { type: 'int' }))}
+    </div></div>
+    <div class="stats">
+      <div class="stat"><span>This year: general</span>${dd('y1-general')}</div>
+      <div class="stat"><span>This year: healthcare</span>${dd('y1-health')}</div>
+      <div class="stat"><span>Healthcare at P1 age 75</span>${dd('hc-75')}</div>
+      <div class="stat"><span>Healthcare at P1 age 85</span>${dd('hc-85')}</div>
+    </div>
+    <p class="hint">The two later figures are in today's dollars and grow only by the extra healthcare inflation, so they show how much healthcare's share of spending grows.</p>
+  </div>`;
+}
+
+function rBigTicket() {
+  const V = state.vehicles, R = state.remodel;
+  const propOpts = [['', 'None (no value added)']].concat(state.properties.map(p => [p.id, p.name || 'Unnamed property']));
+  return `<div class="sec">
+    <div class="card-head"><h2>Vehicle replacement</h2><label class="row">${chk('vehicles.on')} Include vehicles</label></div>
+    <p class="lede">Each vehicle is replaced after a random interval between the minimum and maximum years. Every simulated future gets its own timing. The cost is the price net of trade-in, in today's dollars, and rises with inflation.</p>
+    <div class="card"><div class="grid g4">
+      ${fld('Vehicles in household', inp('vehicles.count', { type: 'int' }))}
+      ${fld('Price per vehicle $ (today)', inp('vehicles.price'))}
+      ${fld('Trade-in value %', inp('vehicles.tradeIn'))}
+      ${fld('Replace every (min yrs)', inp('vehicles.minYears', { type: 'int' }))}
+      ${fld('…to (max yrs)', inp('vehicles.maxYears', { type: 'int' }))}
+      ${fld('Next purchase year', inp('vehicles.firstYear', { type: 'int' }))}
+      ${fld('Stop buying after P1 age', inp('vehicles.stopAge', { type: 'int' }))}
+    </div></div>
+  </div>
+  <div class="sec">
+    <div class="card-head"><h2>House remodel</h2><label class="row">${chk('remodel.on')} Include remodel</label></div>
+    <p class="lede">Choose how to pay for the remodel. Money from the SEP is grossed up for income tax, plus the penalty if taken before 59½. Money from the taxable account pays capital-gains tax on the gain. A loan spreads fixed payments over its term. To compare every funding choice, use <b>Compare remodel funding</b> in the results panel.</p>
+    <div class="card"><div class="grid g4">
+      ${fld('Property', sel('remodel.propId', propOpts))}
+      ${fld('Cost $ (today)', inp('remodel.cost'))}
+      ${fld('Year', inp('remodel.year', { type: 'int' }))}
+      ${fld('Pay with', sel('remodel.source', [['cash', 'Cash savings'], ['taxable', 'Taxable account'], ['deferred', 'SEP IRA'], ['roth', 'Roth IRA'], ['loan', 'Loan / HELOC']]))}
+      ${fld('Loan rate %', inp('remodel.loanRate'))}
+      ${fld('Loan term (yrs)', inp('remodel.loanYears', { type: 'int' }))}
+      ${fld('Value added % of cost', inp('remodel.valueAdd'), 'Share of the cost that raises the home’s value')}
+    </div></div>
+  </div>`;
+}
+
+function rAssumptions() {
+  const A = state.assumptions;
+  const rows = CLASSES.map(c => `<tr><td>${c.label}</td>
+    <td>${inp(`assumptions.classes.${c.k}.mean`, { cls: 'w-pct', label: c.label + ' mean return' })}</td>
+    <td>${inp(`assumptions.classes.${c.k}.sd`, { cls: 'w-pct', label: c.label + ' volatility' })}</td></tr>`).join('');
+  return `<div class="sec">
+    <h2>Assumptions</h2>
+    <p class="lede">Each simulated year draws returns for every asset class together, using typical correlations (stocks move together, bonds cushion), plus a random inflation rate. The defaults are long-run planning figures, not forecasts.</p>
+    <div class="grid g2" style="align-items:start">
+      <div class="tw"><table>
+        <thead><tr><th>Asset class</th><th class="n">Mean return %</th><th class="n">Volatility %</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+      <div class="card"><div class="grid g2">
+        ${fld('Simulations', sel('assumptions.trials', [[500, '500 (fast)'], [1000, '1,000'], [2000, '2,000'], [5000, '5,000'], [10000, '10,000 (slow)']]))}
+        ${fld('Inflation mean %', inp('assumptions.inflMean'))}
+        ${fld('Inflation volatility %', inp('assumptions.inflSd'))}
+        ${fld('Healthcare above inflation %', inp('assumptions.hcExtra'))}
+        ${fld('Blank cost basis = % of value', inp('assumptions.missingBasisPct'), 'Used for holdings with no basis entered')}
+        ${fld('RMD age (Person 1)', inp('assumptions.rmdAge', { type: 'int' }), '75 if born 1960 or later')}
+      </div></div>
+    </div>
+    <p class="note">"Concentrated stock" stands for a large single-company position, so its volatility is much higher than a fund's. Its mean is price growth only, and the dividend is entered as an income stream. Real estate sets the ups and downs for every property, and each property's appreciation rate sets its average.</p>
+    <p class="note">How spending is covered in a short year: cash above your floor first, then the taxable account, then the SEP IRA, then Roth IRAs, and cash below the floor last. Required distributions from the SEP start at the RMD age and count as taxable income.</p>
+  </div>`;
+}
+
+let sharedPlans = null, dbRef = null, dlRef = null;
+function rShare() {
+  const list = sharedPlans === null ? '<p class="hint">Shared plans aren’t available in this view. Use export and import to move plans between people.</p>'
+    : sharedPlans.length === 0 ? '<p class="hint">No shared plans saved yet.</p>'
+    : `<div class="tw"><table><thead><tr><th>Plan</th><th>Saved</th><th></th></tr></thead><tbody>${sharedPlans.map(p => `<tr><td>${esc(p.name)}</td><td class="hint">${esc(p.savedAt ? new Date(p.savedAt).toLocaleString() : '')}</td>
+      <td class="n"><button class="btn small" data-act="load-shared" data-id="${esc(p.id)}">Open</button> <button class="btn ghost small" data-act="del-shared" data-id="${esc(p.id)}">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="sec">
+    <h2>Save &amp; share</h2>
+    <p class="lede">Your edits save automatically in this browser only. To work on the plan with someone else, save it as a shared plan (visible to anyone you share this page with) or export a file and send it.</p>
+    <div class="card"><h3>Plan file</h3>
+      <div class="row">
+        <button class="btn primary" data-act="export">Export plan file (.json)</button>
+        <label class="btn" for="plan-file">Import plan file</label><input id="plan-file" type="file" accept=".json,application/json" hidden>
+      </div>
+      <p class="hint">Importing replaces the plan on screen. Export first if you want to keep it.</p>
+      <div id="share-msg"></div>
+    </div>
+    <div class="card" id="shared-card"><div class="card-head"><h3>Shared plans</h3>${sharedPlans !== null ? '<button class="btn" data-act="save-shared">Save current plan as shared</button>' : ''}</div>
+      ${sharedPlans !== null ? '<p class="hint">Saving under an existing name overwrites that plan. Only people you share this page with can see shared plans.</p>' : ''}
+      ${list}</div>
+    <div class="card"><h3>Start over</h3><div class="row">
+      <button class="btn" data-act="load-example">Load example plan</button>
+      <button class="btn" data-act="blank-plan">Start a blank plan</button></div></div>
+  </div>`;
+}
+
+/* ---------- input handling ---------- */
+function readEl(el) {
+  const t = el.dataset.type;
+  if (t === 'bool') return el.checked;
+  if (t === 'text') { const v = el.value; return el.tagName === 'SELECT' && /^\d+$/.test(v) && el.dataset.path === 'assumptions.trials' ? +v : v; }
+  if (el.value === '') return '';
+  const n = parseFloat(el.value); return isFinite(n) ? (t === 'int' ? Math.round(n) : n) : '';
+}
+function onFieldChange(el) {
+  const path = el.dataset.path;
+  setPath(state, path, readEl(el));
+  if (path !== 'meta.name' && path !== 'meta.uploadMode') state.meta.isExample = false;
+  if (/\.sym$/.test(path)) { // auto-classify known symbols
+    const v = String(el.value).toUpperCase().trim(); const base = path.replace(/\.sym$/, '');
+    if (SYMBOL_CLASS[v]) { setPath(state, base + '.cls', SYMBOL_CLASS[v]); const s = document.getElementById(fid(base + '.cls')); if (s) s.value = SYMBOL_CLASS[v]; }
+  }
+  scheduleSave(); markStale(); refreshDerived();
+  if (/^(taxes\.mode|accounts\.\d+\.type)$/.test(path)) renderPanel();
+}
+document.addEventListener('input', e => {
+  const el = e.target; if (!el.dataset || !el.dataset.path) return;
+  if (el.type === 'checkbox' || el.tagName === 'SELECT') return;
+  onFieldChange(el);
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'budget-file') return handleBudgetFile(el);
+  if (el.id === 'plan-file') return handlePlanFile(el);
+  if (!el.dataset || !el.dataset.path) return;
+  if (el.type === 'checkbox' || el.tagName === 'SELECT') onFieldChange(el);
+});
+
+function arm(btn) { // two-click confirm for destructive actions
+  if (btn.dataset.armed) return true;
+  const txt = btn.textContent;
+  btn.dataset.armed = '1'; btn.textContent = 'Click again to confirm';
+  setTimeout(() => { if (btn.isConnected) { delete btn.dataset.armed; btn.textContent = txt; } }, 3000);
+  return false;
+}
+function structural() { state.meta.isExample = false; scheduleSave(); markStale(); renderPanel(); }
+
+document.addEventListener('click', async e => {
+  const btn = e.target.closest('[data-act]'); if (!btn) return;
+  const act = btn.dataset.act, i = +btn.dataset.i;
+  const y = num(state.household.startYear) || new Date().getFullYear();
+  switch (act) {
+    case 'tab': currentTab = btn.dataset.tab; lsSet(LS_TAB, currentTab); renderTabs(); renderPanel(); $('#tabs').scrollIntoView({ block: 'nearest' }); break;
+    case 'run': runMain(); break;
+    case 'del': state[btn.dataset.list].splice(i, 1); structural(); break;
+    case 'add-income': state.incomes.push({ id: uid(), name: 'New income', amount: 0, start: y, end: '', mode: 'infl', growth: 0, taxable: true, note: '' }); structural(); break;
+    case 'add-account': state.accounts.push({ id: uid(), name: 'New account', type: 'taxable', owner: '', contrib: 0, contribEnd: '', holdings: [] }); structural(); break;
+    case 'del-account': if (arm(btn)) { state.accounts.splice(i, 1); structural(); } break;
+    case 'add-holding': state.accounts[+btn.dataset.a].holdings.push({ id: uid(), sym: '', cls: 'us', qty: 0, price: 0, basis: '' }); structural(); break;
+    case 'del-holding': state.accounts[+btn.dataset.a].holdings.splice(+btn.dataset.h, 1); structural(); break;
+    case 'paste': pasteHoldings(+btn.dataset.a); break;
+    case 'add-cash': state.cash.push({ id: uid(), name: 'New account', balance: 0, rate: 0 }); structural(); break;
+    case 'add-opt': state.options.push({ id: uid(), name: 'New grant', units: 0, strike: 0, price: 0, year: y + 1, growth: 6, vol: 30, taxRate: 37 }); structural(); break;
+    case 'add-prop': state.properties.push({ id: uid(), name: 'New property', value: 0, mortgage: 0, payment: 0, payoff: '', propTax: 0, insurance: 0, maintPct: 1, appr: 4, rent: 0, saleYear: '', sellCost: 6 }); structural(); break;
+    case 'del-prop': if (arm(btn)) { state.properties.splice(i, 1); structural(); } break;
+    case 'add-budget': state.budget.push({ id: uid(), item: 'New item', category: '', amount: 0, kind: 'general', start: '', end: '' }); structural(); break;
+    case 'clear-budget': if (arm(btn)) { state.budget = []; structural(); } break;
+    case 'template': saveFile('budget-template.csv', 'Item,Category,Amount,Frequency,Type\nGroceries,Food,1200,Monthly,General\nUtilities,Home,600,Monthly,Housing\nTravel,Lifestyle,12000,Annual,General\nDental,Health,200,Monthly,Healthcare\nAuto insurance,Insurance,2200,Annual,Insurance\n', '#upload-msg'); break;
+    case 'export': saveFile(((state.meta.name || 'plan').replace(/[^\w\- ]+/g, '').trim() || 'plan') + '.horizon95.json', JSON.stringify(state, null, 1), '#share-msg'); break;
+    case 'load-example': if (arm(btn)) { state = exampleState(); afterReplace(); } break;
+    case 'blank-plan': if (arm(btn)) { state = normalize({ meta: { name: 'New plan', isExample: false } }); afterReplace(); } break;
+    case 'save-shared': saveShared(btn); break;
+    case 'load-shared': loadShared(btn.dataset.id); break;
+    case 'del-shared': if (arm(btn)) delShared(btn.dataset.id); break;
+    case 'chart': chartMode = btn.dataset.mode; drawResults(); break;
+    case 'compare': compareRemodel(); break;
+    case 'goto': currentTab = btn.dataset.tab; lsSet(LS_TAB, currentTab); renderTabs(); renderPanel(); break;
+  }
+});
+function afterReplace() { scheduleSave(); renderTabs(); renderPanel(); runMain(); }
+
+function pasteHoldings(ai) {
+  const a = state.accounts[ai], ta = document.getElementById('paste-' + a.id); if (!ta) return;
+  let added = 0;
+  ta.value.split(/\r?\n/).forEach(line => {
+    line = line.trim(); if (!line) return;
+    const parts = line.includes('\t') ? line.split('\t') : line.split(/\s+/);
+    const sym = (parts[0] || '').toUpperCase().replace(/[^A-Z0-9.\-]/g, '');
+    const qty = num(parts[1]), price = num(parts[2]);
+    if (!sym || !(qty > 0)) return;
+    a.holdings.push({ id: uid(), sym, cls: SYMBOL_CLASS[sym] || 'us', qty, price, basis: parts[3] !== undefined && parts[3] !== '' ? num(parts[3]) : '' });
+    added++;
+  });
+  structural();
+  if (!added) alertIn(`#paste-${a.id}`, 'No rows were read. Each line needs a symbol, quantity and price.');
+}
+function alertIn(sel, msg) { const el = $(sel); if (el) { const p = document.createElement('p'); p.className = 'warnline'; p.textContent = msg; el.after(p); } }
+
+/* ---------- files ---------- */
+async function saveFile(name, text, msgSel) {
+  const msg = $(msgSel);
+  const show = (t, warn) => { if (msg) msg.innerHTML = `<p class="${warn ? 'warnline' : 'hint'}">${esc(t)}</p>`; };
+  if (dlRef) {
+    try { await dlRef.save({ filename: name, data: text }); show('Saved ' + name + '.'); return; }
+    catch (err) { if (err && err.code === 'declined') { show('Download cancelled.'); return; } }
+  }
+  try {
+    if (!window.claude) { // opened as a local file: a normal download works
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' })); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      show('Downloaded ' + name + '.'); return;
+    }
+  } catch { }
+  // fallback: show text to copy
+  $('#modal-root').innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Copy file contents"><div class="card">
+    <h3>Copy ${esc(name)}</h3><p class="hint">Downloads aren’t available in this view. Copy the text below and save it in a file named <span class="mono">${esc(name)}</span>.</p>
+    <textarea id="copy-area" style="min-height:260px" readonly>${esc(text)}</textarea>
+    <div class="row"><button class="btn primary" id="copy-btn">Copy</button><button class="btn" id="close-modal">Close</button></div></div></div>`;
+  $('#close-modal').onclick = () => { $('#modal-root').innerHTML = ''; };
+  $('#copy-btn').onclick = () => { const ta = $('#copy-area'); navigator.clipboard?.writeText(ta.value).then(() => { $('#copy-btn').textContent = 'Copied'; }, () => { ta.select(); }); };
+}
+function handlePlanFile(el) {
+  const f = el.files && el.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const data = JSON.parse(r.result);
+      if (!data || typeof data !== 'object' || !('accounts' in data || 'household' in data)) throw new Error('shape');
+      state = normalize(data); state.meta.isExample = false; afterReplace();
+      const m = $('#share-msg'); if (m) m.innerHTML = `<p class="hint">Imported “${esc(state.meta.name)}”.</p>`;
+    } catch { const m = $('#share-msg'); if (m) m.innerHTML = '<p class="warnline">That file isn’t a Horizon 95 plan. Pick a .json file you exported from this page.</p>'; }
+    el.value = '';
+  };
+  r.readAsText(f);
+}
+function guessKind(text) {
+  const t = text.toLowerCase();
+  if (/health|medical|dental|vision|premium|rx|pharm|doctor|hsa|prescript/.test(t)) return 'healthcare';
+  if (/insur/.test(t)) return 'insurance';
+  if (/tax/.test(t)) return 'tax';
+  if (/mortgage|rent\b|hoa|utilit|electric|water|sewer|garbage|internet|repair|maint|house|home/.test(t)) return 'housing';
+  return 'general';
+}
+function handleBudgetFile(el) {
+  const f = el.files && el.files[0]; if (!f) return;
+  const msg = $('#upload-msg');
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      let rows;
+      if (/\.(xlsx|xls)$/i.test(f.name)) {
+        if (!window.XLSX) throw new Error('The Excel reader didn’t load. Save the sheet as CSV and upload that.');
+        const wb = XLSX.read(new Uint8Array(r.result), { type: 'array' });
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
+      } else if (window.XLSX) {
+        const wb = XLSX.read(r.result, { type: 'string' });
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: '' });
+      } else {
+        rows = String(r.result).split(/\r?\n/).map(l => l.split(l.includes('\t') ? '\t' : ','));
+      }
+      const items = parseBudgetRows(rows);
+      if (!items.length) throw new Error('No budget lines found. The sheet needs an item column and an amount column.');
+      const replace = (state.meta.uploadMode || 'replace') === 'replace';
+      state.budget = replace ? items : state.budget.concat(items);
+      structural();
+      const m2 = $('#upload-msg'); if (m2) m2.innerHTML = `<p class="hint">Read ${items.length} lines from ${esc(f.name)}, totalling ${money(items.reduce((a, b) => a + b.amount, 0))} a year. Check the Type column: it was guessed from each item's name.</p>`;
+    } catch (err) { if (msg) msg.innerHTML = `<p class="warnline">${esc(err.message || 'Couldn’t read that file.')}</p>`; }
+    el.value = '';
+  };
+  if (/\.(xlsx|xls)$/i.test(f.name)) r.readAsArrayBuffer(f); else r.readAsText(f);
+}
+function parseBudgetRows(rows) {
+  rows = rows.filter(r => Array.isArray(r) && r.some(c => String(c).trim() !== ''));
+  let hi = rows.findIndex(r => r.some(c => /item|description|expense|name|line/i.test(String(c))) && r.some(c => /amount|annual|monthly|cost|budget|total|\$/i.test(String(c))));
+  let head = hi >= 0 ? rows[hi].map(c => String(c).toLowerCase().trim()) : null;
+  const find = re => head ? head.findIndex(h => re.test(h)) : -1;
+  let ci = find(/item|description|expense|name|line/), cc = find(/categ|group/), ca = find(/amount|annual|monthly|cost|budget|total|\$/), cf = find(/freq|period|per\b|interval/), ck = find(/^type$|kind/);
+  const monthlyHeader = ca >= 0 && /month/.test(head[ca]);
+  const body = hi >= 0 ? rows.slice(hi + 1) : rows;
+  if (ci < 0) ci = 0;
+  if (ca < 0) ca = body[0] ? body[0].findIndex((c, k) => k !== ci && isFinite(num(c)) && num(c) !== 0) : -1;
+  if (ca < 0) return [];
+  const out = [];
+  body.forEach(r => {
+    const item = String(r[ci] ?? '').trim(); let amt = num(r[ca]);
+    if (!item || !amt || /^total/i.test(item)) return;
+    const freq = cf >= 0 ? String(r[cf]).toLowerCase() : '';
+    if (/month/.test(freq) || (!freq && monthlyHeader)) amt *= 12;
+    else if (/week/.test(freq)) amt *= 52;
+    else if (/quarter/.test(freq)) amt *= 4;
+    const category = cc >= 0 ? String(r[cc] ?? '').trim() : '';
+    const kindRaw = ck >= 0 ? String(r[ck]).toLowerCase() : '';
+    const kind = BUDGET_KINDS.find(([k, t]) => kindRaw && (kindRaw === k || kindRaw === t.toLowerCase()))?.[0] || guessKind(item + ' ' + category);
+    out.push({ id: uid(), item, category, amount: Math.round(amt * 100) / 100, kind, start: '', end: '' });
+  });
+  return out;
+}
+
+/* ---------- shared plans (db capability) ---------- */
+const slug = s => (String(s || 'plan').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'plan').slice(0, 60);
+async function saveShared(btn) {
+  if (!dbRef) return;
+  const name = state.meta.name || 'Untitled plan';
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await dbRef.collection('plans').doc(slug(name)).set({ name, savedAt: new Date().toISOString(), plan: JSON.stringify(state) });
+    btn.textContent = 'Saved';
+  } catch (err) {
+    btn.textContent = 'Save current plan as shared';
+    const m = $('#share-msg'); if (m) m.innerHTML = `<p class="warnline">${err && err.code === 'invalid_argument' ? 'You can view shared plans but not save them. Ask the page owner for edit access.' : 'Couldn’t save the shared plan. Try again in a moment.'}</p>`;
+  }
+  btn.disabled = false;
+}
+async function loadShared(id) {
+  const p = (sharedPlans || []).find(x => x.id === id); if (!p) return;
+  try { state = normalize(JSON.parse(p.plan)); state.meta.isExample = false; afterReplace(); }
+  catch { const m = $('#share-msg'); if (m) m.innerHTML = '<p class="warnline">That shared plan couldn’t be opened.</p>'; }
+}
+async function delShared(id) { try { await dbRef.collection('plans').doc(id).delete(); } catch { } }
+async function initCaps() {
+  if (!window.claude || typeof window.claude.use !== 'function') return;
+  try { dlRef = await window.claude.use('downloads'); } catch { dlRef = null; }
+  try {
+    dbRef = await window.claude.use('db');
+    if (dbRef) {
+      sharedPlans = [];
+      dbRef.collection('plans').orderBy('savedAt', 'desc').onSnapshot(snap => {
+        sharedPlans = snap.docs.map(d => { const v = d.data() || {}; return { id: d.id, name: String(v.name || d.id), savedAt: v.savedAt, plan: v.plan }; });
+        if (currentTab === 'share') renderPanel();
+      }, () => { sharedPlans = null; if (currentTab === 'share') renderPanel(); });
+      if (currentTab === 'share') renderPanel();
+    }
+  } catch { dbRef = null; }
+}
+
+/* ---------- simulation ---------- */
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function cholesky(M) {
+  const n = M.length, L = M.map(() => new Float64Array(n));
+  for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) {
+    let s = M[i][j]; for (let k = 0; k < j; k++) s -= L[i][k] * L[j][k];
+    if (i === j) { if (s <= 0) return null; L[i][i] = Math.sqrt(s); } else L[i][j] = s / L[j][j];
+  }
+  return L;
+}
+const CHOL = cholesky(CORR) || CORR.map((r, i) => r.map((_, j) => i === j ? 1 : 0));
+
+function prepare(s, opt) {
+  const A = ages(s), As = s.assumptions;
+  const cls = CLASSES.map(c => ({ mean: num(As.classes[c.k].mean) / 100, sd: Math.max(0, num(As.classes[c.k].sd)) / 100 }));
+  const ra = num(opt.ret) / 100;
+  [CI.us, CI.intl, CI.single].forEach(k => { cls[k].mean += ra; });
+  const mk = () => ({ bal: 0, basis: 0, w: new Float64Array(CLASSES.length) });
+  const pools = { taxable: mk(), deferred: mk(), roth: mk() };
+  const mb = num(As.missingBasisPct) / 100;
+  const contribs = [];
+  s.accounts.forEach(a => {
+    const P = pools[a.type] || pools.taxable;
+    a.holdings.forEach(h => {
+      const v = num(h.qty) * num(h.price); if (!(v > 0)) return;
+      P.bal += v; P.w[CI[h.cls] ?? 0] += v;
+      if (a.type === 'taxable') P.basis += blank(h.basis) ? v * mb : num(h.basis);
+    });
+    if (num(a.contrib) > 0) contribs.push({ pool: pools[a.type] ? a.type : 'taxable', amt: num(a.contrib), end: blank(a.contribEnd) ? -Infinity : num(a.contribEnd) });
+  });
+  for (const k in pools) { const P = pools[k]; if (P.bal > 0) for (let i = 0; i < P.w.length; i++) P.w[i] /= P.bal; else P.w[CI.us] = 1; }
+  const cashBal = s.cash.reduce((x, c) => x + num(c.balance), 0);
+  const cashRate = cashBal > 0 ? s.cash.reduce((x, c) => x + num(c.balance) * num(c.rate), 0) / cashBal / 100 : num(As.classes.cash.mean) / 100;
+  const N = A.N, spendMult = 1 + num(opt.spend) / 100;
+  const gen = new Float64Array(N), hc = new Float64Array(N);
+  s.budget.forEach(b => { for (let t = 0; t < N; t++) if (inRange(A.start + t, b.start, b.end)) (b.kind === 'healthcare' ? hc : gen)[t] += num(b.amount) * spendMult; });
+  const incomes = s.incomes.map(i => ({ amt: num(i.amount), start: blank(i.start) ? -Infinity : num(i.start), end: blank(i.end) ? Infinity : num(i.end), infl: i.mode !== 'fixed', g: num(i.growth) / 100, taxable: !!i.taxable })).filter(i => i.amt);
+  const props = s.properties.map(p => ({ value: num(p.value), mortgage: num(p.mortgage), payment: num(p.payment), payoff: blank(p.payoff) ? (num(p.mortgage) > 0 ? Infinity : -Infinity) : num(p.payoff), fixed: num(p.propTax) + num(p.insurance), maint: num(p.maintPct) / 100, appr: num(p.appr) / 100, rent: num(p.rent), sale: blank(p.saleYear) ? Infinity : num(p.saleYear), sellCost: num(p.sellCost) / 100, id: p.id }));
+  const V = s.vehicles;
+  const minY = Math.max(1, Math.round(num(V.minYears) || 5)), maxY = Math.max(minY, Math.round(num(V.maxYears) || minY));
+  const veh = { on: !!V.on && num(V.price) > 0, count: Math.max(0, Math.round(num(V.count))), cost: num(V.price) * (1 - num(V.tradeIn) / 100), minY, maxY, first: num(V.firstYear) || A.start, stopAge: num(V.stopAge) || 200 };
+  const R = s.remodel;
+  const src = opt.remodel === undefined ? R.source : opt.remodel;
+  const rem = { on: !!R.on && num(R.cost) > 0 && src !== 'none', cost: num(R.cost), year: num(R.year), source: src, rate: num(R.loanRate) / 100, years: Math.max(1, Math.round(num(R.loanYears) || 1)), valueAdd: num(R.valueAdd) / 100, propIdx: props.findIndex(p => p.id === R.propId) };
+  const options = s.options.map(o => ({ units: num(o.units), strike: num(o.strike), price: num(o.price), year: blank(o.year) ? A.start : num(o.year), mean: num(o.growth) / 100, sd: num(o.vol) / 100, tax: num(o.taxRate) / 100 })).filter(o => o.units > 0);
+  const T = s.taxes;
+  const tax = { fixed: T.mode === 'fixed', base: num(T.fedFixed) + num(T.stateFixed), ord: (num(T.fedRate) + num(T.stateRate)) / 100, wd: T.mode === 'fixed' ? num(T.wdRate) / 100 : (num(T.fedRate) + num(T.stateRate)) / 100, cg: num(T.cgRate) / 100, penalty: !!T.penalty };
+  const H = s.healthcare;
+  return { A, N, cls, pools, contribs, cashBal, cashRate, gen, hc, incomes, props, veh, rem, options, tax,
+    hcPlan: { pre: num(H.pre65), post: num(H.post65), ltc: num(H.ltcCost), ltcAge: num(H.ltcAge), ltcYears: num(H.ltcYears) },
+    inflMean: num(As.inflMean) / 100, inflSd: num(As.inflSd) / 100, hcExtra: num(As.hcExtra) / 100, rmdAge: num(As.rmdAge) || 75, floor: num(s.cashFloor) };
+}
+
+function simulate(s, opt = {}) {
+  const P = prepare(s, opt), A = P.A, N = P.N;
+  const T = Math.max(50, Math.round(opt.trials || num(s.assumptions.trials) || 2000));
+  const rng = mulberry32((opt.seed ?? num(s.assumptions.seed)) >>> 0 || 1);
+  let spare = null;
+  const gauss = () => { if (spare !== null) { const v = spare; spare = null; return v; } let u = rng(); if (u < 1e-12) u = 1e-12; const v = rng(), m = Math.sqrt(-2 * Math.log(u)); spare = m * Math.sin(2 * Math.PI * v); return m * Math.cos(2 * Math.PI * v); };
+  const K = CLASSES.length, e = new Float64Array(K), r = new Float64Array(K);
+  const liq = new Float64Array(T * N), nw = new Float64Array(T * N), inc = new Float64Array(T * N), spd = new Float64Array(T * N), txs = new Float64Array(T * N);
+  let fails = 0; const failAges = [];
+  const people = A.hasP2 ? 2 : 1;
+  const growth = (w) => { let g = 0; for (let i = 0; i < K; i++) g += w[i] * r[i]; return g; };
+  const { taxable: PT, deferred: PD, roth: PR } = P.pools;
+
+  for (let k = 0; k < T; k++) {
+    const S = { tb: PT.bal, basis: PT.basis, db: PD.bal, rb: PR.bal, cb: P.cashBal, wtax: 0 };
+    let cpi = 1, hci = 1, failed = false, loanPay = 0, loanEnd = -Infinity;
+    const pv = P.props.map(p => p.value), pm = P.props.map(p => p.mortgage), sold = P.props.map(() => false);
+    const os = P.options.map(o => o.price), odone = P.options.map(() => false);
+    const nextVeh = [];
+    for (let v = 0; v < P.veh.count; v++) nextVeh.push(P.veh.first + (v === 0 ? 0 : Math.floor(rng() * (P.veh.maxY + 1))));
+
+    // withdraw `need` after-tax dollars from a pool; returns after-tax dollars delivered
+    const wd = (kind, need, age) => {
+      if (need <= 0) return 0;
+      if (kind === 'taxable') {
+        if (S.tb <= 0) return 0;
+        const gs = Math.max(0, 1 - S.basis / S.tb), rate = Math.min(.9, gs * P.tax.cg);
+        const gross = Math.min(S.tb, need / (1 - rate));
+        S.basis -= S.basis * (gross / S.tb); S.tb -= gross; S.wtax += gross * rate; return gross * (1 - rate);
+      }
+      if (kind === 'deferred') {
+        if (S.db <= 0) return 0;
+        const rate = Math.min(.9, P.tax.wd + (P.tax.penalty && age < 59.5 ? .10 : 0));
+        const gross = Math.min(S.db, need / (1 - rate));
+        S.db -= gross; S.wtax += gross * rate; return gross * (1 - rate);
+      }
+      if (kind === 'roth') { const g = Math.min(S.rb, need); S.rb -= g; return g; }
+      if (kind === 'cash') { const g = Math.min(Math.max(0, S.cb), need); S.cb -= g; return g; }
+      return 0;
+    };
+
+    for (let t = 0; t < N; t++) {
+      const Y = A.start + t, a1 = Y - A.b1, a2 = Y - A.b2, ah = Y - A.hb;
+      for (let i = 0; i < K; i++) e[i] = gauss();
+      for (let i = 0; i < K; i++) { let z = 0; const Li = CHOL[i]; for (let j = 0; j <= i; j++) z += Li[j] * e[j]; r[i] = Math.max(-0.95, P.cls[i].mean + P.cls[i].sd * z); }
+      const zUS = (r[CI.us] - P.cls[CI.us].mean) / (P.cls[CI.us].sd || 1);
+      const infl = Math.max(-0.03, P.inflMean + P.inflSd * gauss());
+      S.wtax = 0;
+      let income = 0, ord = 0, spend = 0, tax = 0, inflow = 0;
+
+      for (const s2 of P.incomes) if (Y >= s2.start && Y <= s2.end) { const a = s2.infl ? s2.amt * cpi : s2.amt * Math.pow(1 + s2.g, t); income += a; if (s2.taxable) ord += a; }
+      spend += P.gen[t] * cpi + P.hc[t] * hci;
+      spend += ((a1 < 65 ? P.hcPlan.pre : P.hcPlan.post) + (people === 2 ? (a2 < 65 ? P.hcPlan.pre : P.hcPlan.post) : 0)) * hci;
+      if (P.hcPlan.ltc > 0 && a1 >= P.hcPlan.ltcAge && a1 < P.hcPlan.ltcAge + P.hcPlan.ltcYears) spend += P.hcPlan.ltc * hci;
+
+      for (let j = 0; j < P.props.length; j++) {
+        if (sold[j]) continue; const p = P.props[j];
+        if (Y >= p.sale) { inflow += Math.max(0, pv[j] * (1 - p.sellCost) - pm[j]); sold[j] = true; continue; }
+        spend += p.fixed * cpi + p.maint * pv[j] + (Y <= p.payoff ? p.payment : 0);
+        if (p.rent) { income += p.rent * cpi; ord += p.rent * cpi; }
+      }
+      if (P.veh.on && a1 <= P.veh.stopAge) for (let v = 0; v < nextVeh.length; v++) if (Y >= nextVeh[v]) { spend += P.veh.cost * cpi; nextVeh[v] = Y + P.veh.minY + Math.floor(rng() * (P.veh.maxY - P.veh.minY + 1)); }
+      let cT = 0, cD = 0, cR = 0;
+      for (const c of P.contribs) if (Y <= c.end) { spend += c.amt; if (c.pool === 'taxable') cT += c.amt; else if (c.pool === 'deferred') cD += c.amt; else cR += c.amt; }
+
+      let earmark = 0;
+      if (P.rem.on && Y === P.rem.year) {
+        const cost = P.rem.cost * cpi;
+        if (P.rem.propIdx >= 0 && !sold[P.rem.propIdx]) pv[P.rem.propIdx] += cost * P.rem.valueAdd;
+        if (P.rem.source === 'loan') { const i = P.rem.rate, n = P.rem.years; loanPay = i > 0 ? cost * i / (1 - Math.pow(1 + i, -n)) : cost / n; loanEnd = Y + n - 1; }
+        else earmark = cost;
+      }
+      if (Y <= loanEnd) spend += loanPay;
+
+      for (let j = 0; j < P.options.length; j++) if (!odone[j] && Y >= P.options[j].year) {
+        const o = P.options[j], gross = o.units * Math.max(0, os[j] - o.strike);
+        income += gross; tax += gross * o.tax; odone[j] = true;
+      }
+      if (a1 >= P.rmdAge && S.db > 0) { const rmd = S.db / rmdDiv(a1); S.db -= rmd; income += rmd; ord += rmd; }
+      tax += P.tax.fixed ? P.tax.base * cpi : ord * P.tax.ord;
+
+      // contributions go in
+      S.tb += cT; S.basis += cT; S.db += cD; S.rb += cR;
+      let net = income + inflow - spend - tax;
+      if (earmark > 0) { const got = wd(P.rem.source, earmark, a1); net -= (earmark - got); spend += earmark; }
+      const floor = P.floor * cpi;
+      if (net >= 0) {
+        const toCash = Math.max(0, Math.min(net, floor - S.cb)); S.cb += toCash; S.tb += net - toCash; S.basis += net - toCash;
+      } else {
+        let need = -net;
+        const above = Math.max(0, S.cb - floor), c1 = Math.min(above, need); S.cb -= c1; need -= c1;
+        need -= wd('taxable', need, a1);
+        need -= wd('deferred', need, a1);
+        need -= wd('roth', need, a1);
+        need -= wd('cash', need, a1);
+        if (need > 1 && !failed) { failed = true; fails++; failAges.push(ah); }
+      }
+      tax += S.wtax;
+
+      // growth over the year
+      S.tb *= 1 + growth(PT.w); S.db *= 1 + growth(PD.w); S.rb *= 1 + growth(PR.w);
+      S.cb *= 1 + P.cashRate + (r[CI.cash] - P.cls[CI.cash].mean);
+      if (S.tb < 0) S.tb = 0; if (S.basis > S.tb * 5) S.basis = S.tb * 5;
+      const reDev = r[CI.re] - P.cls[CI.re].mean;
+      let eq = 0;
+      for (let j = 0; j < P.props.length; j++) {
+        if (sold[j]) continue; const p = P.props[j];
+        pv[j] *= 1 + p.appr + reDev;
+        if (Y <= p.payoff && isFinite(p.payoff)) pm[j] -= pm[j] / (p.payoff - Y + 1);
+        eq += pv[j] - pm[j];
+      }
+      let ov = 0;
+      for (let j = 0; j < P.options.length; j++) {
+        const o = P.options[j];
+        os[j] *= Math.max(0.02, 1 + o.mean + o.sd * (0.5 * zUS + 0.866 * gauss()));
+        if (!odone[j]) ov += o.units * Math.max(0, os[j] - o.strike) * (1 - o.tax);
+      }
+      const cpi0 = cpi;
+      cpi *= 1 + infl; hci *= 1 + infl + P.hcExtra;
+      const L = Math.max(0, S.tb) + Math.max(0, S.db) + Math.max(0, S.rb) + Math.max(0, S.cb);
+      const idx = k * N + t;
+      liq[idx] = failed ? 0 : L / cpi; nw[idx] = ((failed ? 0 : L) + eq + ov) / cpi;
+      inc[idx] = (income + inflow) / cpi0; spd[idx] = spend / cpi0; txs[idx] = tax / cpi0;
+    }
+  }
+  // percentiles
+  const q = (arr, t, ps) => { const col = new Float64Array(T); for (let k = 0; k < T; k++) col[k] = arr[k * N + t]; col.sort(); return ps.map(p => col[Math.min(T - 1, Math.floor(p * (T - 1)))]); };
+  const PS = [.1, .25, .5, .75, .9];
+  const band = { liq: [], nw: [] }, med = { inc: [], spd: [], txs: [] };
+  for (let t = 0; t < N; t++) {
+    band.liq.push(q(liq, t, PS)); band.nw.push(q(nw, t, PS));
+    med.inc.push(q(inc, t, [.5])[0]); med.spd.push(q(spd, t, [.5])[0]); med.txs.push(q(txs, t, [.5])[0]);
+  }
+  failAges.sort((a, b) => a - b);
+  return { T, N, A, success: 1 - fails / T, fails, failAges, band, med, opt };
+}
+
+/* ---------- results UI ---------- */
+let lastRes = null, chartMode = 'liq', stale = false, compareRes = null;
+function markStale() { stale = true; const s = $('#stale'); if (s) s.hidden = false; }
+function runMain() {
+  const A = ages();
+  if (!A.ok) { lastRes = null; drawResults(); return; }
+  const btns = $$('[data-act="run"]'); btns.forEach(b => { b.disabled = true; b.textContent = 'Running…'; });
+  setTimeout(() => {
+    try { lastRes = simulate(state, { spend: state.whatif.spend, ret: state.whatif.ret }); compareRes = null; stale = false; }
+    finally { btns.forEach(b => { b.disabled = false; b.textContent = 'Run simulation'; }); drawResults(); }
+  }, 20);
+}
+function status(p) { return p >= .85 ? ['good', 'On track'] : p >= .7 ? ['warn', 'Worth a closer look'] : ['bad', 'At risk']; }
+function renderMissing() {
+  const el = $('#missing'); if (!el) return;
+  const t = totals(), A = ages(), miss = [];
+  if (!A.ok) miss.push(['household', 'Birth years']);
+  if (!state.budget.length) miss.push(['budget', 'Budget']);
+  if (!state.incomes.some(i => num(i.amount) > 0)) miss.push(['income', 'Income amounts']);
+  if (state.properties.length && t.reValue === 0) miss.push(['realestate', 'Property values']);
+  if (t.cash === 0) miss.push(['cash', 'Bank balances']);
+  if (state.accounts.some(a => a.holdings.length === 0)) miss.push(['accounts', 'Empty accounts']);
+  if (t.missingBasis) miss.push(['accounts', `${t.missingBasis} missing cost bas${t.missingBasis > 1 ? 'es' : 'is'}`]);
+  el.innerHTML = miss.length ? `<div class="kicker" style="margin-bottom:6px">Still blank</div><div class="row">${miss.map(([tab, l]) => `<button class="chip" data-act="goto" data-tab="${tab}">${esc(l)}</button>`).join('')}</div>` : '';
+}
+function drawResults() {
+  const R = lastRes, el = $('#results'), t = totals(), A = ages();
+  const who = state.household.horizonWho === 'p1' ? state.household.p1Name : state.household.horizonWho === 'p2' ? state.household.p2Name : 'the younger of you';
+  const ageLabel = num(state.household.horizonAge) || 95;
+  if (!R) {
+    el.innerHTML = `<div><div class="kicker">Chance of lasting through ${ageLabel}</div><h2 style="margin-top:4px">Add birth years to run</h2>
+      <p class="hint" style="margin-top:6px">The simulation needs at least Person 1's birth year and a first plan year.</p></div>
+      <button class="btn primary" data-act="goto" data-tab="household">Go to Household</button><div id="missing"></div>`;
+    renderMissing(); return;
+  }
+  const [cls, label] = status(R.success);
+  const C = 2 * Math.PI * 52, off = C * (1 - R.success);
+  const last = R.band.liq[R.N - 1], lastNw = R.band.nw[R.N - 1];
+  const failMed = R.failAges.length ? R.failAges[Math.floor(R.failAges.length / 2)] : null;
+  el.innerHTML = `
+    <div class="gauge">
+      <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true">
+        <circle cx="60" cy="60" r="52" style="fill:none;stroke:var(--surface-2)" stroke-width="12"></circle>
+        <circle cx="60" cy="60" r="52" style="fill:none;stroke:var(--${cls === 'good' ? 'good' : cls === 'warn' ? 'warn' : 'bad'})" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"></circle></svg>
+        <div class="v"><div><b>${Math.round(R.success * 100)}%</b><small class="hint">of ${R.T.toLocaleString()}</small></div></div></div>
+      <div style="display:grid;gap:6px">
+        <div class="kicker">Chance of lasting through age ${ageLabel}</div>
+        <div><span class="pill ${cls}">${label}</span></div>
+        <p class="hint">In ${Math.round(R.success * 100)}% of ${R.T.toLocaleString()} simulated futures, savings covered every year through ${esc(who)} turning ${ageLabel} (${A.endYear}).${failMed !== null ? ` When money ran out, it was usually around age ${failMed}.` : ''}</p>
+        <p class="stale" id="stale" ${stale ? '' : 'hidden'}>Inputs changed. Run again to update.</p>
+      </div>
+    </div>
+    <div id="missing"></div>
+    <div class="kpis">
+      <div class="kpi"><span>Savings at ${ageLabel}, typical</span><b>${money(last[2], 1)}</b></div>
+      <div class="kpi"><span>Savings at ${ageLabel}, worst 10%</span><b>${money(last[0], 1)}</b></div>
+      <div class="kpi"><span>Savings today</span><b>${money(t.liquid, 1)}</b></div>
+      <div class="kpi"><span>Net worth at ${ageLabel}, typical</span><b>${money(lastNw[2], 1)}</b></div>
+    </div>
+    <div style="display:grid;gap:8px">
+      <div class="row"><h3>Range of outcomes</h3><span class="spacer"></span>
+        <div class="seg" role="group" aria-label="Chart measure">
+          <button data-act="chart" data-mode="liq" aria-pressed="${chartMode === 'liq'}">Savings</button>
+          <button data-act="chart" data-mode="nw" aria-pressed="${chartMode === 'nw'}">Net worth</button></div></div>
+      <div id="chart"></div>
+      <p class="hint">Today's dollars. The dark band holds the middle half of outcomes, the light band 80%, and the line is the median. "Savings" means cash plus all investment accounts.</p>
+    </div>
+    <div class="card" style="gap:10px">
+      <h3>What if…</h3>
+      <div class="slider"><label for="wi-spend">Budget spending</label><input id="wi-spend" type="range" min="-30" max="30" step="5" value="${num(state.whatif.spend)}"><output id="wi-spend-o">${num(state.whatif.spend) > 0 ? '+' : ''}${num(state.whatif.spend)}%</output></div>
+      <div class="slider"><label for="wi-ret">Stock returns</label><input id="wi-ret" type="range" min="-3" max="2" step="0.5" value="${num(state.whatif.ret)}"><output id="wi-ret-o">${num(state.whatif.ret) > 0 ? '+' : ''}${num(state.whatif.ret)} pts</output></div>
+      <p class="hint">Budget changes scale your itemized lines. Stock changes shift the average yearly return on stocks and the concentrated position. The simulation reruns when you let go.</p>
+    </div>
+    <div class="card" style="gap:10px">
+      <div class="row"><h3>Compare remodel funding</h3><span class="spacer"></span><button class="btn small" data-act="compare" ${num(state.remodel.cost) > 0 ? '' : 'disabled'}>Compare</button></div>
+      <div id="compare">${num(state.remodel.cost) > 0 ? '<p class="hint">Runs the same futures once without the remodel and once for each way to pay.</p>' : '<p class="hint">Enter a remodel cost on the Vehicles &amp; remodel tab first.</p>'}</div>
+    </div>
+    <details><summary>Year by year (median)</summary><div class="tw" style="margin-top:8px;max-height:360px;overflow:auto">${yearTable(R)}</div></details>
+    <p class="disclaimer">A planning model, not financial, tax or investment advice. Returns are random draws from the assumptions you set. Taxes use simplified effective rates. Real tax brackets, Social Security taxation, IRMAA surcharges and property sale gains aren't modeled. Review the results with a fiduciary planner or CPA before acting on them.</p>`;
+  renderMissing(); drawChart(); if (compareRes) drawCompare();
+}
+function yearTable(R) {
+  const A = R.A, rows = [];
+  for (let t = 0; t < R.N; t++) {
+    const Y = A.start + t;
+    rows.push(`<tr><td class="mono">${Y}</td><td class="mono">${Y - A.b1}${A.hasP2 ? '/' + (Y - A.b2) : ''}</td><td class="n">${money(R.med.inc[t], 1)}</td><td class="n">${money(R.med.spd[t], 1)}</td><td class="n">${money(R.med.txs[t], 1)}</td><td class="n">${money(R.band.liq[t][2], 1)}</td><td class="n">${money(R.band.liq[t][0], 1)}</td><td class="n">${money(R.band.nw[t][2], 1)}</td></tr>`);
+  }
+  return `<table><thead><tr><th>Year</th><th>Ages</th><th class="n">Income</th><th class="n">Spending</th><th class="n">Taxes</th><th class="n">Savings</th><th class="n">Savings (worst 10%)</th><th class="n">Net worth</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function drawChart() {
+  const R = lastRes, box = $('#chart'); if (!R || !box) return;
+  const B = R.band[chartMode], N = R.N;
+  const W = Math.max(300, Math.round(box.clientWidth || 380)), H = 250, m = { l: 52, r: 10, t: 10, b: 26 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  let lo = Math.min(0, ...B.map(b => b[0])), hi = niceMax(Math.max(...B.map(b => b[4])));
+  const x = t => m.l + (N === 1 ? iw / 2 : t / (N - 1) * iw), y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+  const area = (a, b) => { let d = ''; for (let t = 0; t < N; t++) d += (t ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(B[t][a]).toFixed(1); for (let t = N - 1; t >= 0; t--) d += 'L' + x(t).toFixed(1) + ',' + y(B[t][b]).toFixed(1); return d + 'Z'; };
+  let line = ''; for (let t = 0; t < N; t++) line += (t ? 'L' : 'M') + x(t).toFixed(1) + ',' + y(B[t][2]).toFixed(1);
+  let grid = '';
+  for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, yy = y(v); grid += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" style="stroke:var(--line)" stroke-width="1"></line><text x="${m.l - 6}" y="${(yy + 3).toFixed(1)}" text-anchor="end">${money(v, 1)}</text>`; }
+  const A = R.A, step = N > 30 ? 10 : 5;
+  for (let t = 0; t < N; t++) { const age = A.start + t - A.hb; if (age % step === 0 || t === 0 && N < 6) grid += `<text x="${x(t).toFixed(1)}" y="${H - 8}" text-anchor="middle">${age}</text>`; }
+  const endV = B[N - 1][2];
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Fan chart of ${chartMode === 'liq' ? 'savings' : 'net worth'} by age, median ending at ${money(endV, 1)}">
+    ${grid}
+    <path d="${area(0, 4)}" style="fill:var(--accent);fill-opacity:.16"></path>
+    <path d="${area(1, 3)}" style="fill:var(--accent);fill-opacity:.32"></path>
+    <path d="${line}" style="fill:none;stroke:var(--accent)" stroke-width="2"></path>
+    <circle cx="${x(N - 1).toFixed(1)}" cy="${y(endV).toFixed(1)}" r="3.5" style="fill:var(--accent)"></circle>
+    <text x="${m.l}" y="${H - 8}" text-anchor="start" style="fill:var(--muted)">${''}</text>
+  </svg><div class="hint" style="text-align:right;margin-top:-4px">Age (${esc(R.A.hb === R.A.b1 ? state.household.p1Name : state.household.p2Name)})</div>`;
+}
+function compareRemodel() {
+  const box = $('#compare'); if (!box) return;
+  box.innerHTML = '<p class="hint">Running…</p>';
+  setTimeout(() => {
+    const trials = Math.min(num(state.assumptions.trials) || 2000, 2000);
+    const opts = [['none', 'No remodel'], ['cash', 'Cash savings'], ['taxable', 'Taxable account'], ['deferred', 'SEP IRA'], ['roth', 'Roth IRA'], ['loan', 'Loan / HELOC']];
+    const s2 = JSON.parse(JSON.stringify(state)); s2.remodel.on = true;
+    compareRes = opts.map(([k, l]) => { const r = simulate(s2, { trials, remodel: k, spend: state.whatif.spend, ret: state.whatif.ret }); return { k, l, p: r.success, end: r.band.liq[r.N - 1][2], nw: r.band.nw[r.N - 1][2] }; });
+    drawCompare();
+  }, 20);
+}
+function drawCompare() {
+  const box = $('#compare'); if (!box || !compareRes) return;
+  const cur = state.remodel.on ? state.remodel.source : 'none';
+  box.innerHTML = `<div class="tw"><table class="cmp"><thead><tr><th>Pay with</th><th class="n">Success</th><th style="width:30%"></th><th class="n">Savings at ${num(state.household.horizonAge) || 95}</th></tr></thead><tbody>
+    ${compareRes.map(c => `<tr><td>${esc(c.l)}${c.k === cur ? ' <span class="pill idle">current</span>' : ''}</td><td class="n mono">${pct(c.p)}</td>
+      <td><div class="bar bg"><div class="bar" style="width:${(c.p * 100).toFixed(1)}%"></div></div></td><td class="n mono">${money(c.end, 1)}</td></tr>`).join('')}
+    </tbody></table></div><p class="hint">${compareRes[0] ? '' : ''}Every row uses the same simulated markets, so the differences come only from the remodel and how it's paid for. Savings are median values in today's dollars.</p>`;
+}
+let wiTimer = null;
+document.addEventListener('input', e => {
+  if (e.target.id === 'wi-spend' || e.target.id === 'wi-ret') {
+    const k = e.target.id === 'wi-spend' ? 'spend' : 'ret', v = num(e.target.value);
+    state.whatif[k] = v; $('#' + e.target.id + '-o').textContent = (v > 0 ? '+' : '') + v + (k === 'spend' ? '%' : ' pts');
+    scheduleSave(); clearTimeout(wiTimer); wiTimer = setTimeout(runMain, 350);
+  }
+});
+let rz = null; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(drawChart, 150); });
+
+/* ---------- boot ---------- */
+renderTabs(); renderPanel(); runMain(); initCaps();
+})();
+</script>
