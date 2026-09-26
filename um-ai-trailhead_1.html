@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<title>AI at UM | University of Montana</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A single starting point for AI resources across the University of Montana — ChatMT.ai, the Mansfield Library guide, LEAD training, AI-focused courses, campus events, and who to contact.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Alegreya+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light;
+    --maroon:      #70002e;
+    --maroon-dark: #4C0020;
+    --copper:      #ED8B00;
+    --green:       #1D3C34;
+    --sky:         #BBDDE6;
+    --sunset-red:  #F9423A;
+    --sunset-sky:  #BBDDE6;
+    --content-bg:     #EFE8D4;
+    --content-bg-alt: #DFD1A7;
+    --card-bg:     #FFFFFF;
+    --ink:         #221F1C;
+    --ink-soft:    #59524A;
+    --line:        rgba(34,31,28,0.16);
+    --link:        #70002e;
+    --shadow:      0 1px 2px rgba(34,31,28,0.08);
+    --focus:       #0B5FA5;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --content-bg:     #1B1712;
+      --content-bg-alt: #241F17;
+      --card-bg:     #2A251D;
+      --ink:         #EFE8D4;
+      --ink-soft:    #C9C0AE;
+      --line:        rgba(239,232,212,0.18);
+      --sky:         #35505C;
+      --link:        #F0A9BE;
+      --shadow:      none;
+      --focus:       #7FCBFF;
+    }
+  }
+  :root[data-theme="dark"]{
+    --content-bg:     #1B1712;
+    --content-bg-alt: #241F17;
+    --card-bg:     #2A251D;
+    --ink:         #EFE8D4;
+    --ink-soft:    #C9C0AE;
+    --line:        rgba(239,232,212,0.18);
+    --sky:         #35505C;
+    --link:        #F0A9BE;
+    --shadow:      none;
+    --focus:       #7FCBFF;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--content-bg);
+    color:var(--ink);
+    font-family:'Open Sans', Arial, Helvetica, sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Alegreya Sans', 'Open Sans', sans-serif;
+    font-weight:800;
+    line-height:1.15;
+    margin:0 0 .45em;
+    color:var(--ink);
+  }
+  a{color:var(--link); text-decoration:underline;}
+  a:hover{text-decoration:none;}
+  a:focus-visible, button:focus-visible{
+    outline:3px solid var(--focus); outline-offset:2px; border-radius:2px;
+  }
+  img{max-width:100%;}
+  ul{margin:0; padding:0;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 24px;}
+  .skip-link{
+    position:absolute; left:-999px; top:auto;
+    background:#fff; color:var(--maroon); padding:10px 16px; font-weight:700;
+    z-index:300; text-decoration:none;
+  }
+  .skip-link:focus{left:8px; top:8px;}
+
+  /* ===== Utility bar ===== */
+  .util-bar{background:var(--maroon-dark); color:#fff;}
+  .util-inner{
+    max-width:1180px; margin:0 auto; padding:6px 24px;
+    display:flex; justify-content:space-between; gap:16px; font-size:.78rem;
+    flex-wrap:wrap;
+  }
+  .util-inner a{color:#fff; text-decoration:none; opacity:.92;}
+  .util-inner a:hover{text-decoration:underline;}
+  .util-left, .util-right{display:flex; gap:16px; flex-wrap:wrap;}
+
+  /* ===== Main header ===== */
+  header.main{background:#fff; border-bottom:3px solid var(--maroon);}
+  .header-inner{
+    max-width:1180px; margin:0 auto; padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+  }
+  .um-wordmark{display:flex; align-items:center; text-decoration:none;}
+  .um-wordmark .um-logo-img{height:44px; width:auto; display:block;}
+  nav.main-nav{display:flex; gap:26px; flex-wrap:wrap;}
+  nav.main-nav a{
+    color:var(--ink); text-decoration:none; font-weight:700; font-size:.94rem;
+    padding:6px 2px; border-bottom:3px solid transparent;
+  }
+  nav.main-nav a:hover, nav.main-nav a:focus-visible{border-bottom-color:var(--copper); color:var(--maroon);}
+  .search-btn{
+    border:1px solid var(--line); background:#fff; border-radius:20px; padding:7px 16px;
+    font-size:.86rem; font-weight:600; color:var(--ink); cursor:default;
+  }
+
+  /* ===== Sub-brand bar (this microsite) ===== */
+  .subsite-bar{background:var(--content-bg-alt); border-bottom:1px solid var(--line);}
+  .subsite-inner{
+    max-width:1180px; margin:0 auto; padding:10px 24px;
+    font-family:'Alegreya Sans',sans-serif; font-weight:700; color:var(--maroon); font-size:1rem;
+  }
+
+  /* ===== Hero / banner ===== */
+  .banner{
+    position:relative; background:var(--sunset-sky); color:var(--ink); padding:0; overflow:hidden;
+    min-height:300px; display:flex; align-items:center;
+  }
+  .banner svg.wave{
+    position:absolute; inset:0; width:100%; height:100%; display:block; z-index:0;
+  }
+  .banner-card{
+    position:relative; z-index:1; background:var(--maroon); color:#fff;
+    padding:26px 30px; margin:32px 0; max-width:600px; box-shadow:0 8px 24px rgba(0,0,0,.18);
+  }
+  .breadcrumb{font-size:.8rem; opacity:.85; margin-bottom:12px;}
+  .breadcrumb a{color:#fff; text-decoration:none;}
+  .breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb .sep{margin:0 6px; opacity:.6;}
+  .banner-card h1{color:#fff; font-size:clamp(1.7rem,3.2vw,2.3rem); margin:0;}
+  .banner-card p.lede{font-size:1rem; color:#F3E7EC; margin:12px 0 0;}
+  .proto-flag{
+    display:inline-block; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.45);
+    border-radius:20px; padding:4px 14px; font-size:.76rem; margin-bottom:14px;
+  }
+
+  /* ===== Body layout: sidebar + content ===== */
+  .layout{
+    max-width:1180px; margin:0 auto; padding:38px 24px 60px;
+    display:grid; grid-template-columns:230px 1fr; gap:44px; align-items:start;
+  }
+  aside.side-nav{position:sticky; top:20px;}
+  aside.side-nav .label{
+    font-family:'Alegreya Sans',sans-serif; font-weight:800; color:var(--maroon); font-size:.82rem;
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px;
+  }
+  aside.side-nav ul{list-style:none;}
+  aside.side-nav li{border-bottom:1px solid var(--line);}
+  aside.side-nav a{
+    display:block; padding:11px 4px; color:var(--ink); text-decoration:none; font-weight:600; font-size:.94rem;
+    border-left:3px solid transparent;
+  }
+  aside.side-nav a:hover, aside.side-nav a:focus-visible{color:var(--maroon); border-left-color:var(--copper); padding-left:10px;}
+
+  main.content section{margin-bottom:46px;}
+  main.content section:last-child{margin-bottom:0;}
+  .section-head{margin-bottom:22px;}
+  .section-head h2{font-size:clamp(1.35rem,2.4vw,1.7rem); border-bottom:3px solid var(--copper); display:inline-block; padding-bottom:4px;}
+  .section-head p{color:var(--ink-soft); max-width:64ch; margin:10px 0 0;}
+  .tag{
+    font-size:.7rem; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
+    color:var(--maroon); background:var(--sky); border-radius:4px; padding:3px 7px; display:inline-block;
+  }
+
+  /* Start Here cards */
+  .cards3{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .card{
+    background:var(--card-bg); border:1px solid var(--line); border-top:4px solid var(--maroon);
+    border-radius:4px; padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:10px;
+  }
+  .card h3{font-size:1.1rem;}
+  .card p{color:var(--ink-soft); font-size:.94rem; margin:0; flex-grow:1;}
+  .card a.card-link{font-weight:700; font-size:.9rem;}
+
+  /* Learn list */
+  .learn-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:36px;}
+  .resource-row{display:flex; gap:16px; padding:16px 0; border-top:1px solid var(--line);}
+  .resource-row:first-child{border-top:none;}
+  .resource-row .who{width:170px; flex-shrink:0; color:var(--ink-soft); font-size:.84rem; padding-top:2px; font-weight:600;}
+  .resource-row .what h4{font-size:1rem; margin-bottom:4px;}
+  .resource-row .what p{margin:0 0 6px; color:var(--ink-soft); font-size:.93rem;}
+  .side-box{background:var(--card-bg); border:1px solid var(--line); border-radius:4px; padding:20px; align-self:start;}
+  .side-box h4{font-size:.98rem; margin-bottom:8px; color:var(--maroon);}
+  .side-box ul{margin:0; padding-left:1.1em; font-size:.92rem; color:var(--ink-soft); list-style:disc;}
+  .side-box li{margin-bottom:8px;}
+  .notice{border-left:3px solid var(--copper); background:var(--content-bg-alt); padding:12px 16px; font-size:.9rem; color:var(--ink-soft); margin-top:16px;}
+
+  /* Courses */
+  .cert-banner{
+    display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap;
+    background:var(--maroon); color:#fff; padding:20px 24px; margin-bottom:24px;
+  }
+  .cert-banner h3{color:#fff; font-size:1.12rem; margin-bottom:4px;}
+  .cert-banner p{margin:0; color:#F3E7EC; font-size:.92rem; max-width:52ch;}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:3px; text-decoration:none; font-weight:700; font-size:.92rem;}
+  .btn-copper{background:var(--copper); color:#2A1400;}
+  .btn-copper:hover{background:#C97800;}
+  .btn-ghost{border:1px solid rgba(255,255,255,.6); color:#fff;}
+  .btn-ghost:hover{background:rgba(255,255,255,.14);}
+  .course-table{width:100%; border-collapse:collapse; font-size:.92rem;}
+  .course-table caption{text-align:left; color:var(--ink-soft); font-size:.82rem; margin-bottom:10px;}
+  .course-table th{text-align:left; font-size:.76rem; color:var(--maroon); border-bottom:2px solid var(--maroon); padding:0 12px 8px 0; font-weight:700;}
+  .course-table td{border-bottom:1px solid var(--line); padding:14px 12px 14px 0; vertical-align:top;}
+  .course-table td.code{font-family:'Alegreya Sans',sans-serif; font-weight:800; color:var(--maroon); white-space:nowrap;}
+  .course-table td.contact{color:var(--ink-soft); white-space:nowrap;}
+  .course-table td.group-row{padding:18px 0 6px; border-bottom:none; font-weight:800; font-size:.82rem; color:var(--maroon); text-transform:uppercase; letter-spacing:.02em;}
+  .course-table thead + tbody tr:first-child td.group-row{padding-top:0;}
+
+  /* Events */
+  .events-panel{display:grid; grid-template-columns:1fr 1fr; gap:26px;}
+  .event-list{list-style:none;}
+  .event-list li{display:flex; gap:14px; padding:13px 0; border-top:1px solid var(--line);}
+  .event-list li:first-child{border-top:none;}
+  .event-date{width:82px; flex-shrink:0; font-size:.8rem; color:var(--maroon); font-weight:700; padding-top:2px;}
+  .event-list .what p{margin:2px 0 0; color:var(--ink-soft); font-size:.9rem;}
+  .community-card{background:var(--card-bg); border:1px solid var(--line); border-top:4px solid var(--copper); padding:22px;}
+  .community-card h4{margin-bottom:6px; color:var(--maroon);}
+  .community-card p{color:var(--ink-soft); font-size:.92rem;}
+
+  /* Contacts */
+  .contact-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  .contact-card{border:1px solid var(--line); padding:18px; background:var(--card-bg);}
+  .contact-card .need{font-size:.74rem; color:var(--maroon); font-weight:700; text-transform:uppercase; letter-spacing:.02em; margin-bottom:6px; display:block;}
+  .contact-card h4{font-size:1rem; margin-bottom:4px;}
+  .contact-card p{margin:0 0 8px; font-size:.88rem; color:var(--ink-soft);}
+  .contact-card a{font-weight:700; font-size:.88rem;}
+
+  /* ===== Site sub-footer (like Teaching Resources page block) ===== */
+  .sub-footer{background:var(--content-bg-alt); border-top:1px solid var(--line); padding:28px 0;}
+  .sub-footer .wrap{display:flex; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+  .sub-footer p{margin:0 0 6px; font-size:.86rem; color:var(--ink-soft); max-width:62ch;}
+  .sub-footer .contact-block{font-size:.88rem; color:var(--ink); min-width:220px;}
+  .sub-footer .contact-block strong{display:block; margin-bottom:4px;}
+
+  /* ===== Global footer (mirrors umt.edu) ===== */
+  footer.global{background:var(--maroon-dark); color:#EAD9DF;}
+  footer.global .wrap{padding:34px 24px 28px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:28px;}
+  footer.global h5{color:#fff; font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; margin:0 0 10px; font-family:'Alegreya Sans',sans-serif;}
+  footer.global ul{list-style:none; font-size:.86rem;}
+  footer.global li{margin-bottom:7px;}
+  footer.global a{color:#EAD9DF; text-decoration:none;}
+  footer.global a:hover{text-decoration:underline; color:#fff;}
+  .footer-bottom{
+    border-top:1px solid rgba(255,255,255,.18); padding:16px 24px; display:flex; justify-content:space-between;
+    align-items:center; gap:16px; flex-wrap:wrap; font-size:.8rem; max-width:1180px; margin:0 auto;
+  }
+  .social-row{display:flex; gap:12px;}
+  .social-row a{
+    width:30px; height:30px; border-radius:50%; border:1px solid rgba(255,255,255,.4);
+    display:flex; align-items:center; justify-content:center; font-size:.78rem; text-decoration:none; color:#fff;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    .reveal{animation:rise .5s ease both;}
+    @keyframes rise{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+  }
+
+  @media (max-width: 900px){
+    .layout{grid-template-columns:1fr;}
+    aside.side-nav{position:static;}
+    aside.side-nav ul{display:flex; flex-wrap:wrap; gap:4px;}
+    aside.side-nav li{border-bottom:none;}
+    aside.side-nav a{border:1px solid var(--line); border-radius:20px; padding:6px 14px;}
+    .cards3{grid-template-columns:1fr;}
+    .learn-grid{grid-template-columns:1fr;}
+    .events-panel{grid-template-columns:1fr;}
+    .contact-grid{grid-template-columns:1fr;}
+    .resource-row{flex-direction:column; gap:4px;}
+    .resource-row .who{width:auto;}
+    .course-table{display:block; overflow-x:auto;}
+    footer.global .wrap{grid-template-columns:1fr;}
+    nav.main-nav{display:none;}
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<div class="util-bar">
+  <div class="util-inner">
+    <div class="util-left">
+      <a href="https://www.umt.edu/academics/apply/default.php" target="_blank" rel="noopener">Apply</a>
+      <a href="https://www.umt.edu/admissions/visit.php" target="_blank" rel="noopener">Visit</a>
+      <a href="https://www.umt.edu/request-info/default.php" target="_blank" rel="noopener">Request Info</a>
+    </div>
+    <div class="util-right">
+      <a href="https://www.umt.edu/about" target="_blank" rel="noopener">About</a>
+      <a href="https://www.grizalum.org" target="_blank" rel="noopener">Alumni</a>
+      <a href="https://www.umt.edu/athletics/" target="_blank" rel="noopener">Athletics</a>
+      <a href="https://www.umt.edu/my" target="_blank" rel="noopener">MyUM</a>
+      <a href="https://www.supportum.org/give" target="_blank" rel="noopener">Give</a>
+    </div>
+  </div>
+</div>
+
+<header class="main">
+  <div class="header-inner">
+    <a class="um-wordmark" href="https://www.umt.edu" target="_blank" rel="noopener">
+      <img class="um-logo-img" src="data:image/png;base64,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" alt="University of Montana">
+    </a>
+    <nav class="main-nav" aria-label="University navigation">
+      <a href="https://www.umt.edu/academics/default.php" target="_blank" rel="noopener">Academics</a>
+      <a href="https://www.umt.edu/admissions-and-financial-aid" target="_blank" rel="noopener">Admission and Aid</a>
+      <a href="https://www.umt.edu/student-life" target="_blank" rel="noopener">Student Life</a>
+      <a href="https://www.umt.edu/research" target="_blank" rel="noopener">Research</a>
+    </nav>
+    <span class="search-btn" aria-hidden="true">🔍 Search UM</span>
+  </div>
+</header>
+
+<div class="subsite-bar">
+  <div class="subsite-inner">AI at UM — The Trailhead</div>
+</div>
+
+<div class="banner">
+  <svg class="wave" viewBox="0 0 1200 260" preserveAspectRatio="none" aria-hidden="true">
+    <rect x="0" y="0" width="1200" height="260" fill="#BBDDE6"/>
+    <polygon points="0,0 1200,0 1200,127 1168,127 1022,135 876,142 730,157 584,172 438,191 292,211 146,236 0,256"
+      fill="#F9423A"/>
+    <polygon points="0,0 502,0 0,172" fill="#ED8B00"/>
+  </svg>
+  <div class="wrap">
+    <div class="banner-card reveal">
+      <div class="breadcrumb">
+        <a href="https://www.umt.edu" target="_blank" rel="noopener">UM</a><span class="sep">/</span>
+        <a href="https://umontana.ai" target="_blank" rel="noopener">AI at UM</a><span class="sep">/</span>
+        The Trailhead
+      </div>
+      <span class="proto-flag">Design prototype — not a live UM page</span>
+      <h1>Every AI resource on campus, from one trailhead.</h1>
+      <p class="lede">UM already has a lot here: an institutional AI hub, a campus chatbot, a library guide, faculty training, and courses that teach it directly. This page doesn't replace any of that — it points to all of it from one place.</p>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="side-nav" aria-label="Section navigation">
+    <div class="label">On this page</div>
+    <ul>
+      <li><a href="#start-here">Start here</a></li>
+      <li><a href="#learn">Learn &amp; train</a></li>
+      <li><a href="#courses">Courses</a></li>
+      <li><a href="#events">Events &amp; community</a></li>
+      <li><a href="#contacts">Who to contact</a></li>
+    </ul>
+  </aside>
+
+  <main class="content" id="main">
+
+    <section id="start-here">
+      <div class="section-head">
+        <h2>Start here</h2>
+        <p>Three destinations cover most of what anyone needs first. Everything below this points back to one of these.</p>
+      </div>
+      <div class="cards3">
+        <div class="card">
+          <span class="tag">Campus AI tool</span>
+          <h3>ChatMT.ai</h3>
+          <p>Free, secure, shared AI access for anyone in the Montana University System — the tool UM points students, faculty, and staff toward as Amplify winds down at the end of fall 2026.</p>
+          <a class="card-link" href="https://chatmt.ai" target="_blank" rel="noopener">Sign in at chatmt.ai →</a>
+        </div>
+        <div class="card">
+          <span class="tag">Institutional hub</span>
+          <h3>umontana.ai</h3>
+          <p>UM's community-facing home for AI: the FUTURE Project, guidelines, approved tools by audience, and the path for sharing feedback or concerns about AI on campus.</p>
+          <a class="card-link" href="https://umontana.ai" target="_blank" rel="noopener">Browse umontana.ai →</a>
+        </div>
+        <div class="card">
+          <span class="tag">Research &amp; teaching</span>
+          <h3>Mansfield Library AI Guide</h3>
+          <p>Background on AI technologies, key terms, ethics, evaluation frameworks, citing AI, and UM-specific initiatives — maintained by the library's Online Learning Librarian.</p>
+          <a class="card-link" href="https://libguides.lib.umt.edu/ai" target="_blank" rel="noopener">Open the library guide →</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="learn">
+      <div class="section-head">
+        <h2>Learn &amp; train</h2>
+        <p>Built by the Learning Experience and Design (LEAD) team with campus partners, plus training run by other offices.</p>
+      </div>
+      <div class="learn-grid">
+        <div>
+          <div class="resource-row">
+            <div class="who">Faculty &amp; staff</div>
+            <div class="what">
+              <h4>UM AI Essentials (Canvas)</h4>
+              <p>Self-paced course covering AI capabilities and limits, institutional policy, and practical classroom strategies.</p>
+              <a href="https://canvas.umt.edu/enroll/FK4JW3" target="_blank" rel="noopener">Enroll in UM AI Essentials →</a>
+            </div>
+          </div>
+          <div class="resource-row">
+            <div class="who">For your students</div>
+            <div class="what">
+              <h4>AI Essentials for UM Students</h4>
+              <p>A short Canvas course instructors can share with a class — what AI can do, using it responsibly, and how to reach ChatMT.ai and the library guide.</p>
+              <a href="https://canvas.umt.edu/enroll/D8J3YK" target="_blank" rel="noopener">Share the student course →</a>
+            </div>
+          </div>
+          <div class="resource-row">
+            <div class="who">Center for Teaching Excellence</div>
+            <div class="what">
+              <h4>Teaching with Generative AI</h4>
+              <p>Syllabus statement templates, a three-level policy framework, and scripts for talking with students about AI.</p>
+              <a href="https://www.umt.edu/teaching/teaching-gen-ai.php" target="_blank" rel="noopener">Visit Teaching Resources →</a>
+            </div>
+          </div>
+          <div class="resource-row">
+            <div class="who">Provost's office</div>
+            <div class="what">
+              <h4>Faculty AI Resources</h4>
+              <p>Teaching philosophy, academic-integrity principles, and assessment guidance for AI in the classroom.</p>
+              <a href="https://www.umt.edu/provost/faculty/faculty-resources/teaching-resources/ai-resources/" target="_blank" rel="noopener">Read Provost AI resources →</a>
+            </div>
+          </div>
+          <div class="resource-row">
+            <div class="who">Office of Learning &amp; Development</div>
+            <div class="what">
+              <h4>Professional Development calendar</h4>
+              <p>Live workshops and training sessions on AI tools, policy, and best practice for UM employees.</p>
+              <a href="https://www.umt.edu/learning-development/default.php" target="_blank" rel="noopener">See the OOLD calendar →</a>
+            </div>
+          </div>
+        </div>
+        <div class="side-box">
+          <h4>Career Certificate in Human-Centered AI</h4>
+          <ul>
+            <li>Authorized by the Montana University System, June 2026</li>
+            <li>Built from MART 464, JRNL 102Y, and MART 474 — see the Courses section</li>
+            <li>Feeds into the Board of Regents–approved Institute for Human-Centered AI</li>
+          </ul>
+          <div class="notice">Amplify (chat.umontana.ai) is being retired at the end of fall 2026 — point people to ChatMT.ai instead.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="courses">
+      <div class="section-head">
+        <h2>Classes already teaching AI</h2>
+        <p>Not just one program — AI shows up across Art &amp; Media, Business, and Computer Science. Add rows here as other departments confirm more.</p>
+      </div>
+      <div class="cert-banner">
+        <div>
+          <h3>Three of these make up the Human-Centered AI certificate</h3>
+          <p>Open to students across majors — the certificate stacks with an existing degree rather than replacing one.</p>
+        </div>
+        <a class="btn btn-ghost" href="https://catalog.umt.edu/" target="_blank" rel="noopener">See the course catalog</a>
+      </div>
+      <table class="course-table">
+        <caption>Course details reflect the current UM catalog and program pages — confirm term, section, and prerequisites before publishing.</caption>
+        <thead>
+          <tr><th scope="col">Course</th><th scope="col">Title</th><th scope="col">What it covers</th><th scope="col">Contact</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="4" class="group-row">College of the Arts and Media — Human-Centered AI certificate</td></tr>
+          <tr>
+            <td class="code">MART 464</td>
+            <td>Creatively Exploring AI: An Interdisciplinary Approach</td>
+            <td>Highly experiential; open to any major. Understanding generative AI and using it effectively while weighing its ethical and moral dimensions.</td>
+            <td class="contact">School of Art &amp; Game Design</td>
+          </tr>
+          <tr>
+            <td class="code">MART 474</td>
+            <td>Human-Centered Leadership in AI</td>
+            <td>Leadership-focused follow-on course, part of the certificate sequence.</td>
+            <td class="contact">School of Art &amp; Game Design</td>
+          </tr>
+          <tr>
+            <td class="code">JRNL 102Y</td>
+            <td>Certificate elective</td>
+            <td>Journalism-school contribution to the Human-Centered AI certificate.</td>
+            <td class="contact">School of Journalism</td>
+          </tr>
+          <tr><td colspan="4" class="group-row">College of Business</td></tr>
+          <tr>
+            <td class="code">BGEN 341</td>
+            <td>People, Process and Technology I</td>
+            <td>Required core course preparing business students for work shaped by automation, AI, and creative disruption — data-driven decision-making and the mindset it takes.</td>
+            <td class="contact">College of Business</td>
+          </tr>
+          <tr>
+            <td class="code">BGEN 342</td>
+            <td>People, Process and Technology II</td>
+            <td>Continues the sequence: leading organizational change and becoming a confident, ethical technology decision-maker.</td>
+            <td class="contact">College of Business</td>
+          </tr>
+          <tr>
+            <td class="code">BGEN 541</td>
+            <td>Data Literacy <span class="tag">Graduate</span></td>
+            <td>Data's role in decision-making, plus the applications and ethical considerations of AI in business.</td>
+            <td class="contact">businessgradprograms@umontana.edu</td>
+          </tr>
+          <tr>
+            <td class="code">BGEN 620</td>
+            <td>Business Communication <span class="tag">Graduate</span></td>
+            <td>Written and verbal communication for business, including AI applications alongside frequently used communication technologies.</td>
+            <td class="contact">businessgradprograms@umontana.edu</td>
+          </tr>
+          <tr><td colspan="4" class="group-row">College of Science</td></tr>
+          <tr>
+            <td class="code">CSCI 447</td>
+            <td>Machine Learning</td>
+            <td>Learning from examples, algorithms such as neural networks, and principles like inductive bias and data mining. Offered autumn; co-convenes with CSCI 547 for graduate students.</td>
+            <td class="contact">Computer Science Dept.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px; font-size:.9rem; color:var(--ink-soft);">The College of Business also flags AI and machine learning as an elective add-on for its <a href="https://www.umt.edu/business-graduate-programs/msba-program/default.php" target="_blank" rel="noopener">Master of Science in Business Analytics</a> — worth a line here once a specific course is confirmed.</p>
+    </section>
+
+    <section id="events">
+      <div class="section-head">
+        <h2>Events &amp; community</h2>
+        <p>Most AI programming on campus is scheduled and tracked through GrizHub — this list is illustrative of what shows up there.</p>
+      </div>
+      <div class="events-panel">
+        <div>
+          <ul class="event-list">
+            <li><div class="event-date">Mon, Sep 21</div><div class="what"><h4>Faculty AI Roundtable</h4><p>3–4 p.m., Employee Learning Space — first of a monthly series.</p></div></li>
+            <li><div class="event-date">Weds, ongoing</div><div class="what"><h4>AI Office Hours</h4><p>12–1 p.m. Wednesdays from 9/16, UH 123 and by Teams.</p></div></li>
+            <li><div class="event-date">Weds, Sep 30</div><div class="what"><h4>Fall Writing Symposium</h4><p>Writing academic-integrity statements, 1–2:30 p.m., Employee Learning Space.</p></div></li>
+            <li><div class="event-date">Mon, Oct 19</div><div class="what"><h4>Faculty AI Roundtable</h4><p>3–4 p.m., Employee Learning Space.</p></div></li>
+            <li><div class="event-date">Mon, Nov 16</div><div class="what"><h4>Faculty AI Roundtable</h4><p>3–4 p.m., Employee Learning Space.</p></div></li>
+          </ul>
+          <p style="margin-top:18px;"><a href="https://grizhub.umt.edu/events" target="_blank" rel="noopener">See the live, current schedule on GrizHub →</a></p>
+        </div>
+        <div class="community-card">
+          <h4>Join the AI community</h4>
+          <p>An MS Teams channel for peer support and resource-sharing, open to anyone on campus, alongside email and FAQ support.</p>
+          <p style="margin-top:14px;"><a href="mailto:ai-help@umontana.edu">Email ai-help@umontana.edu</a> — usually a reply within 24 hours.</p>
+          <p><a href="https://umontana.ai/support/faq" target="_blank" rel="noopener">Browse the FAQ library →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contacts">
+      <div class="section-head">
+        <h2>Who to contact</h2>
+        <p>Sorted by what you actually need, not by org chart.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card"><span class="need">General AI question</span><h4>AI Support</h4><p>Email support with a ~24-hour response window.</p><a href="mailto:ai-help@umontana.edu">ai-help@umontana.edu</a></div>
+        <div class="contact-card"><span class="need">Canvas AI Essentials, LEAD resources</span><h4>Tanna Kincaid</h4><p>Learning Experience and Design (LEAD) team.</p><a href="mailto:tanna.kincaid@umontana.edu">tanna.kincaid@umontana.edu</a></div>
+        <div class="contact-card"><span class="need">Teaching resource hub, syllabus statements</span><h4>Amy Ratto Parks</h4><p>Teaching Resources at UM · (406) 243-2133</p><a href="mailto:Amy.RattoParks@umontana.edu">Amy.RattoParks@umontana.edu</a></div>
+        <div class="contact-card"><span class="need">Library AI guide, research tools</span><h4>Karli Cotton</h4><p>Online Learning Librarian, Mansfield Library.</p><a href="mailto:karli.cotton@umontana.edu">karli.cotton@umontana.edu</a></div>
+        <div class="contact-card"><span class="need">Government information &amp; data resources</span><h4>Natalie Bond</h4><p>Government Information Librarian · (406) 243-4558</p><a href="mailto:natalie.bond@mso.umt.edu">natalie.bond@mso.umt.edu</a></div>
+        <div class="contact-card"><span class="need">Human-Centered AI certificate, MART 464/474</span><h4>Michael Cassens</h4><p>School of Art &amp; Game Design.</p><a href="mailto:michael.cassens@umontana.edu">michael.cassens@umontana.edu</a></div>
+        <div class="contact-card"><span class="need">Platform issues, tool troubleshooting</span><h4>IT Solutions</h4><p>Technical support for AI tools and campus systems.</p><a href="https://umt.edu/solutions" target="_blank" rel="noopener">umt.edu/solutions</a></div>
+        <div class="contact-card"><span class="need">FERPA, data protection, policy questions</span><h4>Legal Counsel</h4><p>Institutional policy and compliance guidance on AI.</p><a href="https://www.umt.edu/legal-counsel/default.php" target="_blank" rel="noopener">umt.edu/legal-counsel</a></div>
+        <div class="contact-card"><span class="need">Student conduct questions involving AI</span><h4>Dean of Students</h4><p>Classroom challenges and disciplinary guidance.</p><a href="https://www.umt.edu/campus-life/dean-of-students/" target="_blank" rel="noopener">Dean of Students office</a></div>
+        <div class="contact-card"><span class="need">Research applications, grant-related AI use</span><h4>Office of Research</h4><p>Research methodology and funder-disclosure questions.</p><a href="https://www.umt.edu/research-compliance-tech-transfer/default.php" target="_blank" rel="noopener">Research &amp; Creative Scholarship</a></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="sub-footer">
+  <div class="wrap">
+    <p>This is a design prototype pulling together content already published across umt.edu, umontana.ai, and the Mansfield Library — built to test whether a single wayfinding page would help. Verify every link, name, and course detail with the source office before this goes live under umt.edu. Drafted with AI assistance; review recommended before publishing.</p>
+    <div class="contact-block">
+      <strong>AI at UM — The Trailhead</strong>
+      32 Campus Drive, Missoula, MT 59812<br>
+      <a href="mailto:ai-help@umontana.edu">ai-help@umontana.edu</a>
+    </div>
+  </div>
+</div>
+
+<footer class="global">
+  <div class="wrap">
+    <div>
+      <h5>University of Montana</h5>
+      <ul>
+        <li>32 Campus Drive, Missoula, MT 59812</li>
+        <li><a href="tel:+14062430211">(406) 243-0211</a></li>
+        <li><a href="https://www.umt.edu/contact/" target="_blank" rel="noopener">Contact Us</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Resources</h5>
+      <ul>
+        <li><a href="https://www.umt.edu/accessibility/" target="_blank" rel="noopener">Accessibility</a></li>
+        <li><a href="https://map.umt.edu" target="_blank" rel="noopener">Campus Map</a></li>
+        <li><a href="https://directory.apps.umt.edu/" target="_blank" rel="noopener">Directory</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>More</h5>
+      <ul>
+        <li><a href="https://www.umt.edu/people-culture/jobs" target="_blank" rel="noopener">Employment</a></li>
+        <li><a href="https://www.umt.edu/transportation-parking-services/parking/default.php" target="_blank" rel="noopener">Parking</a></li>
+        <li><a href="https://www.umt.edu/safety/" target="_blank" rel="noopener">Safety and Support</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 University of Montana · <a href="https://www.umt.edu/about/privacy" target="_blank" rel="noopener">Privacy Policy</a></span>
+    <div class="social-row">
+      <a href="https://www.facebook.com/umontana/" target="_blank" rel="noopener" aria-label="Facebook">f</a>
+      <a href="https://x.com/umontana" target="_blank" rel="noopener" aria-label="X / Twitter">x</a>
+      <a href="https://www.youtube.com/user/UniversityOfMontana" target="_blank" rel="noopener" aria-label="YouTube">▶</a>
+      <a href="https://www.instagram.com/umontana" target="_blank" rel="noopener" aria-label="Instagram">ig</a>
+      <a href="https://www.linkedin.com/school/university-of-montana" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
