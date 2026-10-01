@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('views.dashboard') }}">&larr; Back</a></p>
+<article class="card">
+  <h1>{{ item.title }}</h1>
+  {% if g.user.is_superuser %}
+    {% with role_ids = item.role_ids %}{% include "_role_tags.html" %}{% endwith %}
+    <p><a href="{{ url_for('admin.content_edit', content_id=item.id) }}">Edit</a></p>
+  {% endif %}
+  {% if item.body %}<div class="body">{{ item.body }}</div>{% endif %}
+  {% include "_media.html" %}
+  <p class="hint">Updated {{ item.updated_at }}</p>
+</article>
+{% endblock %}

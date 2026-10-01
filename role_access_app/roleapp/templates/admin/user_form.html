@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit user' if user else 'Add user' }}{% endblock %}
+{% block content %}
+{% set f = request.form if request.method == 'POST' else None %}
+{% set selected = (f.getlist('roles') | map('int') | list) if f else (user.role_ids if user else []) %}
+<section class="card">
+  <h1>{{ 'Edit ' ~ user.username if user else 'Add user' }}</h1>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="username">Username</label>
+    <input id="username" name="username" required autocomplete="off"
+           value="{{ f.username if f else (user.username if user else '') }}">
+
+    <label for="email">Email <span class="hint">(used for password resets)</span></label>
+    <input id="email" name="email" type="email" autocomplete="off"
+           value="{{ f.email if f else (user.email or '' if user else '') }}">
+
+    <label for="password">{{ 'New password' if user else 'Password' }}
+      <span class="hint">(at least {{ config.PASSWORD_MIN_LENGTH }} characters{{ '; leave blank to keep the current one' if user }})</span></label>
+    <input id="password" name="password" type="password" autocomplete="new-password"
+           minlength="{{ config.PASSWORD_MIN_LENGTH }}" {{ 'required' if not user }}>
+    <label for="confirm">Confirm password</label>
+    <input id="confirm" name="confirm" type="password" autocomplete="new-password" {{ 'required' if not user }}>
+
+    <fieldset>
+      <legend>Roles</legend>
+      <p class="hint">Every user can see Public content. Pick any extra roles.</p>
+      {% for role in roles if not role.is_builtin %}
+        <label class="check">
+          <input type="checkbox" name="roles" value="{{ role.id }}" {{ 'checked' if role.id in selected }}>
+          {{ role.name }}{% if role.description %} <span class="hint">— {{ role.description }}</span>{% endif %}
+        </label>
+      {% else %}
+        <p class="hint">No custom roles yet. <a href="{{ url_for('admin.role_new') }}">Create one</a>.</p>
+      {% endfor %}
+    </fieldset>
+
+    <fieldset>
+      <legend>Account</legend>
+      <label class="check">
+        <input type="checkbox" name="is_superuser" value="1"
+               {{ 'checked' if (f.is_superuser if f else (user and user.is_superuser)) }}>
+        Superuser <span class="hint">— sees all content and can manage users, roles and content</span>
+      </label>
+      <label class="check">
+        <input type="checkbox" name="is_active" value="1"
+               {{ 'checked' if (f.is_active if f else (user.is_active if user else True)) }}>
+        Active <span class="hint">— disabled accounts can't sign in</span>
+      </label>
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit">{{ 'Save changes' if user else 'Create user' }}</button>
+      <a href="{{ url_for('admin.users') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
