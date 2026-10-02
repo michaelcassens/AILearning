@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}My content{% endblock %}
+{% block content %}
+<h1>My content</h1>
+<p class="hint">
+  {% if g.user.is_superuser %}
+    You're a superuser, so you can see every item.
+  {% else %}
+    You can see items tagged with:
+    {% with role_ids = my_role_ids %}
+      {% include "_role_tags.html" %}
+    {% endwith %}
+  {% endif %}
+</p>
+{% for item in items %}
+  <article class="card">
+    <h2><a href="{{ url_for('views.content_detail', content_id=item.id) }}">{{ item.title }}</a></h2>
+    {% if g.user.is_superuser %}{% with role_ids = item.role_ids %}{% include "_role_tags.html" %}{% endwith %}{% endif %}
+    {% if item.body %}<p class="body">{{ item.body | truncate(300) }}</p>{% endif %}
+    {% include "_media.html" %}
+  </article>
+{% else %}
+  <p>There's nothing for you to see yet.</p>
+{% endfor %}
+{% endblock %}
