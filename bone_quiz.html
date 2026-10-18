@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="author" content="University of Montana">
-<meta name="description" content="Mobile-friendly skeleton image quiz: find or name the bones of the human skeleton, with a definition for every bone.">
+<meta name="description" content="Mobile-friendly bone image quiz: find or name the bones of the human skeleton and the skull, with a definition for every bone.">
 <meta name="theme-color" content="#70002E">
-<title>Skeleton Bone Quiz</title>
+<title>Skeleton &amp; Skull Bone Quiz</title>
 <style>
   :root {
     --maroon: #70002E;
@@ -232,7 +232,7 @@
 <a class="skip-link" href="#panel">Skip to quiz question</a>
 <div class="app">
   <header class="top">
-    <h1>Skeleton Bone Quiz</h1>
+    <h1 id="appTitle">Skeleton Bone Quiz</h1>
     <div class="stats" aria-label="Quiz status">
       <span><span class="sr-only">Found </span><b id="statScore">0</b>/<span id="statTotal">0</span></span>
       <span class="hide-sm" aria-label="Elapsed time">&#9201; <b id="statTime">0:00</b></span>
@@ -267,6 +267,7 @@
             <rect width="3" height="6" fill="#f5b301"/>
           </pattern>
         </defs>
+        <g id="underlay" class="decor"></g>
         <g id="bones"></g>
         <g id="decor" class="decor"></g>
       </svg>
@@ -287,8 +288,15 @@
 <!-- Start menu -->
 <div class="overlay" id="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
   <form class="card" id="menuForm">
-    <h2 id="menuTitle">Skeleton Bone Quiz</h2>
-    <p class="lead">Learn the major bones of the human skeleton. Every label comes with a definition, and correct bones light up in color.</p>
+    <h2 id="menuTitle">Bone Quiz</h2>
+    <p class="lead">Learn the bones of the human skeleton and skull. Every label comes with a definition, and correct bones light up in color.</p>
+    <fieldset>
+      <legend>Diagram</legend>
+      <label class="opt"><input type="radio" name="diagram" value="skeleton" checked>
+        <span>Full skeleton<small>Front view &mdash; 27 major bones</small></span></label>
+      <label class="opt"><input type="radio" name="diagram" value="skull">
+        <span>Skull<small>Front (anterior) view &mdash; all 12 bones you can see from the front</small></span></label>
+    </fieldset>
     <fieldset>
       <legend>Game mode</legend>
       <label class="opt"><input type="radio" name="mode" value="find" checked>
@@ -300,16 +308,7 @@
     </fieldset>
     <fieldset>
       <legend>Bones to include</legend>
-      <label class="opt"><input type="radio" name="set" value="all" checked>
-        <span>Whole skeleton<small>All <span data-count="all"></span> labels</small></span></label>
-      <label class="opt"><input type="radio" name="set" value="axial">
-        <span>Skull &amp; trunk<small>Axial skeleton &mdash; <span data-count="axial"></span> labels</small></span></label>
-      <label class="opt"><input type="radio" name="set" value="upper">
-        <span>Shoulders, arms &amp; hands<small><span data-count="upper"></span> labels</small></span></label>
-      <label class="opt"><input type="radio" name="set" value="lower">
-        <span>Hips, legs &amp; feet<small><span data-count="lower"></span> labels</small></span></label>
-      <label class="opt"><input type="radio" name="set" value="quick">
-        <span>Quick 10<small>10 random bones</small></span></label>
+      <div id="setOptions"></div>
     </fieldset>
     <label class="opt"><input type="checkbox" name="showDef" checked>
       <span>Show the definition with each question<small>Turn off for a harder challenge &mdash; you'll still see it after answering.</small></span></label>
@@ -346,7 +345,7 @@
   //         ['hit', cx, cy, rx, ry] invisible extra tap area for small bones.
   // Paths use absolute "x,y" pairs so paired bones can be mirrored across x = 200.
   // ---------------------------------------------------------------------------
-  const GROUPS = {
+  const SKELETON_GROUPS = {
     skull:    { label: 'Skull',               color: 'var(--g-skull)' },
     spine:    { label: 'Vertebral column',    color: 'var(--g-spine)' },
     thorax:   { label: 'Thorax (chest)',      color: 'var(--g-thorax)' },
@@ -417,7 +416,7 @@
     return ['s', `M194,${y} C${200 - w},${y - 8} ${200 - w - 8},${y + 26} ${fx(200 - w * 0.35)},${y + 34}`, [3.4, 3.8, 4, 4.2, 4.4, 4.4, 4.4, 4.2, 4, 3.6][i]];
   });
 
-  const BONES = [
+  const SKELETON_BONES = [
     // drawn in this order (back to front)
     { id: 'scapula', name: 'Scapula', aka: 'Shoulder blade', group: 'shoulder', region: 'upper', paired: true, count: '2 (1 each side)',
       def: 'The shoulder blade — a flat, triangular bone on the upper back. Its shallow socket (the glenoid cavity) holds the head of the humerus to form the shoulder joint.',
@@ -540,23 +539,156 @@
         ...digit(99, 568.5, 101, 598, 3, 3.4), ...digit(107, 564.5, 111, 588, 3, 3.2), ['hit', 89, 585, 20, 14]] }
   ];
 
-  const BY_ID = Object.fromEntries(BONES.map(b => [b.id, b]));
-  const SETS = {
-    all: BONES.map(b => b.id),
-    axial: BONES.filter(b => b.region === 'axial').map(b => b.id),
-    upper: BONES.filter(b => b.region === 'upper').map(b => b.id),
-    lower: BONES.filter(b => b.region === 'lower').map(b => b.id)
+  // ---------------------------------------------------------------------------
+  // Skull, front (anterior) view, in a 400 x 440 box. Each bone has its own
+  // highlight color, like an anatomy atlas.
+  // ---------------------------------------------------------------------------
+  const SKULL_GROUPS = {
+    cranial: { label: 'Cranial bones (braincase)', color: '#7e57c2' },
+    facial:  { label: 'Facial bones',              color: '#2e7d32' }
   };
-  const GLOSSARY_ORDER = Object.keys(GROUPS);
+
+  const SKULL_BONES = [
+    { id: 'parietal', name: 'Parietal bone', aka: 'Top and upper sides of the skull', group: 'cranial', region: 'cranial', paired: true, count: '2',
+      color: '#7e57c2',
+      def: 'Two large, curved bones that form the top and upper sides of the cranium. They meet each other along the top of the head at the sagittal suture and meet the frontal bone at the coronal suture.',
+      tip: 'Parietal comes from the Latin “paries,” meaning wall — they are the walls of the skull. From the front you only see their outer edges.',
+      shapes: [['f', 'M258,27 C300,34 334,64 344,112 C348,132 348,152 346,168 L326,168 C320,128 302,74 258,27 Z']] },
+    { id: 'temporal', name: 'Temporal bone', aka: 'Side of the skull at the temple and ear', group: 'cranial', region: 'cranial', paired: true, count: '2',
+      color: '#26a69a',
+      def: 'The bones on each side of the skull around the ears. They hold the ear canal and the middle and inner ear, form the jaw joint (TMJ) with the mandible, and include the mastoid process you can feel behind your ear.',
+      tip: 'Temporal = temples, where gray hairs (a sign of time, “tempus”) often show first.',
+      shapes: [['f', 'M326,168 L346,168 C347,200 345,236 342,262 C341,272 336,278 331,272 C329,256 330,240 332,226 C332,212 330,198 328,188 Z']] },
+    { id: 'sphenoid', name: 'Sphenoid bone', aka: 'Butterfly-shaped bone', group: 'cranial', region: 'cranial', paired: true, count: '1',
+      color: '#ec407a',
+      def: 'A butterfly-shaped bone in the middle of the skull base that touches every other cranial bone. From the front you see its greater wings at the temples and parts of it at the back of each eye socket, around the optic canal and the superior orbital fissure.',
+      tip: 'Called the “keystone” of the cranium because it links all the other cranial bones together.',
+      shapes: [
+        ['f', 'M312,174 L326,168 C328,184 332,204 331,222 C324,220 316,214 312,206 C311,196 311,184 312,174 Z'],
+        ['f', 'M244,176 C262,166 290,168 300,180 C304,196 300,212 292,224 C280,220 268,212 260,204 C252,196 246,186 244,176 Z']] },
+    { id: 'frontal', name: 'Frontal bone', aka: 'Forehead bone', group: 'cranial', region: 'cranial', count: '1',
+      color: '#42a5f5',
+      def: 'The forehead bone. It forms the forehead, the brow ridges and the roof of each eye socket (orbit), and it meets the parietal bones at the coronal suture.',
+      tip: 'Frontal = the front of the head.',
+      shapes: [['f', 'M200,22 C232,22 248,24 258,27 C302,74 320,128 326,168 L312,174 L306,174 C296,158 276,153 262,154 C244,155 228,160 218,172 C214,174 208,172 200,172 C192,172 186,174 182,172 C172,160 156,155 138,154 C124,153 104,158 94,174 L88,174 L74,168 C80,128 98,74 142,27 C152,24 168,22 200,22 Z']] },
+    { id: 'mandible', name: 'Mandible', aka: 'Lower jaw', group: 'facial', region: 'facial', count: '1',
+      color: '#3949ab',
+      def: 'The lower jawbone — the largest and strongest bone of the face and the only skull bone that moves. It holds the lower teeth and hinges at the temporomandibular joint (TMJ) so you can chew and speak.',
+      tip: 'Mandible = “mandatory for munching.”',
+      shapes: [['f', 'M200,364 C230,364 256,362 274,356 C292,346 306,284 316,232 C319,238 321,244 324,246 C327,242 329,236 332,230 C337,240 337,262 335,280 C331,308 329,330 326,350 C324,362 316,372 304,380 C276,398 236,418 200,420 C164,418 124,398 96,380 C84,372 76,362 74,350 C71,330 69,308 65,280 C63,262 63,240 68,230 C71,236 73,242 76,246 C79,244 81,238 84,232 C94,284 108,346 126,356 C144,362 170,364 200,364 Z']] },
+    { id: 'maxilla', name: 'Maxilla', aka: 'Upper jaw', group: 'facial', region: 'facial', paired: true, count: '2 (fused)',
+      color: '#2e7d32',
+      def: 'The two maxillae fuse to form the upper jaw. They hold the upper teeth and form the floor of each eye socket, the sides of the nasal opening and most of the hard palate (roof of the mouth).',
+      tip: 'MAXilla is on top; MANDible is below and does the chewing.',
+      shapes: [
+        ['f', 'M214,176 L222,176 C220,196 220,220 224,236 C236,246 252,248 266,246 C264,254 266,262 272,268 C288,282 298,302 296,322 C294,336 284,344 270,348 C250,352 222,352 200,352 L200,300 C206,298 212,296 216,294 C226,286 232,272 228,256 C224,240 218,226 216,216 Z'],
+        ['f', 'M238,232 C252,222 276,224 294,232 C292,240 280,246 264,246 C250,247 240,242 238,232 Z']] },
+    { id: 'zygomatic', name: 'Zygomatic bone', aka: 'Cheekbone', group: 'facial', region: 'facial', paired: true, count: '2',
+      color: '#00838f',
+      def: 'The cheekbone. It forms the prominence of the cheek and the outer wall and floor of each eye socket, and joins the temporal bone to form the zygomatic arch.',
+      tip: 'Feel the hard ridge under your eye and out toward your ear — that’s it.',
+      shapes: [['f', 'M306,174 L312,174 C312,190 312,200 314,208 C320,216 330,222 340,226 C342,232 342,238 338,240 C326,240 314,240 304,248 C296,258 284,268 272,268 C266,262 264,254 266,246 C278,246 292,244 300,236 C306,222 308,196 306,174 Z']] },
+    { id: 'nasal', name: 'Nasal bone', aka: 'Bridge of the nose', group: 'facial', region: 'facial', paired: true, count: '2',
+      color: '#ff7043',
+      def: 'Two small, oblong bones side by side that form the bridge of the nose. The rest of the nose’s shape comes from cartilage, which is why it isn’t on a skull.',
+      tip: 'Feel the hard top of your nose — the soft, bendy part below it is cartilage.',
+      shapes: [['f', 'M200,172 C206,172 212,172 214,176 L216,214 C210,216 205,217 200,217 Z']] },
+    { id: 'ethmoid', name: 'Ethmoid bone', aka: 'Sieve-like bone between the eyes', group: 'cranial', region: 'cranial', paired: true, count: '1',
+      color: '#8d6e63',
+      def: 'A light, spongy bone between the eye sockets. It forms part of the inner (medial) wall of each orbit, the upper part of the nasal septum (perpendicular plate) and the middle nasal conchae inside the nose.',
+      tip: 'Ethmoid means “sieve-like” — its cribriform plate is full of tiny holes for the nerves of smell.',
+      shapes: [
+        ['f', 'M224,182 C230,176 240,174 244,176 C246,190 252,200 258,208 C250,214 240,218 230,218 C224,208 222,194 224,182 Z'],
+        ['f', 'M197,218 L203,218 L204,256 C202,258 198,258 196,256 Z'],
+        ['f', 'M207,236 C215,233 222,239 222,247 C218,251 212,251 206,249 Z']] },
+    { id: 'vomer', name: 'Vomer', aka: 'Lower nasal septum', group: 'facial', region: 'facial', count: '1',
+      color: '#c0ca33',
+      def: 'A thin, flat bone that forms the lower and back part of the nasal septum, the wall that divides the nasal cavity into left and right sides.',
+      tip: '“Vomer” is Latin for plowshare — it is shaped like the blade of a plow.',
+      shapes: [['f', 'M196,259 C198,257 202,257 204,259 L206,293 C204,297 196,297 194,293 Z']] },
+    { id: 'concha', name: 'Inferior nasal concha', aka: 'Lower turbinate', group: 'facial', region: 'facial', paired: true, count: '2',
+      color: '#546e7a',
+      def: 'Two curled, scroll-shaped bones on the side walls of the nasal cavity. They swirl, warm and moisten the air you breathe in. Unlike the upper and middle conchae (part of the ethmoid), each one is a separate bone.',
+      tip: 'Concha means “shell” — they look like curled seashells.',
+      shapes: [['f', 'M207,262 C216,258 226,264 226,276 C222,282 213,282 207,278 C205,272 205,266 207,262 Z']] },
+    { id: 'lacrimal', name: 'Lacrimal bone', aka: 'Tear-duct bone', group: 'facial', region: 'facial', paired: true, count: '2',
+      color: '#9ccc65',
+      def: 'The smallest and most fragile bones of the face, in the inner (medial) wall of each eye socket. A groove in each holds the tear sac, which drains tears down into the nose.',
+      tip: '“Lacrima” is Latin for tear.',
+      shapes: [['f', 'M224,214 C230,218 236,220 240,220 C240,228 236,234 230,237 C226,232 224,224 224,214 Z']] }
+  ];
+
+  // Non-interactive details for each diagram.
+  const DARK = { fill: '#3b3328', opacity: '.88' };
+  // A row of teeth along a gentle arch: outer teeth sit a little higher and are shorter.
+  const teethRow = (layer, x0, n, step, w, top, h, bend = 0) => {
+    for (let i = 0; i < n; i++) {
+      const k = ((i - (n - 1) / 2) / ((n - 1) / 2)) ** 2;
+      layer.append(el('rect', { x: x0 + i * step, y: top - bend * k, width: w, height: h - 2 * k, rx: w * 0.35,
+        fill: '#fbf8f0', stroke: '#8a7a5e', 'stroke-width': .5 }));
+    }
+  };
+  function skeletonDetails(under, decor) {
+    const orbit = 'M171,79 C171,70 192,68 195,76 C197,84 196,94 187,96 C178,98 171,93 171,86 Z';
+    [orbit, mirrorPath(orbit), 'M200,91 C196,95 193,104 194,110 C196,113 204,113 206,110 C207,104 204,95 200,91 Z']
+      .forEach(d => decor.append(el('path', { d, ...DARK })));
+    [[175, 471], [225, 471]].forEach(([cx, cy]) => decor.append(el('ellipse', { cx, cy, rx: 8, ry: 6, ...DARK })));
+    [410, 421, 432].forEach(y => [194.5, 205.5].forEach(cx =>
+      decor.append(el('circle', { cx, cy: y, r: 1.7, fill: '#3b3328', opacity: '.55' }))));
+    teethRow(decor, 182.5, 8, 4.5, 4, 119.5, 7);
+    teethRow(decor, 182.5, 8, 4.5, 4, 129, 6);
+  }
+  function skullDetails(under, decor) {
+    // dark backdrop shows through the eye sockets, nasal cavity and gaps
+    under.append(el('path', { d: 'M200,22 C262,22 318,52 338,108 C348,140 348,200 344,250 L334,284 L326,350 L200,368 L74,350 L66,284 L56,250 C52,200 52,140 62,108 C82,52 138,22 200,22 Z', fill: '#4a3d2f' }));
+    // optic canal, superior orbital fissure, supraorbital, infraorbital and mental foramina
+    const fissure = 'M262,194 C272,186 286,186 294,194 C284,197 272,198 262,194 Z';
+    [fissure, mirrorPath(fissure)].forEach(d => decor.append(el('path', { d, ...DARK })));
+    [[254, 188, 3.5], [248, 151, 2.4], [250, 262, 3.5], [246, 392, 3.5]].forEach(([cx, cy, r]) =>
+      [cx, 400 - cx].forEach(x => decor.append(el('circle', { cx: x, cy, r, ...DARK }))));
+    teethRow(decor, 132.4, 16, 8.5, 7.6, 347, 15, 3);
+    teethRow(decor, 136.4, 16, 8, 7.2, 363, 14, 3);
+  }
+
+  const DIAGRAMS = {
+    skeleton: {
+      title: 'Skeleton Bone Quiz', box: { w: 400, h: 920 }, legend: true,
+      svgTitle: 'Front view of the human skeleton',
+      svgDesc: 'Diagram of the human skeleton seen from the front.',
+      groups: SKELETON_GROUPS, bones: SKELETON_BONES, details: skeletonDetails,
+      sets: [
+        { key: 'all', label: 'Whole skeleton', note: n => `All ${n} labels` },
+        { key: 'axial', label: 'Skull & trunk', note: n => `Axial skeleton — ${n} labels`, filter: b => b.region === 'axial' },
+        { key: 'upper', label: 'Shoulders, arms & hands', note: n => `${n} labels`, filter: b => b.region === 'upper' },
+        { key: 'lower', label: 'Hips, legs & feet', note: n => `${n} labels`, filter: b => b.region === 'lower' },
+        { key: 'quick', label: 'Quick 10', note: () => '10 random bones', random: 10 }
+      ]
+    },
+    skull: {
+      title: 'Skull Bone Quiz', box: { w: 400, h: 440 }, legend: false,
+      svgTitle: 'Front (anterior) view of the human skull',
+      svgDesc: 'Diagram of the human skull seen from the front, showing the 12 bones visible from that side.',
+      groups: SKULL_GROUPS, bones: SKULL_BONES, details: skullDetails,
+      sets: [
+        { key: 'all', label: 'All skull bones', note: n => `All ${n} bones visible from the front (the occipital bone is at the back)` },
+        { key: 'cranial', label: 'Cranial bones', note: n => `The braincase — ${n} bones`, filter: b => b.region === 'cranial' },
+        { key: 'facial', label: 'Facial bones', note: n => `${n} bones`, filter: b => b.region === 'facial' }
+      ]
+    }
+  };
+
+  // The active diagram; loadDiagram() fills these in.
+  let D, DKEY, GROUPS, BONES, BY_ID, SETS, GLOSSARY_ORDER;
 
   // ---------------------------------------------------------------------------
-  // Render the skeleton
+  // Render the active diagram
   // ---------------------------------------------------------------------------
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.getElementById('skeleton');
   const bonesLayer = document.getElementById('bones');
   const decorLayer = document.getElementById('decor');
-  const boneEls = {};
+  const underLayer = document.getElementById('underlay');
+  let boneEls = {};
 
   const mirrorPath = d => d.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x, y) => `${+(400 - x).toFixed(1)},${y}`);
   const el = (tag, attrs) => {
@@ -582,39 +714,32 @@
     }
   }
 
-  BONES.forEach((b, i) => {
-    const g = el('g', { class: 'bone', 'data-bone': b.id, tabindex: '0', role: 'button', 'aria-label': `Bone region ${i + 1}` });
-    g.style.setProperty('--gc', GROUPS[b.group].color);
-    const shapes = b.paired ? [...b.shapes.map(s => [s, false]), ...b.shapes.map(s => [s, true])] : b.shapes.map(s => [s, false]);
-    if (b.separate) {
-      // small separate bones (vertebrae, wrist, ankle) keep their own outlines
-      shapes.forEach(([s, m]) => { drawShape(g, s, m, 'o'); drawShape(g, s, m, 'b'); });
-    } else {
-      shapes.forEach(([s, m]) => drawShape(g, s, m, 'o'));
-      shapes.forEach(([s, m]) => drawShape(g, s, m, 'b'));
-    }
-    bonesLayer.append(g);
-    boneEls[b.id] = g;
-  });
-
-  // Non-interactive details: eye sockets, nose, teeth, sacral holes, obturator foramen
-  const dark = { fill: '#3b3328', opacity: '.88' };
-  const orbit = 'M171,79 C171,70 192,68 195,76 C197,84 196,94 187,96 C178,98 171,93 171,86 Z';
-  [orbit, mirrorPath(orbit), 'M200,91 C196,95 193,104 194,110 C196,113 204,113 206,110 C207,104 204,95 200,91 Z']
-    .forEach(d => decorLayer.append(el('path', { d, ...dark })));
-  [[175, 471], [225, 471]].forEach(([cx, cy]) => decorLayer.append(el('ellipse', { cx, cy, rx: 8, ry: 6, ...dark })));
-  [410, 421, 432].forEach(y => [194.5, 205.5].forEach(cx =>
-    decorLayer.append(el('circle', { cx, cy: y, r: 1.7, fill: '#3b3328', opacity: '.55' }))));
-  for (let i = 0; i < 8; i++) {
-    const x = 182.5 + i * 4.5;
-    decorLayer.append(el('rect', { x, y: 119.5, width: 4, height: 7, rx: 1.4, fill: '#fbf8f0', stroke: '#8a7a5e', 'stroke-width': .5 }));
-    decorLayer.append(el('rect', { x, y: 129, width: 4, height: 6, rx: 1.4, fill: '#fbf8f0', stroke: '#8a7a5e', 'stroke-width': .5 }));
+  function renderDiagram() {
+    raised = null; // any bone brought to the front belongs to the old drawing
+    bonesLayer.replaceChildren(); decorLayer.replaceChildren(); underLayer.replaceChildren();
+    boneEls = {};
+    BONES.forEach((b, i) => {
+      const g = el('g', { class: 'bone', 'data-bone': b.id, tabindex: '0', role: 'button', 'aria-label': `Bone region ${i + 1}` });
+      g.style.setProperty('--gc', boneColor(b));
+      const shapes = b.paired ? [...b.shapes.map(s => [s, false]), ...b.shapes.map(s => [s, true])] : b.shapes.map(s => [s, false]);
+      if (b.separate) {
+        // small separate bones (vertebrae, wrist, ankle) keep their own outlines
+        shapes.forEach(([s, m]) => { drawShape(g, s, m, 'o'); drawShape(g, s, m, 'b'); });
+      } else {
+        shapes.forEach(([s, m]) => drawShape(g, s, m, 'o'));
+        shapes.forEach(([s, m]) => drawShape(g, s, m, 'b'));
+      }
+      bonesLayer.append(g);
+      boneEls[b.id] = g;
+    });
+    D.details(underLayer, decorLayer);
   }
+  const boneColor = b => b.color || GROUPS[b.group].color;
 
   // ---------------------------------------------------------------------------
   // Pan & zoom (touch, mouse, wheel, buttons)
   // ---------------------------------------------------------------------------
-  const BASE = { x: 0, y: 0, w: 400, h: 920 };
+  let BASE = { x: 0, y: 0, w: 400, h: 920 };
   let vb = { ...BASE };
   const applyVB = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
 
@@ -743,7 +868,6 @@
   function startGame(mode, setKey, showDef, idsOverride) {
     S.mode = mode; S.setKey = setKey; S.showDef = showDef;
     S.ids = idsOverride ? [...idsOverride]
-      : setKey === 'quick' ? shuffle([...SETS.all]).slice(0, 10)
       : [...SETS[setKey]];
     S.queue = shuffle([...S.ids]);
     S.results = {}; S.skips = 0; S.clicks = 0; S.goodClicks = 0; S.attempts = 0;
@@ -799,12 +923,13 @@
   // ---------------------------------------------------------------------------
   function boneInfoHTML(b, { heading = 'h2', showTip = true } = {}) {
     const grp = GROUPS[b.group];
+    const count = DKEY === 'skull' ? `How many in the skull: ${esc(b.count)}` : `How many in the body: ${esc(b.count)}`;
     return `
       <${heading} class="prompt-name">${esc(b.name)}</${heading}>
       <p class="aka">${esc(b.aka)}</p>
       <p class="def">${esc(b.def)}</p>
-      <p class="meta"><span class="chip"><span class="swatch" style="background:${grp.color}"></span>${esc(grp.label)}</span>
-        &middot; How many in the body: ${esc(b.count)}</p>
+      <p class="meta"><span class="chip"><span class="swatch" style="background:${boneColor(b)}"></span>${esc(grp.label)}</span>
+        &middot; ${count}</p>
       ${showTip && b.tip ? `<p class="tip"><strong>Memory tip:</strong> ${esc(b.tip)}</p>` : ''}`;
   }
 
@@ -966,7 +1091,7 @@
     const acc = S.clicks ? Math.round((S.goodClicks / S.clicks) * 100) : 100;
 
     let best = null;
-    const key = `boneQuizBest:${S.mode}:${S.setKey}`;
+    const key = `boneQuizBest:${DKEY}:${S.mode}:${S.setKey}`;
     try {
       best = JSON.parse(localStorage.getItem(key) || 'null');
       if (S.setKey !== 'review' && (!best || pct > best.pct || (pct === best.pct && S.elapsed < best.time))) {
@@ -1009,15 +1134,15 @@
     } else {
       html += `<p class="prompt-label">Study mode</p>
         <h2 class="prompt-name">Tap any bone</h2>
-        <p class="def">Tap a bone on the skeleton, or choose one from the list below, to see its name, definition and a memory tip. Colors show which part of the skeleton each bone belongs to.</p>`;
+        <p class="def">Tap a bone on the diagram, or choose one from the list below, to see its name, definition and a memory tip. ${D.legend ? 'Colors show which part of the skeleton each bone belongs to.' : 'Each bone has its own color.'}</p>`;
     }
-    html += `<ul class="legend" aria-label="Color key">${GLOSSARY_ORDER.map(k =>
+    if (D.legend) html += `<ul class="legend" aria-label="Color key">${GLOSSARY_ORDER.map(k =>
       `<li class="chip"><span class="swatch" style="background:${GROUPS[k].color}"></span>${esc(GROUPS[k].label)}</li>`).join('')}</ul>`;
     html += `<div class="glossary">${GLOSSARY_ORDER.map(k => `
       <h2>${esc(GROUPS[k].label)}</h2>
       <ul>${BONES.filter(b => b.group === k).map(b => `
         <li><button type="button" data-study="${b.id}" ${b.id === id ? 'aria-current="true"' : ''}>
-          <span class="swatch" style="background:${GROUPS[k].color}"></span>
+          <span class="swatch" style="background:${boneColor(b)}"></span>
           <span><strong>${esc(b.name)}</strong><small>${esc(b.aka)}</small></span>
         </button></li>`).join('')}</ul>`).join('')}</div>`;
     panelBody.innerHTML = html;
@@ -1055,7 +1180,34 @@
     }
   });
 
-  document.querySelectorAll('[data-count]').forEach(n => { n.textContent = SETS[n.dataset.count].length; });
+  function loadDiagram(key) {
+    DKEY = key; D = DIAGRAMS[key];
+    GROUPS = D.groups; BONES = D.bones; GLOSSARY_ORDER = Object.keys(GROUPS);
+    BY_ID = Object.fromEntries(BONES.map(b => [b.id, b]));
+    SETS = {};
+    D.sets.forEach(o => {
+      const ids = BONES.filter(o.filter || (() => true)).map(b => b.id);
+      Object.defineProperty(SETS, o.key, { enumerable: true, get: () => o.random ? shuffle([...ids]).slice(0, o.random) : ids });
+    });
+    BASE = { x: 0, y: 0, w: D.box.w, h: D.box.h };
+    vb = { ...BASE }; applyVB();
+    renderDiagram();
+    $('appTitle').textContent = D.title;
+    $('svgTitle').textContent = D.svgTitle;
+    $('svgDesc').textContent = `${D.svgDesc} Each bone region can be selected; use Tab to move between regions and Enter to choose one. The Name the Bone mode can be played entirely with buttons.`;
+    $('setOptions').innerHTML = D.sets.map((o, i) => `
+      <label class="opt"><input type="radio" name="set" value="${o.key}" ${i ? '' : 'checked'}>
+        <span>${esc(o.label)}<small>${esc(o.note(BONES.filter(o.filter || (() => true)).length))}</small></span></label>`).join('');
+    S.current = null; S.running = false; clearInterval(S.timer);
+    S.elapsed = 0; tick();
+    $('statScore').textContent = '0'; $('statTotal').textContent = '0'; $('progressBar').style.width = '0';
+    panelBody.innerHTML = '<p class="def">Choose a mode to begin.</p>';
+  }
+
+  document.querySelectorAll('input[name="diagram"]').forEach(r => r.addEventListener('change', () => {
+    loadDiagram(r.value);
+    $('menuClose').hidden = true; // a game on the other diagram can't be resumed
+  }));
 
   $('menuForm').addEventListener('submit', e => {
     e.preventDefault();
@@ -1076,8 +1228,10 @@
   $('retryMissed').onclick = () => { hideOverlays(); startGame(S.mode, 'review', S.showDef, S.missed); };
   $('toMenu').onclick = () => showOverlay('menu');
 
-  // Initial screen: skeleton visible behind the menu.
-  panelBody.innerHTML = '<p class="def">Choose a mode to begin.</p>';
+  // Initial screen: diagram visible behind the menu. bone_quiz.html#skull opens the skull.
+  const startKey = location.hash.slice(1) in DIAGRAMS ? location.hash.slice(1) : 'skeleton';
+  document.querySelector(`input[name="diagram"][value="${startKey}"]`).checked = true;
+  loadDiagram(startKey);
   showOverlay('menu');
 })();
 </script>
