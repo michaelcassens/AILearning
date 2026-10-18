@@ -150,6 +150,11 @@
   .feedback.ok { color: var(--ok-text); }
   .feedback.bad { color: var(--wrong); }
   .feedback.info { color: var(--muted); }
+  .key { display: flex; flex-wrap: wrap; gap: 4px 14px; list-style: none; margin: 8px 0 0; padding: 0; font-size: .85rem; color: var(--muted); }
+  .key li { display: inline-flex; align-items: center; gap: 6px; }
+  .key .sw-found { background: linear-gradient(90deg, var(--g-arm) 0 33%, var(--g-leg) 33% 66%, var(--g-skull) 66%); }
+  .key .sw-missed { background: repeating-linear-gradient(45deg, #c62828 0 3px, #ffe3e3 3px 6px); }
+  .key .sw-target { background: #ffe14d; }
 
   .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   .choice {
@@ -263,8 +268,8 @@
             <feComposite in="final" in2="SourceAlpha" operator="in"/>
           </filter>
           <pattern id="revealPat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <rect width="6" height="6" fill="#fff3c4"/>
-            <rect width="3" height="6" fill="#f5b301"/>
+            <rect width="6" height="6" fill="#ffe3e3"/>
+            <rect width="3" height="6" fill="#c62828"/>
           </pattern>
         </defs>
         <g id="underlay" class="decor"></g>
@@ -945,7 +950,12 @@
     const actions = `<div class="actions">
         <button type="button" class="btn grow" id="skipBtn">Skip &#8631;</button>
         <button type="button" class="btn grow" id="revealBtn">Show me</button>
-      </div>`;
+      </div>
+      <ul class="key" aria-label="What the colors on the diagram mean">
+        <li><span class="swatch sw-found"></span>Solid color = you found it</li>
+        <li><span class="swatch sw-missed"></span>Red stripes = missed (shown to you)</li>
+        ${S.mode === 'name' ? '<li><span class="swatch sw-target"></span>Yellow glow = bone to name</li>' : ''}
+      </ul>`;
     if (S.mode === 'find') {
       html += `<p class="prompt-label">Find this bone &middot; ${remaining} left</p>`;
       html += `<h2 class="prompt-name">${esc(b.name)}</h2><p class="aka">${esc(b.aka)}</p>`;
@@ -1060,7 +1070,7 @@
     boneEls[id].classList.add('revealed');
     S.queue.shift();
     S.lastLearned = id;
-    S.lastFeedback = { kind: 'info', html: `${auto ? 'Out of tries. ' : ''}The striped bone is the <strong>${esc(b.name)}</strong> — it's added to your review list.` };
+    S.lastFeedback = { kind: 'bad', html: `${auto ? 'Out of tries. ' : ''}The <strong>red-striped</strong> bone is the <strong>${esc(b.name)}</strong> — marked as missed and added to your review list.` };
     updateStats();
     nextQuestion();
   }
@@ -1110,7 +1120,7 @@
       <div><b>${acc}%</b>Accuracy</div>
       <div><b>${S.skips}</b>Skips</div>`;
     $('reviewWrap').innerHTML = revealed.length
-      ? `<h3>Bones to review (${revealed.length})</h3><ul class="review">${revealed.map(id => {
+      ? `<h3>Bones you missed (${revealed.length}) — red stripes on the diagram</h3><ul class="review">${revealed.map(id => {
           const b = BY_ID[id];
           return `<li><strong>${esc(b.name)}</strong> (${esc(b.aka)}) — ${esc(b.def)}</li>`;
         }).join('')}</ul>`
