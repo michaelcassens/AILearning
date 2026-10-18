@@ -227,9 +227,9 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
   <h2 id="sel-h">Choose Your Hero</h2>
   <p class="lead">Every hero is a being of living color. Pick the one that feels like you.</p>
   <div class="cards">
-    <button class="card" data-hero="knight"><canvas class="pv" data-hero="knight" aria-hidden="true"></canvas><b>Prism Knight</b><span>Faceless armor of shifting starlight, crowned with a rainbow plume.</span><em>8 hearts &middot; steady pace</em></button>
-    <button class="card" data-hero="sprite"><canvas class="pv" data-hero="sprite" aria-hidden="true"></canvas><b>Aurora Sprite</b><span>A floating mote of living aurora that lights the dark around it.</span><em>6 hearts &middot; swift &middot; brighter glow</em></button>
-    <button class="card" data-hero="golem"><canvas class="pv" data-hero="golem" aria-hidden="true"></canvas><b>Kaleido Golem</b><span>A rounded geode creature whose crystal heart hums with every color. Slow, but hits hard.</span><em>7 hearts &middot; double damage</em></button>
+    <button class="card" data-hero="knight"><canvas class="pv" data-hero="knight" aria-hidden="true"></canvas><b>Prism Knight</b><span>Faceless armor of shifting starlight, crowned with a rainbow plume.</span><em>8 hearts &middot; wide sword sweep &middot; blocks some hits</em></button>
+    <button class="card" data-hero="sprite"><canvas class="pv" data-hero="sprite" aria-hidden="true"></canvas><b>Aurora Sprite</b><span>A floating mote of living aurora that lights the dark around it.</span><em>6 hearts &middot; swift &middot; shoots prism bolts &middot; senses gems</em></button>
+    <button class="card" data-hero="golem"><canvas class="pv" data-hero="golem" aria-hidden="true"></canvas><b>Kaleido Golem</b><span>A rounded geode creature whose crystal heart hums with every color. Slow, but hits hard.</span><em>10 hearts &middot; slow &middot; ground slam hits all around</em></button>
   </div>
   <button id="btn-back" class="link">Back</button>
 </section>
@@ -280,9 +280,13 @@ const GEMS = {
 const GEM_ORDER = ['ruby','sapphire','emerald'];
 
 const HEROES = {
-  knight: { name:'Prism Knight',  hp:8, atk:1, speed:122, light:0,   draw:drawKnight },
-  sprite: { name:'Aurora Sprite', hp:6, atk:1, speed:150, light:1.0, draw:drawSprite },
-  golem:  { name:'Kaleido Golem', hp:7, atk:2, speed:104, light:0,   draw:drawGolem  },
+  // each hero has its own attack style and a passive trait
+  knight: { name:'Prism Knight',  hp:8,  atk:1, speed:122, light:0,   cd:0.38, attack:'sweep', draw:drawKnight,
+            style:'Sword sweep: a wide arc in front of you.', trait:'Steadfast: 20% chance to block any hit, even without a shield.' },
+  sprite: { name:'Aurora Sprite', hp:6,  atk:1, speed:150, light:1.0, cd:0.30, attack:'bolt',  draw:drawSprite,
+            style:'Prism bolts: fires light from a distance.', trait:'Gem sense: glows brighter and spots hidden gems from farther away.' },
+  golem:  { name:'Kaleido Golem', hp:10, atk:2, speed:100, light:0,   cd:0.75, attack:'slam',  draw:drawGolem,
+            style:'Ground slam: slow, but strikes everything around you for double damage.', trait:'Unshakable: never knocked back by hits.' },
 };
 
 const SHOP = [
@@ -417,7 +421,7 @@ let mode = 'title';      // title | select | play
 let time = 0, dpr = 1, vw = 0, vh = 0;
 let isTouch = false, muted = false, mmBig = false;
 const cam = { x:0, y:0, scale:1 };
-let particles = [], texts = [], projectiles = [];
+let particles = [], texts = [], projectiles = [], bolts = [];
 let trans = null, shake = 0, flash = null;
 const layerCache = {};
 
@@ -485,6 +489,8 @@ const SFX = {
   win(){ [523,659,784,659,784,1047,1319].forEach((f,i)=>tone(f,.32,'triangle',.07,0,i*.13)); },
   quest(){ [659,784,988].forEach((f,i)=>tone(f,.18,'triangle',.06,0,i*.09)); },
   pick(){ tone(1200,.06,'sine',.05); tone(1600,.08,'sine',.04,0,.05); },
+  bolt(){ tone(820,.1,'sine',.035,700); tone(1640,.06,'triangle',.015,500); },
+  slam(){ tone(95,.28,'sine',.09,-45); tone(60,.32,'triangle',.06,-20); tone(180,.08,'square',.02,-120); },
   ward(){ tone(520,.18,'sine',.05,-300); },
 };
 
@@ -1096,6 +1102,7 @@ function gatherLights(){
   if (r.gateTiles.length && S.gateOpen){ const [gx, gy] = r.gateTiles[0]; L.push({ x:(gx+1)*TS, y:(gy+.8)*TS, r:3.5*TS, i:0.9 }); }
   if (r.freeTiles.length && S.bossDefeated){ const [fx, fy] = r.freeTiles[0]; L.push({ x:(fx+1)*TS, y:(fy+1)*TS, r:6*TS, i:1 }); }
   for (const p of projectiles) L.push({ x:p.x, y:p.y, r:1*TS, i:0.35 });
+  for (const b of bolts) L.push({ x:b.x, y:b.y, r:1.6*TS, i:0.55 });
   if (boss && boss.active && !boss.dead) L.push({ x:boss.x, y:boss.y-6, r:2.6*TS, i:0.5 });
   return L;
 }
@@ -1264,7 +1271,7 @@ function openBag(){
   const gear = GEAR.map(it => `<div class="item-line${S.items[it.id] ? '' : ' off'}"><div class="si-icon">${itemIcon(it.id)}</div><div><b>${it.name}</b><div class="si-desc">${S.items[it.id] ? it.desc : 'Not owned — sold by Mossback for ' + it.price + ' gold.'}</div></div></div>`).join('');
   const gems = GEM_ORDER.map(g => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>${S.gems[g] ? GEMS[g].name : '???'}</span>`).join('');
   openModal({ kind:'bag', title:'Your Bag', portrait:'hero',
-    body:`<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Hearts</dt><dd>${S.hp} / ${S.maxHp}</dd><dt>Attack</dt><dd>${heroAtk()}</dd><dt>Gold</dt><dd>${S.gold}</dd></dl>
+    body:`<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Hearts</dt><dd>${S.hp} / ${S.maxHp}</dd><dt>Damage</dt><dd>${heroAtk()}</dd><dt>Attack style</dt><dd>${HEROES[S.heroId].style}</dd><dt>Trait</dt><dd>${HEROES[S.heroId].trait}</dd><dt>Gold</dt><dd>${S.gold}</dd></dl>
       <h3 style="margin:14px 0 6px;font-size:16px">Prism Gems</h3><div>${gems}</div>
       <h3 style="margin:14px 0 6px;font-size:16px">Healing Draughts: ${S.potions}</h3>
       <h3 style="margin:14px 0 4px;font-size:16px">Gear</h3>${gear}
@@ -1294,7 +1301,7 @@ function helpHTML(){
   return `<p>You are a hero of living color, imprisoned by the Hollow Sovereign. Explore room to room, search everything, and find the <b>three hidden Prism Gems</b> &mdash; they open the gate to the Sovereign and the path to freedom.</p>
   <h3 style="font-size:16px;margin:12px 0 6px">Keyboard</h3>
   <div class="keys"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span>Move</span>
-  <span><kbd>Space</kbd> / <kbd>J</kbd></span><span>Attack (hold to keep swinging)</span>
+  <span><kbd>Space</kbd> / <kbd>J</kbd></span><span>Attack (hold to keep attacking). Each hero attacks differently: the Knight sweeps, the Sprite shoots bolts, the Golem slams the ground.</span>
   <span><kbd>E</kbd> / <kbd>Enter</kbd></span><span>Search, talk, open</span>
   <span><kbd>H</kbd></span><span>Drink a healing draught</span>
   <span><kbd>I</kbd> &nbsp; <kbd>Q</kbd> &nbsp; <kbd>M</kbd></span><span>Bag &middot; Quests &middot; Enlarge map</span>
@@ -1437,7 +1444,7 @@ function moveEnt(e, dx, dy, hs, isEnemy){
 
 function enterRoom(id, at){
   room = buildRoom(id); S.room = id; S.visited[id] = true;
-  projectiles = []; particles = []; texts = [];
+  projectiles = []; bolts = []; particles = []; texts = [];
   let pos;
   if (at === 'start') pos = room.start;
   else if (at && room.exits[at]){
@@ -1529,12 +1536,14 @@ function usePotion(){
 function hurtHero(dmg, sx, sy){
   if (hero.inv > 0 || hero.dead) return;
   const a = Math.atan2(hero.y - sy, hero.x - sx);
-  if (S.items.shield && Math.random() < 0.35){
+  const kb = S.heroId === 'golem' ? 0 : 1;
+  const block = (S.items.shield ? 0.35 : 0) + (S.heroId === 'knight' ? 0.2 : 0);
+  if (Math.random() < block){
     hero.inv = 0.5; floatText(hero.x, hero.y - 26, 'Blocked!', '#bcd6ff'); SFX.clank();
-    hero.kx = Math.cos(a)*120; hero.ky = Math.sin(a)*120; return;
+    hero.kx = Math.cos(a)*120*kb; hero.ky = Math.sin(a)*120*kb; return;
   }
   S.hp -= dmg; hero.inv = 1.0; shake = 0.25; SFX.hurt();
-  hero.kx = Math.cos(a)*220; hero.ky = Math.sin(a)*220;
+  hero.kx = Math.cos(a)*220*kb; hero.ky = Math.sin(a)*220*kb;
   floatText(hero.x, hero.y - 26, `-${dmg}`, '#ff6b97');
   burst(hero.x, hero.y, 10, ['#ff6b97','#ffffff'], { speed:70, life:.5 });
   if (S.hp <= 0){ S.hp = 0; heroDie(); }
@@ -1551,26 +1560,56 @@ function showDeath(){
       enterRoom('cells', 'start');
     }});
 }
-function doAttack(){
-  hero.atkCd = 0.38; hero.swing = 0.18; SFX.swing();
-  const dmg = heroAtk(), range = 40;
+function hitEnemy(e, dmg, kb, fromX, fromY){
+  e.hp -= dmg; e.flash = 0.15; SFX.hit();
+  const a = Math.atan2(e.y - fromY, e.x - fromX); e.kx = Math.cos(a)*kb; e.ky = Math.sin(a)*kb;
+  e.state = 'chase';
+  burst(e.x, e.y, 8, ['#cfcfd6','#8a8a92'], { speed:70, life:.4 });
+  if (e.hp <= 0) killEnemy(e);
+}
+// melee hit test; minDot = -1 hits all the way around the hero
+function hitArea(range, minDot, dmg, kb){
   for (const e of room.enemies){
     if (e.dead) continue;
     const d = dist(hero.x, hero.y, e.x, e.y);
     if (d > range + ET[e.type].r) continue;
     const dot = ((e.x - hero.x)*hero.fx + (e.y - hero.y)*hero.fy)/(d || 1);
-    if (dot < 0.2 && d > 16) continue;
-    e.hp -= dmg; e.flash = 0.15; SFX.hit();
-    const a = Math.atan2(e.y - hero.y, e.x - hero.x); e.kx = Math.cos(a)*240; e.ky = Math.sin(a)*240;
-    e.state = 'chase';
-    burst(e.x, e.y, 8, ['#cfcfd6','#8a8a92'], { speed:70, life:.4 });
-    if (e.hp <= 0) killEnemy(e);
+    if (dot < minDot && d > 16) continue;
+    hitEnemy(e, dmg, kb, hero.x, hero.y);
   }
   if (boss && boss.active && !boss.dead && boss.dying <= 0){
     const d = dist(hero.x, hero.y, boss.x, boss.y - 6);
     const dot = ((boss.x - hero.x)*hero.fx + (boss.y - 6 - hero.y)*hero.fy)/(d || 1);
-    if (d < range + 22 && (dot > 0.1 || d < 22)) damageBoss(dmg);
+    if (d < range + 22 && (dot >= minDot - 0.1 || d < 22)) damageBoss(dmg);
   }
+}
+function doAttack(){
+  const H = HEROES[S.heroId], dmg = heroAtk();
+  hero.atkCd = H.cd;
+  if (H.attack === 'bolt'){
+    bolts.push({ x:hero.x + hero.fx*10, y:hero.y - 5 + hero.fy*10, vx:hero.fx*320, vy:hero.fy*320, life:0.55, dmg, h:Math.random()*360 });
+    SFX.bolt();
+  } else if (H.attack === 'slam'){
+    hero.slam = 0.32; shake = Math.max(shake, 0.18); SFX.slam();
+    burst(hero.x, hero.y + 8, 18, ['#8a7a66','#b0a090','#ffffff'], { speed:110, life:.45, grav:80 });
+    hitArea(54, -1, dmg, 340);
+  } else {
+    hero.swing = 0.18; SFX.swing();
+    hitArea(40, 0.2, dmg, 240);
+  }
+}
+function updateBolts(dt){
+  for (const b of bolts){
+    b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
+    if (Math.random() < 0.7) burst(b.x, b.y, 1, hsl(b.h + time*300, 100, 70), { speed:12, glow:true, life:.3, grav:0, size:1.4 });
+    if (solidTile(Math.floor(b.x/TS), Math.floor(b.y/TS), true)){ b.life = 0; burst(b.x, b.y, 6, rainbow, { speed:50, glow:true, life:.3 }); continue; }
+    for (const e of room.enemies){
+      if (e.dead || dist(b.x, b.y, e.x, e.y - 4) > ET[e.type].r + 6) continue;
+      hitEnemy(e, b.dmg, 160, b.x - b.vx*0.05, b.y - b.vy*0.05); b.life = 0; break;
+    }
+    if (b.life > 0 && boss && boss.active && !boss.dead && boss.dying <= 0 && dist(b.x, b.y, boss.x, boss.y - 8) < 22){ damageBoss(b.dmg); b.life = 0; }
+  }
+  bolts = bolts.filter(b => b.life > 0);
 }
 function killEnemy(e){
   e.dead = true; S.stats.kills++;
@@ -1772,7 +1811,8 @@ function update(dt){
   hero.target = hero.searching ? null : findInteract();
   if (input.interact){ input.interact = false; if (hero.target && !hero.searching) doInteract(hero.target); }
   if (input.potion){ input.potion = false; usePotion(); }
-  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt);
+  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt); updateBolts(dt);
+  hero.slam -= dt;
   if (boss && !boss.active && !boss.dead && room.id === 'throne' && hero.y < 11.5*TS) startBossFight();
   updateFx(dt);
   updateCamera(dt, false);
@@ -1827,6 +1867,11 @@ function render(){
 
   // projectiles (dark core)
   for (const p of projectiles){ ctx.fillStyle = '#141417'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, TAU); ctx.fill(); }
+  // golem slam shockwave
+  if (hero.slam > 0 && !hero.dead){
+    const p = 1 - hero.slam/0.32;
+    for (let i = 0; i < 3; i++){ ctx.strokeStyle = hsl(time*120 + i*120, 100, 70, (1 - p)*0.8); ctx.lineWidth = 3 - i*0.7; ctx.beginPath(); ctx.ellipse(hero.x, hero.y + 8, 12 + p*48 - i*4, (12 + p*48 - i*4)*0.55, 0, 0, TAU); ctx.stroke(); }
+  }
   // swing arc
   if (hero.swing > 0 && !hero.dead){
     const a = Math.atan2(hero.fy, hero.fx), p = 1 - hero.swing/0.18;
@@ -1903,7 +1948,7 @@ function drawGlows(){
     c.fillStyle = g; c.fillRect(x - 18, y - 18, 36, 36);
   }
   // hidden gem glimmer: only shows when the hero is close enough
-  const reveal = (S.items.lantern ? 4.8 : 2.8)*TS;
+  const reveal = ((S.items.lantern ? 4.8 : 2.8) + (S.heroId === 'sprite' ? 1.6 : 0))*TS;
   for (const o of r.objs){
     if (o.type !== 'loose' || S.searched[o.key]) continue;
     const x = (o.x+.5)*TS, y = (o.y+.5)*TS, d = dist(x, y, hero.x, hero.y);
@@ -1933,6 +1978,11 @@ function drawGlows(){
     else { c.fillStyle = 'rgba(200,200,210,.6)'; c.fillRect(e.x - 3.5, e.y - 11.5, 2, 2); c.fillRect(e.x + 1.5, e.y - 11.5, 2, 2); }
   }
   if (boss && !boss.dead && room.id === 'throne' && boss.dying <= 0){ c.fillStyle = 'rgba(200,200,208,.9)'; c.fillRect(boss.x - 3.6, boss.y - 23, 2.2, 1.4); c.fillRect(boss.x + 1.4, boss.y - 23, 2.2, 1.4); }
+  for (const b of bolts){
+    const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, 9);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(.4, hsl(b.h + time*300, 100, 70)); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(b.x, b.y, 9, 0, TAU); c.fill();
+  }
   for (const p of particles) if (p.glow){ c.globalAlpha = clamp(p.life/p.max, 0, 1); c.fillStyle = p.c; c.beginPath(); c.arc(p.x, p.y, p.s, 0, TAU); c.fill(); }
   c.globalAlpha = 1;
   c.globalCompositeOperation = 'source-over';
@@ -2063,7 +2113,7 @@ function setPlaying(on){
 }
 function showTitle(){ mode = 'title'; setPlaying(false); showScreen('scr-title'); $('#btn-continue').classList.toggle('hidden', !loadSave()); setTimeout(() => $('#btn-new').focus(), 50); }
 function showSelect(){ mode = 'select'; setPlaying(false); showScreen('scr-select'); setTimeout(() => $('.card').focus(), 50); }
-function makeHero(){ return { x:0, y:0, fx:0, fy:1, moving:false, inv:0, atkCd:0, swing:0, searching:null, dead:false, deadT:0, kx:0, ky:0, target:null }; }
+function makeHero(){ return { x:0, y:0, fx:0, fy:1, moving:false, inv:0, atkCd:0, swing:0, slam:0, searching:null, dead:false, deadT:0, kx:0, ky:0, target:null }; }
 function startNew(heroId){
   S = newState(heroId); SEEN = {}; for (const k in layerCache) delete layerCache[k];
   hero = makeHero(); mode = 'play'; showScreen(null); setPlaying(true); hudKey = '';
