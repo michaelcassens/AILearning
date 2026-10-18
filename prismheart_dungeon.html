@@ -229,7 +229,7 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
   <div class="cards">
     <button class="card" data-hero="knight"><canvas class="pv" data-hero="knight" aria-hidden="true"></canvas><b>Prism Knight</b><span>Faceless armor of shifting starlight, crowned with a rainbow plume.</span><em>8 hearts &middot; steady pace</em></button>
     <button class="card" data-hero="sprite"><canvas class="pv" data-hero="sprite" aria-hidden="true"></canvas><b>Aurora Sprite</b><span>A floating mote of living aurora that lights the dark around it.</span><em>6 hearts &middot; swift &middot; brighter glow</em></button>
-    <button class="card" data-hero="golem"><canvas class="pv" data-hero="golem" aria-hidden="true"></canvas><b>Kaleido Golem</b><span>Crystal facets humming with every color. Slow, but hits hard.</span><em>7 hearts &middot; double damage</em></button>
+    <button class="card" data-hero="golem"><canvas class="pv" data-hero="golem" aria-hidden="true"></canvas><b>Kaleido Golem</b><span>A rounded geode creature whose crystal heart hums with every color. Slow, but hits hard.</span><em>7 hearts &middot; double damage</em></button>
   </div>
   <button id="btn-back" class="link">Back</button>
 </section>
@@ -469,7 +469,7 @@ function tone(f, dur, type='square', vol=0.05, slide=0, delay=0){
   } catch(e) {}
 }
 const SFX = {
-  coin(){ tone(988,.07,'square',.04); tone(1319,.12,'square',.04,0,.06); },
+  coin(){ const n = 3 + Math.floor(Math.random()*2); for (let i = 0; i < n; i++){ const f = 2300 + Math.random()*1100, d = i*0.045 + Math.random()*0.02; tone(f, .09, 'sine', .03, 0, d); tone(f*2.76, .05, 'sine', .012, 0, d); tone(f*0.5, .06, 'triangle', .012, 0, d); } },
   gem(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.3,'triangle',.07,0,i*.08)); },
   swing(){ tone(320,.08,'sawtooth',.025,-220); },
   hit(){ tone(190,.1,'square',.05,-90); },
@@ -769,26 +769,56 @@ function drawSprite(c, x, y, t, fx, fy){
   }
 }
 function drawGolem(c, x, y, t, fx, fy, mv){
-  const bob = mv ? -Math.abs(Math.sin(t*9))*2 : 0, h = t*30, st = mv ? Math.sin(t*9)*2 : 0;
+  // a rounded geode creature: smooth stone shell with glowing crystal facets inside
+  const bob = mv ? -Math.abs(Math.sin(t*9))*1.6 : Math.sin(t*2)*0.5, h = t*30, st = mv ? Math.sin(t*9)*1.8 : 0;
   shadow(c, x, y+11, 11, 4);
-  c.fillStyle = hsl(h+240, 50, 38);
-  c.fillRect(x-8, y+3+st*.5, 6, 8); c.fillRect(x+2, y+3-st*.5, 6, 8);
-  const cx = x, cy = y - 1 + bob, R = 10;
-  c.fillStyle = hsl(h+180, 70, 55);
-  c.fillRect(x-15, cy-4 - st, 5, 10); c.fillRect(x+10, cy-4 + st, 5, 10);
-  for (let i = 0; i < 6; i++){
-    const a0 = i*Math.PI/3 - Math.PI/2, a1 = a0 + Math.PI/3;
-    c.fillStyle = hsl(h + i*60, 80, 55 + (i%2)*12);
-    c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a0)*R, cy + Math.sin(a0)*R); c.lineTo(cx + Math.cos(a1)*R, cy + Math.sin(a1)*R); c.closePath(); c.fill();
+  c.fillStyle = hsl(h+240, 45, 40);
+  c.beginPath(); c.ellipse(x-5, y+8+st*.4, 4, 3.5, 0, 0, TAU); c.fill();
+  c.beginPath(); c.ellipse(x+5, y+8-st*.4, 4, 3.5, 0, 0, TAU); c.fill();
+  const cx = x, cy = y - 1 + bob;
+  // floating crystal hands
+  for (const s of [-1, 1]){
+    const hx = cx + s*13, hy = cy + 1 + Math.sin(t*3 + s)*1.5 + (mv ? s*st*.6 : 0);
+    const g = c.createRadialGradient(hx-1, hy-1, .5, hx, hy, 4.5);
+    g.addColorStop(0, '#fff'); g.addColorStop(.5, hsl(h + 180 + s*40, 90, 66)); g.addColorStop(1, hsl(h + 220 + s*40, 80, 48));
+    c.fillStyle = g; c.beginPath(); c.arc(hx, hy, 4.2, 0, TAU); c.fill();
   }
-  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1;
-  c.beginPath(); for (let i = 0; i <= 6; i++){ const a = i*Math.PI/3 - Math.PI/2; const px = cx + Math.cos(a)*R, py = cy + Math.sin(a)*R; i ? c.lineTo(px,py) : c.moveTo(px,py); } c.stroke();
-  c.fillStyle = '#fff'; c.beginPath(); c.arc(cx, cy, 2.4 + Math.sin(t*5)*0.6, 0, TAU); c.fill();
-  const hy = cy - 13;
-  c.fillStyle = hsl(h+90, 85, 66);
-  c.beginPath(); c.moveTo(x, hy-6); c.lineTo(x+7, hy); c.lineTo(x, hy+5); c.lineTo(x-7, hy); c.closePath(); c.fill();
-  c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.moveTo(x, hy-6); c.lineTo(x+3, hy-1); c.lineTo(x, hy); c.closePath(); c.fill();
-  if (fy > -0.6){ c.fillStyle = '#0d0a18'; c.fillRect(x-3.5 + fx*1.5, hy-1, 2, 2); c.fillRect(x+1.5 + fx*1.5, hy-1, 2, 2); }
+  // body shell
+  const g = c.createRadialGradient(cx-3, cy-4, 1, cx, cy, 12);
+  g.addColorStop(0, hsl(h+40, 85, 72)); g.addColorStop(.55, hsl(h+150, 75, 56)); g.addColorStop(1, hsl(h+260, 70, 42));
+  c.fillStyle = g; c.beginPath(); c.ellipse(cx, cy, 10.5, 11, 0, 0, TAU); c.fill();
+  // soft crystal facets inside the shell
+  c.save(); c.beginPath(); c.ellipse(cx, cy, 10.5, 11, 0, 0, TAU); c.clip();
+  for (let i = 0; i < 5; i++){
+    const a = i*TAU/5 + t*0.3;
+    c.fillStyle = hsl(h + i*72, 95, 75, .35);
+    c.beginPath(); c.moveTo(cx, cy + 1);
+    c.quadraticCurveTo(cx + Math.cos(a - .35)*9, cy + Math.sin(a - .35)*9, cx + Math.cos(a)*13, cy + Math.sin(a)*13);
+    c.quadraticCurveTo(cx + Math.cos(a + .35)*9, cy + Math.sin(a + .35)*9, cx, cy + 1);
+    c.fill();
+  }
+  c.restore();
+  c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(cx, cy, 10.5, 11, 0, 0, TAU); c.stroke();
+  // glowing heart core
+  const cg = c.createRadialGradient(cx, cy+2, 0, cx, cy+2, 4.5);
+  cg.addColorStop(0, '#fff'); cg.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = cg; c.beginPath(); c.arc(cx, cy+2, 4.5 + Math.sin(t*5)*.6, 0, TAU); c.fill();
+  // round head with a crown of rounded crystals
+  const hy = cy - 12;
+  for (let i = -1; i <= 1; i++){
+    const sx = x + i*4.2, len = i === 0 ? 7 : 5;
+    c.fillStyle = hsl(h + 120*(i+1), 90, 68);
+    c.beginPath(); c.moveTo(sx - 2.2, hy - 3); c.quadraticCurveTo(sx - 1.5, hy - 3 - len, sx + i*1.2, hy - 4 - len); c.quadraticCurveTo(sx + 1.5, hy - 3 - len, sx + 2.2, hy - 3); c.closePath(); c.fill();
+  }
+  const hg = c.createRadialGradient(x-2, hy-2, .5, x, hy, 7.5);
+  hg.addColorStop(0, hsl(h+90, 90, 80)); hg.addColorStop(1, hsl(h+200, 70, 52));
+  c.fillStyle = hg; c.beginPath(); c.ellipse(x, hy, 7, 6.5, 0, 0, TAU); c.fill();
+  if (fy > -0.6){
+    c.fillStyle = '#120c22';
+    c.beginPath(); c.ellipse(x - 2.6 + fx*1.6, hy + .5, 1.3, 1.8, 0, 0, TAU); c.fill();
+    c.beginPath(); c.ellipse(x + 2.6 + fx*1.6, hy + .5, 1.3, 1.8, 0, 0, TAU); c.fill();
+    c.fillStyle = '#fff'; c.fillRect(x - 3 + fx*1.6, hy - .6, .8, .8); c.fillRect(x + 2.2 + fx*1.6, hy - .6, .8, .8);
+  }
 }
 function drawSovereign(c, x, y, t, flashOn, alpha = 1){
   c.save(); c.globalAlpha = alpha;
@@ -1658,6 +1688,20 @@ function finishBoss(){
     'Behind the throne, the <b>Freedom Door</b> swings open, and warm daylight floods the hall. The way home is clear.',
   ]), 700);
 }
+// move the hero off the Freedom Door onto the nearest open floor tile so they can keep playing
+function stepBackFromDoor(){
+  const tx0 = Math.floor(hero.x/TS), ty0 = Math.floor(hero.y/TS);
+  let best = null, bd = 1e9;
+  for (let ty = 1; ty < room.H - 1; ty++) for (let tx = 1; tx < room.W - 1; tx++){
+    if (ty <= ty0) continue;
+    const x = (tx+.5)*TS, y = (ty+.5)*TS;
+    if (room.t[ty][tx] === T_FREE || blocked(x, y, 9, false)) continue;
+    const d = Math.hypot(tx - tx0, ty - ty0);
+    if (d < bd){ bd = d; best = { x, y }; }
+  }
+  if (best){ hero.x = best.x; hero.y = best.y; hero.fy = 1; hero.fx = 0; }
+  toast('The dungeon is yours to explore. Walk back through the Freedom Door whenever you like.', 4000);
+}
 function victory(){
   S.won = true; save(); SFX.win();
   const owned = GEAR.filter(i => S.items[i.id]).length;
@@ -1667,8 +1711,8 @@ function victory(){
       <dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Prism Gems</dt><dd>3 / 3</dd><dt>Gear owned</dt><dd>${owned} / ${GEAR.length}</dd>
       <dt>Gold in purse</dt><dd>${S.gold}</dd><dt>Things searched</dt><dd>${S.stats.searches}</dd><dt>Shadows banished</dt><dd>${S.stats.kills}</dd><dt>Times fallen</dt><dd>${S.stats.deaths}</dd></dl>
       <p class="muted" style="margin-top:12px">Thanks for playing this first chapter of Prismheart.</p>`,
-    onDismiss: () => { hero.y += TS*1.4; },
-    actions:[{ label:'Keep exploring', fn:() => { closeModal(); hero.y += TS*1.4; } }, { label:'Play again', primary:true, fn:() => { closeModal(); showSelect(); } }] });
+    onDismiss: stepBackFromDoor,
+    actions:[{ label:'Keep exploring', fn:() => { closeModal(); stepBackFromDoor(); } }, { label:'Play again', primary:true, fn:() => { closeModal(); showSelect(); } }] });
 }
 
 /* ---------- main update ---------- */
