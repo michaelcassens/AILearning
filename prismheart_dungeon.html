@@ -214,7 +214,7 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
     <div class="title-gems" aria-hidden="true"><i style="--c:#ff4d7a"></i><i style="--c:#4da6ff"></i><i style="--c:#3dffa8"></i></div>
     <h1>Prismheart</h1>
     <p class="sub">Escape from the Hollow Keep</p>
-    <p class="blurb">Cast into the dungeon by the Hollow Sovereign, you must search the dark, uncover three hidden Prism Gems, and grow strong enough to win back your freedom &mdash; and your people.</p>
+    <p class="blurb">Cast into the dungeon by the Hollow Sovereign, you must search the dark, uncover three hidden Prism Gems, and grow strong enough to win back your freedom and save your people.</p>
     <div class="menu">
       <button id="btn-continue" class="big hidden">Continue</button>
       <button id="btn-new" class="big primary">New Game</button>
@@ -604,9 +604,16 @@ function makeBoss(sp){
 }
 
 /* ---------- static layer: floor, walls, gem veins ---------- */
+// tiles around a still-hidden gem stay free of colored veins and sparkles so its glimmer stands out
+function inCalmZone(r, tx, ty){
+  if (r.looseAt < 0) return false;
+  const lx = r.looseAt % r.W, ly = Math.floor(r.looseAt / r.W);
+  if (S.searched[r.id + ':' + lx + ',' + ly]) return false;
+  return Math.max(Math.abs(tx - lx), Math.abs(ty - ly)) <= 2;
+}
 function gemKey(){ return GEM_ORDER.map(g => S.gems[g] ? 1 : 0).join(''); }
 function getLayer(r){
-  const key = r.id + '|' + gemKey();
+  const key = r.id + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '');
   if (layerCache[key]) return layerCache[key];
   const L = document.createElement('canvas'), Q = 2;
   L.width = r.W*TS*Q; L.height = r.H*TS*Q;
@@ -636,6 +643,7 @@ function getLayer(r){
       const gl = c.createLinearGradient(px, py, px+TS, py+TS);
       gl.addColorStop(0, `rgba(255,255,255,${0.05*found.length})`); gl.addColorStop(.5,'rgba(255,255,255,0)'); gl.addColorStop(1, `rgba(255,255,255,${0.03*found.length})`);
       c.fillStyle = gl; c.fillRect(px, py, TS, TS);
+      if (inCalmZone(r, x, y)) continue;
       found.forEach(g => {
         const rnd = mulberry32(hashStr(r.id+g+x+','+y));
         if (rnd() > 0.34) return;
@@ -1301,7 +1309,7 @@ function buy(id){
 }
 function openBag(){
   if (!S) return;
-  const gear = GEAR.map(it => `<div class="item-line${S.items[it.id] ? '' : ' off'}"><div class="si-icon">${itemIcon(it.id)}</div><div><b>${it.name}</b><div class="si-desc">${S.items[it.id] ? it.desc : 'Not owned — sold by Mossback for ' + it.price + ' gold.'}</div></div></div>`).join('');
+  const gear = GEAR.map(it => `<div class="item-line${S.items[it.id] ? '' : ' off'}"><div class="si-icon">${itemIcon(it.id)}</div><div><b>${it.name}</b><div class="si-desc">${S.items[it.id] ? it.desc : 'Not owned. Mossback sells it for ' + it.price + ' gold.'}</div></div></div>`).join('');
   const gems = GEM_ORDER.map(g => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>${S.gems[g] ? GEMS[g].name : '???'}</span>`).join('');
   openModal({ kind:'bag', title:'Your Bag', portrait:'hero',
     body:`<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Hearts</dt><dd>${S.hp} / ${S.maxHp}</dd><dt>Damage</dt><dd>${heroAtk()}</dd><dt>Attack style</dt><dd>${HEROES[S.heroId].style}</dd><dt>Trait</dt><dd>${HEROES[S.heroId].trait}</dd><dt>Gold</dt><dd>${S.gold}</dd></dl>
@@ -1331,7 +1339,7 @@ function questsHTML(){
 }
 function openQuests(){ if (S) openModal({ kind:'quests', title:'Quest Log', portrait:'narrator', body:questsHTML(), actions:[{ label:'Close', primary:true }] }); }
 function helpHTML(){
-  return `<p>You are a hero of living color, imprisoned by the Hollow Sovereign. Explore room to room, search everything, and find the <b>three hidden Prism Gems</b> &mdash; they open the gate to the Sovereign and the path to freedom.</p>
+  return `<p>You are a hero of living color, imprisoned by the Hollow Sovereign. Explore room to room, search everything, and find the <b>three hidden Prism Gems</b>. They open the gate to the Sovereign and the path to freedom.</p>
   <h3 style="font-size:16px;margin:12px 0 6px">Keyboard</h3>
   <div class="keys"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd></span><span>Move</span>
   <span><kbd>Space</kbd> / <kbd>J</kbd></span><span>Attack (hold to keep attacking). Each hero attacks differently: the Knight sweeps, the Sprite shoots bolts, the Golem slams the ground.</span>
@@ -1356,22 +1364,22 @@ function openHelp(){ openModal({ kind:'help', title:'How to Play', portrait:'nar
    ===================================================================== */
 function openStory(){
   dialog('narrator', [
-    'Your kingdom once shimmered with color. Then the <b>Hollow Sovereign</b> came &mdash; a ruler of ash and silence who drains the color from everything they touch.',
+    'Your kingdom once shimmered with color. Then the <b>Hollow Sovereign</b> came. They are a ruler of ash and silence who drains the color from everything they touch.',
     'You stood against them. For that, you were seized in the night and thrown into the deepest dungeon of the Hollow Keep.',
-    'But the Keep holds a secret: three <b>Prism Gems</b>, hidden in its very walls. Together they open the <b>Prism Gate</b> &mdash; the path to freedom, and to saving your people.',
-    'There is no hurry. Explore, search, and grow stronger. When you are ready, the gate &mdash; and the Sovereign &mdash; will be waiting.',
+    'But the Keep holds a secret: three <b>Prism Gems</b>, hidden in its very walls. Together they open the <b>Prism Gate</b>, the path to freedom and to saving your people.',
+    'There is no hurry. Explore, search, and grow stronger. When you are ready, the gate and the Sovereign will be waiting.',
   ], { doneLabel:'Begin', onDone:() => toast(isTouch ? 'A lantern spirit glows nearby. Walk close and tap Talk.' : 'A lantern spirit glows nearby. Walk close and press E to talk.', 5000) });
 }
 function lumenHint(){
   const n = gemCount();
-  if (S.bossDefeated) return 'You did it! The Freedom Door stands open. Go &mdash; your people are waiting.';
+  if (S.bossDefeated) return 'You did it! The Freedom Door stands open. Go, your people are waiting.';
   if (n >= 3 && !S.gateOpen) return 'All three gems! I can feel their warmth from here. Bring them to the Prism Gate just behind me.';
   if (S.gateOpen){
     const missing = GEAR.filter(i => !S.items[i.id]).map(i => i.name);
-    return missing.length ? `The gate is open. You could face the Sovereign now&hellip; but Mossback still has ${missing.join(', ')}. Their shadow ward turns aside ordinary steel &mdash; only prism light pierces it.` : 'You are as ready as any hero has ever been. Go, and bring back the color.';
+    return missing.length ? `The gate is open. You could face the Sovereign now&hellip; but Mossback still has ${missing.join(', ')}. Their shadow ward turns aside ordinary steel. Only prism light pierces it.` : 'You are as ready as any hero has ever been. Go, and bring back the color.';
   }
-  if (!S.gems.ruby) return `Every room hides one gem inside its walls. The ruby is here in the Cells &mdash; I have seen a red glimmer along the ${gemArea('cells')} walls.`;
-  if (!S.gems.sapphire) return `The sapphire waits in the Sunken Crypt, to the east. Search the ${gemArea('crypt')} walls &mdash; watch for blue light in the stone.`;
+  if (!S.gems.ruby) return `Every room hides one gem inside its walls. The ruby is here in the Cells. I have seen a red glimmer along the ${gemArea('cells')} walls.`;
+  if (!S.gems.sapphire) return `The sapphire waits in the Sunken Crypt, to the east. Search the ${gemArea('crypt')} walls and watch for blue light in the stone.`;
   if (!S.gems.emerald) return `The emerald sleeps in the Crystal Mines, to the south. The crystals there are dull and gray now&hellip; but one stone along the ${gemArea('mines')} walls is not.`;
   return 'Keep searching. Light finds what darkness hides.';
 }
@@ -1385,9 +1393,9 @@ function talkLumen(){
   if (!S.q.met){
     dialog('lumen', [
       'Oh! A new light in the dark. Welcome, friend. I am <b>Lumen</b>, a lantern spirit bound to these cells long ago.',
-      'The Sovereign sealed the <b>Prism Gate</b> behind me. Only the three Prism Gems &mdash; ruby, sapphire and emerald &mdash; can open it. They hide inside the walls of this dungeon. Watch for a <b>glimmer in the stone</b>.',
+      'The Sovereign sealed the <b>Prism Gate</b> behind me. Only the three Prism Gems can open it: ruby, sapphire and emerald. They hide inside the walls of this dungeon. Watch for a <b>glimmer in the stone</b>.',
       'I cannot leave my post, but I can reward a helpful soul. Find my <b>silver locket</b>, lost in the Sunken Crypt. Gather six <b>glowcaps</b> to feed my flame. And banish six <b>shadow creatures</b> that prowl these halls.',
-      'Spend your gold with <b>Mossback</b>, the merchant nearby. Beyond the gate waits the Sovereign. Their shadow ward turns aside ordinary steel &mdash; a <b>Prism Lens</b> could pierce it. But you may face them whenever you feel ready.',
+      'Spend your gold with <b>Mossback</b>, the merchant nearby. Beyond the gate waits the Sovereign. Their shadow ward turns aside ordinary steel, but a <b>Prism Lens</b> could pierce it. But you may face them whenever you feel ready.',
     ], { onDone:() => {
       S.q.met = true; S.q.locket = S.q.caps = S.q.shadows = 'active';
       SFX.quest(); toast('New quests added to your Quest Log.'); save();
@@ -1397,7 +1405,7 @@ function talkLumen(){
   const pages = []; let reward = 0;
   if (S.q.locket === 'active' && S.locket){ pages.push('My locket! I thought it lost forever. Thank you, truly. Please, take these <b>35 gold</b>.'); reward += 35; S.q.locket = 'done'; }
   if (S.q.caps === 'active' && capsCount() >= 6){ pages.push('Six glowcaps! My flame feels brighter already. Here are <b>40 gold</b> for your trouble.'); reward += 40; S.q.caps = 'done'; }
-  if (S.q.shadows === 'active' && S.shadowKills >= 6){ pages.push('The halls feel a little less cold. You have banished the shadows &mdash; take <b>50 gold</b>.'); reward += 50; S.q.shadows = 'done'; }
+  if (S.q.shadows === 'active' && S.shadowKills >= 6){ pages.push('The halls feel a little less cold. You have banished the shadows. Please take <b>50 gold</b>.'); reward += 50; S.q.shadows = 'done'; }
   if (reward){
     dialog('lumen', pages, { onDone:() => { addGold(reward, hero.x, hero.y - 20); SFX.quest(); save(); } });
   } else dialog('lumen', [lumenHint()]);
@@ -1413,14 +1421,14 @@ function talkMoss(){
 function useGate(){
   const n = gemCount();
   if (n < 3){
-    dialog('gate', [`A great slab of stone, carved with three empty sockets &mdash; one red, one blue, one green. They seem to be waiting for something. <br><br><b>Prism Gems found: ${n} / 3</b>`]);
+    dialog('gate', [`A great slab of stone, carved with three empty sockets: one red, one blue, one green. They seem to be waiting for something. <br><br><b>Prism Gems found: ${n} / 3</b>`]);
     return;
   }
   const missing = GEAR.filter(i => !S.items[i.id]).map(i => i.name);
   dialog('gate', [
     'The Ember Ruby, Tide Sapphire and Grove Emerald blaze in your pack. The sockets in the gate begin to glow in answer.',
     'Beyond this gate waits the Hollow Sovereign. Once you enter the throne room, the way back will seal until the battle ends.' +
-      (missing.length ? `<br><br><i>A cold feeling settles over you. You are still missing: <b>${missing.join(', ')}</b>. You can face the Sovereign now &mdash; but it will be harder.</i>` : '<br><br><i>You feel ready. Every advantage the dungeon could offer is yours.</i>'),
+      (missing.length ? `<br><br><i>A cold feeling settles over you. You are still missing: <b>${missing.join(', ')}</b>. You can face the Sovereign now, but it will be harder.</i>` : '<br><br><i>You feel ready. Every advantage the dungeon could offer is yours.</i>'),
   ], { choices:[
     { label:'Not yet', fn:() => closeModal() },
     { label:'Place the gems', primary:true, fn:() => {
@@ -1560,7 +1568,7 @@ function collectGem(g, x, y){
   floatText(x, y - 20, GEMS[g].name + '!', col, true);
   room.layer = getLayer(room);
   const n = gemCount();
-  const msg = n === 3 ? `The ${GEMS[g].name}! All three Prism Gems are yours &mdash; the dungeon walls blaze with color. The Prism Gate in the Forgotten Cells awaits.`
+  const msg = n === 3 ? `The ${GEMS[g].name}! All three Prism Gems are yours, and the dungeon walls blaze with color. The Prism Gate in the Forgotten Cells awaits.`
                       : `You pry the stone loose&hellip; the <b>${GEMS[g].name}</b>! Color bleeds into the dungeon walls. (${n}/3 Prism Gems)`;
   save();
   setTimeout(() => { if (mode === 'play' && !UI.open) dialog('narrator', [msg]); }, 900);
@@ -1687,9 +1695,9 @@ function startBossFight(){
   boss.active = true; room.sealed = true; SFX.boss(); shake = 0.5;
   dialog('sovereign', [
     'So. The little light crawled out of its cell.',
-    'Your bright, noisy kingdom will become ash and silence &mdash; as everything should be. And so will you.',
+    'Your bright, noisy kingdom will become ash and silence, as everything should be. And so will you.',
   ], { onDone:() => {
-    if (S.items.lens){ boss.ward = false; toast('Your Prism Lens blazes &mdash; the shadow ward shatters!'.replace('&mdash;', '—'), 4000); burst(boss.x, boss.y - 10, 60, rainbow, { speed:150, glow:true, life:1.2 }); SFX.gem(); }
+    if (S.items.lens){ boss.ward = false; toast('Your Prism Lens blazes, and the shadow ward shatters!', 4000); burst(boss.x, boss.y - 10, 60, rainbow, { speed:150, glow:true, life:1.2 }); SFX.gem(); }
     else toast('A shadow ward shields the Sovereign. Strike when it flickers out!', 4500);
   }});
 }
@@ -1784,7 +1792,7 @@ function victory(){
   S.won = true; save(); SFX.win();
   const owned = GEAR.filter(i => S.items[i.id]).length;
   openModal({ kind:'victory', title:'Freedom!', portrait:'hero', closable:true,
-    body:`<p>You step through the Freedom Door into the dawn. Behind you, the Hollow Keep blooms with color &mdash; ruby, sapphire and emerald light spilling from every crack in its walls.</p>
+    body:`<p>You step through the Freedom Door into the dawn. Behind you, the Hollow Keep blooms with color. Ruby, sapphire and emerald light spills from every crack in its walls.</p>
       <p>Word spreads fast: the Sovereign has fallen. Across your kingdom, gray banners burn away into bright ones, and the people you fought for pour into the streets to welcome you home.</p>
       <dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Prism Gems</dt><dd>3 / 3</dd><dt>Gear owned</dt><dd>${owned} / ${GEAR.length}</dd>
       <dt>Gold in purse</dt><dd>${S.gold}</dd><dt>Things searched</dt><dd>${S.stats.searches}</dd><dt>Shadows banished</dt><dd>${S.stats.kills}</dd><dt>Times fallen</dt><dd>${S.stats.deaths}</dd></dl>
@@ -1981,7 +1989,7 @@ function drawGlows(){
     const g = GEM_ORDER[sp.g];
     if (!S.gems[g]) continue;
     const ti = sp.ty*r.W + sp.tx;
-    if (!r.seen[ti]) continue;
+    if (!r.seen[ti] || inCalmZone(r, sp.tx, sp.ty)) continue;
     const tw = Math.pow(Math.max(0, Math.sin(time*sp.sp + sp.ph)), 6);
     if (tw < 0.03) continue;
     const a = tw*(0.35 + 0.65*r.tileLight[ti]);
@@ -1999,19 +2007,29 @@ function drawGlows(){
     g.addColorStop(0, hsl(200 + Math.sin(time*2)*30, 100, 65, .45)); g.addColorStop(1, 'rgba(0,0,0,0)');
     c.fillStyle = g; c.fillRect(x - 18, y - 18, 36, 36);
   }
-  // hidden gem glimmer: only shows when the hero is close enough
-  const reveal = ((S.items.lantern ? 4.8 : 2.8) + (S.heroId === 'sprite' ? 1.6 : 0))*TS;
+  // hidden gem glimmer: only shows when the hero is close enough. A white-hot core, a slow pulse and
+  // rising motes make it read differently from the twinkling veins of gems already found.
+  const reveal = ((S.items.lantern ? 4.8 : 3.2) + (S.heroId === 'sprite' ? 1.6 : 0))*TS;
   for (const o of r.objs){
     if (o.type !== 'loose' || S.searched[o.key]) continue;
     const x = (o.x+.5)*TS, y = (o.y+.5)*TS, d = dist(x, y, hero.x, hero.y);
     if (d > reveal) continue;
-    const gid = GEM_ORDER.find(g => GEMS[g].room === r.id);
-    const tw = 0.35 + 0.65*Math.pow(Math.max(0, Math.sin(time*2.4 + o.ph)), 4);
-    const a = (1 - d/reveal)*tw;
-    c.globalAlpha = a; c.strokeStyle = GEMS[gid].color; c.fillStyle = GEMS[gid].color;
-    star(c, x + 2, y - 1, 3 + tw*4);
-    const g = c.createRadialGradient(x, y, 0, x, y, 12); g.addColorStop(0, GEMS[gid].color); g.addColorStop(1, 'rgba(0,0,0,0)');
-    c.fillStyle = g; c.fillRect(x - 12, y - 12, 24, 24);
+    const col = GEMS[GEM_ORDER.find(g => GEMS[g].room === r.id)].color;
+    const near = 1 - d/reveal, pulse = 0.5 + 0.5*Math.sin(time*2.2 + o.ph);
+    const a = Math.min(1, near*1.6)*(0.55 + 0.45*pulse);
+    c.globalAlpha = a;
+    const g = c.createRadialGradient(x, y, 0, x, y, 22 + pulse*6);
+    g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.fillRect(x - 30, y - 30, 60, 60);
+    c.save(); c.translate(x, y); c.rotate(time*0.6 + o.ph);
+    c.strokeStyle = col; c.lineWidth = 2; star(c, 0, 0, 6 + pulse*5);
+    c.rotate(Math.PI/4); c.strokeStyle = '#ffffff'; c.lineWidth = 1; star(c, 0, 0, 3 + pulse*3);
+    c.restore();
+    c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x, y, 1.8 + pulse*1.2, 0, TAU); c.fill();
+    for (let i = 0; i < 4; i++){
+      const t = (time*0.5 + i/4 + o.ph) % 1, mx = x + Math.sin(i*2.3 + time*1.5)*7, my = y - t*22;
+      c.globalAlpha = a*(1 - t); c.fillStyle = col; c.beginPath(); c.arc(mx, my, 1.4, 0, TAU); c.fill();
+    }
     c.globalAlpha = 1;
   }
   // gate shimmer
@@ -2284,7 +2302,7 @@ function frame(now){
     bb.classList.toggle('hidden', !showBoss);
     if (showBoss){
       $('#boss-hp').style.width = (100*boss.hp/boss.max) + '%';
-      $('#boss-ward').textContent = S.items.lens ? 'Shadow ward: shattered by your Prism Lens' : boss.ward ? 'Shadow ward: UP — your strikes are turned aside' : 'Shadow ward: DOWN — strike now!';
+      $('#boss-ward').textContent = S.items.lens ? 'Shadow ward: shattered by your Prism Lens' : boss.ward ? 'Shadow ward: UP. Your strikes are turned aside.' : 'Shadow ward: DOWN. Strike now!';
     }
     const ta = $('#t-act'), lab = hero.target ? hero.target.label.split(' ')[0].replace('?', '') : 'Search';
     if (ta._l !== lab){ ta._l = lab; $('#t-act-label').textContent = lab === 'Loose' ? 'Search' : lab; }
