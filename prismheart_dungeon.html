@@ -291,13 +291,20 @@ const HEROES = {
 
 const SHOP = [
   { id:'potion',  name:'Healing Draught',  price:12, consumable:true, desc:'Restores 4 hearts. Drink from your bag, or press H.' },
-  { id:'blade',   name:'Starsteel Blade',  price:50, desc:'+1 damage on every strike.' },
+  // the weapon slot changes with the hero you play
+  { id:'blade', price:50, get name(){ return heroWeapon().name; }, get desc(){ return heroWeapon().desc; } },
   { id:'shield',  name:'Warded Buckler',   price:45, desc:'35% chance to block a hit completely.' },
   { id:'lantern', name:'Sunstone Lantern', price:35, desc:'Your light reaches much farther, and hidden glimmers show from afar.' },
   { id:'heart',   name:'Heart Crystal',    price:50, desc:'+3 maximum hearts (and heals you fully).' },
   { id:'lens',    name:'Prism Lens',       price:70, desc:'Focuses gem-light into a beam that shatters the Sovereign’s shadow ward.' },
 ];
 const GEAR = SHOP.filter(i => !i.consumable);
+const WEAPONS = {
+  knight: { name:'Starsteel Blade', desc:'+1 damage, and your sword sweep reaches farther.', quip:'Sharp as a snail\u2019s wit. Which is to say: very.' },
+  sprite: { name:'Aurora Wand',     desc:'+1 damage, and your prism bolts fly faster and twice as far.', quip:'Point the sparkly end at the bad things. Simple!' },
+  golem:  { name:'Geode Gauntlets', desc:'+1 damage, and your ground slam shakes a much wider circle.', quip:'Heavy, I know. I carried them on my shell for a year.' },
+};
+const heroWeapon = () => WEAPONS[(S && S.heroId) || 'knight'];
 
 const ET = {
   shade:     { name:'Shade',      hp:2, speed:42, chase:72,  sight:150, dmg:1, r:10 },
@@ -1276,6 +1283,8 @@ function itemIcon(id){
     lens:'<svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z" fill="rgba(220,230,255,.25)" stroke="#e8e8ff" stroke-width="1.3"/><path d="M14 13l8-2M14.5 14l7.5 1M14 15l7 4" stroke-width="1.5" stroke="#ff4d7a"/><path d="M14.5 14l7.5 1" stroke="#3dffa8" stroke-width="1.5"/><path d="M14 15l7 4" stroke="#4da6ff" stroke-width="1.5"/><path d="M2 14l9-1" stroke="#fff" stroke-width="1.5"/></svg>',
     locket:'<svg viewBox="0 0 24 24"><path d="M8 3c0 4 8 4 8 0" stroke="#c8c8d0" fill="none" stroke-width="1.3"/><circle cx="12" cy="14" r="6" fill="#d8d8e0" stroke="#fff" stroke-width="1"/><circle cx="12" cy="14" r="3" fill="#9a9aa8"/></svg>',
   };
+  if (id === 'blade' && S && S.heroId === 'sprite') return '<svg viewBox="0 0 24 24"><path d="M5 20L16 9" stroke="#c9a2ff" stroke-width="2.4" stroke-linecap="round"/><circle cx="17.5" cy="6.5" r="3.6" fill="#fff"/><circle cx="17.5" cy="6.5" r="3.6" fill="none" stroke="#7dffc4" stroke-width="1.2"/><path d="M17.5 1v2M17.5 10v2M12 6.5h2M21 6.5h2" stroke="#ffd36b" stroke-width="1.2" stroke-linecap="round"/></svg>';
+  if (id === 'blade' && S && S.heroId === 'golem') return '<svg viewBox="0 0 24 24"><path d="M5 11a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z" fill="#5a3f6e" stroke="#d4b0ff" stroke-width="1.2"/><path d="M8 8V5M11 8V4M14 8V4M17 8V5" stroke="#d4b0ff" stroke-width="2" stroke-linecap="round"/><path d="M9 14l3-2 3 2-3 3z" fill="#7dffc4"/></svg>';
   return s[id] || '';
 }
 
@@ -1303,7 +1312,7 @@ function buy(id){
     if (id === 'heart'){ S.maxHp += 3; S.hp = S.maxHp; }
   }
   save();
-  const quips = { potion:'Drink it before things get dire, not after!', blade:'Sharp as a snail’s wit. Which is to say: very.', shield:'It has blocked worse than shadows. Probably.',
+  const quips = { blade: heroWeapon().quip, potion:'Drink it before things get dire, not after!', shield:'It has blocked worse than shadows. Probably.',
     lantern:'Ooh, now you’ll see every glimmer in the stone.', heart:'Feel that? That’s more of you to go around.', lens:'Prism light! The Sovereign’s ward won’t stand a chance.' };
   openShop(quips[id]);
 }
@@ -1634,15 +1643,17 @@ function doAttack(){
   const H = HEROES[S.heroId], dmg = heroAtk();
   hero.atkCd = H.cd;
   if (H.attack === 'bolt'){
-    bolts.push({ x:hero.x + hero.fx*10, y:hero.y - 5 + hero.fy*10, vx:hero.fx*320, vy:hero.fy*320, life:0.55, dmg, h:Math.random()*360 });
+    bolts.push({ x:hero.x + hero.fx*10, y:hero.y - 5 + hero.fy*10, vx:hero.fx*(S.items.blade ? 400 : 320), vy:hero.fy*(S.items.blade ? 400 : 320), life:S.items.blade ? 0.85 : 0.55, dmg, h:Math.random()*360 });
     SFX.bolt();
   } else if (H.attack === 'slam'){
     hero.slam = 0.32; shake = Math.max(shake, 0.18); SFX.slam();
     burst(hero.x, hero.y + 8, 18, ['#8a7a66','#b0a090','#ffffff'], { speed:110, life:.45, grav:80 });
-    hitArea(54, -1, dmg, 340);
+    hero.slamR = S.items.blade ? 72 : 54;
+    hitArea(hero.slamR, -1, dmg, 340);
   } else {
     hero.swing = 0.18; SFX.swing();
-    hitArea(40, 0.2, dmg, 240);
+    hero.swingR = S.items.blade ? 30 : 22;
+    hitArea(S.items.blade ? 50 : 40, 0.2, dmg, 240);
   }
 }
 function updateBolts(dt){
@@ -1930,13 +1941,13 @@ function render(){
   // golem slam shockwave
   if (hero.slam > 0 && !hero.dead){
     const p = 1 - hero.slam/0.32;
-    for (let i = 0; i < 3; i++){ ctx.strokeStyle = hsl(time*120 + i*120, 100, 70, (1 - p)*0.8); ctx.lineWidth = 3 - i*0.7; ctx.beginPath(); ctx.ellipse(hero.x, hero.y + 8, 12 + p*48 - i*4, (12 + p*48 - i*4)*0.55, 0, 0, TAU); ctx.stroke(); }
+    for (let i = 0; i < 3; i++){ ctx.strokeStyle = hsl(time*120 + i*120, 100, 70, (1 - p)*0.8); ctx.lineWidth = 3 - i*0.7; ctx.beginPath(); ctx.ellipse(hero.x, hero.y + 8, 12 + p*(hero.slamR - 6) - i*4, (12 + p*(hero.slamR - 6) - i*4)*0.55, 0, 0, TAU); ctx.stroke(); }
   }
   // swing arc
   if (hero.swing > 0 && !hero.dead){
     const a = Math.atan2(hero.fy, hero.fx), p = 1 - hero.swing/0.18;
     ctx.lineCap = 'round';
-    for (let i = 0; i < 3; i++){ ctx.strokeStyle = hsl(time*200 + i*120, 100, 72, (1 - p)*0.9); ctx.lineWidth = 3.5 - i; ctx.beginPath(); ctx.arc(hero.x, hero.y - 2, 22 + i*4, a - 1.15 + p*0.3, a + 1.15 - p*0.3); ctx.stroke(); }
+    for (let i = 0; i < 3; i++){ ctx.strokeStyle = hsl(time*200 + i*120, 100, 72, (1 - p)*0.9); ctx.lineWidth = 3.5 - i; ctx.beginPath(); ctx.arc(hero.x, hero.y - 2, (hero.swingR || 22) + i*4, a - 1.15 + p*0.3, a + 1.15 - p*0.3); ctx.stroke(); }
   }
   for (const p of particles) if (!p.glow){ ctx.globalAlpha = clamp(p.life/p.max, 0, 1); ctx.fillStyle = p.c; ctx.fillRect(p.x - p.s/2, p.y - p.s/2, p.s, p.s); }
   ctx.globalAlpha = 1;
