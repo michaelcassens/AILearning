@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="University of Montana">
+<meta name="description" content="Mobile-friendly skeleton image quiz: find or name the bones of the human skeleton, with a definition for every bone.">
+<meta name="theme-color" content="#70002E">
+<title>Skeleton Bone Quiz</title>
+<style>
+  :root {
+    --maroon: #70002E;
+    --ink: #222222;
+    --muted: #555555;
+    --page: #f6f2e9;
+    --panel: #ffffff;
+    --line: #d9d1bf;
+    --bone: #f3ead6;
+    --bone-edge: #6b5d48;
+    --bone-dark: #3b3328;
+    --wrong: #c62828;
+    --ok-text: #1b5e20;
+    --focus: #1565c0;
+    /* group highlight colors (fill a bone when it's answered correctly) */
+    --g-skull: #7e57c2;
+    --g-spine: #ef6c00;
+    --g-thorax: #d81b60;
+    --g-shoulder: #00897b;
+    --g-arm: #1e88e5;
+    --g-pelvis: #8d5524;
+    --g-leg: #43a047;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--page);
+    color: var(--ink);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .skip-link {
+    position: absolute; left: -9999px; top: 0;
+    background: #fff; color: var(--maroon); padding: 8px 12px; z-index: 100;
+  }
+  .skip-link:focus { left: 8px; top: 8px; }
+
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  header.top {
+    background: var(--maroon); color: #fff;
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; padding-top: max(8px, env(safe-area-inset-top));
+  }
+  header.top h1 { font-size: 1.1rem; margin: 0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stats { display: flex; gap: 12px; font-variant-numeric: tabular-nums; font-size: .95rem; }
+  .stats span b { font-weight: 700; }
+  .icon-btn {
+    background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.5);
+    border-radius: 8px; padding: 6px 10px; cursor: pointer; min-height: 40px;
+  }
+  .icon-btn:hover { background: rgba(255,255,255,.28); }
+
+  .progress { height: 6px; background: #e4d9c3; }
+  .progress > div { height: 100%; width: 0; background: var(--g-leg); transition: width .3s; }
+
+  main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+  /* ---------- skeleton figure ---------- */
+  .figure-wrap { position: relative; flex: 1; min-height: 0; }
+  #skeleton {
+    width: 100%; height: 100%; display: block;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    cursor: grab;
+  }
+  #skeleton.dragging { cursor: grabbing; }
+  .zoom-ctrls {
+    position: absolute; right: 10px; top: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .zoom-ctrls button {
+    width: 44px; height: 44px; border-radius: 10px;
+    border: 1px solid var(--bone-edge); background: #fff; color: var(--ink);
+    font-size: 1.3rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .zoom-ctrls button.small { font-size: .75rem; }
+  .figure-hint {
+    position: absolute; left: 10px; top: 10px; margin: 0; max-width: 34%;
+    font-size: .8rem; color: var(--muted); background: rgba(246,242,233,.85);
+    padding: 2px 6px; border-radius: 6px; pointer-events: none; transition: opacity .4s;
+  }
+  .figure-hint.gone { opacity: 0; }
+
+  /* bone drawing */
+  .bone { cursor: pointer; --bf: var(--bone); }
+  .bone .o { stroke: var(--bone-edge); fill: none; stroke-linecap: round; }
+  .bone .s { stroke: var(--bf); fill: none; stroke-linecap: round; }
+  .bone .f { fill: var(--bf); stroke: var(--bone-edge); stroke-width: 1.4; stroke-linejoin: round; }
+  .bone .hit { fill: transparent; stroke: none; }
+  .bone:hover { --bf: #fffaf0; }
+  .bone:focus { outline: none; }
+  .bone:focus-visible { filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 4px var(--focus)); }
+  .bone.found { --bf: var(--gc); }
+  .bone.found:hover { --bf: var(--gc); }
+  .bone.revealed { --bf: url(#revealPat); }
+  .bone.wrong { --bf: var(--wrong); animation: shake .35s; }
+  .bone.target { --bf: #ffe14d; animation: glow 1s ease-in-out infinite alternate; }
+  .bone.selected { --bf: var(--gc); filter: drop-shadow(0 0 3px #000); }
+  .bone.pop { animation: pop .5s; transform-box: fill-box; transform-origin: center; }
+  .decor { pointer-events: none; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+  @keyframes glow { from { filter: drop-shadow(0 0 1px #000); } to { filter: drop-shadow(0 0 6px #b8860b) drop-shadow(0 0 2px #000); } }
+  @keyframes pop { 0%{filter:brightness(1)} 40%{filter:brightness(1.35) drop-shadow(0 0 6px #fff)} 100%{filter:brightness(1)} }
+  @media (prefers-reduced-motion: reduce) {
+    .bone.wrong, .bone.target, .bone.pop { animation: none; }
+    .progress > div { transition: none; }
+  }
+
+  /* ---------- question / info panel ---------- */
+  .panel {
+    background: var(--panel); border-top: 1px solid var(--line);
+    padding: 12px 14px; padding-bottom: max(12px, env(safe-area-inset-bottom));
+    max-height: 46vh; overflow-y: auto;
+    box-shadow: 0 -2px 8px rgba(0,0,0,.06);
+  }
+  .prompt-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0; }
+  .prompt-name { font-size: 1.5rem; margin: 2px 0 2px; color: var(--maroon); line-height: 1.2; }
+  .aka { color: var(--muted); font-size: .9rem; margin: 0 0 4px; }
+  .def { margin: 4px 0 0; }
+  .meta { font-size: .85rem; color: var(--muted); margin: 6px 0 0; }
+  .tip { font-size: .9rem; margin: 6px 0 0; padding: 6px 10px; background: #f6f2e9; border-left: 4px solid var(--g-spine); border-radius: 4px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; color: var(--ink); }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid rgba(0,0,0,.4); display: inline-block; flex: none; }
+
+  .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .btn {
+    min-height: 44px; padding: 8px 16px; border-radius: 10px; cursor: pointer;
+    border: 2px solid var(--maroon); background: #fff; color: var(--maroon); font-weight: 600;
+  }
+  .btn:hover { background: #f7ecef; }
+  .btn.primary { background: var(--maroon); color: #fff; }
+  .btn.primary:hover { background: #5a0025; }
+  .btn.grow { flex: 1; }
+
+  .feedback { min-height: 1.5em; margin: 8px 0 0; font-weight: 600; }
+  .feedback.ok { color: var(--ok-text); }
+  .feedback.bad { color: var(--wrong); }
+  .feedback.info { color: var(--muted); }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .choice {
+    min-height: 48px; padding: 8px; border-radius: 10px; cursor: pointer;
+    border: 2px solid var(--line); background: #fff; color: var(--ink); font-weight: 600;
+  }
+  .choice:hover { border-color: var(--maroon); }
+  .choice[aria-disabled="true"] { border-color: var(--wrong); color: var(--wrong); text-decoration: line-through; cursor: default; }
+  .choice.correct { border-color: var(--ok-text); color: #fff; background: var(--ok-text); }
+
+  .def-toggle { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: .9rem; }
+  .def-toggle input { width: 20px; height: 20px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin: 10px 0 0; padding: 0; list-style: none; }
+
+  .glossary h2 { font-size: 1.05rem; margin: 14px 0 6px; }
+  .glossary ul { list-style: none; margin: 0; padding: 0; }
+  .glossary li button {
+    display: flex; width: 100%; text-align: left; gap: 8px; align-items: flex-start;
+    padding: 8px; border: 0; border-bottom: 1px solid var(--line); background: none; cursor: pointer; color: var(--ink);
+  }
+  .glossary li button:hover { background: #faf6ee; }
+  .glossary li button .swatch { margin-top: 5px; }
+  .glossary small { display: block; color: var(--muted); font-size: .85rem; }
+
+  /* ---------- overlays ---------- */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(40,20,25,.55); z-index: 50;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .overlay[hidden] { display: none; }
+  .card {
+    background: #fff; border-radius: 16px; width: 100%; max-width: 520px;
+    max-height: calc(100dvh - 32px); overflow-y: auto; padding: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.3);
+  }
+  .card h2 { margin: 0 0 4px; color: var(--maroon); }
+  .card p.lead { margin: 0 0 14px; color: var(--muted); }
+  fieldset { border: 1px solid var(--line); border-radius: 12px; margin: 0 0 12px; padding: 8px 12px 12px; }
+  legend { font-weight: 700; padding: 0 4px; }
+  .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 4px; cursor: pointer; border-radius: 8px; }
+  .opt:hover { background: #faf6ee; }
+  .opt input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+  .opt small { display: block; color: var(--muted); }
+  .sticky-actions {
+    position: sticky; bottom: -20px; background: #fff;
+    margin: 0 -20px -20px; padding: 12px 20px 20px; border-top: 1px solid var(--line);
+  }
+  .result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
+  .result-grid div { background: var(--page); border-radius: 10px; padding: 10px; text-align: center; }
+  .result-grid b { display: block; font-size: 1.5rem; color: var(--maroon); }
+  .review { list-style: none; padding: 0; margin: 8px 0 0; }
+  .review li { border-top: 1px solid var(--line); padding: 8px 0; }
+  .review li strong { color: var(--maroon); }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- wider screens: figure left, panel right ---------- */
+  @media (min-width: 820px) {
+    main { flex-direction: row; }
+    .panel { width: 400px; max-height: none; border-top: 0; border-left: 1px solid var(--line); box-shadow: none; }
+    .prompt-name { font-size: 1.8rem; }
+  }
+  @media (max-width: 819px) {
+    .panel { max-height: 42vh; padding: 10px 14px; }
+    .prompt-name { font-size: 1.3rem; }
+    .def { font-size: .95rem; }
+    .actions { margin-top: 8px; }
+  }
+  @media (max-width: 420px) {
+    header.top h1 { font-size: 1rem; }
+    .card { padding: 16px; }
+    .sticky-actions { bottom: -16px; margin: 0 -16px -16px; padding: 12px 16px 16px; }
+    .opt { padding: 6px 4px; }
+    .stats { gap: 8px; font-size: .85rem; }
+    .stats .hide-sm { display: none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#panel">Skip to quiz question</a>
+<div class="app">
+  <header class="top">
+    <h1>Skeleton Bone Quiz</h1>
+    <div class="stats" aria-label="Quiz status">
+      <span><span class="sr-only">Found </span><b id="statScore">0</b>/<span id="statTotal">0</span></span>
+      <span class="hide-sm" aria-label="Elapsed time">&#9201; <b id="statTime">0:00</b></span>
+    </div>
+    <button class="icon-btn" id="menuBtn" type="button">Menu</button>
+  </header>
+  <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+
+  <main>
+    <div class="figure-wrap">
+      <svg id="skeleton" viewBox="0 0 400 920" preserveAspectRatio="xMidYMid meet" role="img"
+           aria-labelledby="svgTitle svgDesc">
+        <title id="svgTitle">Front view of the human skeleton</title>
+        <desc id="svgDesc">Diagram of the human skeleton seen from the front. Each bone region can be selected; use Tab to move between regions and Enter to choose one. The Name the Bone mode can be played entirely with buttons.</desc>
+        <defs>
+          <pattern id="revealPat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <rect width="6" height="6" fill="#fff3c4"/>
+            <rect width="3" height="6" fill="#f5b301"/>
+          </pattern>
+        </defs>
+        <g id="bones"></g>
+        <g id="decor" class="decor"></g>
+      </svg>
+      <div class="zoom-ctrls">
+        <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+        <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
+        <button type="button" id="zoomReset" class="small" aria-label="Reset zoom">Fit</button>
+      </div>
+      <p class="figure-hint">Pinch or scroll to zoom &middot; drag to move</p>
+    </div>
+
+    <section class="panel" id="panel" tabindex="-1" aria-label="Question">
+      <div id="panelBody"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Start menu -->
+<div class="overlay" id="menu" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
+  <form class="card" id="menuForm">
+    <h2 id="menuTitle">Skeleton Bone Quiz</h2>
+    <p class="lead">Learn the major bones of the human skeleton. Every label comes with a definition, and correct bones light up in color.</p>
+    <fieldset>
+      <legend>Game mode</legend>
+      <label class="opt"><input type="radio" name="mode" value="find" checked>
+        <span>Find the bone<small>You get a name &mdash; tap that bone on the skeleton.</small></span></label>
+      <label class="opt"><input type="radio" name="mode" value="name">
+        <span>Name the bone<small>A bone glows yellow &mdash; pick its name from 4 choices.</small></span></label>
+      <label class="opt"><input type="radio" name="mode" value="study">
+        <span>Study<small>No score. Tap any bone (or the list) to read its definition.</small></span></label>
+    </fieldset>
+    <fieldset>
+      <legend>Bones to include</legend>
+      <label class="opt"><input type="radio" name="set" value="all" checked>
+        <span>Whole skeleton<small>All <span data-count="all"></span> labels</small></span></label>
+      <label class="opt"><input type="radio" name="set" value="axial">
+        <span>Skull &amp; trunk<small>Axial skeleton &mdash; <span data-count="axial"></span> labels</small></span></label>
+      <label class="opt"><input type="radio" name="set" value="upper">
+        <span>Shoulders, arms &amp; hands<small><span data-count="upper"></span> labels</small></span></label>
+      <label class="opt"><input type="radio" name="set" value="lower">
+        <span>Hips, legs &amp; feet<small><span data-count="lower"></span> labels</small></span></label>
+      <label class="opt"><input type="radio" name="set" value="quick">
+        <span>Quick 10<small>10 random bones</small></span></label>
+    </fieldset>
+    <label class="opt"><input type="checkbox" name="showDef" checked>
+      <span>Show the definition with each question<small>Turn off for a harder challenge &mdash; you'll still see it after answering.</small></span></label>
+    <div class="actions sticky-actions">
+      <button type="submit" class="btn primary grow">Start</button>
+      <button type="button" class="btn" id="menuClose" hidden>Resume</button>
+    </div>
+  </form>
+</div>
+
+<!-- Results -->
+<div class="overlay" id="results" role="dialog" aria-modal="true" aria-labelledby="resultsTitle" hidden>
+  <div class="card">
+    <h2 id="resultsTitle">Quiz complete!</h2>
+    <p class="lead" id="resultsLead"></p>
+    <div class="result-grid" id="resultsGrid"></div>
+    <div id="reviewWrap"></div>
+    <div class="actions">
+      <button type="button" class="btn primary grow" id="retryMissed">Practice missed bones</button>
+      <button type="button" class="btn grow" id="playAgain">Play again</button>
+      <button type="button" class="btn grow" id="toMenu">Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------------------------------------------------------------------------
+  // Bone data. Drawing is a front (anterior) view in a 400 x 920 box.
+  // Shapes: ['s', path, width] stroked bone, ['f', path] filled shape,
+  //         ['e', cx, cy, rx, ry] ellipse, ['r', x, y, w, h] rounded block,
+  //         ['hit', cx, cy, rx, ry] invisible extra tap area for small bones.
+  // Paths use absolute "x,y" pairs so paired bones can be mirrored across x = 200.
+  // ---------------------------------------------------------------------------
+  const GROUPS = {
+    skull:    { label: 'Skull',               color: 'var(--g-skull)' },
+    spine:    { label: 'Vertebral column',    color: 'var(--g-spine)' },
+    thorax:   { label: 'Thorax (chest)',      color: 'var(--g-thorax)' },
+    shoulder: { label: 'Shoulder girdle',     color: 'var(--g-shoulder)' },
+    arm:      { label: 'Arm & hand',          color: 'var(--g-arm)' },
+    pelvis:   { label: 'Pelvic girdle',       color: 'var(--g-pelvis)' },
+    leg:      { label: 'Leg & foot',          color: 'var(--g-leg)' }
+  };
+
+  const stack = (n, x, y0, step, w, h) =>
+    Array.from({ length: n }, (_, i) => ['r', x, y0 + i * step, w, h]);
+
+  // A finger/toe drawn as n short segments between two points.
+  const digit = (x1, y1, x2, y2, n, w) => {
+    const out = [], gap = 1.6;
+    for (let i = 0; i < n; i++) {
+      const t0 = i / n, t1 = (i + 1) / n;
+      const ax = x1 + (x2 - x1) * t0, ay = y1 + (y2 - y1) * t0 + (i ? gap / 2 : 0);
+      const bx = x1 + (x2 - x1) * t1, by = y1 + (y2 - y1) * t1 - gap / 2;
+      out.push(['s', `M${ax.toFixed(1)},${ay.toFixed(1)} L${bx.toFixed(1)},${by.toFixed(1)}`, w]);
+    }
+    return out;
+  };
+
+  const ribs = [26, 34, 40, 44, 47, 49, 50, 49, 46, 42].map((w, i) => {
+    const y = 224 + i * 9;
+    return ['s', `M194,${y} C${200 - w},${y - 8} ${200 - w - 8},${y + 26} ${(200 - w * 0.35).toFixed(1)},${y + 34}`, 4];
+  });
+
+  const BONES = [
+    // drawn in this order (back to front)
+    { id: 'scapula', name: 'Scapula', aka: 'Shoulder blade', group: 'shoulder', region: 'upper', paired: true, count: '2 (1 each side)',
+      def: 'The shoulder blade — a flat, triangular bone on the upper back. Its shallow socket (the glenoid cavity) holds the head of the humerus to form the shoulder joint.',
+      tip: 'In this front view most of the scapula hides behind the ribs — look just outside the rib cage below the shoulder.',
+      shapes: [['f', 'M120,208 L166,214 C160,240 150,265 142,292 C132,270 124,240 120,208 Z']] },
+    { id: 'thoracic', name: 'Thoracic vertebrae', aka: 'T1–T12', group: 'spine', region: 'axial', count: '12',
+      def: 'The 12 vertebrae of the upper and middle back (T1–T12). Each one connects to a pair of ribs, which makes this the least flexible part of the spine.',
+      tip: 'Breakfast at 7, lunch at 12, dinner at 5: 7 cervical, 12 thoracic, 5 lumbar vertebrae.',
+      shapes: stack(12, 187, 206, 10.4, 26, 8.5) },
+    { id: 'lumbar', name: 'Lumbar vertebrae', aka: 'L1–L5', group: 'spine', region: 'axial', count: '5',
+      def: 'The 5 largest vertebrae (L1–L5), in the lower back. They carry most of the body’s weight, which is why low-back injuries are so common here.',
+      tip: 'Lumbar = lower back. They are the biggest blocks in the stack.',
+      shapes: stack(5, 184, 333, 13, 32, 11) },
+    { id: 'ribs', name: 'Ribs', aka: 'Costae', group: 'thorax', region: 'axial', paired: true, count: '24 (12 pairs)',
+      def: 'Twelve pairs of curved bones that form the rib cage and protect the heart and lungs. Pairs 1–7 are “true ribs” (attached directly to the sternum), 8–10 are “false ribs,” and 11–12 are “floating ribs.”',
+      tip: 'Males and females both have 12 pairs — a common myth says otherwise.',
+      shapes: ribs },
+    { id: 'sternum', name: 'Sternum', aka: 'Breastbone', group: 'thorax', region: 'axial', count: '1 (3 fused parts)',
+      def: 'The breastbone: a flat bone in the center of the chest made of three parts — the manubrium, body and xiphoid process. The ribs attach to it through costal cartilage.',
+      tip: 'Shaped like a short sword: handle (manubrium), blade (body), tip (xiphoid).',
+      shapes: [['f', 'M189,214 L211,214 L213,230 L207,236 L207,298 L200,314 L193,298 L193,236 L187,230 Z']] },
+    { id: 'clavicle', name: 'Clavicle', aka: 'Collarbone', group: 'shoulder', region: 'upper', paired: true, count: '2',
+      def: 'The collarbone. A long S-shaped bone running horizontally between the sternum and the scapula. It acts as a strut that holds the arm away from the body, and it is the most commonly broken bone.',
+      tip: '“Clavicle” comes from the Latin for “little key.”',
+      shapes: [['s', 'M194,212 C175,214 160,204 132,206', 7]] },
+    { id: 'cervical', name: 'Cervical vertebrae', aka: 'C1–C7 (neck)', group: 'spine', region: 'axial', count: '7',
+      def: 'The 7 vertebrae of the neck (C1–C7). C1, the atlas, holds up the skull; C2, the axis, lets the head turn side to side.',
+      tip: 'Cervical = neck (think “cervical collar” after a neck injury).',
+      shapes: [...stack(7, 192, 158, 6.5, 16, 5), ['hit', 200, 180, 14, 24]] },
+    { id: 'cranium', name: 'Cranium', aka: 'Braincase', group: 'skull', region: 'axial', count: '8 fused bones',
+      def: 'The part of the skull that encloses and protects the brain. It is made of 8 bones (frontal, 2 parietal, 2 temporal, occipital, sphenoid and ethmoid) locked together by immovable joints called sutures.',
+      tip: 'Cranium = the “crown” of the head.',
+      shapes: [['f', 'M152,96 C146,44 172,14 200,14 C228,14 254,44 248,96 C246,104 240,108 236,110 L164,110 C160,108 154,104 152,96 Z']] },
+    { id: 'maxilla', name: 'Maxilla', aka: 'Upper jaw', group: 'skull', region: 'axial', count: '2 (fused)',
+      def: 'The upper jawbone. The two maxillae fuse to form the upper jaw, hold the upper teeth, and form part of the eye sockets, the nasal cavity and the hard palate (roof of the mouth).',
+      tip: 'MAXilla is on top; MANDible is below and does the chewing.',
+      shapes: [['f', 'M172,98 L228,98 L232,124 L168,124 Z']] },
+    { id: 'zygomatic', name: 'Zygomatic bone', aka: 'Cheekbone', group: 'skull', region: 'axial', paired: true, count: '2',
+      def: 'The cheekbone. It forms the prominence of the cheek and part of the outer wall and floor of each eye socket, and joins the temporal bone to form the zygomatic arch.',
+      tip: 'Feel the hard ridge under your eye and out toward your ear — that’s it.',
+      shapes: [['e', 164, 103, 11, 7]] },
+    { id: 'mandible', name: 'Mandible', aka: 'Lower jaw', group: 'skull', region: 'axial', count: '1',
+      def: 'The lower jawbone — the largest and strongest bone of the face and the only skull bone that moves. It hinges at the temporomandibular joint (TMJ) so you can chew and speak.',
+      tip: 'Mandible = “mandatory for munching.”',
+      shapes: [['f', 'M160,106 L168,108 L170,126 L230,126 L232,108 L240,106 C244,132 234,150 214,156 L186,156 C166,150 156,132 160,106 Z']] },
+    { id: 'hip', name: 'Hip bone (pelvis)', aka: 'Os coxae — ilium, ischium & pubis', group: 'pelvis', region: 'lower', paired: true, count: '2 (each = 3 fused bones)',
+      def: 'Each hip bone forms from three fused bones — the ilium, ischium and pubis. Together with the sacrum they make the pelvis, which supports the trunk and holds the socket (acetabulum) for the head of the femur.',
+      tip: 'Put your hands on your hips — you’re touching the iliac crest at the top of the ilium.',
+      shapes: [['f', 'M187,404 C170,380 130,372 120,392 C114,410 130,426 138,440 L146,460 C148,476 158,488 172,488 C184,488 194,480 197,470 L197,458 C188,456 174,450 168,442 C172,428 180,418 187,412 Z']] },
+    { id: 'sacrum', name: 'Sacrum', aka: '5 fused vertebrae', group: 'spine', region: 'axial', count: '1 (5 fused)',
+      def: 'A triangular bone at the base of the spine formed by 5 fused vertebrae. It wedges between the two hip bones and connects the spine to the pelvis.',
+      tip: 'The sacrum is the keystone of the pelvic arch.',
+      shapes: [['f', 'M185,400 L215,400 C214,420 210,436 200,452 C190,436 186,420 185,400 Z']] },
+    { id: 'coccyx', name: 'Coccyx', aka: 'Tailbone', group: 'spine', region: 'axial', count: '1 (3–5 fused)',
+      def: 'The tailbone — 3 to 5 small fused vertebrae at the very bottom of the spine. It anchors several muscles, tendons and ligaments and helps support you when you sit.',
+      tip: 'Named from the Greek for “cuckoo” because its shape resembles a cuckoo’s beak.',
+      shapes: [['f', 'M195,455 L205,455 L200,468 Z'], ['hit', 200, 461, 8, 9]] },
+    { id: 'femur', name: 'Femur', aka: 'Thigh bone', group: 'leg', region: 'lower', paired: true, count: '2',
+      def: 'The thigh bone — the longest, heaviest and strongest bone in the body. Its ball-shaped head fits into the hip socket, and its lower end forms the top of the knee joint.',
+      tip: 'Your femur is roughly a quarter of your height.',
+      shapes: [['s', 'M140,470 L168,632', 12], ['s', 'M150,456 L138,468', 9], ['e', 148, 452, 9, 9], ['e', 136, 468, 7, 8], ['e', 170, 638, 14, 9]] },
+    { id: 'tarsals', name: 'Tarsals', aka: 'Ankle bones', group: 'leg', region: 'lower', paired: true, count: '14 (7 per foot)',
+      def: 'Seven bones of the ankle and rear foot, including the talus (which connects to the leg) and the calcaneus (the heel bone, the largest tarsal).',
+      tip: 'Tarsals = ankle; carpals = wrist. “T” for toes side.',
+      shapes: [['f', 'M154,848 L192,848 C196,856 196,864 194,870 L152,870 C150,862 150,854 154,848 Z']] },
+    { id: 'metatarsals', name: 'Metatarsals', aka: 'Foot bones', group: 'leg', region: 'lower', paired: true, count: '10 (5 per foot)',
+      def: 'The five long bones of the midfoot, numbered I (big toe) to V (little toe). They form the arches of the foot and the ball of the foot.',
+      tip: 'Meta = “beyond” — the bones beyond the tarsals.',
+      shapes: [
+        ['s', 'M157,875 L152,890', 4], ['s', 'M165,875 L162,891', 4], ['s', 'M173,875 L172,892', 4],
+        ['s', 'M181,875 L182,892', 4], ['s', 'M189,875 L193,891', 5.5], ['hit', 172, 883, 24, 9]] },
+    { id: 'phalanges_f', name: 'Phalanges (foot)', aka: 'Toe bones', group: 'leg', region: 'lower', paired: true, count: '28 (14 per foot)',
+      def: 'The toe bones. The big toe (hallux) has 2 phalanges and each of the other toes has 3 — 14 in each foot.',
+      tip: 'Same name as the finger bones — “phalanx” was a Greek battle line of soldiers in a row.',
+      shapes: [
+        ...digit(151, 896, 149, 907, 3, 3.5), ...digit(161, 897, 160, 909, 3, 3.5), ...digit(171, 897, 171, 910, 3, 3.5),
+        ...digit(182, 897, 183, 910, 3, 3.5), ...digit(193, 896, 195, 910, 2, 5), ['hit', 172, 903, 26, 8]] },
+    { id: 'fibula', name: 'Fibula', aka: 'Calf bone', group: 'leg', region: 'lower', paired: true, count: '2',
+      def: 'The thin bone on the outer side of the lower leg. It bears little weight but anchors muscles, and its lower end forms the bump on the outside of the ankle (lateral malleolus).',
+      tip: 'The fibula is the “fib” (little) one — thin like a fib.',
+      shapes: [['s', 'M160,674 L164,842', 5], ['e', 160, 672, 5, 5], ['e', 164, 846, 5, 6]] },
+    { id: 'tibia', name: 'Tibia', aka: 'Shinbone', group: 'leg', region: 'lower', paired: true, count: '2',
+      def: 'The shinbone — the larger, weight-bearing bone of the lower leg, on the big-toe side. Its lower end forms the bump on the inside of your ankle (medial malleolus).',
+      tip: 'Tibia is the thick one you bang on the coffee table.',
+      shapes: [['s', 'M176,670 L178,838', 11], ['e', 175, 666, 14, 6], ['e', 182, 842, 6, 6]] },
+    { id: 'patella', name: 'Patella', aka: 'Kneecap', group: 'leg', region: 'lower', paired: true, count: '2',
+      def: 'The kneecap. A small triangular bone that sits inside the quadriceps tendon (a sesamoid bone). It protects the knee joint and improves the leverage of the thigh muscles.',
+      tip: '“Patella” is Latin for “small dish.”',
+      shapes: [['e', 172, 652, 8, 10]] },
+    { id: 'humerus', name: 'Humerus', aka: 'Upper arm bone', group: 'arm', region: 'upper', paired: true, count: '2',
+      def: 'The long bone of the upper arm, running from the shoulder to the elbow. The “funny bone” tingle comes from the ulnar nerve passing near its lower end.',
+      tip: 'Humerus sounds like “humorous” — home of the funny bone.',
+      shapes: [['s', 'M122,228 L106,380', 10], ['e', 124, 222, 11, 11], ['e', 105, 386, 12, 6]] },
+    { id: 'radius', name: 'Radius', aka: 'Forearm bone (thumb side)', group: 'arm', region: 'upper', paired: true, count: '2',
+      def: 'The forearm bone on the thumb side. It rotates around the ulna, letting you turn your palm up and down.',
+      tip: 'Radius rotates, and it’s on the thumb side — “thumbs up for radius.”',
+      shapes: [['s', 'M97,395 L84,518', 5.5]] },
+    { id: 'ulna', name: 'Ulna', aka: 'Forearm bone (pinky side)', group: 'arm', region: 'upper', paired: true, count: '2',
+      def: 'The forearm bone on the little-finger side. Its upper end (the olecranon) forms the point of your elbow.',
+      tip: 'Ulna lines up with the little finger — “U” and little finger both point down when you make a fist.',
+      shapes: [['s', 'M112,393 L102,518', 5.5]] },
+    { id: 'carpals', name: 'Carpals', aka: 'Wrist bones', group: 'arm', region: 'upper', paired: true, count: '16 (8 per wrist)',
+      def: 'Eight small bones of the wrist arranged in two rows of four: scaphoid, lunate, triquetrum, pisiform, trapezium, trapezoid, capitate and hamate.',
+      tip: 'Carpals = wrist — think “carpal tunnel syndrome.”',
+      shapes: [
+        ['e', 83, 526, 4, 3.6], ['e', 91, 525, 4, 3.6], ['e', 99, 525, 4, 3.6], ['e', 106, 527, 3.6, 3.6],
+        ['e', 81, 534, 4, 3.6], ['e', 89, 535, 4, 3.6], ['e', 97, 535, 4, 3.6], ['e', 104, 534, 4, 3.6],
+        ['hit', 93, 530, 15, 8]] },
+    { id: 'metacarpals', name: 'Metacarpals', aka: 'Palm bones', group: 'arm', region: 'upper', paired: true, count: '10 (5 per hand)',
+      def: 'The five long bones of the palm, numbered I (thumb) to V (little finger). They connect the wrist to the fingers, and their heads form your knuckles.',
+      tip: 'Meta = “beyond” — the bones just beyond the carpals.',
+      shapes: [
+        ['s', 'M79,541 L70,556', 4], ['s', 'M86,541 L82,566', 3.6], ['s', 'M92,542 L91,568', 3.6],
+        ['s', 'M98,542 L99,567', 3.6], ['s', 'M104,540 L107,563', 3.6], ['hit', 92, 554, 16, 10]] },
+    { id: 'phalanges_h', name: 'Phalanges (hand)', aka: 'Finger bones', group: 'arm', region: 'upper', paired: true, count: '28 (14 per hand)',
+      def: 'The finger bones. Each finger has 3 phalanges (proximal, middle and distal) and the thumb has 2 — 14 in each hand.',
+      tip: 'One finger bone = a phalanx; two or more = phalanges.',
+      shapes: [
+        ...digit(68, 560, 61, 578, 2, 3.8), ...digit(82, 570, 79, 597, 3, 3.4), ...digit(91, 572, 91, 603, 3, 3.4),
+        ...digit(99, 571, 101, 599, 3, 3.4), ...digit(107, 567, 111, 589, 3, 3.2), ['hit', 89, 585, 20, 14]] }
+  ];
+
+  const BY_ID = Object.fromEntries(BONES.map(b => [b.id, b]));
+  const SETS = {
+    all: BONES.map(b => b.id),
+    axial: BONES.filter(b => b.region === 'axial').map(b => b.id),
+    upper: BONES.filter(b => b.region === 'upper').map(b => b.id),
+    lower: BONES.filter(b => b.region === 'lower').map(b => b.id)
+  };
+  const GLOSSARY_ORDER = Object.keys(GROUPS);
+
+  // ---------------------------------------------------------------------------
+  // Render the skeleton
+  // ---------------------------------------------------------------------------
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('skeleton');
+  const bonesLayer = document.getElementById('bones');
+  const decorLayer = document.getElementById('decor');
+  const boneEls = {};
+
+  const mirrorPath = d => d.replace(/(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g, (_, x, y) => `${+(400 - x).toFixed(1)},${y}`);
+  const el = (tag, attrs) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  };
+
+  function drawShape(g, s, mirror) {
+    const mx = x => mirror ? 400 - x : x;
+    const [type] = s;
+    if (type === 's') {
+      const d = mirror ? mirrorPath(s[1]) : s[1];
+      g.append(el('path', { d, class: 'o', 'stroke-width': s[2] + 2.6 }));
+      g.append(el('path', { d, class: 's', 'stroke-width': s[2] }));
+    } else if (type === 'f') {
+      g.append(el('path', { d: mirror ? mirrorPath(s[1]) : s[1], class: 'f' }));
+    } else if (type === 'e') {
+      g.append(el('ellipse', { cx: mx(s[1]), cy: s[2], rx: s[3], ry: s[4], class: 'f' }));
+    } else if (type === 'r') {
+      const x = mirror ? 400 - s[1] - s[3] : s[1];
+      g.append(el('rect', { x, y: s[2], width: s[3], height: s[4], rx: 2, class: 'f' }));
+    } else if (type === 'hit') {
+      g.append(el('ellipse', { cx: mx(s[1]), cy: s[2], rx: s[3], ry: s[4], class: 'hit' }));
+    }
+  }
+
+  BONES.forEach((b, i) => {
+    const g = el('g', { class: 'bone', 'data-bone': b.id, tabindex: '0', role: 'button', 'aria-label': `Bone region ${i + 1}` });
+    g.style.setProperty('--gc', GROUPS[b.group].color);
+    b.shapes.forEach(s => drawShape(g, s, false));
+    if (b.paired) b.shapes.forEach(s => drawShape(g, s, true));
+    bonesLayer.append(g);
+    boneEls[b.id] = g;
+  });
+
+  // Non-interactive details: eye sockets, nose, teeth line, obturator foramen
+  [
+    ['ellipse', { cx: 182, cy: 84, rx: 11, ry: 10 }], ['ellipse', { cx: 218, cy: 84, rx: 11, ry: 10 }],
+    ['path', { d: 'M200,92 L193,110 L207,110 Z' }],
+    ['ellipse', { cx: 174, cy: 470, rx: 8, ry: 6.5 }], ['ellipse', { cx: 226, cy: 470, rx: 8, ry: 6.5 }]
+  ].forEach(([t, a]) => decorLayer.append(el(t, { ...a, fill: '#3b3328', opacity: '.85' })));
+  decorLayer.append(el('path', { d: 'M176,125 L224,125', stroke: '#3b3328', 'stroke-width': 1.5, fill: 'none' }));
+
+  // ---------------------------------------------------------------------------
+  // Pan & zoom (touch, mouse, wheel, buttons)
+  // ---------------------------------------------------------------------------
+  const BASE = { x: 0, y: 0, w: 400, h: 920 };
+  let vb = { ...BASE };
+  const applyVB = () => svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+
+  function clientToSvg(cx, cy) {
+    const pt = svg.createSVGPoint();
+    pt.x = cx; pt.y = cy;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+  function zoomAt(factor, p) {
+    const w = Math.min(BASE.w, Math.max(BASE.w / 8, vb.w / factor));
+    const k = w / vb.w;
+    vb.x = p.x - (p.x - vb.x) * k;
+    vb.y = p.y - (p.y - vb.y) * k;
+    vb.w = w; vb.h = w * BASE.h / BASE.w;
+    clampVB(); applyVB();
+  }
+  function clampVB() {
+    const padX = vb.w * 0.5, padY = vb.h * 0.5;
+    vb.x = Math.min(BASE.w - vb.w + padX, Math.max(-padX, vb.x));
+    vb.y = Math.min(BASE.h - vb.h + padY, Math.max(-padY, vb.y));
+    if (vb.w >= BASE.w) { vb.x = 0; vb.y = 0; }
+  }
+  const centerPt = () => ({ x: vb.x + vb.w / 2, y: vb.y + vb.h / 2 });
+  document.getElementById('zoomIn').onclick = () => zoomAt(1.5, centerPt());
+  document.getElementById('zoomOut').onclick = () => zoomAt(1 / 1.5, centerPt());
+  document.getElementById('zoomReset').onclick = () => { vb = { ...BASE }; applyVB(); };
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, clientToSvg(e.clientX, e.clientY));
+  }, { passive: false });
+
+  const pointers = new Map();
+  let tapStart = null, moved = false, pinchDist = 0;
+
+  svg.addEventListener('pointerdown', e => {
+    document.querySelector('.figure-hint').classList.add('gone');
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    svg.setPointerCapture(e.pointerId);
+    if (pointers.size === 1) {
+      tapStart = { x: e.clientX, y: e.clientY, target: e.target };
+      moved = false;
+    } else if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      moved = true;
+    }
+  });
+  svg.addEventListener('pointermove', e => {
+    const prev = pointers.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    if (pointers.size === 1) {
+      if (!moved && Math.hypot(cur.x - tapStart.x, cur.y - tapStart.y) > 8) { moved = true; svg.classList.add('dragging'); }
+      if (moved) {
+        const rect = svg.getBoundingClientRect();
+        const scale = Math.max(vb.w / rect.width, vb.h / rect.height);
+        vb.x -= (cur.x - prev.x) * scale;
+        vb.y -= (cur.y - prev.y) * scale;
+        clampVB(); applyVB();
+      }
+    }
+    pointers.set(e.pointerId, cur);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchDist > 0) zoomAt(d / pinchDist, clientToSvg((a.x + b.x) / 2, (a.y + b.y) / 2));
+      pinchDist = d;
+    }
+  });
+  const endPointer = e => {
+    if (!pointers.has(e.pointerId)) return;
+    const wasSingle = pointers.size === 1;
+    pointers.delete(e.pointerId);
+    if (e.type === 'pointerup' && wasSingle && !moved && tapStart) {
+      const g = tapStart.target.closest && tapStart.target.closest('.bone');
+      if (g) onBoneChosen(g.dataset.bone);
+    }
+    if (pointers.size === 0) { tapStart = null; svg.classList.remove('dragging'); }
+  };
+  svg.addEventListener('pointerup', endPointer);
+  svg.addEventListener('pointercancel', endPointer);
+
+  bonesLayer.addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('bone')) {
+      e.preventDefault();
+      onBoneChosen(e.target.dataset.bone);
+    }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Game state
+  // ---------------------------------------------------------------------------
+  const $ = id => document.getElementById(id);
+  const panelBody = $('panelBody');
+  const S = {
+    mode: 'find', setKey: 'all', showDef: true, ids: [], queue: [], current: null,
+    attempts: 0, results: {}, skips: 0, clicks: 0, goodClicks: 0,
+    start: 0, elapsed: 0, timer: null, running: false, lastFeedback: null
+  };
+
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const fmtTime = ms => { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function resetBoneClasses() {
+    Object.values(boneEls).forEach(g => g.classList.remove('found', 'revealed', 'wrong', 'target', 'selected', 'pop'));
+    restoreRaised();
+  }
+
+  // In "name" mode, bring the glowing bone to the front so bones hidden
+  // behind others (scapula, thoracic vertebrae) are visible.
+  let raised = null;
+  function raise(id) {
+    restoreRaised();
+    const g = boneEls[id];
+    raised = { g, next: g.nextSibling };
+    bonesLayer.append(g);
+  }
+  function restoreRaised() {
+    if (!raised) return;
+    bonesLayer.insertBefore(raised.g, raised.next);
+    raised = null;
+  }
+
+  function startGame(mode, setKey, showDef, idsOverride) {
+    S.mode = mode; S.setKey = setKey; S.showDef = showDef;
+    S.ids = idsOverride ? [...idsOverride]
+      : setKey === 'quick' ? shuffle([...SETS.all]).slice(0, 10)
+      : [...SETS[setKey]];
+    S.queue = shuffle([...S.ids]);
+    S.results = {}; S.skips = 0; S.clicks = 0; S.goodClicks = 0; S.attempts = 0;
+    S.lastFeedback = null; S.current = null;
+    resetBoneClasses();
+    clearInterval(S.timer);
+    S.elapsed = 0; S.start = Date.now(); S.running = mode !== 'study';
+    if (S.running) S.timer = setInterval(tick, 500);
+    tick();
+    $('statTotal').textContent = S.ids.length;
+    // Dim bones outside the chosen set so it's clear which ones count.
+    Object.entries(boneEls).forEach(([id, g]) => {
+      g.style.opacity = (mode === 'study' || S.ids.includes(id)) ? '' : '.35';
+    });
+    if (mode === 'study') renderStudy(null);
+    else nextQuestion();
+    updateStats();
+  }
+
+  function tick() {
+    if (S.running) S.elapsed = Date.now() - S.start;
+    $('statTime').textContent = fmtTime(S.elapsed);
+  }
+
+  function updateStats() {
+    const done = Object.values(S.results).filter(r => r === 'correct').length;
+    $('statScore').textContent = S.mode === 'study' ? '–' : done;
+    const finished = Object.keys(S.results).length;
+    $('progressBar').style.width = S.ids.length ? `${(finished / S.ids.length) * 100}%` : '0';
+  }
+
+  function nextQuestion() {
+    restoreRaised();
+    Object.values(boneEls).forEach(g => g.classList.remove('target'));
+    S.current = S.queue.length ? S.queue[0] : null;
+    S.attempts = 0;
+    if (!S.current) return finish();
+    if (S.mode === 'name') {
+      boneEls[S.current].classList.add('target');
+      raise(S.current);
+      S.choices = shuffle([S.current, ...shuffle(S.ids.filter(id => id !== S.current)).slice(0, 3)]);
+      if (S.choices.length < 4) {
+        const extra = shuffle(SETS.all.filter(id => !S.choices.includes(id)));
+        S.choices = shuffle([...S.choices, ...extra.slice(0, 4 - S.choices.length)]);
+      }
+      S.wrongChoices = [];
+    }
+    renderQuestion();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Panel rendering
+  // ---------------------------------------------------------------------------
+  function boneInfoHTML(b, { heading = 'h2', showTip = true } = {}) {
+    const grp = GROUPS[b.group];
+    return `
+      <${heading} class="prompt-name">${esc(b.name)}</${heading}>
+      <p class="aka">${esc(b.aka)}</p>
+      <p class="def">${esc(b.def)}</p>
+      <p class="meta"><span class="chip"><span class="swatch" style="background:${grp.color}"></span>${esc(grp.label)}</span>
+        &middot; How many in the body: ${esc(b.count)}</p>
+      ${showTip && b.tip ? `<p class="tip"><strong>Memory tip:</strong> ${esc(b.tip)}</p>` : ''}`;
+  }
+
+  function feedbackHTML() {
+    const f = S.lastFeedback;
+    return `<p class="feedback ${f ? f.kind : ''}" id="feedback" role="status" aria-live="polite">${f ? f.html : ''}</p>`;
+  }
+
+  function renderQuestion() {
+    const b = BY_ID[S.current];
+    const remaining = S.queue.length;
+    let html = '';
+    const actions = `<div class="actions">
+        <button type="button" class="btn grow" id="skipBtn">Skip &#8631;</button>
+        <button type="button" class="btn grow" id="revealBtn">Show me</button>
+      </div>`;
+    if (S.mode === 'find') {
+      html += `<p class="prompt-label">Find this bone &middot; ${remaining} left</p>`;
+      html += `<h2 class="prompt-name">${esc(b.name)}</h2><p class="aka">${esc(b.aka)}</p>`;
+      html += feedbackHTML() + actions;
+      if (S.showDef) html += `<p class="def">${esc(b.def)}</p>`;
+    } else {
+      // hide the answer word (and its plural/other endings) inside the clue
+      const stem = b.name.split(' ')[0].replace(/s$/, '');
+      const clue = b.def.replace(new RegExp(`\\b${stem}\\w*`, 'gi'), '____');
+      html += `<p class="prompt-label">Name the glowing bone &middot; ${remaining} left</p>`;
+      html += `<div class="choices" role="group" aria-label="Answer choices">${S.choices.map(id =>
+        `<button type="button" class="choice" data-choice="${id}" ${S.wrongChoices.includes(id) ? 'aria-disabled="true"' : ''}>${esc(BY_ID[id].name)}</button>`
+      ).join('')}</div>`;
+      html += feedbackHTML() + actions;
+      if (S.showDef) html += `<p class="def"><strong>Clue:</strong> ${esc(clue)}</p>`;
+    }
+    html += lastAnswerHTML();
+    panelBody.innerHTML = html;
+    $('skipBtn').onclick = skip;
+    $('revealBtn').onclick = () => reveal(false);
+    panelBody.querySelectorAll('[data-choice]').forEach(btn => btn.onclick = () => onChoice(btn.dataset.choice, btn));
+  }
+
+  // After each answer, keep the definition of the bone you just learned visible.
+  function lastAnswerHTML() {
+    if (!S.lastLearned) return '';
+    const b = BY_ID[S.lastLearned];
+    return `<details class="glossary" ${S.showDef ? '' : 'open'} style="margin-top:12px">
+      <summary>About the last bone: <strong>${esc(b.name)}</strong></summary>
+      ${boneInfoHTML(b, { heading: 'h3' })}
+    </details>`;
+  }
+
+  function setFeedback(kind, html) {
+    S.lastFeedback = { kind, html };
+    const f = $('feedback');
+    if (f) { f.className = `feedback ${kind}`; f.innerHTML = html; }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Answering
+  // ---------------------------------------------------------------------------
+  function onBoneChosen(id) {
+    if (S.mode === 'study') return renderStudy(id);
+    if (!S.current) return;
+    const b = BY_ID[id];
+    if (S.mode === 'name') {
+      // tapping on the figure in name mode just tells you what's already known
+      if (S.results[id]) setFeedback('info', `That one is the ${esc(b.name)}.`);
+      return;
+    }
+    if (S.results[id]) {
+      setFeedback('info', `Already done: ${esc(b.name)}. Keep looking for the ${esc(BY_ID[S.current].name)}.`);
+      return;
+    }
+    S.clicks++;
+    if (id === S.current) {
+      S.goodClicks++;
+      markCorrect(id);
+    } else {
+      S.attempts++;
+      flashWrong(id);
+      if (S.attempts >= 3) {
+        reveal(true);
+      } else {
+        setFeedback('bad', `&#10007; Not quite. Try again (${3 - S.attempts} ${3 - S.attempts === 1 ? 'try' : 'tries'} left), or skip it.`);
+      }
+    }
+  }
+
+  function onChoice(id, btn) {
+    if (!S.current || btn.getAttribute('aria-disabled') === 'true') return;
+    S.clicks++;
+    if (id === S.current) {
+      S.goodClicks++;
+      markCorrect(id);
+    } else {
+      S.attempts++;
+      S.wrongChoices.push(id);
+      btn.setAttribute('aria-disabled', 'true');
+      if (S.attempts >= 2) reveal(true);
+      else setFeedback('bad', `&#10007; Not the ${esc(BY_ID[id].name)}. One more try, or skip it.`);
+    }
+  }
+
+  function flashWrong(id) {
+    const g = boneEls[id];
+    g.classList.remove('wrong'); void g.getBBox(); g.classList.add('wrong');
+    setTimeout(() => g.classList.remove('wrong'), 650);
+  }
+
+  function markCorrect(id) {
+    const b = BY_ID[id];
+    S.results[id] = 'correct';
+    const g = boneEls[id];
+    g.classList.remove('target');
+    g.classList.add('found', 'pop');
+    setTimeout(() => g.classList.remove('pop'), 600);
+    S.queue.shift();
+    S.lastLearned = id;
+    S.lastFeedback = { kind: 'ok', html: `&#10003; Correct — ${esc(b.name)}!${S.attempts ? '' : ' First try.'}` };
+    updateStats();
+    nextQuestion();
+  }
+
+  function reveal(auto) {
+    const id = S.current;
+    if (!id) return;
+    const b = BY_ID[id];
+    S.results[id] = 'revealed';
+    boneEls[id].classList.remove('target');
+    boneEls[id].classList.add('revealed');
+    S.queue.shift();
+    S.lastLearned = id;
+    S.lastFeedback = { kind: 'info', html: `${auto ? 'Out of tries. ' : ''}The striped bone is the <strong>${esc(b.name)}</strong> — it's added to your review list.` };
+    updateStats();
+    nextQuestion();
+  }
+
+  function skip() {
+    if (!S.current) return;
+    S.skips++;
+    const id = S.queue.shift();
+    S.queue.push(id);
+    S.lastFeedback = S.queue.length > 1
+      ? { kind: 'info', html: `Skipped ${esc(BY_ID[id].name)} — it will come back at the end.` }
+      : { kind: 'info', html: 'That’s the last one! Give it a try or tap “Show me.”' };
+    nextQuestion();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Finish / results
+  // ---------------------------------------------------------------------------
+  function finish() {
+    S.running = false;
+    clearInterval(S.timer);
+    tick();
+    restoreRaised();
+    const total = S.ids.length;
+    const correct = S.ids.filter(id => S.results[id] === 'correct').length;
+    const revealed = S.ids.filter(id => S.results[id] === 'revealed');
+    const pct = total ? Math.round((correct / total) * 100) : 0;
+    const acc = S.clicks ? Math.round((S.goodClicks / S.clicks) * 100) : 100;
+
+    let best = null;
+    const key = `boneQuizBest:${S.mode}:${S.setKey}`;
+    try {
+      best = JSON.parse(localStorage.getItem(key) || 'null');
+      if (S.setKey !== 'review' && (!best || pct > best.pct || (pct === best.pct && S.elapsed < best.time))) {
+        localStorage.setItem(key, JSON.stringify({ pct, time: S.elapsed }));
+        best = null; // new record
+      }
+    } catch (_) { /* storage unavailable — fine */ }
+
+    $('resultsTitle').textContent = pct === 100 ? 'Perfect score!' : pct >= 80 ? 'Great job!' : 'Quiz complete!';
+    $('resultsLead').textContent = best
+      ? `Your best on this quiz: ${best.pct}% in ${fmtTime(best.time)}.`
+      : (S.setKey === 'review' ? 'Review round finished.' : 'New personal best for this quiz!');
+    $('resultsGrid').innerHTML = `
+      <div><b>${pct}%</b>Score (${correct}/${total})</div>
+      <div><b>${fmtTime(S.elapsed)}</b>Time</div>
+      <div><b>${acc}%</b>Accuracy</div>
+      <div><b>${S.skips}</b>Skips</div>`;
+    $('reviewWrap').innerHTML = revealed.length
+      ? `<h3>Bones to review (${revealed.length})</h3><ul class="review">${revealed.map(id => {
+          const b = BY_ID[id];
+          return `<li><strong>${esc(b.name)}</strong> (${esc(b.aka)}) — ${esc(b.def)}</li>`;
+        }).join('')}</ul>`
+      : '<p>You found every bone without needing a reveal. &#127881;</p>';
+    $('retryMissed').hidden = revealed.length === 0;
+    S.missed = revealed;
+    showOverlay('results');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Study mode
+  // ---------------------------------------------------------------------------
+  function renderStudy(id) {
+    Object.values(boneEls).forEach(g => g.classList.remove('selected'));
+    restoreRaised();
+    let html = '';
+    if (id) {
+      boneEls[id].classList.add('selected');
+      raise(id);
+      html += `<p class="prompt-label">Study mode</p>${boneInfoHTML(BY_ID[id])}`;
+    } else {
+      html += `<p class="prompt-label">Study mode</p>
+        <h2 class="prompt-name">Tap any bone</h2>
+        <p class="def">Tap a bone on the skeleton, or choose one from the list below, to see its name, definition and a memory tip. Colors show which part of the skeleton each bone belongs to.</p>`;
+    }
+    html += `<ul class="legend" aria-label="Color key">${GLOSSARY_ORDER.map(k =>
+      `<li class="chip"><span class="swatch" style="background:${GROUPS[k].color}"></span>${esc(GROUPS[k].label)}</li>`).join('')}</ul>`;
+    html += `<div class="glossary">${GLOSSARY_ORDER.map(k => `
+      <h2>${esc(GROUPS[k].label)}</h2>
+      <ul>${BONES.filter(b => b.group === k).map(b => `
+        <li><button type="button" data-study="${b.id}" ${b.id === id ? 'aria-current="true"' : ''}>
+          <span class="swatch" style="background:${GROUPS[k].color}"></span>
+          <span><strong>${esc(b.name)}</strong><small>${esc(b.aka)}</small></span>
+        </button></li>`).join('')}</ul>`).join('')}</div>`;
+    panelBody.innerHTML = html;
+    panelBody.querySelectorAll('[data-study]').forEach(btn => btn.onclick = () => {
+      renderStudy(btn.dataset.study);
+      $('panel').scrollTop = 0;
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Overlays (menu & results)
+  // ---------------------------------------------------------------------------
+  let lastFocus = null;
+  function showOverlay(name) {
+    lastFocus = document.activeElement;
+    ['menu', 'results'].forEach(n => { $(n).hidden = n !== name; });
+    const first = $(name).querySelector('input:checked, button:not([hidden])');
+    if (first) first.focus();
+  }
+  function hideOverlays() {
+    $('menu').hidden = true; $('results').hidden = true;
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !$('menu').hidden && !$('menuClose').hidden) hideOverlays();
+    // keep Tab inside an open dialog
+    if (e.key === 'Tab') {
+      const open = ['menu', 'results'].map($).find(o => !o.hidden);
+      if (!open) return;
+      const items = [...open.querySelectorAll('button:not([hidden]), input')].filter(n => n.offsetParent !== null);
+      if (!items.length) return;
+      const first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  document.querySelectorAll('[data-count]').forEach(n => { n.textContent = SETS[n.dataset.count].length; });
+
+  $('menuForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    hideOverlays();
+    startGame(fd.get('mode'), fd.get('set'), fd.get('showDef') === 'on');
+    $('menuClose').hidden = false;
+  });
+  $('menuBtn').onclick = () => {
+    if (S.running) { S.running = false; S.elapsed = Date.now() - S.start; }
+    showOverlay('menu');
+  };
+  $('menuClose').onclick = () => {
+    if (S.mode !== 'study' && S.current) { S.running = true; S.start = Date.now() - S.elapsed; }
+    hideOverlays();
+  };
+  $('playAgain').onclick = () => { hideOverlays(); startGame(S.mode, S.setKey === 'review' ? 'all' : S.setKey, S.showDef); };
+  $('retryMissed').onclick = () => { hideOverlays(); startGame(S.mode, 'review', S.showDef, S.missed); };
+  $('toMenu').onclick = () => showOverlay('menu');
+
+  // Initial screen: skeleton visible behind the menu.
+  panelBody.innerHTML = '<p class="def">Choose a mode to begin.</p>';
+  showOverlay('menu');
+})();
+</script>
+</body>
+</html>
