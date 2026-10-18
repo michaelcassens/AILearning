@@ -15,8 +15,8 @@
     --page: #f6f2e9;
     --panel: #ffffff;
     --line: #d9d1bf;
-    --bone: #f3ead6;
-    --bone-edge: #6b5d48;
+    --bone: #efe4cb;
+    --bone-edge: #7d6b4f;
     --bone-dark: #3b3328;
     --wrong: #c62828;
     --ok-text: #1b5e20;
@@ -95,25 +95,26 @@
   .figure-hint.gone { opacity: 0; }
 
   /* bone drawing */
-  .bone { cursor: pointer; --bf: var(--bone); }
-  .bone .o { stroke: var(--bone-edge); fill: none; stroke-linecap: round; }
+  .bone { cursor: pointer; --bf: var(--bone); filter: url(#boneShade); }
+  .bone .o { stroke: var(--bone-edge); fill: var(--bone-edge); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .bone path.o[stroke-width] { fill: none; }
   .bone .s { stroke: var(--bf); fill: none; stroke-linecap: round; }
-  .bone .f { fill: var(--bf); stroke: var(--bone-edge); stroke-width: 1.4; stroke-linejoin: round; }
+  .bone .f { fill: var(--bf); stroke: none; }
   .bone .hit { fill: transparent; stroke: none; }
-  .bone:hover { --bf: #fffaf0; }
+  .bone:hover { --bf: #fbf3e2; }
   .bone:focus { outline: none; }
-  .bone:focus-visible { filter: drop-shadow(0 0 2px #000) drop-shadow(0 0 4px var(--focus)); }
+  .bone:focus-visible { filter: url(#boneShade) drop-shadow(0 0 2px #000) drop-shadow(0 0 4px var(--focus)); }
   .bone.found { --bf: var(--gc); }
   .bone.found:hover { --bf: var(--gc); }
   .bone.revealed { --bf: url(#revealPat); }
   .bone.wrong { --bf: var(--wrong); animation: shake .35s; }
   .bone.target { --bf: #ffe14d; animation: glow 1s ease-in-out infinite alternate; }
-  .bone.selected { --bf: var(--gc); filter: drop-shadow(0 0 3px #000); }
+  .bone.selected { --bf: var(--gc); filter: url(#boneShade) drop-shadow(0 0 3px #000); }
   .bone.pop { animation: pop .5s; transform-box: fill-box; transform-origin: center; }
   .decor { pointer-events: none; }
   @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
-  @keyframes glow { from { filter: drop-shadow(0 0 1px #000); } to { filter: drop-shadow(0 0 6px #b8860b) drop-shadow(0 0 2px #000); } }
-  @keyframes pop { 0%{filter:brightness(1)} 40%{filter:brightness(1.35) drop-shadow(0 0 6px #fff)} 100%{filter:brightness(1)} }
+  @keyframes glow { from { filter: url(#boneShade) drop-shadow(0 0 1px #000); } to { filter: url(#boneShade) drop-shadow(0 0 6px #b8860b) drop-shadow(0 0 2px #000); } }
+  @keyframes pop { 0%,100%{filter:url(#boneShade)} 40%{filter:url(#boneShade) brightness(1.3) drop-shadow(0 0 6px #fff)} }
   @media (prefers-reduced-motion: reduce) {
     .bone.wrong, .bone.target, .bone.pop { animation: none; }
     .progress > div { transition: none; }
@@ -247,6 +248,20 @@
         <title id="svgTitle">Front view of the human skeleton</title>
         <desc id="svgDesc">Diagram of the human skeleton seen from the front. Each bone region can be selected; use Tab to move between regions and Enter to choose one. The Name the Bone mode can be played entirely with buttons.</desc>
         <defs>
+          <!-- soft lighting so bones look rounded; works with any highlight color -->
+          <filter id="boneShade" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1.4" result="bump"/>
+            <feDiffuseLighting in="bump" surfaceScale="2.2" diffuseConstant="1" lighting-color="#ffffff" result="diff">
+              <feDistantLight azimuth="235" elevation="50"/>
+            </feDiffuseLighting>
+            <feSpecularLighting in="bump" surfaceScale="2.2" specularConstant=".5" specularExponent="20" lighting-color="#ffffff" result="spec">
+              <feDistantLight azimuth="235" elevation="50"/>
+            </feSpecularLighting>
+            <feComposite in="SourceGraphic" in2="diff" operator="arithmetic" k1=".75" k2=".35" result="lit"/>
+            <feComposite in="spec" in2="SourceAlpha" operator="in" result="shine"/>
+            <feComposite in="lit" in2="shine" operator="arithmetic" k2="1" k3=".6" result="final"/>
+            <feComposite in="final" in2="SourceAlpha" operator="in"/>
+          </filter>
           <pattern id="revealPat" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
             <rect width="6" height="6" fill="#fff3c4"/>
             <rect width="3" height="6" fill="#f5b301"/>
@@ -327,7 +342,7 @@
   // ---------------------------------------------------------------------------
   // Bone data. Drawing is a front (anterior) view in a 400 x 920 box.
   // Shapes: ['s', path, width] stroked bone, ['f', path] filled shape,
-  //         ['e', cx, cy, rx, ry] ellipse, ['r', x, y, w, h] rounded block,
+  //         ['e', cx, cy, rx, ry] ellipse,
   //         ['hit', cx, cy, rx, ry] invisible extra tap area for small bones.
   // Paths use absolute "x,y" pairs so paired bones can be mirrored across x = 200.
   // ---------------------------------------------------------------------------
@@ -341,24 +356,65 @@
     leg:      { label: 'Leg & foot',          color: 'var(--g-leg)' }
   };
 
-  const stack = (n, x, y0, step, w, h) =>
-    Array.from({ length: n }, (_, i) => ['r', x, y0 + i * step, w, h]);
+  const fx = n => +n.toFixed(1);
 
-  // A finger/toe drawn as n short segments between two points.
+  // Smooth long-bone outline from (x1,y1) to (x2,y2): rounded, knobby ends
+  // (half-widths a at the top, b at the bottom) joined by a slimmer shaft (s).
+  // notch = small dip between the two condyles at the lower end.
+  const longBone = (x1, y1, x2, y2, a, s, b, notch = false) => {
+    const L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    const P = (v, u) => `${fx(x1 + ux * u - uy * v)},${fx(y1 + uy * u + ux * v)}`;
+    const t1 = Math.max(a * 0.6 + 0.5, Math.min(L * 0.3, a * 2.1));
+    const t2 = Math.max(b * 0.6 + 0.5, Math.min(L * 0.3, b * 2.1));
+    const m1 = t1 + (L - t1 - t2) * 0.35, m2 = L - t2 - (L - t1 - t2) * 0.35;
+    const side = k => [
+      `C${P(k * a, (a * 0.6 + t1) / 2)} ${P(k * s * 1.1, t1 * 0.85)} ${P(k * s, t1)}`,
+      `C${P(k * s * 0.9, m1)} ${P(k * s * 0.9, m2)} ${P(k * s, L - t2)}`,
+      `C${P(k * s * 1.1, L - t2 * 0.85)} ${P(k * b, (L - b * 0.6 + L - t2) / 2)} ${P(k * b, L - b * 0.6)}`
+    ];
+    const [r1, r2, r3] = side(1);
+    const bottom = notch
+      ? `C${P(b, L + b * 0.5)} ${P(b * 0.3, L + b * 0.5)} ${P(0, L + b * 0.12)} C${P(-b * 0.3, L + b * 0.5)} ${P(-b, L + b * 0.5)} ${P(-b, L - b * 0.6)}`
+      : `C${P(b, L + b * 0.4)} ${P(-b, L + b * 0.4)} ${P(-b, L - b * 0.6)}`;
+    return [
+      `M${P(-a, a * 0.6)}`, `C${P(-a, -a * 0.4)} ${P(a, -a * 0.4)} ${P(a, a * 0.6)}`,
+      r1, r2, r3, bottom,
+      // back up the other side
+      `C${P(-b, (L - b * 0.6 + L - t2) / 2)} ${P(-s * 1.1, L - t2 * 0.85)} ${P(-s, L - t2)}`,
+      `C${P(-s * 0.9, m2)} ${P(-s * 0.9, m1)} ${P(-s, t1)}`,
+      `C${P(-s * 1.1, t1 * 0.85)} ${P(-a, (a * 0.6 + t1) / 2)} ${P(-a, a * 0.6)} Z`
+    ].join(' ');
+  };
+
+  // A vertebra seen from the front: rounded body with a small process on each side.
+  // cx = center, y = top, bw = body half-width, h = height, pw = half-width across the processes.
+  const vertebra = (cx, y, bw, h, pw) => {
+    const Q = (dx, dy) => `${fx(cx + dx)},${fx(y + dy)}`;
+    return `M${Q(-bw + 1.5, 0)} L${Q(bw - 1.5, 0)} Q${Q(bw, 0)} ${Q(bw, h * 0.2)} ` +
+      `C${Q(pw - 1, h * 0.05)} ${Q(pw, h * 0.25)} ${Q(pw, h * 0.35)} C${Q(pw, h * 0.55)} ${Q(bw + 1, h * 0.5)} ${Q(bw, h * 0.6)} ` +
+      `L${Q(bw, h - 1.5)} Q${Q(bw, h)} ${Q(bw - 1.5, h)} L${Q(-bw + 1.5, h)} Q${Q(-bw, h)} ${Q(-bw, h - 1.5)} ` +
+      `L${Q(-bw, h * 0.6)} C${Q(-bw - 1, h * 0.5)} ${Q(-pw, h * 0.55)} ${Q(-pw, h * 0.35)} ` +
+      `C${Q(-pw, h * 0.25)} ${Q(-pw + 1, h * 0.05)} ${Q(-bw, h * 0.2)} Q${Q(-bw, 0)} ${Q(-bw + 1.5, 0)} Z`;
+  };
+  const spine = (n, y0, step, bw, h, pw) =>
+    Array.from({ length: n }, (_, i) => ['f', vertebra(200, y0 + i * step, bw, h, pw)]);
+
+  // A finger/toe: n small bones between two points, the tip bone a little slimmer.
   const digit = (x1, y1, x2, y2, n, w) => {
-    const out = [], gap = 1.6;
+    const out = [], gap = 1.3;
     for (let i = 0; i < n; i++) {
-      const t0 = i / n, t1 = (i + 1) / n;
+      const t0 = i / n, t1 = (i + 1) / n, k = i === n - 1 ? 0.8 : 1;
       const ax = x1 + (x2 - x1) * t0, ay = y1 + (y2 - y1) * t0 + (i ? gap / 2 : 0);
       const bx = x1 + (x2 - x1) * t1, by = y1 + (y2 - y1) * t1 - gap / 2;
-      out.push(['s', `M${ax.toFixed(1)},${ay.toFixed(1)} L${bx.toFixed(1)},${by.toFixed(1)}`, w]);
+      out.push(['f', longBone(ax, ay, bx, by, w * 0.6 * k, w * 0.36 * k, w * 0.55 * k)]);
     }
     return out;
   };
+  const ray = (x1, y1, x2, y2, w) => ['f', longBone(x1, y1, x2, y2, w * 0.65, w * 0.38, w * 0.68)];
 
   const ribs = [26, 34, 40, 44, 47, 49, 50, 49, 46, 42].map((w, i) => {
     const y = 224 + i * 9;
-    return ['s', `M194,${y} C${200 - w},${y - 8} ${200 - w - 8},${y + 26} ${(200 - w * 0.35).toFixed(1)},${y + 34}`, 4];
+    return ['s', `M194,${y} C${200 - w},${y - 8} ${200 - w - 8},${y + 26} ${fx(200 - w * 0.35)},${y + 34}`, [3.4, 3.8, 4, 4.2, 4.4, 4.4, 4.4, 4.2, 4, 3.6][i]];
   });
 
   const BONES = [
@@ -366,15 +422,15 @@
     { id: 'scapula', name: 'Scapula', aka: 'Shoulder blade', group: 'shoulder', region: 'upper', paired: true, count: '2 (1 each side)',
       def: 'The shoulder blade — a flat, triangular bone on the upper back. Its shallow socket (the glenoid cavity) holds the head of the humerus to form the shoulder joint.',
       tip: 'In this front view most of the scapula hides behind the ribs — look just outside the rib cage below the shoulder.',
-      shapes: [['f', 'M120,208 L166,214 C160,240 150,265 142,292 C132,270 124,240 120,208 Z']] },
-    { id: 'thoracic', name: 'Thoracic vertebrae', aka: 'T1–T12', group: 'spine', region: 'axial', count: '12',
+      shapes: [['f', 'M121,206 C134,202 152,205 167,212 C168,216 165,219 162,220 C156,242 150,266 144,290 C142,295 137,295 135,290 C129,264 123,238 119,214 C118,209 118,207 121,206 Z']] },
+    { id: 'thoracic', separate: true, name: 'Thoracic vertebrae', aka: 'T1–T12', group: 'spine', region: 'axial', count: '12',
       def: 'The 12 vertebrae of the upper and middle back (T1–T12). Each one connects to a pair of ribs, which makes this the least flexible part of the spine.',
       tip: 'Breakfast at 7, lunch at 12, dinner at 5: 7 cervical, 12 thoracic, 5 lumbar vertebrae.',
-      shapes: stack(12, 187, 206, 10.4, 26, 8.5) },
-    { id: 'lumbar', name: 'Lumbar vertebrae', aka: 'L1–L5', group: 'spine', region: 'axial', count: '5',
+      shapes: spine(12, 206, 10.4, 9, 9, 14) },
+    { id: 'lumbar', separate: true, name: 'Lumbar vertebrae', aka: 'L1–L5', group: 'spine', region: 'axial', count: '5',
       def: 'The 5 largest vertebrae (L1–L5), in the lower back. They carry most of the body’s weight, which is why low-back injuries are so common here.',
       tip: 'Lumbar = lower back. They are the biggest blocks in the stack.',
-      shapes: stack(5, 184, 333, 13, 32, 11) },
+      shapes: spine(5, 333, 13, 12, 11.5, 20) },
     { id: 'ribs', name: 'Ribs', aka: 'Costae', group: 'thorax', region: 'axial', paired: true, count: '24 (12 pairs)',
       def: 'Twelve pairs of curved bones that form the rib cage and protect the heart and lungs. Pairs 1–7 are “true ribs” (attached directly to the sternum), 8–10 are “false ribs,” and 11–12 are “floating ribs.”',
       tip: 'Males and females both have 12 pairs — a common myth says otherwise.',
@@ -382,88 +438,88 @@
     { id: 'sternum', name: 'Sternum', aka: 'Breastbone', group: 'thorax', region: 'axial', count: '1 (3 fused parts)',
       def: 'The breastbone: a flat bone in the center of the chest made of three parts — the manubrium, body and xiphoid process. The ribs attach to it through costal cartilage.',
       tip: 'Shaped like a short sword: handle (manubrium), blade (body), tip (xiphoid).',
-      shapes: [['f', 'M189,214 L211,214 L213,230 L207,236 L207,298 L200,314 L193,298 L193,236 L187,230 Z']] },
+      shapes: [['f', 'M190,213 C194,211 206,211 210,213 C213,216 214,225 211,231 C208,234 207,236 207,240 L207,296 C207,302 204,308 201,316 C200,318 200,318 199,316 C196,308 193,302 193,296 L193,240 C193,236 192,234 189,231 C186,225 187,216 190,213 Z']] },
     { id: 'clavicle', name: 'Clavicle', aka: 'Collarbone', group: 'shoulder', region: 'upper', paired: true, count: '2',
       def: 'The collarbone. A long S-shaped bone running horizontally between the sternum and the scapula. It acts as a strut that holds the arm away from the body, and it is the most commonly broken bone.',
       tip: '“Clavicle” comes from the Latin for “little key.”',
-      shapes: [['s', 'M194,212 C175,214 160,204 132,206', 7]] },
-    { id: 'cervical', name: 'Cervical vertebrae', aka: 'C1–C7 (neck)', group: 'spine', region: 'axial', count: '7',
+      shapes: [['f', 'M196,209 C186,207 178,213 168,211 C158,209 146,203 134,203 C129,203 127,208 131,210 C143,211 154,215 166,217 C178,219 188,215 196,215 C199,214 199,210 196,209 Z']] },
+    { id: 'cervical', separate: true, name: 'Cervical vertebrae', aka: 'C1–C7 (neck)', group: 'spine', region: 'axial', count: '7',
       def: 'The 7 vertebrae of the neck (C1–C7). C1, the atlas, holds up the skull; C2, the axis, lets the head turn side to side.',
       tip: 'Cervical = neck (think “cervical collar” after a neck injury).',
-      shapes: [...stack(7, 192, 158, 6.5, 16, 5), ['hit', 200, 180, 14, 24]] },
+      shapes: [...spine(7, 157, 6.3, 6.5, 5, 9.5), ['hit', 200, 180, 14, 24]] },
     { id: 'cranium', name: 'Cranium', aka: 'Braincase', group: 'skull', region: 'axial', count: '8 fused bones',
       def: 'The part of the skull that encloses and protects the brain. It is made of 8 bones (frontal, 2 parietal, 2 temporal, occipital, sphenoid and ethmoid) locked together by immovable joints called sutures.',
       tip: 'Cranium = the “crown” of the head.',
-      shapes: [['f', 'M152,96 C146,44 172,14 200,14 C228,14 254,44 248,96 C246,104 240,108 236,110 L164,110 C160,108 154,104 152,96 Z']] },
+      shapes: [['f', 'M200,12 C229,12 251,34 252,66 C253,84 250,98 244,110 C240,104 236,100 232,100 L168,100 C164,100 160,104 156,110 C150,98 147,84 148,66 C149,34 171,12 200,12 Z']] },
     { id: 'maxilla', name: 'Maxilla', aka: 'Upper jaw', group: 'skull', region: 'axial', count: '2 (fused)',
       def: 'The upper jawbone. The two maxillae fuse to form the upper jaw, hold the upper teeth, and form part of the eye sockets, the nasal cavity and the hard palate (roof of the mouth).',
       tip: 'MAXilla is on top; MANDible is below and does the chewing.',
-      shapes: [['f', 'M172,98 L228,98 L232,124 L168,124 Z']] },
+      shapes: [['f', 'M172,97 C186,94 214,94 228,97 C231,106 230,116 226,124 C214,128 186,128 174,124 C170,116 169,106 172,97 Z']] },
     { id: 'zygomatic', name: 'Zygomatic bone', aka: 'Cheekbone', group: 'skull', region: 'axial', paired: true, count: '2',
       def: 'The cheekbone. It forms the prominence of the cheek and part of the outer wall and floor of each eye socket, and joins the temporal bone to form the zygomatic arch.',
       tip: 'Feel the hard ridge under your eye and out toward your ear — that’s it.',
-      shapes: [['e', 164, 103, 11, 7]] },
+      shapes: [['f', 'M154,98 C160,93 172,94 178,101 C179,108 172,113 163,113 C157,112 152,105 154,98 Z']] },
     { id: 'mandible', name: 'Mandible', aka: 'Lower jaw', group: 'skull', region: 'axial', count: '1',
       def: 'The lower jawbone — the largest and strongest bone of the face and the only skull bone that moves. It hinges at the temporomandibular joint (TMJ) so you can chew and speak.',
       tip: 'Mandible = “mandatory for munching.”',
-      shapes: [['f', 'M160,106 L168,108 L170,126 L230,126 L232,108 L240,106 C244,132 234,150 214,156 L186,156 C166,150 156,132 160,106 Z']] },
+      shapes: [['f', 'M160,106 C164,107 167,112 168,118 C170,125 175,129 182,130 L218,130 C225,129 230,125 232,118 C233,112 236,107 240,106 C243,122 241,136 232,145 C224,152 212,155 200,155 C188,155 176,152 168,145 C159,136 157,122 160,106 Z']] },
     { id: 'hip', name: 'Hip bone (pelvis)', aka: 'Os coxae — ilium, ischium & pubis', group: 'pelvis', region: 'lower', paired: true, count: '2 (each = 3 fused bones)',
       def: 'Each hip bone forms from three fused bones — the ilium, ischium and pubis. Together with the sacrum they make the pelvis, which supports the trunk and holds the socket (acetabulum) for the head of the femur.',
       tip: 'Put your hands on your hips — you’re touching the iliac crest at the top of the ilium.',
-      shapes: [['f', 'M187,404 C170,380 130,372 120,392 C114,410 130,426 138,440 L146,460 C148,476 158,488 172,488 C184,488 194,480 197,470 L197,458 C188,456 174,450 168,442 C172,428 180,418 187,412 Z']] },
+      shapes: [['f', 'M188,404 C176,384 146,370 126,380 C116,386 114,400 120,412 C126,424 134,432 139,442 C142,450 144,458 146,466 C149,480 160,490 173,490 C185,490 195,482 198,472 L198,460 C190,457 176,452 169,444 C171,430 179,419 188,412 Z']] },
     { id: 'sacrum', name: 'Sacrum', aka: '5 fused vertebrae', group: 'spine', region: 'axial', count: '1 (5 fused)',
       def: 'A triangular bone at the base of the spine formed by 5 fused vertebrae. It wedges between the two hip bones and connects the spine to the pelvis.',
       tip: 'The sacrum is the keystone of the pelvic arch.',
-      shapes: [['f', 'M185,400 L215,400 C214,420 210,436 200,452 C190,436 186,420 185,400 Z']] },
+      shapes: [['f', 'M184,399 C194,397 206,397 216,399 C216,418 211,436 202,452 C201,454 199,454 198,452 C189,436 184,418 184,399 Z']] },
     { id: 'coccyx', name: 'Coccyx', aka: 'Tailbone', group: 'spine', region: 'axial', count: '1 (3–5 fused)',
       def: 'The tailbone — 3 to 5 small fused vertebrae at the very bottom of the spine. It anchors several muscles, tendons and ligaments and helps support you when you sit.',
       tip: 'Named from the Greek for “cuckoo” because its shape resembles a cuckoo’s beak.',
-      shapes: [['f', 'M195,455 L205,455 L200,468 Z'], ['hit', 200, 461, 8, 9]] },
+      shapes: [['f', 'M195,455 C198,454 202,454 205,455 C205,460 202,466 200,469 C198,466 195,460 195,455 Z'], ['hit', 200, 461, 8, 9]] },
     { id: 'femur', name: 'Femur', aka: 'Thigh bone', group: 'leg', region: 'lower', paired: true, count: '2',
       def: 'The thigh bone — the longest, heaviest and strongest bone in the body. Its ball-shaped head fits into the hip socket, and its lower end forms the top of the knee joint.',
       tip: 'Your femur is roughly a quarter of your height.',
-      shapes: [['s', 'M140,470 L168,632', 12], ['s', 'M150,456 L138,468', 9], ['e', 148, 452, 9, 9], ['e', 136, 468, 7, 8], ['e', 170, 638, 14, 9]] },
-    { id: 'tarsals', name: 'Tarsals', aka: 'Ankle bones', group: 'leg', region: 'lower', paired: true, count: '14 (7 per foot)',
+      shapes: [['f', longBone(139, 462, 169, 642, 10, 5.8, 12.5, true)], ['f', longBone(150, 455, 140, 467, 6, 5, 7)], ['e', 148, 452, 9, 9], ['e', 135, 467, 6, 8]] },
+    { id: 'tarsals', separate: true, name: 'Tarsals', aka: 'Ankle bones', group: 'leg', region: 'lower', paired: true, count: '14 (7 per foot)',
       def: 'Seven bones of the ankle and rear foot, including the talus (which connects to the leg) and the calcaneus (the heel bone, the largest tarsal).',
       tip: 'Tarsals = ankle; carpals = wrist. “T” for toes side.',
-      shapes: [['f', 'M154,848 L192,848 C196,856 196,864 194,870 L152,870 C150,862 150,854 154,848 Z']] },
+      shapes: [['e', 172, 853, 13, 5.5], ['e', 158, 863, 5, 4], ['e', 167, 864, 4.2, 4], ['e', 176, 864, 4.2, 4], ['e', 185, 863, 5, 4], ['hit', 172, 860, 22, 10]] },
     { id: 'metatarsals', name: 'Metatarsals', aka: 'Foot bones', group: 'leg', region: 'lower', paired: true, count: '10 (5 per foot)',
       def: 'The five long bones of the midfoot, numbered I (big toe) to V (little toe). They form the arches of the foot and the ball of the foot.',
       tip: 'Meta = “beyond” — the bones beyond the tarsals.',
       shapes: [
-        ['s', 'M157,875 L152,890', 4], ['s', 'M165,875 L162,891', 4], ['s', 'M173,875 L172,892', 4],
-        ['s', 'M181,875 L182,892', 4], ['s', 'M189,875 L193,891', 5.5], ['hit', 172, 883, 24, 9]] },
+        ray(157, 872, 152, 890, 4), ray(165, 872, 162, 891, 4), ray(173, 872, 172, 892, 4),
+        ray(181, 872, 182, 892, 4), ray(189, 872, 193, 891, 5.2), ['hit', 172, 883, 24, 9]] },
     { id: 'phalanges_f', name: 'Phalanges (foot)', aka: 'Toe bones', group: 'leg', region: 'lower', paired: true, count: '28 (14 per foot)',
       def: 'The toe bones. The big toe (hallux) has 2 phalanges and each of the other toes has 3 — 14 in each foot.',
       tip: 'Same name as the finger bones — “phalanx” was a Greek battle line of soldiers in a row.',
       shapes: [
-        ...digit(151, 896, 149, 907, 3, 3.5), ...digit(161, 897, 160, 909, 3, 3.5), ...digit(171, 897, 171, 910, 3, 3.5),
-        ...digit(182, 897, 183, 910, 3, 3.5), ...digit(193, 896, 195, 910, 2, 5), ['hit', 172, 903, 26, 8]] },
+        ...digit(152, 891.5, 149, 906, 3, 3.6), ...digit(162, 892.5, 160, 908, 3, 3.6), ...digit(172, 893.5, 171, 909, 3, 3.6),
+        ...digit(182, 893.5, 183, 909, 3, 3.6), ...digit(193, 892.5, 195, 909, 2, 5), ['hit', 172, 903, 26, 8]] },
     { id: 'fibula', name: 'Fibula', aka: 'Calf bone', group: 'leg', region: 'lower', paired: true, count: '2',
       def: 'The thin bone on the outer side of the lower leg. It bears little weight but anchors muscles, and its lower end forms the bump on the outside of the ankle (lateral malleolus).',
       tip: 'The fibula is the “fib” (little) one — thin like a fib.',
-      shapes: [['s', 'M160,674 L164,842', 5], ['e', 160, 672, 5, 5], ['e', 164, 846, 5, 6]] },
+      shapes: [['f', longBone(160, 666, 164, 852, 5.5, 2.4, 5.5)]] },
     { id: 'tibia', name: 'Tibia', aka: 'Shinbone', group: 'leg', region: 'lower', paired: true, count: '2',
       def: 'The shinbone — the larger, weight-bearing bone of the lower leg, on the big-toe side. Its lower end forms the bump on the inside of your ankle (medial malleolus).',
       tip: 'Tibia is the thick one you bang on the coffee table.',
-      shapes: [['s', 'M176,670 L178,838', 11], ['e', 175, 666, 14, 6], ['e', 182, 842, 6, 6]] },
+      shapes: [['f', longBone(175, 660, 179, 846, 14.5, 5.2, 8)]] },
     { id: 'patella', name: 'Patella', aka: 'Kneecap', group: 'leg', region: 'lower', paired: true, count: '2',
       def: 'The kneecap. A small triangular bone that sits inside the quadriceps tendon (a sesamoid bone). It protects the knee joint and improves the leverage of the thigh muscles.',
       tip: '“Patella” is Latin for “small dish.”',
-      shapes: [['e', 172, 652, 8, 10]] },
+      shapes: [['f', 'M164,647 C165,640 179,640 180,647 C181,655 176,664 172,666 C168,664 163,655 164,647 Z']] },
     { id: 'humerus', name: 'Humerus', aka: 'Upper arm bone', group: 'arm', region: 'upper', paired: true, count: '2',
       def: 'The long bone of the upper arm, running from the shoulder to the elbow. The “funny bone” tingle comes from the ulnar nerve passing near its lower end.',
       tip: 'Humerus sounds like “humorous” — home of the funny bone.',
-      shapes: [['s', 'M122,228 L106,380', 10], ['e', 124, 222, 11, 11], ['e', 105, 386, 12, 6]] },
+      shapes: [['f', longBone(120, 228, 105, 390, 8, 4.6, 10.5, true)], ['e', 124, 221, 11, 11]] },
     { id: 'radius', name: 'Radius', aka: 'Forearm bone (thumb side)', group: 'arm', region: 'upper', paired: true, count: '2',
       def: 'The forearm bone on the thumb side. It rotates around the ulna, letting you turn your palm up and down.',
       tip: 'Radius rotates, and it’s on the thumb side — “thumbs up for radius.”',
-      shapes: [['s', 'M97,395 L84,518', 5.5]] },
+      shapes: [['f', longBone(97, 393, 84, 522, 4.2, 2.6, 7)]] },
     { id: 'ulna', name: 'Ulna', aka: 'Forearm bone (pinky side)', group: 'arm', region: 'upper', paired: true, count: '2',
       def: 'The forearm bone on the little-finger side. Its upper end (the olecranon) forms the point of your elbow.',
       tip: 'Ulna lines up with the little finger — “U” and little finger both point down when you make a fist.',
-      shapes: [['s', 'M112,393 L102,518', 5.5]] },
-    { id: 'carpals', name: 'Carpals', aka: 'Wrist bones', group: 'arm', region: 'upper', paired: true, count: '16 (8 per wrist)',
+      shapes: [['f', longBone(112, 389, 102, 520, 6.5, 2.6, 4.2)]] },
+    { id: 'carpals', separate: true, name: 'Carpals', aka: 'Wrist bones', group: 'arm', region: 'upper', paired: true, count: '16 (8 per wrist)',
       def: 'Eight small bones of the wrist arranged in two rows of four: scaphoid, lunate, triquetrum, pisiform, trapezium, trapezoid, capitate and hamate.',
       tip: 'Carpals = wrist — think “carpal tunnel syndrome.”',
       shapes: [
@@ -474,14 +530,14 @@
       def: 'The five long bones of the palm, numbered I (thumb) to V (little finger). They connect the wrist to the fingers, and their heads form your knuckles.',
       tip: 'Meta = “beyond” — the bones just beyond the carpals.',
       shapes: [
-        ['s', 'M79,541 L70,556', 4], ['s', 'M86,541 L82,566', 3.6], ['s', 'M92,542 L91,568', 3.6],
-        ['s', 'M98,542 L99,567', 3.6], ['s', 'M104,540 L107,563', 3.6], ['hit', 92, 554, 16, 10]] },
+        ray(79, 541, 70, 556, 4), ray(86, 541, 82, 566, 3.6), ray(92, 542, 91, 568, 3.6),
+        ray(98, 542, 99, 567, 3.6), ray(104, 540, 107, 563, 3.4), ['hit', 92, 554, 16, 10]] },
     { id: 'phalanges_h', name: 'Phalanges (hand)', aka: 'Finger bones', group: 'arm', region: 'upper', paired: true, count: '28 (14 per hand)',
       def: 'The finger bones. Each finger has 3 phalanges (proximal, middle and distal) and the thumb has 2 — 14 in each hand.',
       tip: 'One finger bone = a phalanx; two or more = phalanges.',
       shapes: [
-        ...digit(68, 560, 61, 578, 2, 3.8), ...digit(82, 570, 79, 597, 3, 3.4), ...digit(91, 572, 91, 603, 3, 3.4),
-        ...digit(99, 571, 101, 599, 3, 3.4), ...digit(107, 567, 111, 589, 3, 3.2), ['hit', 89, 585, 20, 14]] }
+        ...digit(70, 557.5, 62, 577, 2, 3.8), ...digit(82, 567.5, 79, 596, 3, 3.4), ...digit(91, 569.5, 91, 602, 3, 3.4),
+        ...digit(99, 568.5, 101, 598, 3, 3.4), ...digit(107, 564.5, 111, 588, 3, 3.2), ['hit', 89, 585, 20, 14]] }
   ];
 
   const BY_ID = Object.fromEntries(BONES.map(b => [b.id, b]));
@@ -509,21 +565,19 @@
     return n;
   };
 
-  function drawShape(g, s, mirror) {
+  // pass 'o' draws the dark outline, pass 'b' the bone fill on top of it.
+  function drawShape(g, s, mirror, pass) {
     const mx = x => mirror ? 400 - x : x;
     const [type] = s;
+    const cls = pass === 'o' ? 'o' : 'f';
     if (type === 's') {
       const d = mirror ? mirrorPath(s[1]) : s[1];
-      g.append(el('path', { d, class: 'o', 'stroke-width': s[2] + 2.6 }));
-      g.append(el('path', { d, class: 's', 'stroke-width': s[2] }));
+      g.append(el('path', pass === 'o' ? { d, class: 'o', 'stroke-width': s[2] + 1.8 } : { d, class: 's', 'stroke-width': s[2] }));
     } else if (type === 'f') {
-      g.append(el('path', { d: mirror ? mirrorPath(s[1]) : s[1], class: 'f' }));
+      g.append(el('path', { d: mirror ? mirrorPath(s[1]) : s[1], class: cls }));
     } else if (type === 'e') {
-      g.append(el('ellipse', { cx: mx(s[1]), cy: s[2], rx: s[3], ry: s[4], class: 'f' }));
-    } else if (type === 'r') {
-      const x = mirror ? 400 - s[1] - s[3] : s[1];
-      g.append(el('rect', { x, y: s[2], width: s[3], height: s[4], rx: 2, class: 'f' }));
-    } else if (type === 'hit') {
+      g.append(el('ellipse', { cx: mx(s[1]), cy: s[2], rx: s[3], ry: s[4], class: cls }));
+    } else if (type === 'hit' && pass === 'b') {
       g.append(el('ellipse', { cx: mx(s[1]), cy: s[2], rx: s[3], ry: s[4], class: 'hit' }));
     }
   }
@@ -531,19 +585,31 @@
   BONES.forEach((b, i) => {
     const g = el('g', { class: 'bone', 'data-bone': b.id, tabindex: '0', role: 'button', 'aria-label': `Bone region ${i + 1}` });
     g.style.setProperty('--gc', GROUPS[b.group].color);
-    b.shapes.forEach(s => drawShape(g, s, false));
-    if (b.paired) b.shapes.forEach(s => drawShape(g, s, true));
+    const shapes = b.paired ? [...b.shapes.map(s => [s, false]), ...b.shapes.map(s => [s, true])] : b.shapes.map(s => [s, false]);
+    if (b.separate) {
+      // small separate bones (vertebrae, wrist, ankle) keep their own outlines
+      shapes.forEach(([s, m]) => { drawShape(g, s, m, 'o'); drawShape(g, s, m, 'b'); });
+    } else {
+      shapes.forEach(([s, m]) => drawShape(g, s, m, 'o'));
+      shapes.forEach(([s, m]) => drawShape(g, s, m, 'b'));
+    }
     bonesLayer.append(g);
     boneEls[b.id] = g;
   });
 
-  // Non-interactive details: eye sockets, nose, teeth line, obturator foramen
-  [
-    ['ellipse', { cx: 182, cy: 84, rx: 11, ry: 10 }], ['ellipse', { cx: 218, cy: 84, rx: 11, ry: 10 }],
-    ['path', { d: 'M200,92 L193,110 L207,110 Z' }],
-    ['ellipse', { cx: 174, cy: 470, rx: 8, ry: 6.5 }], ['ellipse', { cx: 226, cy: 470, rx: 8, ry: 6.5 }]
-  ].forEach(([t, a]) => decorLayer.append(el(t, { ...a, fill: '#3b3328', opacity: '.85' })));
-  decorLayer.append(el('path', { d: 'M176,125 L224,125', stroke: '#3b3328', 'stroke-width': 1.5, fill: 'none' }));
+  // Non-interactive details: eye sockets, nose, teeth, sacral holes, obturator foramen
+  const dark = { fill: '#3b3328', opacity: '.88' };
+  const orbit = 'M171,79 C171,70 192,68 195,76 C197,84 196,94 187,96 C178,98 171,93 171,86 Z';
+  [orbit, mirrorPath(orbit), 'M200,91 C196,95 193,104 194,110 C196,113 204,113 206,110 C207,104 204,95 200,91 Z']
+    .forEach(d => decorLayer.append(el('path', { d, ...dark })));
+  [[175, 471], [225, 471]].forEach(([cx, cy]) => decorLayer.append(el('ellipse', { cx, cy, rx: 8, ry: 6, ...dark })));
+  [410, 421, 432].forEach(y => [194.5, 205.5].forEach(cx =>
+    decorLayer.append(el('circle', { cx, cy: y, r: 1.7, fill: '#3b3328', opacity: '.55' }))));
+  for (let i = 0; i < 8; i++) {
+    const x = 182.5 + i * 4.5;
+    decorLayer.append(el('rect', { x, y: 119.5, width: 4, height: 7, rx: 1.4, fill: '#fbf8f0', stroke: '#8a7a5e', 'stroke-width': .5 }));
+    decorLayer.append(el('rect', { x, y: 129, width: 4, height: 6, rx: 1.4, fill: '#fbf8f0', stroke: '#8a7a5e', 'stroke-width': .5 }));
+  }
 
   // ---------------------------------------------------------------------------
   // Pan & zoom (touch, mouse, wheel, buttons)
