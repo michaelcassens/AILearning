@@ -1856,14 +1856,27 @@ function update(dt){
   updateFx(dt);
   updateCamera(dt, false);
 }
+// screen space (css px) covered by the HUD, minimap and touch buttons. Tall screens reserve a strip at the
+// top (and bottom on touch); short landscape screens reserve the sides, where the HUD and buttons sit.
+let mmSmall = null;
+function screenReserve(){
+  const hud = $('#hud').getBoundingClientRect();
+  if (!mmBig || !mmSmall) mmSmall = $('#mm-wrap').getBoundingClientRect();
+  if (vh < 560 && vw > vh) return { top:0, bottom:0, left: hud.right + 6, right: Math.max(vw - mmSmall.left, isTouch ? 210 : 0) + 6 };
+  return { top: Math.max(hud.bottom, mmSmall.bottom) + 6, bottom: isTouch ? 130 : 30, left:0, right:0 };
+}
 function updateCamera(dt, snap){
-  const fit = Math.min(vw/(room.W*TS), vh/(room.H*TS))*0.97;
+  const pad = screenReserve(), RW = room.W*TS, RH = room.H*TS;
+  const fit = Math.min((vw - pad.left - pad.right)/RW, (vh - pad.top - pad.bottom)/RH)*0.98;
   // on phones, zoom in so tiles stay readable and touch-friendly (camera follows the hero)
-  const minS = isTouch ? Math.max(36/TS, Math.min(vh*0.78/(room.H*TS), vw/(9*TS))) : 30/TS;
+  const minS = isTouch ? Math.max(36/TS, Math.min(vh*0.78/RH, vw/(9*TS))) : 30/TS;
   const s = Math.min(2.6, Math.max(fit, minS)); cam.scale = s;
-  const viewW = vw/s, viewH = vh/s, RW = room.W*TS, RH = room.H*TS;
-  const tx = RW <= viewW ? (RW - viewW)/2 : clamp(hero.x - viewW/2, 0, RW - viewW);
-  const ty = RH <= viewH ? (RH - viewH)/2 : clamp(hero.y - viewH/2, 0, RH - viewH);
+  const viewW = vw/s, viewH = vh/s;
+  const padT = pad.top/s, padB = pad.bottom/s, padL = pad.left/s, padR = pad.right/s;
+  const availW = viewW - padL - padR, availH = viewH - padT - padB;
+  // the room can scroll a little past its edges so corners never hide under the HUD or minimap
+  const tx = RW <= availW ? -padL - (availW - RW)/2 : clamp(hero.x - padL - availW/2, -padL, RW - viewW + padR);
+  const ty = RH <= availH ? -padT - (availH - RH)/2 : clamp(hero.y - padT - availH/2, -padT, RH - viewH + padB);
   if (snap){ cam.x = tx; cam.y = ty; }
   else { const k = Math.min(1, dt*8); cam.x += (tx - cam.x)*k; cam.y += (ty - cam.y)*k; }
 }
