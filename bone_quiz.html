@@ -218,7 +218,7 @@
     .prompt-name { font-size: 1.8rem; }
   }
   @media (max-width: 819px) {
-    .panel { max-height: 42vh; padding: 10px 14px; }
+    .panel { height: 42vh; max-height: none; flex: none; padding: 10px 14px; } /* fixed so the diagram doesn't jump between questions */
     .prompt-name { font-size: 1.3rem; }
     .def { font-size: .95rem; }
     .actions { margin-top: 8px; }
@@ -315,8 +315,8 @@
       <legend>Bones to include</legend>
       <div id="setOptions"></div>
     </fieldset>
-    <label class="opt"><input type="checkbox" name="showDef" checked>
-      <span>Show the definition with each question<small>Turn off for a harder challenge &mdash; you'll still see it after answering.</small></span></label>
+    <label class="opt"><input type="checkbox" name="showDef">
+      <span>Show hints with each question<small>Adds the bone&rsquo;s nickname and definition to each question. Either way, you see the full definition after you answer.</small></span></label>
     <div class="actions sticky-actions">
       <button type="submit" class="btn primary grow">Start</button>
       <button type="button" class="btn" id="menuClose" hidden>Resume</button>
@@ -958,7 +958,8 @@
       </ul>`;
     if (S.mode === 'find') {
       html += `<p class="prompt-label">Find this bone &middot; ${remaining} left</p>`;
-      html += `<h2 class="prompt-name">${esc(b.name)}</h2><p class="aka">${esc(b.aka)}</p>`;
+      html += `<h2 class="prompt-name">${esc(b.name)}</h2>`;
+      if (S.showDef) html += `<p class="aka">${esc(b.aka)}</p>`;
       html += feedbackHTML() + actions;
       if (S.showDef) html += `<p class="def">${esc(b.def)}</p>`;
     } else {
