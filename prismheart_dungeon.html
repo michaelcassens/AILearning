@@ -425,11 +425,41 @@ let particles = [], texts = [], projectiles = [], bolts = [];
 let trans = null, shake = 0, flash = null;
 const layerCache = {};
 
+/* ---------- hidden gem placement (new spot every game) ---------- */
+// wall tiles that face open floor, away from doorways and the starting cell
+function gemCandidates(id){
+  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, FLOOR = '.~=+ge';
+  const exits = [], starts = [], out = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    if ('NSEWGF'.includes(m[y][x])) exits.push([x, y]);
+    if (m[y][x] === '@') starts.push([x, y]);
+  }
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+    if (m[y][x] !== '#' && m[y][x] !== 'L') continue;
+    const faces = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const n = (m[y+dy] || '')[x+dx]; return !!n && FLOOR.includes(n); });
+    if (!faces) continue;
+    if (exits.some(([ex, ey]) => Math.abs(ex - x) + Math.abs(ey - y) < 3)) continue;
+    if (starts.some(([sx, sy]) => Math.abs(sx - x) + Math.abs(sy - y) < 4)) continue;
+    out.push([x, y]);
+  }
+  return out;
+}
+function rollGemSpots(){
+  const o = {};
+  for (const g of GEM_ORDER){ const id = GEMS[g].room, c = gemCandidates(id); o[id] = c[Math.floor(Math.random()*c.length)]; }
+  return o;
+}
+// the original fixed spots, used for saves made before gems moved around
+function classicGemSpots(){
+  const o = {};
+  for (const g of GEM_ORDER){ const id = GEMS[g].room; ROOM_DEFS[id].map.forEach((row, y) => { const x = row.indexOf('L'); if (x >= 0) o[id] = [x, y]; }); }
+  return o;
+}
 function newState(heroId){
   const h = HEROES[heroId];
   return {
     heroId, hp:h.hp, maxHp:h.hp, gold:0, potions:1, items:{}, gems:{},
-    room:'cells', pos:null, searched:{}, capsFound:{}, visited:{ cells:true },
+    room:'cells', pos:null, searched:{}, capsFound:{}, visited:{ cells:true }, gemSpots:rollGemSpots(),
     q:{ met:false, locket:'none', caps:'none', shadows:'none' },
     locket:false, shadowKills:0, gateOpen:false, bossDefeated:false, won:false, metMoss:false,
     stats:{ searches:0, kills:0, deaths:0 },
@@ -513,7 +543,7 @@ function buildRoom(id){
       switch (ch){
         case '#': t = T_WALL; break;
         case 'T': t = T_WALL; r.torches.push({ x, y, ph:Math.random()*10 }); break;
-        case 'L': t = T_WALL; r.objs.push({ type:'loose', x, y, key:id+':'+x+','+y, ph:Math.random()*6 }); break;
+        case 'L': t = T_WALL; break;
         case '~': t = T_WATER; r.water.push([x,y]); break;
         case '=': t = T_RAIL; break;
         case '+': t = T_CARPET; break;
@@ -543,6 +573,9 @@ function buildRoom(id){
     r.t.push(row);
   }
   if (!r.start) r.start = { x:W*TS/2, y:H*TS/2 };
+  const spot = S.gemSpots && S.gemSpots[id];
+  r.looseAt = -1;
+  if (spot){ const [x, y] = spot; r.objs.push({ type:'loose', x, y, key:id+':'+x+','+y, ph:Math.random()*6 }); r.looseAt = y*W + x; }
   // wall sparkle points (only on wall faces next to open floor)
   const rnd = mulberry32(hashStr(id + 'sparkle'));
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
@@ -700,7 +733,7 @@ function drawWallTile(c, r, x, y){
       c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(bx+1, by+6, 14, 1);
     }
   }
-  if (r.def.map[y][x] === 'L'){ // a subtly different, cracked stone
+  if (r.looseAt === y*r.W + x){ // a subtly different, cracked stone
     c.strokeStyle = 'rgba(20,20,24,.55)'; c.lineWidth = 1;
     c.beginPath(); c.moveTo(px+9,py+9); c.lineTo(px+14,py+15); c.lineTo(px+12,py+21); c.moveTo(px+14,py+15); c.lineTo(px+21,py+17); c.stroke();
   }
@@ -1337,10 +1370,16 @@ function lumenHint(){
     const missing = GEAR.filter(i => !S.items[i.id]).map(i => i.name);
     return missing.length ? `The gate is open. You could face the Sovereign now&hellip; but Mossback still has ${missing.join(', ')}. Their shadow ward turns aside ordinary steel &mdash; only prism light pierces it.` : 'You are as ready as any hero has ever been. Go, and bring back the color.';
   }
-  if (!S.gems.ruby) return 'Every room hides one gem inside its walls. The ruby is here in the Cells &mdash; I have seen a red glimmer near the corner of the lower-left cell.';
-  if (!S.gems.sapphire) return 'The sapphire waits in the Sunken Crypt, to the east. Search the walls among the tombs &mdash; watch for blue light in the stone.';
-  if (!S.gems.emerald) return 'The emerald sleeps in the Crystal Mines, to the south. The crystals there are dull and gray now&hellip; but one stone in the wall is not.';
+  if (!S.gems.ruby) return `Every room hides one gem inside its walls. The ruby is here in the Cells &mdash; I have seen a red glimmer along the ${gemArea('cells')} walls.`;
+  if (!S.gems.sapphire) return `The sapphire waits in the Sunken Crypt, to the east. Search the ${gemArea('crypt')} walls &mdash; watch for blue light in the stone.`;
+  if (!S.gems.emerald) return `The emerald sleeps in the Crystal Mines, to the south. The crystals there are dull and gray now&hellip; but one stone along the ${gemArea('mines')} walls is not.`;
   return 'Keep searching. Light finds what darkness hides.';
+}
+// rough compass area of this game's gem spot, e.g. "southwest"
+function gemArea(id){
+  const [x, y] = S.gemSpots[id], m = ROOM_DEFS[id].map, W = m[0].length, H = m.length;
+  const ns = y < H/3 ? 'north' : y > H*2/3 ? 'south' : '', ew = x < W/3 ? 'west' : x > W*2/3 ? 'east' : '';
+  return (ns + ew) || 'inner';
 }
 function talkLumen(){
   if (!S.q.met){
@@ -2059,7 +2098,7 @@ function drawMinimap(){
     for (const [x, y, ch] of [].concat(...def.map.map((row, y) => [...row].map((ch, x) => [x, y, ch])))){
       if (!seen || !seen[y*RW + x]) continue;
       if (ch === 'Q' || ch === 'M'){ c.fillStyle = ch === 'Q' ? '#ffd36b' : '#7dffc4'; c.beginPath(); c.arc(ox + (x+.5)*p, oy + (y+.5)*p, p*1.1, 0, TAU); c.fill(); }
-      if (ch === 'L' && S.searched[id + ':' + x + ',' + y]){ const g = GEM_ORDER.find(gg => GEMS[gg].room === id); c.fillStyle = GEMS[g].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6, p*1.6); }
+      if (S.gemSpots[id] && S.gemSpots[id][0] === x && S.gemSpots[id][1] === y && S.searched[id + ':' + x + ',' + y]){ const g = GEM_ORDER.find(gg => GEMS[gg].room === id); c.fillStyle = GEMS[g].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6, p*1.6); }
     }
     if (id === room.id){ c.strokeStyle = '#f2c14e'; c.lineWidth = 1; c.strokeRect(ox - .5, oy - .5, RW*p + 1, RH*p + 1); }
   }
@@ -2124,6 +2163,7 @@ function continueGame(){
   SEEN = {};
   for (const k in (d.seenStr || {})) SEEN[k] = Uint8Array.from(d.seenStr[k].split(''), Number);
   delete d.seenStr;
+  if (!d.gemSpots) d.gemSpots = classicGemSpots();
   S = Object.assign(newState(d.heroId), d);
   for (const k in layerCache) delete layerCache[k];
   hero = makeHero(); mode = 'play'; showScreen(null); setPlaying(true); hudKey = '';
