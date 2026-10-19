@@ -293,7 +293,7 @@ const SHOP = [
   { id:'potion',  name:'Healing Draught',  price:12, consumable:true, desc:'Restores 4 hearts. Drink from your bag, or press H.' },
   // the weapon slot changes with the hero you play
   { id:'blade', price:50, get name(){ return heroWeapon().name; }, get desc(){ return heroWeapon().desc; } },
-  { id:'shield',  name:'Warded Buckler',   price:45, desc:'35% chance to block a hit completely.' },
+  { id:'shield', price:45, get name(){ return heroShield().name; }, get desc(){ return heroShield().desc; } },
   { id:'lantern', name:'Sunstone Lantern', price:35, desc:'Your light reaches much farther, and hidden glimmers show from afar.' },
   { id:'heart',   name:'Heart Crystal',    price:50, desc:'+3 maximum hearts (and heals you fully).' },
   { id:'lens',    name:'Prism Lens',       price:70, desc:'Focuses gem-light into a beam that shatters the Sovereign’s shadow ward.' },
@@ -305,6 +305,12 @@ const WEAPONS = {
   golem:  { name:'Geode Gauntlets', desc:'+1 damage, and your ground slam shakes a much wider circle.', quip:'Heavy, I know. I carried them on my shell for a year.' },
 };
 const heroWeapon = () => WEAPONS[(S && S.heroId) || 'knight'];
+const SHIELDS = {
+  knight: { name:'Warded Buckler',    chance:0.35, label:'Blocked!',   color:'#bcd6ff', desc:'35% chance to block a hit. A blocked hit shoves nearby enemies away.', quip:'It has blocked worse than shadows. Probably.' },
+  sprite: { name:'Shimmer Veil',      chance:0.30, label:'Phased!',    color:'#e6c8ff', desc:'30% chance to phase right through a hit. When you are hurt, you stay untouchable longer.', quip:'Woven from moonlight and a little bit of luck.' },
+  golem:  { name:'Crystal Carapace',  chance:0.25, label:'Shattered!', color:'#7dffc4', desc:'25% chance to block a hit. A blocked hit bursts into crystal shards that strike enemies around you.', quip:'Grows right onto you. Itches for a day or two.' },
+};
+const heroShield = () => SHIELDS[(S && S.heroId) || 'knight'];
 
 const ET = {
   shade:     { name:'Shade',      hp:2, speed:42, chase:72,  sight:150, dmg:1, r:10 },
@@ -1283,6 +1289,8 @@ function itemIcon(id){
     lens:'<svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z" fill="rgba(220,230,255,.25)" stroke="#e8e8ff" stroke-width="1.3"/><path d="M14 13l8-2M14.5 14l7.5 1M14 15l7 4" stroke-width="1.5" stroke="#ff4d7a"/><path d="M14.5 14l7.5 1" stroke="#3dffa8" stroke-width="1.5"/><path d="M14 15l7 4" stroke="#4da6ff" stroke-width="1.5"/><path d="M2 14l9-1" stroke="#fff" stroke-width="1.5"/></svg>',
     locket:'<svg viewBox="0 0 24 24"><path d="M8 3c0 4 8 4 8 0" stroke="#c8c8d0" fill="none" stroke-width="1.3"/><circle cx="12" cy="14" r="6" fill="#d8d8e0" stroke="#fff" stroke-width="1"/><circle cx="12" cy="14" r="3" fill="#9a9aa8"/></svg>',
   };
+  if (id === 'shield' && S && S.heroId === 'sprite') return '<svg viewBox="0 0 24 24"><path d="M5 4c5 2 9 2 14 0-1 6-1 11 0 16-5-2-9-2-14 0 1-5 1-10 0-16z" fill="rgba(212,176,255,.35)" stroke="#e6c8ff" stroke-width="1.2"/><path d="M8 8c3 1 5 1 8 0M8 12c3 1 5 1 8 0M8 16c3 1 5 1 8 0" stroke="#7ab8ff" stroke-width="1" fill="none"/><circle cx="16" cy="6" r="1" fill="#fff"/></svg>';
+  if (id === 'shield' && S && S.heroId === 'golem') return '<svg viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 22l-8-6.5v-9z" fill="#1f4436" stroke="#7dffc4" stroke-width="1.3"/><path d="M12 2v20M4 6.5l16 9M20 6.5l-16 9" stroke="#7dffc4" stroke-width=".8" opacity=".6"/><path d="M12 7l3 5-3 5-3-5z" fill="#ff7aa2"/></svg>';
   if (id === 'blade' && S && S.heroId === 'sprite') return '<svg viewBox="0 0 24 24"><path d="M5 20L16 9" stroke="#c9a2ff" stroke-width="2.4" stroke-linecap="round"/><circle cx="17.5" cy="6.5" r="3.6" fill="#fff"/><circle cx="17.5" cy="6.5" r="3.6" fill="none" stroke="#7dffc4" stroke-width="1.2"/><path d="M17.5 1v2M17.5 10v2M12 6.5h2M21 6.5h2" stroke="#ffd36b" stroke-width="1.2" stroke-linecap="round"/></svg>';
   if (id === 'blade' && S && S.heroId === 'golem') return '<svg viewBox="0 0 24 24"><path d="M5 11a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z" fill="#5a3f6e" stroke="#d4b0ff" stroke-width="1.2"/><path d="M8 8V5M11 8V4M14 8V4M17 8V5" stroke="#d4b0ff" stroke-width="2" stroke-linecap="round"/><path d="M9 14l3-2 3 2-3 3z" fill="#7dffc4"/></svg>';
   return s[id] || '';
@@ -1312,7 +1320,7 @@ function buy(id){
     if (id === 'heart'){ S.maxHp += 3; S.hp = S.maxHp; }
   }
   save();
-  const quips = { blade: heroWeapon().quip, potion:'Drink it before things get dire, not after!', shield:'It has blocked worse than shadows. Probably.',
+  const quips = { blade: heroWeapon().quip, shield: heroShield().quip, potion:'Drink it before things get dire, not after!',
     lantern:'Ooh, now you’ll see every glimmer in the stone.', heart:'Feel that? That’s more of you to go around.', lens:'Prism light! The Sovereign’s ward won’t stand a chance.' };
   openShop(quips[id]);
 }
@@ -1592,17 +1600,37 @@ function usePotion(){
 function hurtHero(dmg, sx, sy){
   if (hero.inv > 0 || hero.dead) return;
   const a = Math.atan2(hero.y - sy, hero.x - sx);
-  const kb = S.heroId === 'golem' ? 0 : 1;
-  const block = (S.items.shield ? 0.35 : 0) + (S.heroId === 'knight' ? 0.2 : 0);
-  if (Math.random() < block){
-    hero.inv = 0.5; floatText(hero.x, hero.y - 26, 'Blocked!', '#bcd6ff'); SFX.clank();
-    hero.kx = Math.cos(a)*120*kb; hero.ky = Math.sin(a)*120*kb; return;
+  const kb = S.heroId === 'golem' ? 0 : 1, sh = heroShield();
+  const shieldBlock = S.items.shield && Math.random() < sh.chance;
+  const traitBlock = S.heroId === 'knight' && Math.random() < 0.2;   // Steadfast
+  if (shieldBlock || traitBlock){
+    hero.inv = 0.5; SFX.clank();
+    floatText(hero.x, hero.y - 26, shieldBlock ? sh.label : 'Blocked!', shieldBlock ? sh.color : '#bcd6ff');
+    hero.kx = Math.cos(a)*120*kb; hero.ky = Math.sin(a)*120*kb;
+    if (shieldBlock) shieldEffect();
+    return;
   }
-  S.hp -= dmg; hero.inv = 1.0; shake = 0.25; SFX.hurt();
+  S.hp -= dmg; hero.inv = (S.items.shield && S.heroId === 'sprite') ? 1.7 : 1.0; shake = 0.25; SFX.hurt();
   hero.kx = Math.cos(a)*220*kb; hero.ky = Math.sin(a)*220*kb;
   floatText(hero.x, hero.y - 26, `-${dmg}`, '#ff6b97');
   burst(hero.x, hero.y, 10, ['#ff6b97','#ffffff'], { speed:70, life:.5 });
   if (S.hp <= 0){ S.hp = 0; heroDie(); }
+}
+function shieldEffect(){
+  if (S.heroId === 'knight'){          // shove enemies back
+    burst(hero.x, hero.y, 16, ['#bcd6ff','#ffffff'], { speed:120, glow:true, life:.4 });
+    for (const e of room.enemies){
+      if (e.dead) continue;
+      const d = dist(hero.x, hero.y, e.x, e.y);
+      if (d < 70){ const a = Math.atan2(e.y - hero.y, e.x - hero.x); e.kx = Math.cos(a)*360; e.ky = Math.sin(a)*360; e.flash = 0.12; }
+    }
+  } else if (S.heroId === 'sprite'){   // shimmer out of reach
+    burst(hero.x, hero.y - 4, 22, rainbow, { speed:70, glow:true, life:.6, grav:-20 });
+  } else {                             // crystal shards
+    burst(hero.x, hero.y - 2, 26, ['#7dffc4','#ff7aa2','#7ab8ff','#ffffff'], { speed:170, glow:true, life:.45, grav:0, size:2.2 });
+    for (const e of room.enemies) if (!e.dead && dist(hero.x, hero.y, e.x, e.y) < 60) hitEnemy(e, 1, 200, hero.x, hero.y);
+    if (boss && boss.active && !boss.dead && boss.dying <= 0 && dist(hero.x, hero.y, boss.x, boss.y - 6) < 50) damageBoss(1);
+  }
 }
 function heroDie(){
   hero.dead = true; hero.deadT = 0; S.stats.deaths++; SFX.die();
