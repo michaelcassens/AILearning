@@ -276,8 +276,22 @@ const GEMS = {
   ruby:     { name:'Ember Ruby',    color:'#ff4d7a', room:'cells' },
   sapphire: { name:'Tide Sapphire', color:'#4da6ff', room:'crypt' },
   emerald:  { name:'Grove Emerald', color:'#3dffa8', room:'mines' },
+  amethyst: { name:'Dusk Amethyst', color:'#b46bff', room:'frozen' },
+  topaz:    { name:'Sun Topaz',     color:'#ffc23d', room:'cistern' },
+  diamond:  { name:'Star Diamond',  color:'#dff4ff', room:'garden' },
 };
-const GEM_ORDER = ['ruby','sapphire','emerald'];
+const GEM_ORDER = ['ruby','sapphire','emerald'];          // Level 1: the Prism Gems
+const GEM_L2 = ['amethyst','topaz','diamond'];             // Level 2: the Vault Gems
+const ALL_GEMS = GEM_ORDER.concat(GEM_L2);
+const gemsOfLevel = lvl => lvl === 2 ? GEM_L2 : GEM_ORDER;
+const gemRoomOf = id => ALL_GEMS.find(g => GEMS[g].room === id);
+const hexRgb = h => [1,3,5].map(i => parseInt(h.slice(i, i+2), 16)).join(',');
+// in the Vaults, each Level 1 gem clears one kind of obstacle
+const POWERS = {
+  ice:  { gem:'ruby',     label:'Melt ice',       msg:'The Ember Ruby glows hot, and the ice melts away!' },
+  deep: { gem:'sapphire', label:'Calm the water', msg:'The Tide Sapphire hums. The deep water stills into a shallow pool.' },
+  pit:  { gem:'emerald',  label:'Grow vines',     msg:'The Grove Emerald blooms, and vines weave a bridge across the chasm.' },
+};
 
 const HEROES = {
   // each hero has its own attack style and a passive trait
@@ -297,14 +311,25 @@ const SHOP = [
   { id:'lantern', name:'Sunstone Lantern', price:35, desc:'Your light reaches much farther, and hidden glimmers show from afar.' },
   { id:'heart',   name:'Heart Crystal',    price:50, desc:'+3 maximum hearts (and heals you fully).' },
   { id:'lens',    name:'Prism Lens',       price:70, desc:'Focuses gem-light into a beam that shatters the Sovereign’s shadow ward.' },
+  // Vault stock (Level 2)
+  { id:'blade2', level:2, price:90, get name(){ return heroWeapon2().name; }, get desc(){ return heroWeapon2().desc; } },
+  { id:'heart2', level:2, name:'Greater Heart Crystal', price:80, desc:'+3 more maximum hearts (and heals you fully).' },
+  { id:'radiant', level:2, name:'Radiant Lens', price:100, desc:'Gathers the light of all six gems to break the Eclipse Ward of the Sovereign Unbound.' },
 ];
-const GEAR = SHOP.filter(i => !i.consumable);
+const GEAR = SHOP.filter(i => !i.consumable && !i.level);
+const GEAR2 = SHOP.filter(i => i.level === 2);
 const WEAPONS = {
   knight: { name:'Starsteel Blade', desc:'+1 damage, and your sword sweep reaches farther.', quip:'Sharp as a snail\u2019s wit. Which is to say: very.' },
   sprite: { name:'Aurora Wand',     desc:'+1 damage, and your prism bolts fly faster and twice as far.', quip:'Point the sparkly end at the bad things. Simple!' },
   golem:  { name:'Geode Gauntlets', desc:'+1 damage, and your ground slam shakes a much wider circle.', quip:'Heavy, I know. I carried them on my shell for a year.' },
 };
 const heroWeapon = () => WEAPONS[(S && S.heroId) || 'knight'];
+const WEAPONS2 = {
+  knight: { name:'Dawnsteel Greatsword', desc:'+1 more damage, and your sweep becomes a long, wide crescent.', quip:'Forged at sunrise. Smells faintly of toast.' },
+  sprite: { name:'Starfall Scepter',     desc:'+1 more damage, and your bolts pierce through every enemy in their path.', quip:'It hums when you smile. Try it.' },
+  golem:  { name:'Mountainheart Fists',  desc:'+1 more damage, and your slam shakes the whole floor around you.', quip:'Carved from the root of a mountain. Please do not drop them on me.' },
+};
+const heroWeapon2 = () => WEAPONS2[(S && S.heroId) || 'knight'];
 const SHIELDS = {
   knight: { name:'Warded Buckler',    chance:0.35, label:'Blocked!',   color:'#bcd6ff', desc:'35% chance to block a hit. A blocked hit shoves nearby enemies away.', quip:'It has blocked worse than shadows. Probably.' },
   sprite: { name:'Shimmer Veil',      chance:0.30, label:'Phased!',    color:'#e6c8ff', desc:'30% chance to phase right through a hit. When you are hurt, you stay untouchable longer.', quip:'Woven from moonlight and a little bit of luck.' },
@@ -317,6 +342,9 @@ const ET = {
   bone:      { name:'Bonewalker', hp:3, speed:36, chase:66,  sight:140, dmg:1, r:10 },
   bat:       { name:'Ash Bat',    hp:1, speed:64, chase:104, sight:170, dmg:1, r:8  },
   shadeling: { name:'Shadeling',  hp:1, speed:60, chase:88,  sight:999, dmg:1, r:9  },
+  wraith:    { name:'Frost Wraith', hp:3, speed:46, chase:82, sight:160, dmg:1, r:10 },
+  drowned:   { name:'Drowned One',  hp:4, speed:34, chase:60, sight:140, dmg:2, r:11 },
+  thorn:     { name:'Thornling',    hp:3, speed:54, chase:92, sight:150, dmg:1, r:9  },
 };
 
 const SPEAKERS = {
@@ -325,6 +353,8 @@ const SPEAKERS = {
   sovereign: 'The Hollow Sovereign',
   narrator:  'The Hollow Keep',
   gate:      'The Prism Gate',
+  vault:     'The Vault Door',
+  unbound:   'The Sovereign Unbound',
 };
 
 /* Map legend
@@ -333,10 +363,12 @@ const SPEAKERS = {
    |  iron bars     C  crate  B barrel  X  chest   Y tomb  Z tomb (locket)
    R  rubble        P  pillar           H  crystal cluster   K throne
    g  glowcap       Q  Lumen            M  Mossback          @ start
-   e  enemy         b  boss             N S E W  exits       G prism gate  F freedom door */
+   e  enemy         b  boss             N S E W  exits       G gate/vault door  F freedom door
+   < >  stairs      U  urn (color vial) I  ice wall (Ruby)   D deep water (Sapphire)   O chasm (Emerald) */
 const ROOM_DEFS = {
   cells: {
-    name:'The Forgotten Cells', grid:[0,1], enemy:'shade', torchR:3.4,
+    name:'The Forgotten Cells', level:1, grid:[0,1], enemy:'shade', torchR:3.4,
+    gate:{ gems:GEM_ORDER, flag:'gateOpen', speaker:'gate' },
     exits:{ E:{to:'crypt',at:'W'}, S:{to:'mines',at:'N'}, G:{to:'throne',at:'S'} },
     map:[
       '####T#####GG#####T######',
@@ -357,7 +389,7 @@ const ROOM_DEFS = {
       '#####T#####SS#####T#####',
     ]},
   crypt: {
-    name:'The Sunken Crypt', grid:[1,1], enemy:'bone', torchR:3.2,
+    name:'The Sunken Crypt', level:1, grid:[1,1], enemy:'bone', torchR:3.2,
     exits:{ W:{to:'cells',at:'E'} },
     map:[
       '######T#####T#####T#####',
@@ -378,7 +410,7 @@ const ROOM_DEFS = {
       '##########L#############',
     ]},
   mines: {
-    name:'The Crystal Mines', grid:[0,2], enemy:'bat', torchR:3.2,
+    name:'The Crystal Mines', level:1, grid:[0,2], enemy:'bat', torchR:3.2,
     exits:{ N:{to:'cells',at:'S'} },
     map:[
       '#####T#####NN#####T#####',
@@ -399,8 +431,8 @@ const ROOM_DEFS = {
       '#################L######',
     ]},
   throne: {
-    name:'Throne of the Hollow Sovereign', grid:[0,0], enemy:null, torchR:2.6, boss:true,
-    exits:{ S:{to:'cells',at:'G'} },
+    name:'Throne of the Hollow Sovereign', level:1, grid:[0,0], enemy:null, torchR:2.6, boss:'sovereign',
+    exits:{ S:{to:'cells',at:'G'}, '>':{to:'vault',at:'<'} },
     map:[
       '#####T#####FF#####T#####',
       '#.........++++.........#',
@@ -408,7 +440,7 @@ const ROOM_DEFS = {
       '#.........+b++.........#',
       '#.........++++.........#',
       'T..P......++++......P..T',
-      '#.........++++.........#',
+      '#.........++>+.........#',
       '#.........++++.........#',
       '#..P......++++......P..#',
       '#.........++++.........#',
@@ -419,9 +451,121 @@ const ROOM_DEFS = {
       '#.........++++.........#',
       '##########SS############',
     ]},
+
+  /* ---------------- Level 2: the Vaults beneath the Keep ---------------- */
+  vault: {
+    name:'The Vault Antechamber', level:2, grid:[1,1], enemy:null, torchR:3.2,
+    gate:{ gems:GEM_L2, flag:'vaultOpen', speaker:'vault' },
+    exits:{ W:{to:'frozen',at:'E'}, E:{to:'cistern',at:'W'}, S:{to:'garden',at:'N'}, G:{to:'heart',at:'S'}, '<':{to:'throne',at:'>'} },
+    map:[
+      '#####T####GG######T#####',
+      '#..P......++......P....#',
+      '#.........++...........#',
+      '#...Q.....++.....M.....#',
+      '#.........++...........#',
+      'T..P......++......P....T',
+      '#.........++...........#',
+      'W.........++...........E',
+      'W.........++...........E',
+      '#.........++...........#',
+      'T..P......<+......P....T',
+      '#.........++.@.........#',
+      '#.C.......++........B..#',
+      '#.........++...........#',
+      '#X........++.........C.#',
+      '#####T####SS######T#####',
+    ]},
+  frozen: {
+    name:'The Frozen Gallery', level:2, grid:[0,1], enemy:'wraith', torchR:3.0,
+    exits:{ E:{to:'vault',at:'W'} },
+    map:[
+      '######T#####T#####T#####',
+      '#..X.I.......P.........#',
+      '#....I..........e......#',
+      '#.U..I...P.........P...#',
+      '#....I.................#',
+      '#IIIII......g..........T',
+      '#......................#',
+      'T...........e..........E',
+      '#......................E',
+      '#...P.........P........#',
+      '#IIIII............IIIII#',
+      '#....I.....e......I....#',
+      '#.C..I............I.g..#',
+      '#....I...P........I....#',
+      '#..B.I............I..R.#',
+      '######T#####T###########',
+    ]},
+  cistern: {
+    name:'The Flooded Cistern', level:2, grid:[2,1], enemy:'drowned', torchR:3.0,
+    exits:{ W:{to:'vault',at:'E'} },
+    map:[
+      '######T#####T#####T#####',
+      '#~~......DDDD.......X..#',
+      '#~.......DDDD..........#',
+      '#....P...DDDD....P.....#',
+      '#........DDDD..........#',
+      'T..e.....DDDD.....e....T',
+      '#........DDDD..........#',
+      'W..~~....DDDD..g.......#',
+      'W..~~....DDDD..........#',
+      '#........DDDD....P.....#',
+      'T...P....DDDD..........T',
+      '#........DDDD.....U....#',
+      '#.g......DDDD..........#',
+      '#....B...DDDD.......C..#',
+      '#C.......DDDD.....~~~..#',
+      '######T#####T#####T#####',
+    ]},
+  garden: {
+    name:'The Chasm Garden', level:2, grid:[1,2], enemy:'thorn', torchR:3.0,
+    exits:{ N:{to:'vault',at:'S'} },
+    map:[
+      '#####T####NN######T#####',
+      '#.....P..........P.....#',
+      '#..g.....e.............#',
+      '#......................#',
+      'T...P............P.....T',
+      '#OOOOOOOOOOOOOOOOOOOOOO#',
+      '#OOOOOOOOOOOOOOOOOOOOOO#',
+      '#......................#',
+      'T....P.....e.....P.....T',
+      '#..U...................#',
+      '#.................g....#',
+      '#.....e................#',
+      '#..C......P........X...#',
+      '#......................#',
+      '#.B..................C.#',
+      '#####T#############T####',
+    ]},
+  heart: {
+    name:'Heart of the Vault', level:2, grid:[1,0], enemy:null, torchR:2.6, boss:'unbound',
+    exits:{ S:{to:'vault',at:'G'} },
+    map:[
+      '#####T#####FF#####T#####',
+      '#..........++..........#',
+      '#..H.......++.......H..#',
+      '#..........b+..........#',
+      '#..........++..........#',
+      'T....H.....++.....H....T',
+      '#..........++..........#',
+      '#..........++..........#',
+      '#..H.......++.......H..#',
+      '#..........++..........#',
+      'T..........++..........T',
+      '#.....H....++....H.....#',
+      '#..........++..........#',
+      '#..........++..........#',
+      '#..........++..........#',
+      '##########SS############',
+    ]},
 };
-const T_FLOOR=0, T_WALL=1, T_WATER=2, T_BARS=3, T_EXIT=4, T_GATE=5, T_FREE=6, T_CARPET=7, T_RAIL=8;
-const SEARCHABLE = { crate:1, barrel:1, chest:1, sarc:1, sarcZ:1, rubble:1, loose:1 };
+const T_FLOOR=0, T_WALL=1, T_WATER=2, T_BARS=3, T_EXIT=4, T_GATE=5, T_FREE=6, T_CARPET=7, T_RAIL=8,
+      T_STAIRS=9, T_ICE=10, T_DEEP=11, T_PIT=12, T_VINE=13;
+const levelOf = id => (ROOM_DEFS[id] && ROOM_DEFS[id].level) || 1;
+const bossDone = id => id === 'heart' ? S.boss2Defeated : S.bossDefeated;
+const gateFlag = r => !!(r.def.gate && S[r.def.gate.flag]);
+const SEARCHABLE = { crate:1, barrel:1, chest:1, sarc:1, sarcZ:1, rubble:1, loose:1, urn:1 };
 const SAVE_KEY = 'prismheart_save_v1';
 
 /* =====================================================================
@@ -434,39 +578,49 @@ let mode = 'title';      // title | select | play
 let time = 0, dpr = 1, vw = 0, vh = 0;
 let isTouch = false, muted = false, mmBig = false;
 const cam = { x:0, y:0, scale:1 };
-let particles = [], texts = [], projectiles = [], bolts = [];
+let particles = [], texts = [], projectiles = [], bolts = [], marks = [];
 let trans = null, shake = 0, flash = null;
 const layerCache = {};
 
 /* ---------- hidden gem placement (new spot every game) ---------- */
 // wall tiles that face open floor, away from doorways and the starting cell
 function gemCandidates(id){
-  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@';
-  const exits = [], starts = [], out = [];
+  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@<>', OBST = 'IDO';
+  const exits = [], starts = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
-    if ('NSEWGF'.includes(m[y][x])) exits.push([x, y]);
+    if ('NSEWGF<>'.includes(m[y][x])) exits.push([x, y]);
     if (m[y][x] === '@') starts.push([x, y]);
   }
   // flood fill from the start and every doorway, treating chests, tombs, pillars and the like as solid,
   // so a gem is never sealed behind furniture
-  const reach = new Uint8Array(W*H), q = [];
-  const visit = (x, y) => { if (x < 0 || y < 0 || x >= W || y >= H || reach[y*W + x] || !WALK.includes(m[y][x])) return; reach[y*W + x] = 1; q.push([x, y]); };
-  starts.forEach(([x, y]) => visit(x, y));
-  exits.forEach(([x, y]) => { visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); });
-  while (q.length){ const [x, y] = q.shift(); visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); }
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
-    if (m[y][x] !== '#' && m[y][x] !== 'L') continue;
-    const faces = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && reach[ny*W + nx]; });
-    if (!faces) continue;
-    if (exits.some(([ex, ey]) => Math.abs(ex - x) + Math.abs(ey - y) < 3)) continue;
-    if (starts.some(([sx, sy]) => Math.abs(sx - x) + Math.abs(sy - y) < 4)) continue;
-    out.push([x, y]);
-  }
-  return out;
+  const fill = walk => {
+    const reach = new Uint8Array(W*H), q = [];
+    const visit = (x, y) => { if (x < 0 || y < 0 || x >= W || y >= H || reach[y*W + x] || !walk.includes(m[y][x])) return; reach[y*W + x] = 1; q.push([x, y]); };
+    starts.forEach(([x, y]) => visit(x, y));
+    exits.forEach(([x, y]) => { visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); });
+    while (q.length){ const [x, y] = q.shift(); visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); }
+    return reach;
+  };
+  const plain = fill(WALK), withPowers = fill(WALK + OBST);
+  const pick = reach => {
+    const out = [];
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
+      if (m[y][x] !== '#' && m[y][x] !== 'L') continue;
+      const faces = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && reach(nx, ny); });
+      if (!faces) continue;
+      if (exits.some(([ex, ey]) => Math.abs(ex - x) + Math.abs(ey - y) < 3)) continue;
+      if (starts.some(([sx, sy]) => Math.abs(sx - x) + Math.abs(sy - y) < 4)) continue;
+      out.push([x, y]);
+    }
+    return out;
+  };
+  // in the Vaults, a gem waits beyond an obstacle you clear with a gem power
+  const behind = pick((x, y) => withPowers[y*W + x] && !plain[y*W + x]);
+  return behind.length ? behind : pick((x, y) => plain[y*W + x]);
 }
 function rollGemSpots(){
   const o = {};
-  for (const g of GEM_ORDER){ const id = GEMS[g].room, c = gemCandidates(id); o[id] = c[Math.floor(Math.random()*c.length)]; }
+  for (const g of ALL_GEMS){ const id = GEMS[g].room, c = gemCandidates(id); o[id] = c[Math.floor(Math.random()*c.length)]; }
   return o;
 }
 // the original fixed spots, used for saves made before gems moved around
@@ -482,12 +636,16 @@ function newState(heroId){
     room:'cells', pos:null, searched:{}, capsFound:{}, visited:{ cells:true }, gemSpots:rollGemSpots(),
     q:{ met:false, locket:'none', caps:'none', shadows:'none' },
     locket:false, shadowKills:0, gateOpen:false, bossDefeated:false, won:false, metMoss:false,
+    // Level 2
+    q2:{ met:false, vials:'none', moss:'none', chains:'none' }, vials:0, chainKills:0, vaultOpen:false,
+    boss2Defeated:false, won2:false, metMoss2:false, cleared:{}, moved:{},
     stats:{ searches:0, kills:0, deaths:0 },
   };
 }
-const gemCount = () => GEM_ORDER.filter(g => S.gems[g]).length;
-const capsCount = () => Object.keys(S.capsFound).length;
-const heroAtk = () => HEROES[S.heroId].atk + (S.items.blade ? 1 : 0);
+const gemCount = (lvl = 1) => gemsOfLevel(lvl).filter(g => S.gems[g]).length;
+const capsCount = (lvl = 1) => Object.keys(S.capsFound).filter(k => levelOf(k.split(':')[0]) === lvl).length;
+const heroAtk = () => HEROES[S.heroId].atk + (S.items.blade ? 1 : 0) + (S.items.blade2 ? 1 : 0);
+const curLevel = () => room ? levelOf(room.id) : 1;
 
 function save(){
   if (!S || mode !== 'play') return;
@@ -559,6 +717,8 @@ function buildRoom(id){
     for (let x = 0; x < W; x++){
       const ch = map[y][x], cx = (x+.5)*TS, cy = (y+.5)*TS, idx = y*W + x;
       const obj = (type, extra) => { r.objs.push(Object.assign({ type, x, y, key:id+':'+x+','+y }, extra||{})); r.solidObj[idx] = 1; };
+      const exitTile = c2 => { (r.exits[c2] = r.exits[c2] || []).push([x,y]); r.exitAt[idx] = c2; };
+      const cleared = S.cleared && S.cleared[id+':'+x+','+y];
       let t = T_FLOOR;
       switch (ch){
         case '#': t = T_WALL; break;
@@ -587,6 +747,12 @@ function buildRoom(id){
           t = T_EXIT; (r.exits[ch] = r.exits[ch] || []).push([x,y]); r.exitAt[idx] = ch; break;
         case 'G': t = T_GATE; r.gateTiles.push([x,y]); r.exitAt[idx] = 'G'; (r.exits.G = r.exits.G || []).push([x,y]); break;
         case 'F': t = T_FREE; r.freeTiles.push([x,y]); break;
+        case '<': t = T_STAIRS; exitTile('<'); break;
+        case '>': if (S.bossDefeated){ t = T_STAIRS; exitTile('>'); } else t = T_CARPET; break;
+        case 'U': obj('urn'); break;
+        case 'I': t = cleared ? T_FLOOR : T_ICE; break;
+        case 'D': t = cleared ? T_WATER : T_DEEP; r.water.push([x,y]); break;
+        case 'O': t = cleared ? T_VINE : T_PIT; break;
       }
       row.push(t);
     }
@@ -599,7 +765,9 @@ function buildRoom(id){
     if (mv){ r.solidObj[o.y*W + o.x] = 0; o.x = mv[0]; o.y = mv[1]; r.solidObj[o.y*W + o.x] = 1; }
     if (o.type === 'rubble' && S.searched[o.key]) r.solidObj[o.y*W + o.x] = 0;
   }
-  const spot = S.gemSpots && S.gemSpots[id];
+  S.gemSpots = S.gemSpots || {};
+  if (!S.gemSpots[id] && gemRoomOf(id)){ const c = gemCandidates(id); S.gemSpots[id] = c[Math.floor(Math.random()*c.length)]; }
+  const spot = S.gemSpots[id];
   r.looseAt = -1;
   if (spot){ const [x, y] = spot; r.objs.push({ type:'loose', x, y, key:id+':'+x+','+y, ph:Math.random()*6 }); r.looseAt = y*W + x; }
   // wall sparkle points (only on wall faces next to open floor)
@@ -612,10 +780,10 @@ function buildRoom(id){
       if (nx>=0 && ny>=0 && nx<W && ny<H && r.t[ny][nx] !== T_WALL) open = true;
     }
     if (!open) continue;
-    for (let i = 0; i < 3; i++) r.sparkles.push({ tx:x, ty:y, x:(x+rnd())*TS, y:(y+rnd())*TS, g:Math.floor(rnd()*3), ph:rnd()*TAU, sp:1.2+rnd()*2.2 });
+    for (let i = 0; i < 3; i++) r.sparkles.push({ tx:x, ty:y, x:(x+rnd())*TS, y:(y+rnd())*TS, g:Math.floor(rnd()*ALL_GEMS.length), ph:rnd()*TAU, sp:1.2+rnd()*2.2 });
   }
   if (def.enemy) for (const s of r.spawns) r.enemies.push(makeEnemy(def.enemy, s.x, s.y));
-  boss = (def.boss && !S.bossDefeated) ? makeBoss(r.bossSpawn) : null;
+  boss = (def.boss && !bossDone(id)) ? makeBoss(r.bossSpawn, def.boss) : null;
   r.layer = getLayer(r);
   return r;
 }
@@ -624,8 +792,10 @@ function makeEnemy(type, x, y){
   return { type, x, y, hp:ET[type].hp, kx:0, ky:0, dir:Math.random()*TAU, wt:Math.random()*2,
     state: type === 'shadeling' ? 'chase' : 'wander', flash:0, ph:Math.random()*TAU, alert:0, dead:false };
 }
-function makeBoss(sp){
-  return { x:sp.x, y:sp.y + 16, hp:26, max:26, active:false, dead:false, dying:0, flash:0, ward:true, wardT:4.5,
+function makeBoss(sp, kind){
+  const big = kind === 'unbound';
+  return { kind, x:sp.x, y:sp.y + 16, hp:big ? 36 : 26, max:big ? 36 : 26, r:big ? 28 : 22, scale:big ? 1.3 : 1,
+    active:false, dead:false, dying:0, flash:0, ward:true, wardT:4.5,
     atkT:2.2, mode:'move', modeT:0, dx:0, dy:0, spin:0, last:'' };
 }
 
@@ -637,9 +807,10 @@ function inCalmZone(r, tx, ty){
   if (S.searched[r.id + ':' + lx + ',' + ly]) return false;
   return Math.max(Math.abs(tx - lx), Math.abs(ty - ly)) <= 2;
 }
-function gemKey(){ return GEM_ORDER.map(g => S.gems[g] ? 1 : 0).join(''); }
+function gemKey(){ return ALL_GEMS.map(g => S.gems[g] ? 1 : 0).join(''); }
 function getLayer(r){
-  const key = r.id + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '');
+  const nCleared = Object.keys(S.cleared || {}).filter(k => k.startsWith(r.id + ':')).length;
+  const key = r.id + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '') + '|' + nCleared + (S.bossDefeated ? 'b' : '');
   if (layerCache[key]) return layerCache[key];
   const L = document.createElement('canvas'), Q = 2;
   L.width = r.W*TS*Q; L.height = r.H*TS*Q;
@@ -647,6 +818,10 @@ function getLayer(r){
   for (let y = 0; y < r.H; y++) for (let x = 0; x < r.W; x++){
     const t = r.t[y][x], px = x*TS, py = y*TS, rnd = mulberry32(hashStr(r.id+':'+x+','+y));
     if (t === T_WALL) { drawWallTile(c, r, x, y); continue; }
+    if (t === T_ICE) { drawFloorTile(c, px, py, rnd); drawIceTile(c, r, x, y, rnd); continue; }
+    if (t === T_DEEP) { drawDeepTile(c, r, x, y, rnd); continue; }
+    if (t === T_PIT || t === T_VINE) { drawPitTile(c, r, x, y, rnd); if (t === T_VINE) drawVineTile(c, r, x, y, rnd); continue; }
+    if (t === T_STAIRS) { drawFloorTile(c, px, py, rnd); drawStairsTile(c, r, x, y); continue; }
     if (t === T_CARPET) drawCarpet(c, r, x, y);
     else if (t === T_WATER) drawWaterTile(c, px, py, rnd);
     else drawFloorTile(c, px, py, rnd);
@@ -661,7 +836,7 @@ function getLayer(r){
   // torch brackets
   for (const t of r.torches){ const p = torchPos(r, t); c.fillStyle = '#2a2a2e'; c.fillRect(p.x-2, p.y+2, 4, 9); c.fillStyle = '#4a4a50'; c.fillRect(p.x-4, p.y, 8, 3); }
   // gem veins & gloss: color seeping into the stone as gems are found
-  const found = GEM_ORDER.filter(g => S.gems[g]);
+  const found = ALL_GEMS.filter(g => S.gems[g]);
   if (found.length){
     for (let y = 0; y < r.H; y++) for (let x = 0; x < r.W; x++){
       if (r.t[y][x] !== T_WALL) continue;
@@ -694,6 +869,61 @@ function getLayer(r){
   return L;
 }
 
+function drawIceTile(c, r, x, y, rnd){
+  const px = x*TS, py = y*TS;
+  const g = c.createLinearGradient(px, py - 6, px + TS, py + TS);
+  g.addColorStop(0, 'rgba(235,248,255,.97)'); g.addColorStop(.45, 'rgba(160,205,238,.95)'); g.addColorStop(1, 'rgba(105,150,200,.97)');
+  c.fillStyle = g; c.fillRect(px, py - 6, TS, TS + 6);
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(px + 4, py - 4); c.lineTo(px + 12, py - 4); c.lineTo(px + 4, py + 14); c.closePath(); c.fill();
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1;
+  c.beginPath(); let cx = px + 6 + rnd()*20, cy = py - 2; c.moveTo(cx, cy); for (let i = 0; i < 3; i++){ cx += (rnd()-.5)*12; cy += 8; c.lineTo(cx, cy); } c.stroke();
+  c.fillStyle = 'rgba(40,70,110,.35)'; c.fillRect(px, py + TS - 3, TS, 3);
+}
+function drawDeepTile(c, r, x, y, rnd){
+  const px = x*TS, py = y*TS;
+  const g = c.createRadialGradient(px + 16, py + 16, 2, px + 16, py + 16, 26);
+  g.addColorStop(0, '#071420'); g.addColorStop(1, '#0f2638');
+  c.fillStyle = g; c.fillRect(px, py, TS, TS);
+  c.strokeStyle = 'rgba(120,175,215,.16)'; c.lineWidth = 1;
+  for (let i = 0; i < 3; i++){ const yy = py + 6 + rnd()*22, xx = px + rnd()*16; c.beginPath(); c.moveTo(xx, yy); c.quadraticCurveTo(xx + 6, yy - 2, xx + 12, yy); c.stroke(); }
+  const deep = (xx, yy) => yy >= 0 && yy < r.H && xx >= 0 && xx < r.W && r.def.map[yy][xx] === 'D';
+  c.fillStyle = 'rgba(190,220,240,.25)';
+  if (!deep(x-1, y)) c.fillRect(px, py, 2, TS);
+  if (!deep(x+1, y)) c.fillRect(px + TS - 2, py, 2, TS);
+}
+function drawPitTile(c, r, x, y, rnd){
+  const px = x*TS, py = y*TS;
+  const pit = (xx, yy) => yy >= 0 && yy < r.H && xx >= 0 && xx < r.W && r.def.map[yy][xx] === 'O';
+  // a deep drop: dusky violet-gray depths, a rocky lip on the near and far edges
+  const g = c.createLinearGradient(0, py, 0, py + TS);
+  g.addColorStop(0, pit(x, y-1) ? '#120f18' : '#2a2433'); g.addColorStop(1, pit(x, y+1) ? '#120f18' : '#07060a');
+  c.fillStyle = g; c.fillRect(px, py, TS, TS);
+  if (!pit(x, y-1)){ const lg = c.createLinearGradient(0, py, 0, py + 12); lg.addColorStop(0, '#6a5440'); lg.addColorStop(.5, '#3a2c20'); lg.addColorStop(1, 'rgba(20,16,24,0)'); c.fillStyle = lg; c.fillRect(px, py, TS, 12);
+    c.fillStyle = 'rgba(255,230,200,.18)'; c.fillRect(px, py, TS, 1.5); }
+  if (!pit(x, y+1)){ c.fillStyle = '#4a3b2c'; c.fillRect(px, py + TS - 4, TS, 4); c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(px, py + TS - 6, TS, 2); }
+  c.fillStyle = 'rgba(190,180,220,.10)';
+  for (let i = 0; i < 4; i++) c.fillRect(px + rnd()*TS, py + 8 + rnd()*18, 1.2, 1.2);
+  c.strokeStyle = 'rgba(160,150,190,.08)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(px, py + 18 + rnd()*6); c.quadraticCurveTo(px + 16, py + 14 + rnd()*8, px + TS, py + 18 + rnd()*6); c.stroke();
+}
+function drawVineTile(c, r, x, y, rnd){
+  const px = x*TS, py = y*TS;
+  const vert = r.t[y-1] && (r.t[y-1][x] === T_VINE || r.t[y+1] && r.t[y+1][x] === T_VINE);
+  c.save(); c.translate(px + 16, py + 16); if (!vert) c.rotate(Math.PI/2);
+  c.fillStyle = '#2f5a2a'; c.fillRect(-13, -16, 26, 32);
+  for (const sx of [-10, 10]){ c.strokeStyle = '#4f9a3c'; c.lineWidth = 3; c.beginPath(); c.moveTo(sx, -16); c.bezierCurveTo(sx + 4, -6, sx - 4, 6, sx, 16); c.stroke(); }
+  c.strokeStyle = '#6cc04f'; c.lineWidth = 2;
+  for (let i = -12; i <= 12; i += 6){ c.beginPath(); c.moveTo(-11, i); c.quadraticCurveTo(0, i + 3, 11, i); c.stroke(); }
+  c.fillStyle = '#8fe06a';
+  for (let i = 0; i < 4; i++){ const lx = (rnd() - .5)*22, ly = (rnd() - .5)*28; c.beginPath(); c.ellipse(lx, ly, 3, 1.6, rnd()*3, 0, TAU); c.fill(); }
+  c.restore();
+}
+function drawStairsTile(c, r, x, y){
+  const px = x*TS, py = y*TS;
+  c.fillStyle = '#1a1612'; c.fillRect(px + 2, py + 2, TS - 4, TS - 4);
+  for (let i = 0; i < 5; i++){ const sh = 92 - i*15; c.fillStyle = `rgb(${sh},${sh - 10},${sh - 22})`; c.fillRect(px + 3, py + 3 + i*5.4, TS - 6, 4.2); }
+  c.strokeStyle = '#3a3026'; c.lineWidth = 1.5; c.strokeRect(px + 2.5, py + 2.5, TS - 5, TS - 5);
+}
 function drawFloorTile(c, px, py, rnd){
   const tones = [[96,72,50],[88,66,46],[102,78,54],[84,62,43],[92,70,47]];
   const b = tones[Math.floor(rnd()*tones.length)];
@@ -946,6 +1176,42 @@ function drawBat(c, x, y, t, e){
   c.fillStyle = e.flash > 0 ? '#fff' : '#4a4a50'; c.beginPath(); c.ellipse(x, yy, 4.5, 5.5, 0, 0, TAU); c.fill();
   c.beginPath(); c.moveTo(x-4, yy-4); c.lineTo(x-3, yy-8); c.lineTo(x-1, yy-4); c.moveTo(x+4, yy-4); c.lineTo(x+3, yy-8); c.lineTo(x+1, yy-4); c.fill();
 }
+function drawWraith(c, x, y, t, e){
+  const bob = Math.sin(t*2.6 + e.ph)*2.5;
+  c.save(); c.translate(x, y + bob);
+  shadow(c, 0, 11 - bob, 8, 2.5);
+  c.fillStyle = e.flash > 0 ? '#ffffff' : 'rgba(150,156,166,.82)';
+  c.beginPath(); c.moveTo(-8, 8); c.quadraticCurveTo(-11, -16, 0, -16); c.quadraticCurveTo(11, -16, 8, 8);
+  for (let i = 0; i < 5; i++) c.lineTo(8 - (i+1)*3.2, 8 + (i%2 ? 1 : 7) + Math.sin(t*5 + i + e.ph)*2);
+  c.closePath(); c.fill();
+  c.fillStyle = 'rgba(70,74,82,.9)'; c.beginPath(); c.ellipse(0, -8, 5.5, 4, 0, 0, TAU); c.fill();
+  c.restore();
+}
+function drawDrowned(c, x, y, t, e){
+  const sway = Math.sin(t*2 + e.ph)*1.5, col = e.flash > 0 ? '#ffffff' : '#4d5254';
+  shadow(c, x, y + 11, 9, 3);
+  c.fillStyle = col;
+  c.beginPath(); c.moveTo(x - 9, y + 10); c.quadraticCurveTo(x - 10 + sway, y - 8, x + 1 + sway, y - 12); c.quadraticCurveTo(x + 10 + sway, y - 8, x + 9, y + 10); c.closePath(); c.fill();
+  c.fillStyle = '#3a3e40'; c.beginPath(); c.arc(x + 1 + sway, y - 12, 6, 0, TAU); c.fill();
+  c.strokeStyle = '#6a7072'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 8, y - 2); c.lineTo(x - 13, y + 6 + Math.sin(t*3)*2); c.moveTo(x + 8, y - 2); c.lineTo(x + 13, y + 6 - Math.sin(t*3)*2); c.stroke();
+  c.fillStyle = 'rgba(150,170,180,.6)'; c.fillRect(x - 4, y + 4 + ((t*20 + e.ph*10) % 8), 1, 2); c.fillRect(x + 5, y + 2 + ((t*16 + e.ph*7) % 8), 1, 2);
+}
+function drawThorn(c, x, y, t, e){
+  const rot = t*2 + e.ph, col = e.flash > 0 ? '#ffffff' : '#45474a';
+  shadow(c, x, y + 9, 8, 2.5);
+  c.save(); c.translate(x, y - 2); c.rotate(rot);
+  c.fillStyle = col;
+  c.beginPath();
+  for (let i = 0; i < 16; i++){ const a = i*TAU/16, rr2 = i % 2 ? 6 : 11; c.lineTo(Math.cos(a)*rr2, Math.sin(a)*rr2); }
+  c.closePath(); c.fill();
+  c.strokeStyle = '#2c2d30'; c.lineWidth = 1.2; c.beginPath(); c.arc(0, 0, 5, 0, TAU); c.stroke();
+  c.restore();
+}
+function drawUnboundHalo(c, x, y, t){
+  const g = c.createRadialGradient(x, y - 30, 8, x, y - 30, 30);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(.7, 'rgba(10,10,14,.75)'); g.addColorStop(.85, 'rgba(200,200,210,.35)'); g.addColorStop(1, 'rgba(200,200,210,0)');
+  c.fillStyle = g; c.beginPath(); c.arc(x, y - 30, 30, 0, TAU); c.fill();
+}
 function drawLumen(c, x, y, t){
   const yy = y - 8 + Math.sin(t*2)*3;
   shadow(c, x, y+12, 7, 2.5);
@@ -1067,6 +1333,16 @@ function drawObj(c, o){
       }
       break;
     }
+    case 'urn': {
+      const x = px + 16, y = py + 18;
+      shadow(c, x, y + 10, 10, 3);
+      c.fillStyle = '#6a6a72'; c.beginPath(); c.moveTo(x - 6, y - 12); c.lineTo(x + 6, y - 12); c.quadraticCurveTo(x + 13, y - 4, x + 9, y + 8); c.lineTo(x - 9, y + 8); c.quadraticCurveTo(x - 13, y - 4, x - 6, y - 12); c.closePath(); c.fill();
+      c.fillStyle = '#85858e'; c.fillRect(x - 7, y - 14, 14, 3);
+      c.strokeStyle = '#3e3e44'; c.lineWidth = 1.5;
+      if (!done){ c.beginPath(); c.moveTo(x - 10, y - 6); c.lineTo(x + 10, y + 2); c.moveTo(x + 10, y - 6); c.lineTo(x - 10, y + 2); c.stroke(); c.fillStyle = '#4a4a50'; c.fillRect(x - 2, y - 4, 4, 4); }
+      else { c.fillStyle = '#121216'; c.beginPath(); c.ellipse(x, y - 12, 5.5, 1.8, 0, 0, TAU); c.fill(); }
+      break;
+    }
     case 'pillar': {
       shadow(c, px+16, py+28, 13, 4);
       c.fillStyle = '#5c5c62'; c.fillRect(px+4, py+20, 24, 9);
@@ -1107,6 +1383,15 @@ function drawObj(c, o){
 }
 function drawCap(c, cp){
   const x = (cp.x+.5)*TS, y = (cp.y+.5)*TS;
+  if (curLevel() === 2){   // starmoss: little silver star flowers
+    for (let i = 0; i < 3; i++){
+      const ox = (i-1)*7, oy = i === 1 ? -3 : 3, s2 = (i === 1 ? 3.6 : 2.8) + Math.sin(time*3 + i)*0.4;
+      c.strokeStyle = '#6f8f7a'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + ox, y + oy + 2); c.lineTo(x + ox, y + oy + 7); c.stroke();
+      c.fillStyle = '#e6f4ff';
+      c.beginPath(); for (let k = 0; k < 10; k++){ const a = k*Math.PI/5 - Math.PI/2, rr2 = k % 2 ? s2*0.45 : s2; c.lineTo(x + ox + Math.cos(a)*rr2, y + oy + Math.sin(a)*rr2); } c.closePath(); c.fill();
+    }
+    return;
+  }
   for (let i = 0; i < 3; i++){
     const ox = (i-1)*7, oy = (i===1 ? -3 : 3), s = i===1 ? 5 : 4;
     c.fillStyle = '#e4dccb'; c.fillRect(x+ox-1, y+oy, 2, 6);
@@ -1119,12 +1404,12 @@ function drawGateAndDoors(c){
   const r = room;
   if (r.gateTiles.length){
     const x0 = r.gateTiles[0][0]*TS, y0 = r.gateTiles[0][1]*TS, w = r.gateTiles.length*TS;
-    if (!S.gateOpen){
+    if (!gateFlag(r)){
       c.fillStyle = '#2a2a30'; c.fillRect(x0-3, y0, w+6, TS);
       c.fillStyle = '#4c4c55'; c.fillRect(x0+1, y0+2, w-2, TS-3);
       c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(x0+1, y0+2, w-2, 2);
       c.strokeStyle = '#2a2a30'; c.lineWidth = 1; c.beginPath(); c.moveTo(x0+w/2, y0+2); c.lineTo(x0+w/2, y0+TS); c.stroke();
-      GEM_ORDER.forEach((g, i) => {
+      r.def.gate.gems.forEach((g, i) => {
         const sx = x0 + w*(i+1)/4, sy = y0 + 15;
         c.fillStyle = '#16161a'; c.beginPath(); c.moveTo(sx, sy-7); c.lineTo(sx+5, sy); c.lineTo(sx, sy+7); c.lineTo(sx-5, sy); c.closePath(); c.fill();
         if (S.gems[g]) drawGemShape(c, sx, sy, 3.6, GEMS[g].color);
@@ -1138,7 +1423,7 @@ function drawGateAndDoors(c){
   }
   if (r.freeTiles.length){
     const x0 = r.freeTiles[0][0]*TS, y0 = r.freeTiles[0][1]*TS, w = r.freeTiles.length*TS;
-    if (!S.bossDefeated){
+    if (!bossDone(r.id)){
       c.fillStyle = '#1e1e22'; c.fillRect(x0-3, y0, w+6, TS);
       c.fillStyle = '#333338'; c.fillRect(x0+1, y0+2, w-2, TS-3);
       c.fillStyle = '#4a4a50'; c.fillRect(x0+1, y0+9, w-2, 3); c.fillRect(x0+1, y0+21, w-2, 3);
@@ -1153,6 +1438,14 @@ function drawGateAndDoors(c){
   }
   for (const o of r.objs){
     if (o.type === 'loose' && S.searched[o.key]){ const px = o.x*TS, py = o.y*TS; c.fillStyle = '#0c0b0e'; c.fillRect(px+9, py+9, 14, 14); c.strokeStyle = 'rgba(255,255,255,.15)'; c.strokeRect(px+9.5, py+9.5, 13, 13); }
+  }
+}
+function drawPitMist(c){
+  for (let y = 0; y < room.H; y++) for (let x = 0; x < room.W; x++){
+    if (room.t[y][x] !== T_PIT) continue;
+    const px = x*TS, py = y*TS, ph = (time*0.4 + x*0.37 + y*0.71) % 1;
+    c.fillStyle = `rgba(190,185,215,${0.06*Math.sin(ph*Math.PI)})`;
+    c.beginPath(); c.ellipse(px + 16 + Math.sin(time*0.6 + x)*6, py + 20 - ph*8, 14, 4, 0, 0, TAU); c.fill();
   }
 }
 function drawWaterAnim(c){
@@ -1171,7 +1464,7 @@ function drawWaterAnim(c){
 const lightCv = document.createElement('canvas'); let lightCtx = null, lightImg = null;
 function heroLightRadius(){
   let r = 4.6 + HEROES[S.heroId].light + (S.items.lantern ? 2.4 : 0);
-  if (room.id === 'throne') r -= 0.4;
+  if (room.def.boss) r -= 0.4;
   return r;
 }
 function gatherLights(){
@@ -1184,8 +1477,8 @@ function gatherLights(){
   }
   for (const n of r.npcs){ const x = (n.x+.5)*TS, y = (n.y+.5)*TS; L.push(n.type === 'lumen' ? { x, y, r:2.8*TS, i:0.85 } : { x, y:y-10, r:2.2*TS, i:0.6 }); }
   for (const cp of r.caps) if (!S.capsFound[cp.key]) L.push({ x:(cp.x+.5)*TS, y:(cp.y+.5)*TS, r:1.5*TS, i:0.45 });
-  if (r.gateTiles.length && S.gateOpen){ const [gx, gy] = r.gateTiles[0]; L.push({ x:(gx+1)*TS, y:(gy+.8)*TS, r:3.5*TS, i:0.9 }); }
-  if (r.freeTiles.length && S.bossDefeated){ const [fx, fy] = r.freeTiles[0]; L.push({ x:(fx+1)*TS, y:(fy+1)*TS, r:6*TS, i:1 }); }
+  if (r.gateTiles.length && gateFlag(r)){ const [gx, gy] = r.gateTiles[0]; L.push({ x:(gx+1)*TS, y:(gy+.8)*TS, r:3.5*TS, i:0.9 }); }
+  if (r.freeTiles.length && bossDone(r.id)){ const [fx, fy] = r.freeTiles[0]; L.push({ x:(fx+1)*TS, y:(fy+1)*TS, r:6*TS, i:1 }); }
   for (const p of projectiles) L.push({ x:p.x, y:p.y, r:1*TS, i:0.35 });
   for (const b of bolts) L.push({ x:b.x, y:b.y, r:1.6*TS, i:0.55 });
   if (boss && boss.active && !boss.dead) L.push({ x:boss.x, y:boss.y-6, r:2.6*TS, i:0.5 });
@@ -1197,7 +1490,7 @@ function computeLight(){
     lightCv.width = LW; lightCv.height = LH; lightCtx = lightCv.getContext('2d'); lightImg = lightCtx.createImageData(LW, LH);
   }
   const data = lightImg.data, src = gatherLights(), hr = heroLightRadius()*TS;
-  const MEM = r.id === 'throne' ? 0.16 : 0.2;
+  const MEM = r.def.boss ? 0.16 : 0.2;
   r.tileLight.fill(0);
   for (let j = 0; j < LH; j++){
     const wy = (j + .5)*TS/2;
@@ -1266,8 +1559,9 @@ function updateHUD(){
   $('#hearts').innerHTML = h; $('#hearts').setAttribute('aria-label', `Health ${S.hp} of ${S.maxHp}`);
   $('#gold').textContent = S.gold;
   $('#potions').textContent = S.potions; $('#t-pot-n').textContent = S.potions;
-  $('#gems').innerHTML = GEM_ORDER.map(g => `<span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>`).join('');
-  $('#gems').setAttribute('aria-label', `Prism gems found: ${gemCount()} of 3`);
+  const shown = S.visited.vault ? ALL_GEMS : GEM_ORDER;
+  $('#gems').innerHTML = shown.map(g => `<span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>`).join('');
+  $('#gems').setAttribute('aria-label', S.visited.vault ? `Gems found: ${gemCount(1) + gemCount(2)} of 6` : `Prism gems found: ${gemCount()} of 3`);
 }
 
 const UI = { open:null, modal:null, portrait:null };
@@ -1311,6 +1605,7 @@ function dialog(who, pages, opts = {}){
 
 /* ---------- item icons ---------- */
 function itemIcon(id){
+  if (id === 'blade2') id = 'blade'; else if (id === 'heart2') id = 'heart'; else if (id === 'radiant') id = 'lens';
   const s = {
     potion:'<svg viewBox="0 0 24 24"><path d="M9 3h6v2l-1 1v4l5 8a2 2 0 0 1-2 3H7a2 2 0 0 1-2-3l5-8V6L9 5z" fill="#3a2a44" stroke="#ffd0e0" stroke-width="1.2"/><path d="M7.5 15h9l2 3.3a1 1 0 0 1-1 1.7H6.5a1 1 0 0 1-1-1.7z" fill="#ff5d8f"/></svg>',
     blade:'<svg viewBox="0 0 24 24"><path d="M19 3l2 0 0 2-11 11-2-2z" fill="#dfe8ff" stroke="#9fb4ff" stroke-width=".8"/><path d="M5 15l4 4M7 13l4 4" stroke="#c9a2ff" stroke-width="2" stroke-linecap="round"/><path d="M4 20l2-2" stroke="#f2c14e" stroke-width="2.5" stroke-linecap="round"/></svg>',
@@ -1329,7 +1624,7 @@ function itemIcon(id){
 
 /* ---------- panels ---------- */
 function openShop(quip){
-  const rows = SHOP.map(it => {
+  const rows = SHOP.filter(it => !it.level || S.visited.vault).map(it => {
     const owned = !it.consumable && S.items[it.id], can = S.gold >= it.price && !owned;
     const why = owned ? 'Already owned' : (S.gold < it.price ? 'Not enough gold' : `Buy for ${it.price} gold`);
     return `<div class="shop-row"><div class="si-icon">${itemIcon(it.id)}</div>
@@ -1348,42 +1643,61 @@ function buy(id){
   if (it.consumable) S.potions++;
   else {
     S.items[id] = true;
-    if (id === 'heart'){ S.maxHp += 3; S.hp = S.maxHp; }
+    if (id === 'heart' || id === 'heart2'){ S.maxHp += 3; S.hp = S.maxHp; }
   }
   save();
-  const quips = { blade: heroWeapon().quip, shield: heroShield().quip, potion:'Drink it before things get dire, not after!',
+  const quips = { blade: heroWeapon().quip, blade2: heroWeapon2().quip, heart2:'Even more of you! The Vaults will hardly know what hit them.', radiant:'Six gems of light in one lens. Mind your eyebrows.', shield: heroShield().quip, potion:'Drink it before things get dire, not after!',
     lantern:'Ooh, now you’ll see every glimmer in the stone.', heart:'Feel that? That’s more of you to go around.', lens:'Prism light! The Sovereign’s ward won’t stand a chance.' };
   openShop(quips[id]);
 }
 function openBag(){
   if (!S) return;
-  const gear = GEAR.map(it => `<div class="item-line${S.items[it.id] ? '' : ' off'}"><div class="si-icon">${itemIcon(it.id)}</div><div><b>${it.name}</b><div class="si-desc">${S.items[it.id] ? it.desc : 'Not owned. Mossback sells it for ' + it.price + ' gold.'}</div></div></div>`).join('');
-  const gems = GEM_ORDER.map(g => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>${S.gems[g] ? GEMS[g].name : '???'}</span>`).join('');
+  const gear = GEAR.concat(S.visited.vault ? GEAR2 : []).map(it => `<div class="item-line${S.items[it.id] ? '' : ' off'}"><div class="si-icon">${itemIcon(it.id)}</div><div><b>${it.name}</b><div class="si-desc">${S.items[it.id] ? it.desc : 'Not owned. Mossback sells it for ' + it.price + ' gold.'}</div></div></div>`).join('');
+  const gems = (S.visited.vault ? ALL_GEMS : GEM_ORDER).map(g => `<span style="display:inline-flex;align-items:center;gap:6px;margin-right:14px"><span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>${S.gems[g] ? GEMS[g].name : '???'}</span>`).join('');
   openModal({ kind:'bag', title:'Your Bag', portrait:'hero',
     body:`<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Hearts</dt><dd>${S.hp} / ${S.maxHp}</dd><dt>Damage</dt><dd>${heroAtk()}</dd><dt>Attack style</dt><dd>${HEROES[S.heroId].style}</dd><dt>Trait</dt><dd>${HEROES[S.heroId].trait}</dd><dt>Gold</dt><dd>${S.gold}</dd></dl>
-      <h3 style="margin:14px 0 6px;font-size:16px">Prism Gems</h3><div>${gems}</div>
+      <h3 style="margin:14px 0 6px;font-size:16px">${S.visited.vault ? 'Gems' : 'Prism Gems'}</h3><div style="display:flex;flex-wrap:wrap;gap:6px 0">${gems}</div>
+      ${S.visited.vault ? `<p class="si-desc" style="margin:6px 0 0">In the Vaults, stand next to ice, deep water or a chasm and press E (or tap the action button). The Ruby melts ice, the Sapphire calms water and the Emerald grows vine bridges.</p>` : ''}
       <h3 style="margin:14px 0 6px;font-size:16px">Healing Draughts: ${S.potions}</h3>
       <h3 style="margin:14px 0 4px;font-size:16px">Gear</h3>${gear}
+      ${S.vials && S.q2.vials !== 'done' ? `<div class="item-line"><div class="si-icon">${itemIcon('potion')}</div><div><b>Vials of Stolen Color (${Math.min(3, S.vials)}/3)</b><div class="si-desc">Bright color the Sovereign locked away. Lumen will know what to do.</div></div></div>` : ''}
       ${S.locket && S.q.locket !== 'done' ? `<div class="item-line"><div class="si-icon">${itemIcon('locket')}</div><div><b>Silver Locket</b><div class="si-desc">Lumen’s keepsake. Bring it back to them.</div></div></div>` : ''}`,
     actions:[{ label:`Drink draught (${S.potions})`, disabled: S.potions < 1 || S.hp >= S.maxHp, fn:() => { usePotion(); openBag(); } }, { label:'Close', primary:true }] });
 }
-function questsHTML(){
-  const n = gemCount();
-  const steps = [[`Find the three hidden Prism Gems (${n}/3)`, n >= 3], ['Open the Prism Gate in the Forgotten Cells', S.gateOpen], ['Defeat the Hollow Sovereign', S.bossDefeated], ['Escape through the Freedom Door', S.won]];
-  let cur = steps.findIndex(s => !s[1]);
-  let h = `<div class="q ultimate"><h3>Ultimate Quest: The Path to Freedom</h3><div class="meta">Escape the Hollow Keep and save your people.</div><ul>${steps.map((s, i) => `<li class="${s[1] ? 'done' : i === cur ? 'now' : ''}">${s[1] ? '✓' : i === cur ? '▸' : '•'} ${s[0]}</li>`).join('')}</ul></div>`;
-  if (!S.q.met) return h + `<div class="q"><h3>Side quests</h3><div class="meta">Speak with Lumen, the lantern spirit in the Forgotten Cells, to learn of tasks that pay gold.</div></div>`;
-  const side = [
-    ['locket', 'Lumen’s Lost Locket', 'Find Lumen’s silver locket somewhere in the Sunken Crypt.', S.locket ? 'Found' : 'Not found', 35, S.locket],
-    ['caps', 'Glowcap Gathering', 'Collect glowing glowcap mushrooms from across the dungeon.', `${Math.min(6, capsCount())}/6 gathered`, 40, capsCount() >= 6],
-    ['shadows', 'Banish the Shadows', 'Defeat creatures that prowl the dungeon.', `${Math.min(6, S.shadowKills)}/6 banished`, 50, S.shadowKills >= 6],
-  ];
-  for (const [id, title, desc, prog, rew, ready] of side){
-    const st = S.q[id];
+function ultimateHTML(title, meta, steps){
+  const cur = steps.findIndex(s => !s[1]);
+  return `<div class="q ultimate"><h3>${title}</h3><div class="meta">${meta}</div><ul>${steps.map((s, i) => `<li class="${s[1] ? 'done' : i === cur ? 'now' : ''}">${s[1] ? '✓' : i === cur ? '▸' : '•'} ${s[0]}</li>`).join('')}</ul></div>`;
+}
+function sideHTML(q, list){
+  let h = '';
+  for (const [id, title, desc, prog, rew, ready] of list){
+    const st = q[id];
     const tag = st === 'done' ? '<span class="tag done">Complete</span>' : ready ? '<span class="tag ready">Return to Lumen</span>' : '<span class="tag active">Active</span>';
     h += `<div class="q"><h3>${title}${tag}</h3><div class="meta">${desc}</div><div style="margin-top:4px;font-size:15px">${st === 'done' ? 'Reward claimed.' : prog} &middot; <span class="coin"></span>${rew} gold</div></div>`;
   }
   return h;
+}
+function questsHTML(){
+  const n = gemCount();
+  const one = ultimateHTML('Chapter One: The Path to Freedom', 'Escape the Hollow Keep.', [[`Find the three hidden Prism Gems (${n}/3)`, n >= 3], ['Open the Prism Gate in the Forgotten Cells', S.gateOpen], ['Defeat the Hollow Sovereign', S.bossDefeated], ['Step through the Freedom Door or take the stair down', S.won || S.visited.vault]]);
+  if (S.visited.vault){
+    const n2 = gemCount(2);
+    let h = ultimateHTML('Chapter Two: The Heart of the Vault', 'Win back every color the Sovereign stole.', [[`Find the three hidden Vault Gems (${n2}/3)`, n2 >= 3], ['Open the Vault Door in the Antechamber', S.vaultOpen], ['Defeat the Sovereign Unbound', S.boss2Defeated], ['Step through the Freedom Door', S.won2]]);
+    if (!S.q2.met) h += `<div class="q"><h3>Vault tasks</h3><div class="meta">Lumen followed you down. Speak with them in the Vault Antechamber.</div></div>`;
+    else h += sideHTML(S.q2, [
+      ['vials', 'Colors in Chains', 'Open the chained urns hidden in the three vaults and recover the stolen color.', `${Math.min(3, S.vials)}/3 vials`, 60, S.vials >= 3],
+      ['moss', 'Starmoss Harvest', 'Gather silver starmoss that grows in the Vaults.', `${Math.min(6, capsCount(2))}/6 gathered`, 50, capsCount(2) >= 6],
+      ['chains', 'Break the Chains', 'Defeat creatures that guard the Vaults.', `${Math.min(8, S.chainKills)}/8 defeated`, 70, S.chainKills >= 8],
+    ]);
+    return h + one;
+  }
+  let h = one;
+  if (!S.q.met) return h + `<div class="q"><h3>Side quests</h3><div class="meta">Speak with Lumen, the lantern spirit in the Forgotten Cells, to learn of tasks that pay gold.</div></div>`;
+  return h + sideHTML(S.q, [
+    ['locket', 'Lumen’s Lost Locket', 'Find Lumen’s silver locket somewhere in the Sunken Crypt.', S.locket ? 'Found' : 'Not found', 35, S.locket],
+    ['caps', 'Glowcap Gathering', 'Collect glowing glowcap mushrooms from across the dungeon.', `${Math.min(6, capsCount())}/6 gathered`, 40, capsCount() >= 6],
+    ['shadows', 'Banish the Shadows', 'Defeat creatures that prowl the dungeon.', `${Math.min(6, S.shadowKills)}/6 banished`, 50, S.shadowKills >= 6],
+  ]);
 }
 function openQuests(){ if (S) openModal({ kind:'quests', title:'Quest Log', portrait:'narrator', body:questsHTML(), actions:[{ label:'Close', primary:true }] }); }
 function helpHTML(){
@@ -1401,6 +1715,7 @@ function helpHTML(){
   <ul style="padding-left:18px;margin:0">
   <li>Light reveals the room as you move. Torches flare up as you get close.</li>
   <li>Gems hide inside the walls themselves. Watch for a faint glimmer in the stone.</li>
+  <li>In the Vaults, your Prism Gems have powers: stand beside ice, deep water or a chasm and press E to melt, calm or bridge it.</li>
   <li>Standing still makes you harder for creatures to notice.</li>
   <li>Quests from Lumen pay gold. Spend it with Mossback to prepare for the final battle.</li>
   <li>There is no time limit. If you fall, you wake in your cell with a little less gold.</li></ul>`;
@@ -1420,6 +1735,7 @@ function openStory(){
 }
 function lumenHint(){
   const n = gemCount();
+  if (S.bossDefeated && !S.boss2Defeated) return 'The Sovereign’s ash fled down the stair in the throne room. Follow it into the Vaults, and I will find you there.';
   if (S.bossDefeated) return 'You did it! The Freedom Door stands open. Go, your people are waiting.';
   if (n >= 3 && !S.gateOpen) return 'All three gems! I can feel their warmth from here. Bring them to the Prism Gate just behind me.';
   if (S.gateOpen){
@@ -1443,14 +1759,55 @@ function lumenRewards(){
   if (S.q.locket === 'active' && S.locket){ pages.push('My locket! I thought it lost forever. Thank you, truly. Please, take these <b>35 gold</b>.'); reward += 35; done.push('locket'); }
   if (S.q.caps === 'active' && capsCount() >= 6){ pages.push('Six glowcaps! My flame feels brighter already. Here are <b>40 gold</b> for your trouble.'); reward += 40; done.push('caps'); }
   if (S.q.shadows === 'active' && S.shadowKills >= 6){ pages.push('The halls feel a little less cold. You have banished the shadows. Please take <b>50 gold</b>.'); reward += 50; done.push('shadows'); }
-  return { pages, reward, done };
+  return { pages, reward, done, q:S.q };
 }
 function payLumen(r){
-  if (!r.done.some(k => S.q[k] === 'active')) return;
-  r.done.forEach(k => S.q[k] = 'done');
+  const q = r.q || S.q;
+  if (!r.done.some(k => q[k] === 'active')) return;
+  r.done.forEach(k => q[k] = 'done');
   addGold(r.reward, hero.x, hero.y - 20); SFX.quest(); save();
 }
+function lumenHint2(){
+  const n = gemCount(2);
+  if (S.boss2Defeated) return 'Every color is free. The Freedom Door in the Heart of the Vault is open. Go home, hero.';
+  if (n >= 3 && !S.vaultOpen) return 'All three Vault Gems! Bring them to the Vault Door, just north of here.';
+  if (S.vaultOpen){
+    const missing = GEAR2.filter(i => !S.items[i.id]).map(i => i.name);
+    return missing.length ? `The Vault Door is open. Down here the Sovereign wears an Eclipse Ward. A Prism Lens only weakens it; Mossback’s Radiant Lens can break it. Mossback still has: ${missing.join(', ')}.` : 'You carry the light of six gems. Go, and set the colors free.';
+  }
+  if (!S.gems.amethyst) return `The amethyst hides in the Frozen Gallery, to the west, sealed behind walls of ice. Your Ember Ruby can melt them. Look along the ${gemArea('frozen')} walls.`;
+  if (!S.gems.topaz) return `The topaz waits in the Flooded Cistern, to the east, past water too deep to cross. Let your Tide Sapphire calm it. Search the ${gemArea('cistern')} walls.`;
+  if (!S.gems.diamond) return `The diamond sleeps in the Chasm Garden, to the south, across a chasm. Your Grove Emerald can grow a bridge. Try the ${gemArea('garden')} walls.`;
+  return 'Keep searching. Light finds what darkness hides.';
+}
+function lumenRewards2(){
+  const pages = [], done = []; let reward = 0;
+  if (S.q2.vials === 'active' && S.vials >= 3){ pages.push('Three vials of stolen color! I will keep them safe until every color goes home. Take <b>60 gold</b>.'); reward += 60; done.push('vials'); }
+  if (S.q2.moss === 'active' && capsCount(2) >= 6){ pages.push('Starmoss! It burns so cleanly in my lantern. Here are <b>50 gold</b>.'); reward += 50; done.push('moss'); }
+  if (S.q2.chains === 'active' && S.chainKills >= 8){ pages.push('The guards of the Vaults are broken. You are a wonder. Take <b>70 gold</b>.'); reward += 70; done.push('chains'); }
+  return { pages, reward, done, q:S.q2 };
+}
+function talkLumen2(){
+  if (!S.q2.met){
+    dialog('lumen', [
+      'There you are! When the Sovereign fell, the chain on my lantern broke at last, so I followed your light down the stair.',
+      'These are the Vaults, where the Sovereign locked away every color they stole. Their shadow fled to the <b>Heart of the Vault</b>, behind the great Vault Door to the north.',
+      'Your Prism Gems are stronger down here. The <b>Ruby</b> melts ice, the <b>Sapphire</b> calms deep water, and the <b>Emerald</b> grows vine bridges. Stand beside one and use it.',
+      'Three new gems hide beyond those obstacles: an <b>amethyst</b>, a <b>topaz</b> and a <b>diamond</b>. Together they open the Vault Door. And if you can, find the <b>chained urns</b>, gather <b>starmoss</b>, and break the creatures guarding this place.',
+    ], { onDone:() => {
+      S.q2.met = true; S.q2.vials = S.q2.moss = S.q2.chains = 'active';
+      SFX.quest(); toast('New Vault quests added to your Quest Log.'); save();
+      const r = lumenRewards2();
+      if (r.reward){ r.pages[0] = 'Wait&hellip; you have already been busy! ' + r.pages[0]; dialog('lumen', r.pages, { onDone:() => payLumen(r) }); }
+    }});
+    return;
+  }
+  const r = lumenRewards2();
+  if (r.reward) dialog('lumen', r.pages, { onDone:() => payLumen(r) });
+  else dialog('lumen', [lumenHint2()]);
+}
 function talkLumen(){
+  if (curLevel() === 2) return talkLumen2();
   if (!S.q.met){
     dialog('lumen', [
       'Oh! A new light in the dark. Welcome, friend. I am <b>Lumen</b>, a lantern spirit bound to these cells long ago.',
@@ -1472,13 +1829,42 @@ function talkLumen(){
 }
 function talkMoss(){
   const quips = ['Shells and spells, trinkets and kettles! What’ll it be?', 'Slow and steady fills the purse. Yours, ideally, into mine.', 'Everything here was found, not stolen. Mostly.', 'The Sovereign never shops here. Terrible taste in everything.'];
+  if (curLevel() === 2 && !S.metMoss2){
+    S.metMoss2 = true;
+    dialog('mossback', ['You found the Vaults too! I followed the smell of opportunity. And mildew. Mostly opportunity.', 'Fresh stock from the deep: stronger weapons, a bigger heart, and a lens that could break an eclipse. Have a look.'],
+      { onDone:() => openShop('Vault prices, I am afraid. Danger is expensive.') });
+    return;
+  }
   if (!S.metMoss){
     S.metMoss = true;
     dialog('mossback', ['Oh-ho! A customer! I am <b>Mossback</b>, merchant of the deep. I carry my whole shop on my back, you know.', 'Bring me gold from quests and dusty chests, and I’ll make you strong enough to face anything. Even them.'],
       { onDone:() => openShop(quips[0]) });
   } else openShop(quips[Math.floor(Math.random()*quips.length)]);
 }
+function useVaultDoor(){
+  const n = gemCount(2);
+  if (n < 3){
+    dialog('vault', [`A great round door of black iron, carved with three empty sockets: violet, gold and white. Behind it, something breathes slowly in the dark.<br><br><b>Vault Gems found: ${n} / 3</b>`]);
+    return;
+  }
+  const missing = GEAR2.filter(i => !S.items[i.id]).map(i => i.name);
+  dialog('vault', [
+    'The Dusk Amethyst, Sun Topaz and Star Diamond flare in your pack. One by one, the locks of the Vault Door begin to turn.',
+    'Beyond it lies the Heart of the Vault, where the Sovereign Unbound waits with every stolen color. The way back will seal until the battle ends.' +
+      (missing.length ? `<br><br><i>A chill runs through you. You are still missing: <b>${missing.join(', ')}</b>. You can face the Sovereign Unbound now, but it will be harder.</i>` : '<br><br><i>You feel ready. The light of six gems is with you.</i>'),
+  ], { choices:[
+    { label:'Not yet', fn:() => closeModal() },
+    { label:'Place the gems', primary:true, fn:() => {
+      closeModal(); S.vaultOpen = true; SFX.gem(); SFX.door(); shake = 0.5;
+      const [gx, gy] = room.gateTiles[0];
+      burst((gx+1)*TS, (gy+.6)*TS, 70, rainbow, { speed:140, glow:true, life:1.4, grav:-10 });
+      flash = { t:0.6, max:0.6, c:'255,255,255' };
+      toast('The Vault Door rolls open. The Heart of the Vault lies beyond.', 4000); save();
+    }},
+  ]});
+}
 function useGate(){
+  if (room.def.gate.speaker === 'vault') return useVaultDoor();
   const n = gemCount();
   if (n < 3){
     dialog('gate', [`A great slab of stone, carved with three empty sockets: one red, one blue, one green. They seem to be waiting for something. <br><br><b>Prism Gems found: ${n} / 3</b>`]);
@@ -1517,10 +1903,20 @@ function tileAt(px, py){ const tx = Math.floor(px/TS), ty = Math.floor(py/TS); r
 function solidTile(tx, ty, isEnemy){
   if (tx < 0 || ty < 0 || tx >= room.W || ty >= room.H) return true;
   const t = room.t[ty][tx];
-  if (t === T_WALL || t === T_BARS) return true;
-  if (t === T_GATE) return isEnemy || !S.gateOpen;
-  if (t === T_FREE) return isEnemy || !S.bossDefeated;
+  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_DEEP || t === T_PIT) return true;
+  if (t === T_GATE) return isEnemy || !gateFlag(room);
+  if (t === T_FREE) return isEnemy || !bossDone(room.id);
+  if (t === T_STAIRS) return isEnemy;
   if (t === T_EXIT) return isEnemy || room.sealed;
+  return room.solidObj[ty*room.W + tx] === 1;
+}
+// what stops a projectile: walls, ice and closed doors (it flies over water and chasms)
+function shotBlocked(tx, ty){
+  if (tx < 0 || ty < 0 || tx >= room.W || ty >= room.H) return true;
+  const t = room.t[ty][tx];
+  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_EXIT || t === T_STAIRS) return true;
+  if (t === T_GATE) return !gateFlag(room);
+  if (t === T_FREE) return !bossDone(room.id);
   return room.solidObj[ty*room.W + tx] === 1;
 }
 function blocked(x, y, hs, isEnemy){
@@ -1550,8 +1946,9 @@ function moveEnt(e, dx, dy, hs, isEnemy){
 }
 
 function enterRoom(id, at){
+  const firstVisit = !S.visited[id];
   room = buildRoom(id); S.room = id; S.visited[id] = true;
-  projectiles = []; bolts = []; particles = []; texts = [];
+  projectiles = []; bolts = []; marks = []; particles = []; texts = [];
   let pos;
   if (at === 'start') pos = room.start;
   else if (at && room.exits[at]){
@@ -1560,6 +1957,7 @@ function enterRoom(id, at){
     let dx = 0, dy = 0;
     if (ay === 0) dy = 1; else if (ay === room.H-1) dy = -1;
     if (ax === 0) dx = 1; else if (ax === room.W-1) dx = -1;
+    if (!dx && !dy) dy = 1;   // stairs in the middle of a room: step off below them
     pos = { x:(ax + .5 + dx*1.3)*TS, y:(ay + .5 + dy*1.3)*TS };
   } else if (S.pos && !blocked(S.pos.x, S.pos.y, 9, false)) pos = S.pos;
   else pos = room.start;
@@ -1569,6 +1967,10 @@ function enterRoom(id, at){
   clearTimeout(enterRoom._t); enterRoom._t = setTimeout(() => rn.classList.remove('show'), 2200);
   $('#mm-label').textContent = room.def.name;
   save();
+  if (firstVisit && id === 'vault') setTimeout(() => dialog('narrator', [
+    'The stair winds down and down, into cold vaults of black iron. The air smells of frost and old rain.',
+    'Your three Prism Gems pulse against your pack, stronger than ever. Down here, their light can do more than open doors. Ahead, a familiar warm glow flickers: Lumen is waiting.',
+  ]), 450);
 }
 function startTrans(to, at){ if (trans) return; trans = { phase:'out', t:0, to, at }; SFX.door(); }
 
@@ -1603,7 +2005,7 @@ function reachGoals(fromIdx, toIdx){
   const blockedAt = i => {
     if (i === toIdx) return true;
     const x = i % W, y = (i/W)|0, t = room.t[y][x];
-    if (t === T_WALL || t === T_BARS || t === T_GATE || t === T_FREE || t === T_EXIT) return true;
+    if (t === T_WALL || t === T_BARS || t === T_GATE || t === T_FREE || t === T_EXIT || t === T_STAIRS || t === T_ICE || t === T_DEEP || t === T_PIT) return true;
     return i !== fromIdx && room.solidObj[i] === 1;
   };
   const start = Math.floor(hero.y/TS)*W + Math.floor(hero.x/TS), q = [start]; reach[start] = 1;
@@ -1632,16 +2034,62 @@ function findInteract(){
     const sc = d - dot*12;
     if (sc < bs){ bs = sc; best = { kind, ref, x:cx, y:cy, label }; }
   };
-  const L = { crate:'Search crate', barrel:'Search barrel', chest:'Open chest', sarc:'Search tomb', sarcZ:'Search tomb', rubble:'Dig through rubble', loose:'Loose stone?' };
+  const L = { crate:'Search crate', barrel:'Search barrel', chest:'Open chest', sarc:'Search tomb', sarcZ:'Search tomb', rubble:'Dig through rubble', loose:'Loose stone?', urn:'Open urn' };
   for (const o of room.objs) if (SEARCHABLE[o.type] && !S.searched[o.key]) consider('search', o, (o.x+.5)*TS, (o.y+.5)*TS, L[o.type]);
   for (const n of room.npcs) consider('talk', n, (n.x+.5)*TS, (n.y+.5)*TS, n.type === 'lumen' ? 'Talk to Lumen' : 'Talk to Mossback');
-  if (!S.gateOpen && room.gateTiles.length){ for (const [gx, gy] of room.gateTiles) consider('gate', null, (gx+.5)*TS, (gy+.5)*TS, 'Examine gate'); }
+  if (!gateFlag(room) && room.gateTiles.length){ for (const [gx, gy] of room.gateTiles) consider('gate', null, (gx+.5)*TS, (gy+.5)*TS, room.def.gate.speaker === 'vault' ? 'Examine vault door' : 'Examine gate'); }
+  // obstacles a gem power can clear
+  const htx = Math.floor(hero.x/TS), hty = Math.floor(hero.y/TS);
+  for (let ty = hty - 2; ty <= hty + 2; ty++) for (let tx = htx - 2; tx <= htx + 2; tx++){
+    if (ty < 0 || tx < 0 || ty >= room.H || tx >= room.W) continue;
+    const t = room.t[ty][tx], kind = t === T_ICE ? 'ice' : t === T_DEEP ? 'deep' : t === T_PIT ? 'pit' : null;
+    if (!kind) continue;
+    const P = POWERS[kind];
+    consider('power', { x:tx, y:ty, t, kind }, (tx+.5)*TS, (ty+.5)*TS, `${P.label} (${GEMS[P.gem].name.split(' ')[1]})`);
+  }
   return best;
 }
 function doInteract(it){
   if (it.kind === 'search'){ hero.searching = { obj:it.ref, t:0, dur: it.ref.type === 'loose' ? 1.0 : 0.6 }; SFX.search(); }
   else if (it.kind === 'talk') it.ref.type === 'lumen' ? talkLumen() : talkMoss();
   else if (it.kind === 'gate') useGate();
+  else if (it.kind === 'power') usePower(it.ref);
+}
+// clear a connected ice wall, deep pool or (a two-tile strip of) chasm with the matching gem
+function usePower(ref){
+  const P = POWERS[ref.kind];
+  if (!S.gems[P.gem]){ toast(`You need the ${GEMS[P.gem].name} to clear this.`); return; }
+  const r = room, W = r.W, seen = new Uint8Array(W*r.H), q = [[ref.x, ref.y]], tiles = [];
+  while (q.length){
+    const [x, y] = q.pop();
+    if (x < 0 || y < 0 || x >= W || y >= r.H || seen[y*W + x] || r.t[y][x] !== ref.t) continue;
+    seen[y*W + x] = 1; tiles.push([x, y]);
+    q.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
+  }
+  let sel = tiles;
+  if (ref.kind === 'pit'){
+    // a bridge two tiles wide, running the way the hero wants to cross
+    const vertical = Math.abs(hero.y - (ref.y+.5)*TS) >= Math.abs(hero.x - (ref.x+.5)*TS);
+    const a = vertical ? ref.x : ref.y, has = v => tiles.some(([x, y]) => (vertical ? x : y) === v);
+    const b2 = has(a + 1) ? a + 1 : a - 1;
+    sel = tiles.filter(([x, y]) => { const v = vertical ? x : y; return v === a || v === b2; });
+  }
+  sel.sort((p1, p2) => (Math.abs(p1[0] - ref.x) + Math.abs(p1[1] - ref.y)) - (Math.abs(p2[0] - ref.x) + Math.abs(p2[1] - ref.y)));
+  const col = GEMS[P.gem].color, newT = ref.kind === 'ice' ? T_FLOOR : ref.kind === 'deep' ? T_WATER : T_VINE;
+  const fx = { ice:['#ffffff','#cfe9ff', col], deep:['#7ab8ff','#bfe3ff', col], pit:['#6cc04f','#8fe06a', col] }[ref.kind];
+  floatText(hero.x, hero.y - 26, GEMS[P.gem].name + '!', col, true);
+  burst(hero.x, hero.y - 6, 30, [col, '#ffffff'], { speed:110, glow:true, life:.8, grav:-20 });
+  [523, 659, 784].forEach((f, i) => tone(f*(ref.kind === 'deep' ? .75 : ref.kind === 'pit' ? .9 : 1), .25, 'triangle', .05, 0, i*.07));
+  const steps = 6, per = Math.ceil(sel.length/steps);
+  for (let i = 0; i < steps; i++) setTimeout(() => {
+    for (const [x, y] of sel.slice(i*per, (i+1)*per)){
+      S.cleared[r.id + ':' + x + ',' + y] = 1;
+      r.t[y][x] = newT;
+      burst((x+.5)*TS, (y+.5)*TS, 6, fx, { speed:50, glow:true, life:.7, grav:ref.kind === 'ice' ? -40 : 10 });
+    }
+    if (room === r) r.layer = getLayer(r);
+    if (i === steps - 1){ toast(P.msg.replace('&mdash;', ''), 3500); save(); }
+  }, i*110);
 }
 function addGold(n, x, y){ S.gold += n; floatText(x, y, `+${n} gold`, '#ffd76a'); SFX.coin(); burst(x, y, 10, ['#ffd76a','#fff3b0'], { speed:60, glow:true, life:.6 }); }
 function lootFor(o){
@@ -1653,7 +2101,8 @@ function lootFor(o){
     case 'sarc':   return r < .6 ? { gold:4 + Math.floor(rnd()*6) } : {};
     case 'sarcZ':  return { locket:true, gold:3 };
     case 'rubble': return r < .6 ? { gold:3 + Math.floor(rnd()*5) } : {};
-    case 'loose':  return { gem:room.def && GEM_ORDER.find(g => GEMS[g].room === room.id) };
+    case 'loose':  return { gem:gemRoomOf(room.id) };
+    case 'urn':    return { vial:true, gold:4 + Math.floor(rnd()*4) };
   }
   return {};
 }
@@ -1666,6 +2115,11 @@ function resolveSearch(o){
   if (loot.gem){ collectGem(loot.gem, cx, cy); return; }
   let got = false;
   if (loot.locket){ S.locket = true; got = true; floatText(cx, cy - 14, 'Silver Locket!', '#e8e8f0'); SFX.quest(); toast('You found Lumen’s silver locket! Return it to them.'); }
+  if (loot.vial){
+    S.vials++; got = true; floatText(cx, cy - 18, 'Vial of stolen color!', '#ffffff');
+    burst(cx, cy - 8, 40, rainbow, { speed:90, glow:true, life:1.1, grav:-30 }); SFX.quest();
+    toast(S.q2.met ? `A vial of stolen color! (${Math.min(3, S.vials)}/3) Lumen will want to see it.` : `A vial of stolen color! (${Math.min(3, S.vials)}/3) Someone down here may know what it is.`);
+  }
   if (loot.gold){ addGold(loot.gold, cx, cy - 4); got = true; }
   if (loot.potion){ S.potions++; got = true; floatText(cx, cy - 18, '+1 Healing Draught', '#ff8fb0'); SFX.pick(); }
   if (!got){
@@ -1677,13 +2131,16 @@ function resolveSearch(o){
 function collectGem(g, x, y){
   S.gems[g] = true;
   const col = GEMS[g].color;
-  SFX.gem(); shake = 0.4; flash = { t:0.7, max:0.7, c: col === '#ff4d7a' ? '255,77,122' : col === '#4da6ff' ? '77,166,255' : '61,255,168' };
+  SFX.gem(); shake = 0.4; flash = { t:0.7, max:0.7, c:hexRgb(col) };
   burst(x, y, 90, [col, '#ffffff', col], { speed:160, glow:true, life:1.6, grav:-8, size:2.6 });
   floatText(x, y - 20, GEMS[g].name + '!', col, true);
   room.layer = getLayer(room);
-  const n = gemCount();
-  const msg = n === 3 ? `The ${GEMS[g].name}! All three Prism Gems are yours, and the dungeon walls blaze with color. The Prism Gate in the Forgotten Cells awaits.`
-                      : `You pry the stone loose&hellip; the <b>${GEMS[g].name}</b>! Color bleeds into the dungeon walls. (${n}/3 Prism Gems)`;
+  const lvl = GEM_L2.includes(g) ? 2 : 1, n = gemCount(lvl);
+  const msg = lvl === 2
+    ? (n === 3 ? `The ${GEMS[g].name}! All three Vault Gems are yours. The Vault Door in the Antechamber will answer them now.`
+               : `You pry the stone loose&hellip; the <b>${GEMS[g].name}</b>! New color spills through the vault walls. (${n}/3 Vault Gems)`)
+    : (n === 3 ? `The ${GEMS[g].name}! All three Prism Gems are yours, and the dungeon walls blaze with color. The Prism Gate in the Forgotten Cells awaits.`
+               : `You pry the stone loose&hellip; the <b>${GEMS[g].name}</b>! Color bleeds into the dungeon walls. (${n}/3 Prism Gems)`);
   save();
   setTimeout(() => { if (mode === 'play' && !UI.open) dialog('narrator', [msg]); }, 900);
 }
@@ -1735,10 +2192,11 @@ function heroDie(){
 }
 function showDeath(){
   const lost = Math.floor(S.gold*0.25);
-  dialog('narrator', [`Darkness takes you&hellip; but a hero’s light is not so easily snuffed out.<br><br>You awaken back in your cell${lost ? `, <b>${lost} gold</b> lighter` : ''}. Your gems and gear are still with you.`],
+  const deep = curLevel() === 2;
+  dialog('narrator', [`Darkness takes you&hellip; but a hero’s light is not so easily snuffed out.<br><br>You awaken ${deep ? 'in the Vault Antechamber' : 'back in your cell'}${lost ? `, <b>${lost} gold</b> lighter` : ''}. Your gems and gear are still with you.`],
     { closable:false, doneLabel:'Rise again', onDone:() => {
       S.gold -= lost; S.hp = S.maxHp; hero.dead = false; hero.deathShown = false; hero.inv = 1.5;
-      enterRoom('cells', 'start');
+      enterRoom(deep ? 'vault' : 'cells', 'start');
     }});
 }
 function hitEnemy(e, dmg, kb, fromX, fromY){
@@ -1761,43 +2219,46 @@ function hitArea(range, minDot, dmg, kb){
   if (boss && boss.active && !boss.dead && boss.dying <= 0){
     const d = dist(hero.x, hero.y, boss.x, boss.y - 6);
     const dot = ((boss.x - hero.x)*hero.fx + (boss.y - 6 - hero.y)*hero.fy)/(d || 1);
-    if (d < range + 22 && (dot >= minDot - 0.1 || d < 22)) damageBoss(dmg);
+    if (d < range + boss.r && (dot >= minDot - 0.1 || d < boss.r)) damageBoss(dmg);
   }
 }
 function doAttack(){
   const H = HEROES[S.heroId], dmg = heroAtk();
   hero.atkCd = H.cd;
   if (H.attack === 'bolt'){
-    bolts.push({ x:hero.x + hero.fx*10, y:hero.y - 5 + hero.fy*10, vx:hero.fx*(S.items.blade ? 400 : 320), vy:hero.fy*(S.items.blade ? 400 : 320), life:S.items.blade ? 0.85 : 0.55, dmg, h:Math.random()*360 });
+    bolts.push({ x:hero.x + hero.fx*10, y:hero.y - 5 + hero.fy*10, vx:hero.fx*(S.items.blade ? 400 : 320), vy:hero.fy*(S.items.blade ? 400 : 320), life:S.items.blade ? 0.85 : 0.55, dmg, pierce:!!S.items.blade2, hits:new Set(), h:Math.random()*360 });
     SFX.bolt();
   } else if (H.attack === 'slam'){
     hero.slam = 0.32; shake = Math.max(shake, 0.18); SFX.slam();
     burst(hero.x, hero.y + 8, 18, ['#8a7a66','#b0a090','#ffffff'], { speed:110, life:.45, grav:80 });
-    hero.slamR = S.items.blade ? 72 : 54;
+    hero.slamR = S.items.blade2 ? 90 : S.items.blade ? 72 : 54;
     hitArea(hero.slamR, -1, dmg, 340);
   } else {
     hero.swing = 0.18; SFX.swing();
-    hero.swingR = S.items.blade ? 30 : 22;
-    hitArea(S.items.blade ? 50 : 40, 0.2, dmg, 240);
+    hero.swingR = S.items.blade2 ? 38 : S.items.blade ? 30 : 22;
+    hitArea(S.items.blade2 ? 60 : S.items.blade ? 50 : 40, S.items.blade2 ? -0.1 : 0.2, dmg, 240);
   }
 }
 function updateBolts(dt){
   for (const b of bolts){
     b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
     if (Math.random() < 0.7) burst(b.x, b.y, 1, hsl(b.h + time*300, 100, 70), { speed:12, glow:true, life:.3, grav:0, size:1.4 });
-    if (solidTile(Math.floor(b.x/TS), Math.floor(b.y/TS), true)){ b.life = 0; burst(b.x, b.y, 6, rainbow, { speed:50, glow:true, life:.3 }); continue; }
+    if (shotBlocked(Math.floor(b.x/TS), Math.floor(b.y/TS))){ b.life = 0; burst(b.x, b.y, 6, rainbow, { speed:50, glow:true, life:.3 }); continue; }
     for (const e of room.enemies){
       if (e.dead || dist(b.x, b.y, e.x, e.y - 4) > ET[e.type].r + 6) continue;
-      hitEnemy(e, b.dmg, 160, b.x - b.vx*0.05, b.y - b.vy*0.05); b.life = 0; break;
+      if (b.hits && b.hits.has(e)) continue;
+      hitEnemy(e, b.dmg, 160, b.x - b.vx*0.05, b.y - b.vy*0.05);
+      if (b.pierce) b.hits.add(e); else { b.life = 0; break; }
     }
-    if (b.life > 0 && boss && boss.active && !boss.dead && boss.dying <= 0 && dist(b.x, b.y, boss.x, boss.y - 8) < 22){ damageBoss(b.dmg); b.life = 0; }
+    if (b.life > 0 && boss && boss.active && !boss.dead && boss.dying <= 0 && dist(b.x, b.y, boss.x, boss.y - 8*boss.scale) < boss.r && !(b.hits && b.hits.has(boss))){ damageBoss(b.dmg); if (b.pierce) b.hits.add(boss); else b.life = 0; }
   }
   bolts = bolts.filter(b => b.life > 0);
 }
 function killEnemy(e){
   e.dead = true; S.stats.kills++;
   burst(e.x, e.y, 22, ['#55555c','#8a8a92','#2a2a30'], { speed:80, life:.8, grav:-20 });
-  if (S.q.shadows === 'active'){ S.shadowKills++; if (S.shadowKills === 6) toast('Shadows banished! Return to Lumen for your reward.'); }
+  if (curLevel() === 1 && S.q.shadows === 'active'){ S.shadowKills++; if (S.shadowKills === 6) toast('Shadows banished! Return to Lumen for your reward.'); }
+  if (curLevel() === 2 && S.q2.chains === 'active'){ S.chainKills++; if (S.chainKills === 8) toast('The Vault guards are broken! Return to Lumen for your reward.'); }
   if (e.type !== 'shadeling' && Math.random() < 0.35) addGold(1 + Math.floor(Math.random()*2), e.x, e.y - 10);
 }
 function updateEnemies(dt){
@@ -1829,6 +2290,17 @@ function updateEnemies(dt){
 /* ---------- boss ---------- */
 function startBossFight(){
   boss.active = true; room.sealed = true; SFX.boss(); shake = 0.5;
+  if (boss.kind === 'unbound'){
+    dialog('unbound', [
+      'You followed me down. Into the dark where I keep every color I have ever taken.',
+      'Up there I was only ash. Down here, I am the eclipse itself.',
+    ], { onDone:() => {
+      if (S.items.radiant){ boss.ward = false; toast('Your Radiant Lens blazes with six colors, and the Eclipse Ward breaks apart!', 4500); burst(boss.x, boss.y - 20, 80, rainbow, { speed:170, glow:true, life:1.3 }); SFX.gem(); }
+      else if (S.items.lens) toast('Your Prism Lens weakens the Eclipse Ward, but cannot break it. Strike when it fades!', 4500);
+      else toast('An Eclipse Ward shields the Sovereign Unbound. Strike when it fades!', 4500);
+    }});
+    return;
+  }
   dialog('sovereign', [
     'So. The little light crawled out of its cell.',
     'Your bright, noisy kingdom will become ash and silence, as everything should be. And so will you.',
@@ -1848,31 +2320,52 @@ function updateBoss(dt){
   }
   if (!b.active || b.dead || hero.dead) return;
   b.flash -= dt;
-  if (S.items.lens) b.ward = false;
-  else { b.wardT -= dt; if (b.wardT <= 0){ b.ward = !b.ward; b.wardT = b.ward ? 4.5 : 3.6; if (!b.ward){ SFX.ward(); floatText(b.x, b.y - 46, 'Ward down!', '#ffe08a'); } } }
+  const unbound = b.kind === 'unbound', breaks = unbound ? S.items.radiant : S.items.lens, weak = unbound && S.items.lens;
+  if (breaks) b.ward = false;
+  else { b.wardT -= dt; if (b.wardT <= 0){ b.ward = !b.ward; b.wardT = b.ward ? (weak ? 2.6 : 4.5) : (unbound ? (weak ? 4.5 : 3.0) : 3.6); if (!b.ward){ SFX.ward(); floatText(b.x, b.y - 46*b.scale, 'Ward down!', '#ffe08a'); } } }
   const d = dist(b.x, b.y, hero.x, hero.y), ax = (hero.x - b.x)/(d || 1), ay = (hero.y - b.y)/(d || 1);
   if (b.mode === 'tele'){ b.modeT -= dt; if (b.modeT <= 0){ b.mode = 'dash'; b.modeT = 0.55; } }
   else if (b.mode === 'dash'){
     b.modeT -= dt;
-    if (moveEnt(b, b.dx*290*dt, b.dy*290*dt, 12, true) || b.modeT <= 0){ b.mode = 'move'; shake = Math.max(shake, 0.15); }
+    const ds = unbound ? 330 : 290;
+    if (moveEnt(b, b.dx*ds*dt, b.dy*ds*dt, 12, true) || b.modeT <= 0){ b.mode = 'move'; shake = Math.max(shake, 0.15); }
   } else {
     const want = d > 150 ? 1 : d < 90 ? -0.7 : 0;
-    const side = Math.sin(time*0.7)*0.6, sp = 40;
+    const side = Math.sin(time*0.7)*0.6, sp = unbound ? 50 : 40;
     moveEnt(b, (ax*want - ay*side)*sp*dt, (ay*want + ax*side)*sp*dt, 12, true);
     b.atkT -= dt; if (b.atkT <= 0) bossAttack(ax, ay);
   }
-  if (d < 26) hurtHero(2, b.x, b.y);
+  if (d < b.r + 4) hurtHero(2, b.x, b.y);
+}
+function updateMarks(dt){
+  for (const m of marks){
+    m.t -= dt;
+    if (m.t <= 0){
+      burst(m.x, m.y, 18, ['#9a9aa2','#5a5a60','#d0d0d8'], { speed:90, life:.5, grav:40 }); tone(90,.2,'sawtooth',.04,-30);
+      if (dist(m.x, m.y, hero.x, hero.y) < 24) hurtHero(1, m.x, m.y);
+    }
+  }
+  marks = marks.filter(m => m.t > 0);
 }
 function bossAttack(ax, ay){
-  const b = boss, rage = b.hp <= b.max*0.5;
-  b.atkT = rage ? 1.8 : 2.6;
-  let opts = ['volley','aimed','dash'];
+  const b = boss, rage = b.hp <= b.max*0.5, unbound = b.kind === 'unbound';
+  b.atkT = unbound ? (rage ? 1.5 : 2.1) : (rage ? 1.8 : 2.6);
+  let opts = unbound ? ['volley','aimed','dash','ashrain'] : ['volley','aimed','dash'];
   if (rage && room.enemies.filter(e => !e.dead).length < 3) opts.push('summon','summon');
   opts = opts.filter(o => o !== b.last);
   const pick = opts[Math.floor(Math.random()*opts.length)]; b.last = pick;
   if (pick === 'volley'){ const n = rage ? 14 : 10; b.spin += 0.37; for (let i = 0; i < n; i++){ const a = b.spin + i*TAU/n; shoot(b.x, b.y - 10, Math.cos(a)*100, Math.sin(a)*100); } tone(110,.3,'sawtooth',.04,-40); }
   else if (pick === 'aimed'){ const a0 = Math.atan2(hero.y - b.y + 10, hero.x - b.x), n = rage ? 5 : 3; for (let i = 0; i < n; i++){ const a = a0 + (i - (n-1)/2)*0.28; shoot(b.x, b.y - 10, Math.cos(a)*150, Math.sin(a)*150); } tone(140,.2,'sawtooth',.04,-60); }
   else if (pick === 'dash'){ b.mode = 'tele'; b.modeT = 0.75; b.dx = ax; b.dy = ay; }
+  else if (pick === 'ashrain'){
+    // gray ash falls on marked spots; the first one lands where you stand
+    const n = rage ? 8 : 5;
+    for (let i = 0; i < n; i++){
+      const x = clamp(hero.x + (i ? (Math.random() - .5)*200 : 0), 1.5*TS, (room.W - 1.5)*TS), y = clamp(hero.y + (i ? (Math.random() - .5)*160 : 0), 1.5*TS, (room.H - 1.5)*TS);
+      marks.push({ x, y, t:0.95 + i*0.08, max:0.95 + i*0.08 });
+    }
+    floatText(b.x, b.y - 60, 'Ash, fall!', '#b8b8c0'); tone(70,.5,'sawtooth',.05,-10);
+  }
   else {
     for (const s of [-1, 1]){
       let x = b.x + s*40, y = b.y + 20;
@@ -1885,29 +2378,43 @@ function bossAttack(ax, ay){
 function updateProjectiles(dt){
   for (const p of projectiles){
     p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt;
-    if (solidTile(Math.floor(p.x/TS), Math.floor(p.y/TS), true)){ p.life = 0; burst(p.x, p.y, 4, ['#6a6a72','#2a2a30'], { speed:40, life:.3 }); }
+    if (shotBlocked(Math.floor(p.x/TS), Math.floor(p.y/TS))){ p.life = 0; burst(p.x, p.y, 4, ['#6a6a72','#2a2a30'], { speed:40, life:.3 }); }
     if (dist(p.x, p.y, hero.x, hero.y - 2) < 13){ p.life = 0; hurtHero(1, p.x, p.y); }
   }
   projectiles = projectiles.filter(p => p.life > 0);
 }
 function damageBoss(dmg){
   const b = boss;
-  if (b.ward){ floatText(b.x, b.y - 46, 'Warded!', '#b8b8c0'); SFX.clank(); burst(b.x, b.y - 10, 8, ['#8a8a92','#cfcfd6'], { speed:90, life:.35 }); return; }
+  if (b.ward){ floatText(b.x, b.y - 46*b.scale, 'Warded!', '#b8b8c0'); SFX.clank(); burst(b.x, b.y - 10, 8, ['#8a8a92','#cfcfd6'], { speed:90, life:.35 }); return; }
   b.hp -= dmg; b.flash = 0.15; SFX.hit(); floatText(b.x, b.y - 46, `-${dmg}`, '#ffffff');
   burst(b.x, b.y - 10, 10, ['#cfcfd6','#5a5a60'], { speed:90, life:.4 });
   if (b.hp <= 0){
-    b.hp = 0; b.dying = 2.4; projectiles = []; shake = 0.9; SFX.die(); SFX.boss();
+    b.hp = 0; b.dying = 2.4; projectiles = []; marks = []; shake = 0.9; SFX.die(); SFX.boss();
     for (const e of room.enemies) if (!e.dead){ e.dead = true; burst(e.x, e.y, 12, ['#3a3a40'], { speed:50 }); }
   }
 }
 function finishBoss(){
-  boss.dead = true; S.bossDefeated = true; room.sealed = false; SFX.win();
+  boss.dead = true; room.sealed = false; SFX.win();
   burst(boss.x, boss.y - 10, 160, rainbow, { speed:220, glow:true, life:2, grav:-10, size:2.8 });
   flash = { t:1, max:1, c:'255,255,255' };
+  if (boss.kind === 'unbound'){
+    S.boss2Defeated = true; save();
+    setTimeout(() => dialog('narrator', [
+      'The Sovereign Unbound cracks like a dark shell. From inside pours every color they ever stole: ruby, sapphire, emerald, amethyst, topaz and diamond light, flooding the vault.',
+      'The eclipse is gone for good. Above you, the <b>Freedom Door</b> swings open onto the morning.',
+    ]), 700);
+    return;
+  }
+  S.bossDefeated = true;
+  // a stair opens in the throne room floor
+  const m = room.def.map;
+  m.forEach((row, y) => { const x = row.indexOf('>'); if (x >= 0){ room.t[y][x] = T_STAIRS; room.exitAt[y*room.W + x] = '>'; room.exits['>'] = [[x, y]]; } });
+  room.layer = getLayer(room);
   save();
   setTimeout(() => dialog('narrator', [
     'The Hollow Sovereign crumbles into gray ash. Their crown clatters to the floor, dull and powerless.',
-    'Behind the throne, the <b>Freedom Door</b> swings open, and warm daylight floods the hall. The way home is clear.',
+    'But the ash does not settle. It slithers across the floor and pours down a hidden <b>stair</b> that has opened in the carpet, into the Vaults below the Keep.',
+    'Behind the throne, the <b>Freedom Door</b> swings open. You could step into the daylight now&hellip; or follow the ash down the stair and win back every color the Sovereign stole.',
   ]), 700);
 }
 // move the hero off the Freedom Door onto the nearest open floor tile so they can keep playing
@@ -1924,15 +2431,29 @@ function stepBackFromDoor(){
   if (best){ hero.x = best.x; hero.y = best.y; hero.fy = 1; hero.fx = 0; }
   toast('The dungeon is yours to explore. Walk back through the Freedom Door whenever you like.', 4000);
 }
+function statsHTML(gems){
+  const all = GEAR.concat(S.visited.vault ? GEAR2 : []), owned = all.filter(i => S.items[i.id]).length;
+  return `<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Gems</dt><dd>${gems}</dd><dt>Gear owned</dt><dd>${owned} / ${all.length}</dd>
+    <dt>Gold in purse</dt><dd>${S.gold}</dd><dt>Things searched</dt><dd>${S.stats.searches}</dd><dt>Creatures defeated</dt><dd>${S.stats.kills}</dd><dt>Times fallen</dt><dd>${S.stats.deaths}</dd></dl>`;
+}
+// the Freedom Door in the throne room: the end of Chapter One, with the way down to the Vaults
 function victory(){
+  if (S.boss2Defeated) return finalVictory();
   S.won = true; save(); SFX.win();
-  const owned = GEAR.filter(i => S.items[i.id]).length;
+  openModal({ kind:'victory', title:'Chapter One Complete', portrait:'hero', closable:true,
+    body:`<p>You step through the Freedom Door and feel real sunlight for the first time in a long while. But when you look out over your kingdom, it is still gray. The colors the Sovereign stole are not here.</p>
+      <p>Behind you, the stair in the throne room breathes cold air. The Sovereign’s ash went down there, into the Vaults below the Keep, where every stolen color is locked away.</p>
+      ${statsHTML('3 / 3 Prism Gems')}`,
+    onDismiss: stepBackFromDoor,
+    actions:[{ label:'Keep exploring', fn:() => { closeModal(); stepBackFromDoor(); } }, { label:'Descend to the Vaults', primary:true, fn:() => { closeModal(); startTrans('vault', '<'); } }] });
+}
+function finalVictory(){
+  S.won2 = true; save(); SFX.win();
   openModal({ kind:'victory', title:'Freedom!', portrait:'hero', closable:true,
-    body:`<p>You step through the Freedom Door into the dawn. Behind you, the Hollow Keep blooms with color. Ruby, sapphire and emerald light spills from every crack in its walls.</p>
-      <p>Word spreads fast: the Sovereign has fallen. Across your kingdom, gray banners burn away into bright ones, and the people you fought for pour into the streets to welcome you home.</p>
-      <dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Prism Gems</dt><dd>3 / 3</dd><dt>Gear owned</dt><dd>${owned} / ${GEAR.length}</dd>
-      <dt>Gold in purse</dt><dd>${S.gold}</dd><dt>Things searched</dt><dd>${S.stats.searches}</dd><dt>Shadows banished</dt><dd>${S.stats.kills}</dd><dt>Times fallen</dt><dd>${S.stats.deaths}</dd></dl>
-      <p class="muted" style="margin-top:12px">Thanks for playing this first chapter of Prismheart.</p>`,
+    body:`<p>You climb out of the Vaults and through the Freedom Door into the dawn. Behind you, the Hollow Keep blooms with color. Ruby, sapphire, emerald, amethyst, topaz and diamond light spills from every crack in its walls.</p>
+      <p>The stolen colors race out across your kingdom. Gray banners burn away into bright ones, fields turn green and gold again, and the people you fought for pour into the streets to welcome you home.</p>
+      ${statsHTML('6 / 6')}
+      <p class="muted" style="margin-top:12px">Thanks for playing Prismheart.</p>`,
     onDismiss: stepBackFromDoor,
     actions:[{ label:'Keep exploring', fn:() => { closeModal(); stepBackFromDoor(); } }, { label:'Play again', primary:true, fn:() => { closeModal(); showSelect(); } }] });
 }
@@ -1976,16 +2497,17 @@ function update(dt){
   const tx = Math.floor(hero.x/TS), ty = Math.floor(hero.y/TS);
   const ex = room.exitAt[ty*room.W + tx];
   if (ex && !room.sealed && room.def.exits[ex]){ const t = room.def.exits[ex]; startTrans(t.to, t.at); }
-  if (room.t[ty] && room.t[ty][tx] === T_FREE && S.bossDefeated && !UI.open){ victory(); }
+  if (room.t[ty] && room.t[ty][tx] === T_FREE && bossDone(room.id) && !UI.open){ room.id === 'heart' ? finalVictory() : victory(); }
   // glowcaps
   for (const cp of room.caps){
     if (S.capsFound[cp.key]) continue;
     if (dist(hero.x, hero.y, (cp.x+.5)*TS, (cp.y+.5)*TS) < 20){
       S.capsFound[cp.key] = 1; SFX.pick();
       burst((cp.x+.5)*TS, (cp.y+.5)*TS, 16, i => hsl(185 + Math.random()*90, 90, 65), { speed:50, glow:true, grav:-30 });
-      const n = capsCount();
-      floatText(hero.x, hero.y - 24, `Glowcap ${Math.min(n,6)}/6`, '#8ff0ff');
-      if (n === 6 && S.q.caps === 'active') toast('Six glowcaps gathered! Return to Lumen.');
+      const lvl = curLevel(), n = capsCount(lvl);
+      floatText(hero.x, hero.y - 24, `${lvl === 2 ? 'Starmoss' : 'Glowcap'} ${Math.min(n,6)}/6`, lvl === 2 ? '#dff4ff' : '#8ff0ff');
+      if (n === 6 && lvl === 1 && S.q.caps === 'active') toast('Six glowcaps gathered! Return to Lumen.');
+      if (n === 6 && lvl === 2 && S.q2.moss === 'active') toast('Six starmoss gathered! Return to Lumen.');
       save();
     }
   }
@@ -1995,9 +2517,9 @@ function update(dt){
   hero.target = hero.searching ? null : findInteract();
   if (input.interact){ input.interact = false; if (hero.target && !hero.searching) doInteract(hero.target); }
   if (input.potion){ input.potion = false; usePotion(); }
-  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt); updateBolts(dt);
+  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt); updateBolts(dt); updateMarks(dt);
   hero.slam -= dt;
-  if (boss && !boss.active && !boss.dead && room.id === 'throne' && hero.y < 11.5*TS) startBossFight();
+  if (boss && !boss.active && !boss.dead && room.def.boss && hero.y < 11.5*TS) startBossFight();
   updateFx(dt);
   updateCamera(dt, false);
 }
@@ -2039,6 +2561,7 @@ function render(){
   ctx.imageSmoothingEnabled = true;
   ctx.drawImage(room.layer, 0, 0, room.W*TS, room.H*TS);
   drawWaterAnim(ctx);
+  drawPitMist(ctx);
   drawGateAndDoors(ctx);
 
   // y-sorted entities
@@ -2050,12 +2573,19 @@ function render(){
     if (e.type === 'shade') drawShade(ctx, e.x, e.y, time, e);
     else if (e.type === 'shadeling') drawShade(ctx, e.x, e.y, time, e, 0.8);
     else if (e.type === 'bone') drawBone(ctx, e.x, e.y, time, e);
+    else if (e.type === 'wraith') drawWraith(ctx, e.x, e.y, time, e);
+    else if (e.type === 'drowned') drawDrowned(ctx, e.x, e.y, time, e);
+    else if (e.type === 'thorn') drawThorn(ctx, e.x, e.y, time, e);
     else drawBat(ctx, e.x, e.y, time, e);
   }]);
-  if (boss && !boss.dead && room.id === 'throne'){
+  if (boss && !boss.dead && room.def.boss){
     list.push([boss.y + 16, () => {
       if (boss.mode === 'tele'){ ctx.strokeStyle = 'rgba(200,200,210,.35)'; ctx.lineWidth = 3; ctx.setLineDash([6,6]); ctx.beginPath(); ctx.moveTo(boss.x, boss.y); ctx.lineTo(boss.x + boss.dx*160, boss.y + boss.dy*160); ctx.stroke(); ctx.setLineDash([]); }
-      drawSovereign(ctx, boss.x, boss.y, time, boss.flash > 0 || (boss.mode === 'tele' && Math.floor(time*16) % 2 === 0), boss.dying > 0 ? boss.dying/2.4 : 1);
+      const fl = boss.flash > 0 || (boss.mode === 'tele' && Math.floor(time*16) % 2 === 0), al = boss.dying > 0 ? boss.dying/2.4 : 1;
+      if (boss.kind === 'unbound'){
+        ctx.save(); ctx.globalAlpha = al; drawUnboundHalo(ctx, boss.x, boss.y, time); ctx.restore();
+        ctx.save(); ctx.translate(boss.x, boss.y); ctx.scale(boss.scale, boss.scale); drawSovereign(ctx, 0, 0, time, fl, al); ctx.restore();
+      } else drawSovereign(ctx, boss.x, boss.y, time, fl, al);
     }]);
   }
   if (!hero.dead) list.push([hero.y + 10, () => { if (!(hero.inv > 0 && Math.floor(time*20) % 2 === 0)) HEROES[S.heroId].draw(ctx, hero.x, hero.y, time, hero.fx, hero.fy, hero.moving); }]);
@@ -2092,7 +2622,7 @@ function render(){
 }
 function star(c, x, y, s){ c.beginPath(); c.moveTo(x - s, y); c.lineTo(x + s, y); c.moveTo(x, y - s); c.lineTo(x, y + s); c.stroke(); }
 function drawGlows(){
-  const c = ctx, r = room, allGems = gemCount() === 3;
+  const c = ctx, r = room, allGems = gemCount(levelOf(r.id)) === 3;
   // torch flames (always visible), with additive glow
   for (const t of r.torches){
     const p = torchPos(r, t), f = reduceMotion ? 0 : Math.sin(time*12 + t.ph)*0.15 + Math.sin(time*7.3 + t.ph*2)*0.1;
@@ -2123,7 +2653,7 @@ function drawGlows(){
   // sparkles in walls (gems found)
   c.lineWidth = 1.2;
   for (const sp of r.sparkles){
-    const g = GEM_ORDER[sp.g];
+    const g = ALL_GEMS[sp.g % ALL_GEMS.length];
     if (!S.gems[g]) continue;
     const ti = sp.ty*r.W + sp.tx;
     if (!r.seen[ti] || inCalmZone(r, sp.tx, sp.ty)) continue;
@@ -2151,7 +2681,7 @@ function drawGlows(){
     if (o.type !== 'loose' || S.searched[o.key]) continue;
     const x = (o.x+.5)*TS, y = (o.y+.5)*TS, d = dist(x, y, hero.x, hero.y);
     if (d > reveal) continue;
-    const col = GEMS[GEM_ORDER.find(g => GEMS[g].room === r.id)].color;
+    const col = GEMS[gemRoomOf(r.id)].color;
     const near = 1 - d/reveal, pulse = 0.5 + 0.5*Math.sin(time*2.2 + o.ph);
     const a = Math.min(1, near*1.6)*(0.55 + 0.45*pulse);
     c.globalAlpha = a;
@@ -2172,7 +2702,7 @@ function drawGlows(){
   // gate shimmer
   if (r.gateTiles.length){
     const [gx, gy] = r.gateTiles[0], x0 = gx*TS, w = r.gateTiles.length*TS;
-    GEM_ORDER.forEach((g, i) => { if (!S.gems[g] || S.gateOpen) return; const sx = x0 + w*(i+1)/4, sy = gy*TS + 15, gg = c.createRadialGradient(sx, sy, 0, sx, sy, 12); gg.addColorStop(0, GEMS[g].color); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = .6 + Math.sin(time*3 + i)*0.2; c.fillStyle = gg; c.fillRect(sx - 12, sy - 12, 24, 24); });
+    r.def.gate.gems.forEach((g, i) => { if (!S.gems[g] || gateFlag(r)) return; const sx = x0 + w*(i+1)/4, sy = gy*TS + 15, gg = c.createRadialGradient(sx, sy, 0, sx, sy, 12); gg.addColorStop(0, GEMS[g].color); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = .6 + Math.sin(time*3 + i)*0.2; c.fillStyle = gg; c.fillRect(sx - 12, sy - 12, 24, 24); });
     c.globalAlpha = 1;
   }
   // projectile rims, enemy eyes, boss eyes
@@ -2182,9 +2712,18 @@ function drawGlows(){
     c.fillStyle = 'rgba(215,215,222,.85)';
     if (e.type === 'shade' || e.type === 'shadeling'){ const s = e.type === 'shade' ? 1 : .8, by = e.y + Math.sin(time*3 + e.ph)*2 - 5*s; c.fillRect(e.x - 3.5*s, by - 1, 2*s, 2*s); c.fillRect(e.x + 1.5*s, by - 1, 2*s, 2*s); }
     else if (e.type === 'bat'){ const by = e.y - 7 + Math.sin(time*4 + e.ph)*2; c.fillRect(e.x - 2.2, by, 1.5, 1.5); c.fillRect(e.x + .7, by, 1.5, 1.5); }
+    else if (e.type === 'wraith'){ const by = e.y + Math.sin(time*2.6 + e.ph)*2.5 - 8; c.fillRect(e.x - 3.5, by - 1, 2, 2); c.fillRect(e.x + 1.5, by - 1, 2, 2); }
+    else if (e.type === 'drowned'){ const sx = Math.sin(time*2 + e.ph)*1.5; c.fillRect(e.x - 2 + sx, e.y - 13, 1.6, 1.6); c.fillRect(e.x + 2.4 + sx, e.y - 13, 1.6, 1.6); }
+    else if (e.type === 'thorn'){ c.fillRect(e.x - 2.5, e.y - 3, 1.6, 1.6); c.fillRect(e.x + 1, e.y - 3, 1.6, 1.6); }
     else { c.fillStyle = 'rgba(200,200,210,.6)'; c.fillRect(e.x - 3.5, e.y - 11.5, 2, 2); c.fillRect(e.x + 1.5, e.y - 11.5, 2, 2); }
   }
-  if (boss && !boss.dead && room.id === 'throne' && boss.dying <= 0){ c.fillStyle = 'rgba(200,200,208,.9)'; c.fillRect(boss.x - 3.6, boss.y - 23, 2.2, 1.4); c.fillRect(boss.x + 1.4, boss.y - 23, 2.2, 1.4); }
+  if (boss && !boss.dead && room.def.boss && boss.dying <= 0){ const k = boss.scale; c.fillStyle = 'rgba(200,200,208,.9)'; c.fillRect(boss.x - 3.6*k, boss.y - 23*k, 2.2*k, 1.4*k); c.fillRect(boss.x + 1.4*k, boss.y - 23*k, 2.2*k, 1.4*k); }
+  // ash rain warnings
+  for (const m of marks){
+    const p = 1 - m.t/m.max;
+    c.strokeStyle = `rgba(210,210,220,${0.4 + 0.5*p})`; c.lineWidth = 1.5; c.beginPath(); c.arc(m.x, m.y, 22, 0, TAU); c.stroke();
+    c.fillStyle = `rgba(160,160,170,${0.15 + 0.25*p})`; c.beginPath(); c.arc(m.x, m.y, 22*p, 0, TAU); c.fill();
+  }
   for (const b of bolts){
     const g = c.createRadialGradient(b.x, b.y, 0, b.x, b.y, 9);
     g.addColorStop(0, '#ffffff'); g.addColorStop(.4, hsl(b.h + time*300, 100, 70)); g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -2195,7 +2734,7 @@ function drawGlows(){
   c.globalCompositeOperation = 'source-over';
   // shadow ward
   if (boss && boss.active && boss.ward && !boss.dead && boss.dying <= 0){
-    const rad = 30 + Math.sin(time*4)*2, g = c.createRadialGradient(boss.x, boss.y - 8, 8, boss.x, boss.y - 8, rad);
+    const rad = (30 + Math.sin(time*4)*2)*boss.scale, g = c.createRadialGradient(boss.x, boss.y - 8, 8, boss.x, boss.y - 8, rad);
     g.addColorStop(0, 'rgba(20,20,26,0)'); g.addColorStop(.8, 'rgba(28,28,36,.45)'); g.addColorStop(1, 'rgba(60,60,70,.6)');
     c.fillStyle = g; c.beginPath(); c.arc(boss.x, boss.y - 8, rad, 0, TAU); c.fill();
     c.strokeStyle = 'rgba(180,180,190,.5)'; c.lineWidth = 1.5; c.setLineDash([5, 7]); c.lineDashOffset = -time*20;
@@ -2232,21 +2771,34 @@ function drawOverlays(){
 
 /* ---------- minimap ---------- */
 const MM_COL = { '#':'#6d6d75', T:'#6d6d75', L:'#6d6d75', '|':'#3d3d44', '~':'#2b5560', N:'#d8c48a', S:'#d8c48a', E:'#d8c48a', W:'#d8c48a', F:'#ffe9a8', '+':'#4a4650',
-  C:'#8a5a32', B:'#8a5a32', X:'#c9a24a', Y:'#7b766d', Z:'#7b766d', R:'#7b766d', P:'#8a8a90', H:'#8a8a90', K:'#5a5a60' };
+  C:'#8a5a32', B:'#8a5a32', X:'#c9a24a', Y:'#7b766d', Z:'#7b766d', R:'#7b766d', P:'#8a8a90', H:'#8a8a90', K:'#5a5a60', U:'#7b7b84' };
 let mmTimer = 0;
 function drawMinimap(){
-  const p = mmBig ? 5 : 2, RW = 24, RH = 16, gap = mmBig ? 10 : 5, pad = 2;
-  const w = pad*2 + 2*RW*p + gap, h = pad*2 + 3*RH*p + 2*gap;
-  if (mmc._w !== w || mmc._d !== dpr){ mmc.width = w*dpr; mmc.height = h*dpr; mmc.style.width = w + 'px'; mmc.style.height = h + 'px'; mmc._w = w; mmc._d = dpr; }
+  const lvl = curLevel(), ids = Object.keys(ROOM_DEFS).filter(id => levelOf(id) === lvl);
+  const cols = Math.max(...ids.map(id => ROOM_DEFS[id].grid[0])) + 1, rows = Math.max(...ids.map(id => ROOM_DEFS[id].grid[1])) + 1;
+  // a three-wide map is drawn a little smaller on narrow phones so it clears the HUD buttons
+  const p = mmBig ? (vw < 480 && cols > 2 ? 4 : 5) : (vw < 480 && cols > 2 ? 1.5 : 2), RW = 24, RH = 16, gap = mmBig ? 10 : 5, pad = 2;
+  const w = pad*2 + cols*RW*p + (cols - 1)*gap, h = pad*2 + rows*RH*p + (rows - 1)*gap;
+  if (mmc._w !== w || mmc._h !== h || mmc._d !== dpr){ mmc.width = w*dpr; mmc.height = h*dpr; mmc.style.width = w + 'px'; mmc.style.height = h + 'px'; mmc._w = w; mmc._h = h; mmc._d = dpr; }
   const c = mctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
   const org = id => { const g = ROOM_DEFS[id].grid; return [pad + g[0]*(RW*p + gap), pad + g[1]*(RH*p + gap)]; };
-  // corridors
-  c.fillStyle = '#8a7550';
-  const [cx0, cy0] = org('cells');
-  c.fillRect(cx0 + RW*p, cy0 + 7*p, gap, 2*p);
-  c.fillRect(cx0 + 11*p, cy0 + RH*p, 2*p, gap);
-  c.fillStyle = S.gateOpen ? '#d4b0ff' : '#4a3e5a'; c.fillRect(cx0 + 10*p, cy0 - gap, 2*p, gap);
-  for (const id in ROOM_DEFS){
+  // corridors drawn from each visited room's doorways
+  for (const id of ids){
+    if (!S.visited[id]) continue;
+    const def = ROOM_DEFS[id], [ox, oy] = org(id);
+    for (const ch in def.exits){
+      if (ch === '<' || ch === '>' || levelOf(def.exits[ch].to) !== lvl) continue;
+      const pts = []; def.map.forEach((row, y) => [...row].forEach((cc, x) => { if (cc === ch) pts.push([x, y]); }));
+      if (!pts.length) continue;
+      const x0 = Math.min(...pts.map(q => q[0])), y0 = Math.min(...pts.map(q => q[1])), x1 = Math.max(...pts.map(q => q[0])), y1 = Math.max(...pts.map(q => q[1]));
+      c.fillStyle = ch === 'G' ? (gateFlag({ def }) ? '#d4b0ff' : '#4a3e5a') : '#8a7550';
+      if (y0 === 0) c.fillRect(ox + x0*p, oy - gap, (x1 - x0 + 1)*p, gap);
+      else if (y1 === RH - 1) c.fillRect(ox + x0*p, oy + RH*p, (x1 - x0 + 1)*p, gap);
+      else if (x0 === 0) c.fillRect(ox - gap, oy + y0*p, gap, (y1 - y0 + 1)*p);
+      else c.fillRect(ox + RW*p, oy + y0*p, gap, (y1 - y0 + 1)*p);
+    }
+  }
+  for (const id of ids){
     const [ox, oy] = org(id), def = ROOM_DEFS[id];
     if (!S.visited[id]){
       c.strokeStyle = 'rgba(196,184,166,.35)'; c.lineWidth = 1; c.setLineDash([3, 3]); c.strokeRect(ox + .5, oy + .5, RW*p - 1, RH*p - 1); c.setLineDash([]);
@@ -2258,15 +2810,20 @@ function drawMinimap(){
     c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(ox, oy, RW*p, RH*p);
     for (let y = 0; y < RH; y++) for (let x = 0; x < RW; x++){
       if (!seen || !seen[y*RW + x]) continue;
-      const ch = def.map[y][x];
+      const ch = def.map[y][x], cl = S.cleared[id + ':' + x + ',' + y];
       let col = MM_COL[ch] || '#5b4834';
-      if (ch === 'G') col = S.gateOpen ? '#d4b0ff' : '#8a72b0';
+      if (ch === 'G') col = gateFlag({ def }) ? '#d4b0ff' : '#8a72b0';
+      else if (ch === 'I') col = cl ? '#5b4834' : '#bfe3ff';
+      else if (ch === 'D') col = cl ? '#2b5560' : '#16324a';
+      else if (ch === 'O') col = cl ? '#4f9a3c' : '#0b0b0e';
+      else if (ch === '<' || (ch === '>' && S.bossDefeated)) col = '#e0c890';
+      else if (ch === '>') col = MM_COL['+'];
       c.fillStyle = col; c.fillRect(ox + x*p, oy + y*p, p, p);
     }
     for (const [x, y, ch] of [].concat(...def.map.map((row, y) => [...row].map((ch, x) => [x, y, ch])))){
       if (!seen || !seen[y*RW + x]) continue;
       if (ch === 'Q' || ch === 'M'){ c.fillStyle = ch === 'Q' ? '#ffd36b' : '#7dffc4'; c.beginPath(); c.arc(ox + (x+.5)*p, oy + (y+.5)*p, p*1.1, 0, TAU); c.fill(); }
-      if (S.gemSpots[id] && S.gemSpots[id][0] === x && S.gemSpots[id][1] === y && S.searched[id + ':' + x + ',' + y]){ const g = GEM_ORDER.find(gg => GEMS[gg].room === id); c.fillStyle = GEMS[g].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6, p*1.6); }
+      if (S.gemSpots[id] && S.gemSpots[id][0] === x && S.gemSpots[id][1] === y && S.searched[id + ':' + x + ',' + y]){ c.fillStyle = GEMS[gemRoomOf(id)].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6, p*1.6); }
     }
     if (id === room.id){ c.strokeStyle = '#f2c14e'; c.lineWidth = 1; c.strokeRect(ox - .5, oy - .5, RW*p + 1, RH*p + 1); }
   }
@@ -2282,18 +2839,20 @@ function drawPortrait(){
   const cv = $('#m-portrait'), c = cv.getContext('2d'), who = UI.portrait;
   c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, 128, 128);
   const bg = c.createRadialGradient(64, 60, 4, 64, 64, 80);
-  bg.addColorStop(0, who === 'sovereign' ? '#3a3a40' : who === 'lumen' ? '#5a4220' : who === 'mossback' ? '#1f4436' : '#2e2240'); bg.addColorStop(1, '#0b090e');
+  bg.addColorStop(0, who === 'sovereign' || who === 'unbound' ? '#3a3a40' : who === 'lumen' ? '#5a4220' : who === 'mossback' ? '#1f4436' : '#2e2240'); bg.addColorStop(1, '#0b090e');
   c.fillStyle = bg; c.fillRect(0, 0, 128, 128);
   c.setTransform(3.2, 0, 0, 3.2, 0, 0);
   if (who === 'hero' && S) HEROES[S.heroId].draw(c, 20, 25, time, 0, 1, false);
   else if (who === 'lumen') drawLumen(c, 20, 25, time);
   else if (who === 'mossback') drawMossback(c, 20, 22, time);
   else if (who === 'sovereign'){ c.setTransform(2.4, 0, 0, 2.4, 0, 0); drawSovereign(c, 26.6, 40, time, false); }
-  else if (who === 'gate'){
-    c.fillStyle = '#4c4c55'; c.fillRect(6, 8, 28, 26); c.fillStyle = '#2a2a30'; c.fillRect(19.5, 8, 1, 26);
-    GEM_ORDER.forEach((g, i) => { const x = 11 + i*9, y = 20; c.fillStyle = '#16161a'; c.beginPath(); c.moveTo(x, y-5); c.lineTo(x+3.5, y); c.lineTo(x, y+5); c.lineTo(x-3.5, y); c.closePath(); c.fill(); if (S && S.gems[g]) drawGemShape(c, x, y, 2.6, GEMS[g].color); });
+  else if (who === 'unbound'){ c.setTransform(2.1, 0, 0, 2.1, 0, 0); drawUnboundHalo(c, 30.5, 46, time); drawSovereign(c, 30.5, 46, time, false); }
+  else if (who === 'gate' || who === 'vault'){
+    c.fillStyle = who === 'vault' ? '#2c2c32' : '#4c4c55'; c.fillRect(6, 8, 28, 26); c.fillStyle = '#2a2a30'; c.fillRect(19.5, 8, 1, 26);
+    (who === 'vault' ? GEM_L2 : GEM_ORDER).forEach((g, i) => { const x = 11 + i*9, y = 20; c.fillStyle = '#16161a'; c.beginPath(); c.moveTo(x, y-5); c.lineTo(x+3.5, y); c.lineTo(x, y+5); c.lineTo(x-3.5, y); c.closePath(); c.fill(); if (S && S.gems[g]) drawGemShape(c, x, y, 2.6, GEMS[g].color); });
   } else {
-    GEM_ORDER.forEach((g, i) => { const a = time*0.8 + i*TAU/3; drawGemShape(c, 20 + Math.cos(a)*8, 20 + Math.sin(a)*8, 3.4 + Math.sin(time*3 + i)*0.4, GEMS[g].color); });
+    const ring = S && S.visited.vault ? ALL_GEMS : GEM_ORDER;
+    ring.forEach((g, i) => { const a = time*0.8 + i*TAU/ring.length; drawGemShape(c, 20 + Math.cos(a)*8, 20 + Math.sin(a)*8, 3.4 + Math.sin(time*3 + i)*0.4, GEMS[g].color); });
   }
 }
 function drawPreviews(){
@@ -2435,11 +2994,13 @@ function frame(now){
     if (!UI.open) update(dt);
     updateHUD();
     mmTimer -= dt; if (mmTimer <= 0){ drawMinimap(); mmTimer = 0.1; }
-    const bb = $('#bossbar'), showBoss = boss && boss.active && !boss.dead && room.id === 'throne';
+    const bb = $('#bossbar'), showBoss = boss && boss.active && !boss.dead && room.def.boss;
     bb.classList.toggle('hidden', !showBoss);
     if (showBoss){
+      const ub = boss.kind === 'unbound', wn = ub ? 'Eclipse ward' : 'Shadow ward', broke = ub ? S.items.radiant : S.items.lens;
+      $('#bossbar .bname').textContent = ub ? 'THE SOVEREIGN UNBOUND' : 'THE HOLLOW SOVEREIGN';
       $('#boss-hp').style.width = (100*boss.hp/boss.max) + '%';
-      $('#boss-ward').textContent = S.items.lens ? 'Shadow ward: shattered by your Prism Lens' : boss.ward ? 'Shadow ward: UP. Your strikes are turned aside.' : 'Shadow ward: DOWN. Strike now!';
+      $('#boss-ward').textContent = broke ? `${wn}: shattered by your ${ub ? 'Radiant' : 'Prism'} Lens` : boss.ward ? `${wn}: UP. Your strikes are turned aside.` : `${wn}: DOWN. Strike now!`;
     }
     const ta = $('#t-act'), lab = hero.target ? hero.target.label.split(' ')[0].replace('?', '') : 'Search';
     if (ta._l !== lab){ ta._l = lab; $('#t-act-label').textContent = lab === 'Loose' ? 'Search' : lab; }
@@ -2451,7 +3012,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 if (/[?&]debug/.test(location.search)) window.__ph = { get S(){ return S; }, get hero(){ return hero; }, get room(){ return room; }, get boss(){ return boss; },
-  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, collectGem, resolveSearch, damageBoss, keys, input };
+  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, usePower, get marks(){ return marks; }, collectGem, resolveSearch, damageBoss, keys, input };
 resize();
 showTitle();
 requestAnimationFrame(frame);
