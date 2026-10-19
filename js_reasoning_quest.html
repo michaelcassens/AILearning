@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="A level-based JavaScript game about understanding, building, debugging, and explaining code in the age of AI assistants.">
-<title>JS Reasoning Quest — Learn JavaScript by Thinking It Through</title>
+<title>JS Reasoning Quest: Learn JavaScript by Thinking It Through</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 <style>
@@ -210,6 +210,16 @@ fieldset label{display:block;margin:4px 0;cursor:pointer}
 table{border-collapse:collapse;width:100%;margin:10px 0;background:var(--surface);border-radius:10px;overflow:hidden}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
 th{background:var(--surface2)}
+.ways{border-color:var(--accent)}
+.ways h3{font-size:1rem;margin:14px 0 6px}
+.way-forms{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.way-forms li{margin:0}
+.way-code{background:#0a0a17;border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:0 0 4px;overflow-x:auto;font-family:var(--mono);font-size:.9rem}
+.way-code code{background:none;padding:0;white-space:pre}
+.way-forms p{margin:2px 0 0;color:var(--muted)}
+.coach .alts{list-style:none;margin-left:0}
+.coach .alts li{padding:6px 0;border-bottom:1px solid #24244a}
+.coach .alts li:last-child{border-bottom:0}
 .journal-entry{border-left:3px solid var(--accent);padding:4px 12px;margin:12px 0}
 .journal-entry pre{font-family:var(--mono);font-size:.85rem;background:#0a0a17;padding:8px;border-radius:6px;overflow-x:auto;white-space:pre}
 
@@ -252,7 +262,7 @@ th{background:var(--surface2)}
 <script src="js/js_reasoning_quest_levels.js"></script>
 <script>
 /* =====================================================================
-   JS Reasoning Quest — game engine
+   JS Reasoning Quest: game engine
    ===================================================================== */
 
 /* ---------- Sandboxed code runner (shared by the worker and the fallback) ---------- */
@@ -349,7 +359,7 @@ const live = document.getElementById('live');
 let uid = 0;
 
 const SKILLS = {
-  understand: { label: 'Understand', icon: '🧭', desc: 'Read a problem, find the inputs, outputs, rules and edge cases — before any code exists.' },
+  understand: { label: 'Understand', icon: '🧭', desc: 'Read a problem, find the inputs, outputs, rules and edge cases, before any code exists.' },
   build:      { label: 'Build',      icon: '🛠️', desc: 'Write code yourself, run it against tests, and get coaching on how to improve it.' },
   debug:      { label: 'Debug',      icon: '🐞', desc: 'Find the line, name the kind of error (syntax, runtime, logic), and choose the right fix.' },
   explain:    { label: 'Explain & Judge', icon: '💬', desc: 'Predict what code does, judge AI-written code against requirements, and explain it in your own words.' }
@@ -374,7 +384,7 @@ const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 function esc(s) { return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
 function frag(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
 function announce(msg) { live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 40); }
-// In-page "are you sure?" — some hosts (like embedded viewers) block confirm()
+// In-page "are you sure?": some hosts (like embedded viewers) block confirm()
 function confirmInline(btn, question, onYes) {
   const row = frag('<span class="confirm-row" role="group" aria-label="Confirm"><span>' + question + '</span><button type="button" class="btn yes">Yes</button><button type="button" class="btn ghost no">Cancel</button></span>');
   btn.after(row); btn.hidden = true;
@@ -446,7 +456,7 @@ function runCode(code, tests) {
     } catch (e) {
       return resolve(runCore(code, tests || [])); // no workers available: run on the page
     }
-    // A safety stop for runaway loops — not a speed limit on the student.
+    // A safety stop for runaway loops. Not a speed limit on the student.
     const timer = setTimeout(() => { w.terminate(); resolve({ timeout: true, logs: [], results: [] }); }, 2500);
     w.onmessage = e => { clearTimeout(timer); w.terminate(); resolve(e.data); };
     w.onerror = e => { e.preventDefault(); clearTimeout(timer); w.terminate(); resolve(runCore(code, tests || [])); };
@@ -460,7 +470,7 @@ function syntaxAdvice(s) {
   if (/Unterminated template/i.test(m)) return 'A template literal is missing its closing backtick <code>`</code>.';
   if (/already been declared/i.test(m)) return 'The same name is declared twice with <code>let</code>/<code>const</code>. Declare it once, then change it without the keyword.';
   if (/rvalue|left-hand/i.test(m)) return 'The left side of <code>=</code> must be a variable or property. Did you mean <code>===</code> (compare) instead of <code>=</code> (assign)?';
-  if (s.pastEnd) return 'The code ended while something was still open — usually a missing <code>}</code> or <code>)</code>. The real mistake is often far above where the error is reported: match up every opening bracket.';
+  if (s.pastEnd) return 'The code ended while something was still open: usually a missing <code>}</code> or <code>)</code>. The real mistake is often far above where the error is reported: match up every opening bracket.';
   if (/Unexpected token/i.test(m)) return 'JavaScript found something it didn\'t expect. Check this line <em>and the line before it</em> for a missing <code>)</code>, <code>}</code>, <code>]</code>, comma, or quote.';
   return 'JavaScript couldn\'t read the code, so <strong>nothing ran</strong>. Check the reported line and the one before it.';
 }
@@ -511,7 +521,7 @@ function renderOutput(out, res, tests) {
     ? '<pre class="console">' + logs.slice(0, 200).map(l => '<span class="log-' + l.kind + '">' + esc(l.text) + '</span>').join('\n') + (logs.length > 200 ? '\n… more output hidden' : '') + '</pre>'
     : '<p class="muted">(Nothing was printed.)</p>';
   const d = diagnose(res, tests);
-  if (d) html += '<div class="diag diag-' + d.kind + '"><p><strong>' + d.badge + (d.title ? ' — ' : '') + '</strong>' + d.title + '</p><p>' + d.text + '</p></div>';
+  if (d) html += '<div class="diag diag-' + d.kind + '"><p><strong>' + d.badge + (d.title ? ': ' : '') + '</strong>' + d.title + '</p><p>' + d.text + '</p></div>';
   if (tests && tests.length && !res.syntax && !res.timeout) {
     html += '<ul class="tests" aria-label="Checks">' + tests.map((t, i) => {
       const r = res.results[i];
@@ -532,8 +542,8 @@ const KNOWN_OBJ = new Set(['Math', 'Number', 'Object', 'JSON', 'Array', 'String'
 
 function analyzeCode(code, opts) {
   opts = opts || {};
-  const res = { summary: [], strengths: [], tips: [], error: null };
-  if (!code.trim()) { res.summary.push('The editor is empty — write something to analyze.'); return res; }
+  const res = { summary: [], strengths: [], tips: [], alts: [], error: null };
+  if (!code.trim()) { res.summary.push('The editor is empty. Write something to analyze.'); return res; }
   if (!window.acorn) return regexCoach(code, res);
   const comments = [];
   let ast;
@@ -572,6 +582,13 @@ function analyzeCode(code, opts) {
     return null;
   };
   const curFn = () => fnStack[fnStack.length - 1];
+  const src = x => code.slice(x.start, x.end);
+  const altSeen = new Set();
+  const alt = (kind, line, from, forms, note) => {
+    if (altSeen.has(kind) || res.alts.length >= 4) return;
+    altSeen.add(kind);
+    res.alts.push({ line, from, forms, note });
+  };
   const alwaysReturns = st => {
     if (!st) return false;
     if (st.type === 'ReturnStatement' || st.type === 'ThrowStatement') return true;
@@ -657,6 +674,34 @@ function analyzeCode(code, opts) {
         break;
       }
     }
+    // Spot code that has a common alternative spelling
+    if (node.type === 'AssignmentExpression' && node.left.type === 'Identifier') {
+      const x = node.left.name, R = node.right;
+      if (node.operator === '=' && R.type === 'BinaryExpression' && ['+', '-', '*', '/'].includes(R.operator) && R.left.type === 'Identifier' && R.left.name === x) {
+        const amt = src(R.right), forms = [x + ' ' + R.operator + '= ' + amt];
+        if (amt === '1' && (R.operator === '+' || R.operator === '-')) forms.push(x + R.operator + R.operator);
+        const verb = { '+': 'add', '-': 'subtract', '*': 'multiply by', '/': 'divide by' }[R.operator];
+        alt('update', line, src(node), forms, '<code>' + R.operator + '=</code> is shorthand for “' + verb + ' ' + esc(amt) + ', then store the result back in <code>' + esc(x) + '</code>.”' + (forms.length > 1 ? ' <code>' + R.operator + R.operator + '</code> only works for exactly 1.' : ''));
+      } else if ((node.operator === '+=' || node.operator === '-=') && node.right.type === 'Literal' && node.right.value === 1) {
+        const op = node.operator[0];
+        alt('update', line, src(node), [x + ' = ' + x + ' ' + op + ' 1', x + op + op], 'All three change <code>' + esc(x) + '</code> by exactly 1.');
+      }
+    }
+    if (node.type === 'UpdateExpression' && node.argument.type === 'Identifier' && !(parent && parent.type === 'ForStatement')) {
+      const x = node.argument.name, op = node.operator[0];
+      alt('update', line, src(node), [x + ' ' + op + '= 1', x + ' = ' + x + ' ' + op + ' 1'], '<code>++</code> and <code>--</code> always change by exactly 1.');
+    }
+    if (node.type === 'FunctionDeclaration' && node.body.body.length === 1 && node.body.body[0].type === 'ReturnStatement' && node.body.body[0].argument) {
+      const ps = node.params.map(src).join(', ');
+      alt('arrow', line, 'function ' + node.id.name + '(' + ps + ') { return …; }', ['const ' + node.id.name + ' = (' + ps + ') => ' + src(node.body.body[0].argument)],
+        'An arrow function. With one expression after <code>=&gt;</code>, the value is returned automatically. (A declaration can be called before the line it\'s written on; an arrow stored in a <code>const</code> can\'t.)');
+    }
+    if (node.type === 'ForStatement' && node.test && node.test.type === 'BinaryExpression' && node.test.operator === '<' && node.test.left.type === 'Identifier' &&
+        node.test.right.type === 'MemberExpression' && !node.test.right.computed && node.test.right.property.name === 'length' && node.test.right.object.type === 'Identifier') {
+      const i = node.test.left.name, arr = node.test.right.object.name;
+      if (src(node.body).includes(arr + '[' + i + ']')) alt('forof', line, 'for (let ' + i + ' = 0; ' + i + ' < ' + arr + '.length; ' + i + '++) { … ' + arr + '[' + i + '] … }',
+        ['for (const item of ' + arr + ') { … item … }'], '<code>for...of</code> hands you each item directly, so there\'s no index to get wrong. Keep the indexed loop when you need the position <code>' + esc(i) + '</code>.');
+    }
     if (LOOPN[node.type]) {
       loops[LOOPN[node.type]] = (loops[LOOPN[node.type]] || 0) + 1;
       if (node.type === 'ForStatement' && node.test && node.test.type === 'BinaryExpression' && node.test.operator === '<=' &&
@@ -690,7 +735,7 @@ function analyzeCode(code, opts) {
   // --- What you built ---
   res.summary.push(plural(loc, 'line') + ' of code' + (comments.length ? ' and ' + plural(comments.length, 'comment') : '') + '.');
   if (named.length) res.summary.push('Defines ' + plural(named.length, 'function') + ': ' + named.map(f =>
-    '<code>' + esc(f.name) + '(' + f.params.map(esc).join(', ') + ')</code>' + (f.returns ? (f.allPaths ? ' — returns a value' : ' — returns a value on some paths') : (f.logs ? ' — prints, but doesn\'t return' : ' — doesn\'t return anything'))).join('; ') + '.');
+    '<code>' + esc(f.name) + '(' + f.params.map(esc).join(', ') + ')</code>' + (f.returns ? (f.allPaths ? ' (returns a value)' : ' (returns a value on some paths)') : (f.logs ? ' (prints, but doesn\'t return)' : ' (doesn\'t return anything)'))).join('; ') + '.');
   if (vars.length) {
     const kinds = ['const', 'let', 'var'].map(k => { const c = vars.filter(v => v.kind === k).length; return c ? c + ' ' + k : ''; }).filter(Boolean).join(', ');
     res.summary.push('Declares ' + plural(vars.length, 'variable') + ' (' + kinds + '): ' + codeList([...new Set(vars.map(v => v.name))]) + '.');
@@ -714,13 +759,13 @@ function analyzeCode(code, opts) {
   // --- Suggestions ---
   if (opts.expectReturn) {
     const f = named.find(x => x.name === opts.expectReturn);
-    if (!f) tip('warn', null, 'This challenge needs a function named <code>' + esc(opts.expectReturn) + '</code>, but none was found. Check the spelling — JavaScript is case-sensitive.');
+    if (!f) tip('warn', null, 'This challenge needs a function named <code>' + esc(opts.expectReturn) + '</code>, but none was found. Check the spelling. JavaScript is case-sensitive.');
     else if (f.returns && !f.allPaths) tip('warn', f.line, 'Some paths through <code>' + esc(f.name) + '</code> reach the end without a <code>return</code>, so for those inputs it gives back <code>undefined</code>. Does every case have an answer?');
-    else if (!f.returns) tip('warn', f.line, '<code>' + esc(f.name) + '</code> never <code>return</code>s a value' + (f.logs ? ' — it prints instead. Printing shows a human the answer; <code>return</code> hands it back to the code that asked.' : '. Without <code>return</code>, calling it gives <code>undefined</code>.'));
+    else if (!f.returns) tip('warn', f.line, '<code>' + esc(f.name) + '</code> never <code>return</code>s a value' + (f.logs ? '. It prints instead. Printing shows a human the answer; <code>return</code> hands it back to the code that asked.' : '. Without <code>return</code>, calling it gives <code>undefined</code>.'));
   }
   condAssign.forEach(l => tip('warn', l, 'A condition uses <code>=</code>, which <em>assigns</em> a value. To compare, use <code>===</code>.'));
   offByOne.forEach(l => tip('warn', l, 'The loop runs while <code>i &lt;= ….length</code>. The last index is <code>length - 1</code>, so this goes one step too far (off-by-one). Use <code>&lt;</code>.'));
-  unreachable.forEach(l => tip('warn', l, 'This line can never run — it comes right after a <code>return</code>/<code>break</code>.'));
+  unreachable.forEach(l => tip('warn', l, 'This line can never run. It comes right after a <code>return</code>/<code>break</code>.'));
   loose.slice(0, 2).forEach(l => tip('tip', l, '<code>==</code>/<code>!=</code> convert types before comparing (so <code>"5" == 5</code> is true). Prefer <code>===</code>/<code>!==</code> so surprises can\'t sneak in.'));
   named.concat(callbacks).forEach(f => f.params.forEach(p => {
     if (!f.uses[p] && !p.startsWith('_')) tip('warn', f.line, 'Parameter <code>' + esc(p) + '</code> of ' + (f.name ? '<code>' + esc(f.name) + '</code>' : 'a function') + ' is never used. Unused inputs often mean a requirement was forgotten.');
@@ -736,7 +781,7 @@ function analyzeCode(code, opts) {
   if (magic.size) tip('tip', [...magic.values()][0], 'Unnamed numbers ' + codeList([...magic.keys()].map(String), 4) + ' appear in calculations. Naming them (<code>const TAX_RATE = 0.08;</code>) explains what they mean and gives one place to change them.');
   if (concat && !n.templates) tip('tip', null, 'Text is built with <code>+</code>. A template literal (<code>`Total: ${total}`</code>) is often easier to read.');
   if (maxDepth > 3) tip('tip', depthLine, 'Code is nested ' + maxDepth + ' levels deep. Consider returning early or moving part into its own function.');
-  named.filter(f => f.end - f.line > 25).forEach(f => tip('tip', f.line, '<code>' + esc(f.name) + '</code> is ' + (f.end - f.line + 1) + ' lines long. Long functions are hard to explain — could part of it be its own function?'));
+  named.filter(f => f.end - f.line > 25).forEach(f => tip('tip', f.line, '<code>' + esc(f.name) + '</code> is ' + (f.end - f.line + 1) + ' lines long. Long functions are hard to explain. Could part of it be its own function?'));
   named.filter(f => f.params.length > 4).forEach(f => tip('tip', f.line, '<code>' + esc(f.name) + '</code> takes ' + f.params.length + ' parameters. Passing one object is easier to read and harder to mix up.'));
   empty.slice(0, 1).forEach(l => tip('tip', l, 'This block <code>{ }</code> is empty. Is something missing?'));
   if (loc > 15 && !comments.length) tip('tip', null, 'No comments yet. One short comment on <em>why</em> a tricky part works will help you (and a reviewer) later.');
@@ -777,7 +822,10 @@ function renderCoach(el, a) {
     (a.strengths.length ? '<h4>Working well</h4><ul>' + a.strengths.map(s => '<li>' + s + '</li>').join('') + '</ul>' : '') +
     '<h4>Suggestions</h4>' + (a.tips.length
       ? '<ul class="tips">' + a.tips.map(t => '<li class="' + t.level + '"><span class="tag">' + (t.level === 'warn' ? '⚠ Check this' : '💡 Tip') + '</span>' + (t.line ? '<span class="lref">Line ' + t.line + ':</span> ' : '') + t.text + '</li>').join('') + '</ul>'
-      : '<p>No suggestions — clean work. The real test: can you explain every line?</p>');
+      : '<p>No suggestions. Clean work. The real test: can you explain every line?</p>') +
+    ((a.alts || []).length ? '<h4>Other ways to write it</h4><ul class="alts">' + a.alts.map(x => '<li>' + (x.line ? '<span class="lref">Line ' + x.line + ':</span> ' : '') +
+      '<code>' + esc(x.from) + '</code> can also be written ' + x.forms.map(f => '<code>' + esc(f) + '</code>').join(' or ') + '. ' + x.note + '</li>').join('') +
+      '</ul><p class="muted">Same behavior, different spelling. Use whichever your team reads most easily.</p>' : '');
 }
 
 function requiredNames(c) {
@@ -849,7 +897,7 @@ function codeBlock(parent, code, opts) {
   };
   if (opts.runnable) {
     const rb = $('.run', wrap), out = $('.out', wrap);
-    if (opts.lockRun) { rb.disabled = true; $('.runnote', wrap).textContent = 'Predict first — Run unlocks when you\'ve answered the questions.'; }
+    if (opts.lockRun) { rb.disabled = true; $('.runnote', wrap).textContent = 'Predict first. Run unlocks when you\'ve answered the questions.'; }
     rb.addEventListener('click', async () => {
       rb.disabled = true;
       const res = await runCode(code, []);
@@ -858,6 +906,15 @@ function codeBlock(parent, code, opts) {
     });
   }
   return api;
+}
+
+/* ---------- "other ways to write it" panel ---------- */
+function waysBlock(ways, open) {
+  const d = frag('<details class="ways"' + (open ? ' open' : '') + '><summary>Other ways to write it</summary></details>');
+  ways.forEach(w => d.append(frag('<div class="way"><h3>' + w.topic + '</h3><ul class="way-forms">' +
+    w.forms.map(f => '<li><pre class="way-code"><code>' + f.code.split('\n').map(hl).join('\n') + '</code></pre><p>' + f.note + '</p></li>').join('') +
+    '</ul>' + (w.tip ? '<p class="muted">' + w.tip + '</p>' : '') + '</div>')));
+  return d;
 }
 
 /* ---------- questions ---------- */
@@ -912,7 +969,7 @@ function askQ(q, i, total, ctx, onCorrect) {
     }));
   } else if (q.kind === 'line') {
     const answers = [].concat(q.answer);
-    body.innerHTML = '<p class="muted">Select a line in the code above — click it, or Tab to it and press Enter.</p><button type="button" class="btn ghost jump">Go to the code</button>';
+    body.innerHTML = '<p class="muted">Select a line in the code above: click it, or Tab to it and press Enter.</p><button type="button" class="btn ghost jump">Go to the code</button>';
     $('.jump', body).addEventListener('click', () => ctx.viewer.focusFirst());
     ctx.viewer.setSelectable(nLine => {
       if (finished) return true;
@@ -990,13 +1047,13 @@ function explainBox(parent, c, r, heading, onDone) {
     const groups = ex.keywords || [];
     const hits = groups.map(g => g.any.some(w => text.includes(w.toLowerCase())));
     let html = '';
-    if (groups.length) html += '<p>Strong explanations of this code usually touch on:</p><ul class="coverage">' + groups.map((g, i) => '<li class="' + (hits[i] ? 'hit' : '') + '">' + g.label + '<span class="sr-only">' + (hits[i] ? ' — you covered this' : ' — not mentioned yet') + '</span></li>').join('') + '</ul>';
-    if (complete && ex.model) html += '<details open><summary>Compare with an example explanation</summary><p class="model">' + ex.model + '</p><p class="muted">Yours doesn\'t need to match — but did you cover the same ideas? Revise anytime.</p></details>';
+    if (groups.length) html += '<p>Strong explanations of this code usually touch on:</p><ul class="coverage">' + groups.map((g, i) => '<li class="' + (hits[i] ? 'hit' : '') + '">' + g.label + '<span class="sr-only">' + (hits[i] ? ': you covered this' : ': not mentioned yet') + '</span></li>').join('') + '</ul>';
+    if (complete && ex.model) html += '<details open><summary>Compare with an example explanation</summary><p class="model">' + ex.model + '</p><p class="muted">Yours doesn\'t need to match, but did you cover the same ideas? Revise anytime.</p></details>';
     return { html, hits: hits.filter(Boolean).length, total: groups.length };
   };
   btn.addEventListener('click', () => {
     const w = words(ta.value);
-    if (w < min) { fb.innerHTML = '<p class="no"><strong>Keep going.</strong> Aim for at least ' + min + ' words — say <em>what</em> the code does and <em>why</em>.</p>'; return; }
+    if (w < min) { fb.innerHTML = '<p class="no"><strong>Keep going.</strong> Aim for at least ' + min + ' words. Say <em>what</em> the code does and <em>why</em>.</p>'; return; }
     const f = feedback(true);
     if (f.total && f.hits === 0) { fb.innerHTML = '<p class="no"><strong>Almost.</strong> Your explanation doesn\'t mention any key ideas yet. Point at specific parts of the code.</p>' + feedback(false).html; return; }
     r.explanation = ta.value.trim(); save();
@@ -1008,14 +1065,14 @@ function explainBox(parent, c, r, heading, onDone) {
 
 /* ---------- page: home ---------- */
 function renderHome() {
-  main.innerHTML = '<section class="hero"><h1>JS Reasoning Quest</h1><p class="lead">Learn JavaScript the way it\'s actually used now: alongside AI assistants. Writing code is only half the job — the other half is <strong>knowing whether code is right and being able to explain why.</strong></p></section>' +
-    '<h2>No timers. No speed scores.</h2><p>You progress by understanding. Wrong answers explain themselves, so take as long as you need. What gets tracked is <em>how</em> you reasoned: first-try answers, hints used, and whether you built something independently or with AI help (both are fine — just be honest about it).</p>' +
+  main.innerHTML = '<section class="hero"><h1>JS Reasoning Quest</h1><p class="lead">Learn JavaScript the way it\'s actually used now: alongside AI assistants. Writing code is only half the job; the other half is <strong>knowing whether code is right and being able to explain why.</strong></p></section>' +
+    '<h2>No timers. No speed scores.</h2><p>You progress by understanding. Wrong answers explain themselves, so take as long as you need. What gets tracked is <em>how</em> you reasoned: first-try answers, hints used, and whether you built something independently or with AI help (both are fine; just be honest about it).</p>' +
     '<h2>Four skills you\'ll practice</h2><div class="skills-grid">' + Object.keys(SKILLS).map(k => '<div class="card"><h3>' + SKILLS[k].icon + ' ' + SKILLS[k].label + '</h3><p>' + SKILLS[k].desc + '</p></div>').join('') + '</div>' +
     '<h2>The Try-First Ladder</h2><p>Whenever you\'re stuck, climb one rung at a time:</p><ol class="ladder">' +
     '<li><strong>Understand the problem.</strong> Inputs, outputs, rules, edge cases. Work one example by hand.</li>' +
-    '<li><strong>Try it yourself.</strong> A wrong attempt is useful — it shows you exactly what you don\'t know yet.</li>' +
+    '<li><strong>Try it yourself.</strong> A wrong attempt is useful: it shows you exactly what you don\'t know yet.</li>' +
     '<li><strong>Take a hint.</strong> Hints get more specific one at a time.</li>' +
-    '<li><strong>Ask the AI assistant</strong> — with a specific question about what you tried. It unlocks after your first attempt.</li>' +
+    '<li><strong>Ask the AI assistant</strong> with a specific question about what you tried. It unlocks after your first attempt.</li>' +
     '<li><strong>Explain it back.</strong> Always. Whoever wrote the code, you should be able to justify every line.</li></ol>' +
     '<div class="field"><label for="studentName">Your name (used only on the progress report you export)</label><input type="text" id="studentName" autocomplete="name"></div>' +
     '<div class="btn-row"><a class="btn" href="#levels">' + (Object.keys(store.ch).length ? 'Continue the quest' : 'Start at Level 0') + '</a><a class="btn ghost" href="#workshop">Open the Workshop</a></div>' +
@@ -1050,7 +1107,7 @@ function renderLevels(notice) {
 function navHTML(L, li, ci) {
   return '<p class="lvl-name">Level ' + li + ': ' + esc(L.title) + '</p><ol>' + L.challenges.map((x, i) => {
     const s = statusOf(x);
-    return '<li><a href="#c/' + L.id + '/' + i + '"' + (i === ci ? ' aria-current="page"' : '') + '><span class="st ' + s.cls + '" aria-hidden="true">' + s.icon + '</span><span>' + esc(x.title) + '<span class="sr-only"> — ' + s.text + '</span></span></a></li>';
+    return '<li><a href="#c/' + L.id + '/' + i + '"' + (i === ci ? ' aria-current="page"' : '') + '><span class="st ' + s.cls + '" aria-hidden="true">' + s.icon + '</span><span>' + esc(x.title) + '<span class="sr-only">: ' + s.text + '</span></span></a></li>';
   }).join('') + '</ol><p><a href="#levels">← All levels</a></p>';
 }
 
@@ -1087,7 +1144,7 @@ function completeChallenge(ctx, r) {
   const panel = frag('<section class="success complete-panel"><h2><span aria-hidden="true">✓</span> Challenge complete' + (r.assisted ? ' (with AI assistance)' : '') + '</h2>' +
     (c.takeaway ? '<p><strong>Takeaway:</strong> ' + c.takeaway + '</p>' : '') +
     (last && lvlDone ? '<p><strong>Level ' + li + ' complete!</strong> ' + (LEVELS[li + 1] ? 'Level ' + (li + 1) + ' is unlocked.' : 'You finished the whole quest. Export your report from My Progress.') + '</p>' : '') +
-    (last && !lvlDone && firstOpen >= 0 ? '<p>Some challenges in this level are still open — <a href="#c/' + L.id + '/' + firstOpen + '">go to the first one</a>.</p>' : '') +
+    (last && !lvlDone && firstOpen >= 0 ? '<p>Some challenges in this level are still open: <a href="#c/' + L.id + '/' + firstOpen + '">go to the first one</a>.</p>' : '') +
     '<div class="btn-row">' + next + '<a class="btn ghost" href="#profile">My Progress</a></div></section>');
   ctx.body.append(panel);
 }
@@ -1102,6 +1159,7 @@ function renderQuiz(ctx) {
   let viewer = null;
   const total = c.questions.length;
   if (c.code) viewer = codeBlock(body, c.code, { runnable: c.runnable !== false, lockRun: c.runAfter && !r.done && (r.qDone || 0) < total });
+  if (c.ways) body.append(waysBlock(c.ways, false));
   (c.codes || []).forEach((x, i) => {
     body.append(frag('<h2 class="code-title">' + esc(x.label) + '</h2>'));
     const v = codeBlock(body, x.code, { runnable: true });
@@ -1174,7 +1232,7 @@ function renderBuild(ctx) {
     const aiArea = $('.ai-area', wb);
     const drawAI = () => {
       if (r.assisted) {
-        aiArea.innerHTML = '<p class="muted">You asked: “' + esc(r.stuck || '') + '”</p><p>Here\'s the assistant\'s solution. <strong>Read it before you use it</strong> — can you predict what each line does? To finish, you\'ll answer questions about it and explain it.</p>';
+        aiArea.innerHTML = '<p class="muted">You asked: “' + esc(r.stuck || '') + '”</p><p>Here\'s the assistant\'s solution. <strong>Read it before you use it</strong>. Can you predict what each line does? To finish, you\'ll answer questions about it and explain it.</p>';
         codeBlock(aiArea, c.solution, {});
         const lb = frag('<button type="button" class="btn ghost">Load into my editor (replaces my code)</button>');
         aiArea.append(lb);
@@ -1182,14 +1240,14 @@ function renderBuild(ctx) {
         return;
       }
       if (!(r.runs > 0)) {
-        aiArea.innerHTML = '<p class="locked-note"><span aria-hidden="true">🔒</span> Unlocks after your first <strong>Run</strong>. Even a wrong attempt shows you what you don\'t know yet — which is what makes the AI\'s answer meaningful.</p>';
+        aiArea.innerHTML = '<p class="locked-note"><span aria-hidden="true">🔒</span> Unlocks after your first <strong>Run</strong>. Even a wrong attempt shows you what you don\'t know yet, which is what makes the AI\'s answer meaningful.</p>';
         return;
       }
       const tid = 'ask' + (++uid);
       aiArea.innerHTML = '<p>Using AI is allowed. Good use starts with a specific question.</p><div class="field"><label for="' + tid + '">What would you tell the assistant? Describe what you tried and where you\'re stuck.</label><textarea id="' + tid + '" style="min-height:80px"></textarea></div><button type="button" class="btn purple">Ask the AI</button><div class="fb" aria-live="polite"></div><p class="muted">Assisted completions are marked ◐ in your progress. That\'s honest record-keeping, not a penalty.</p>';
       $('button', aiArea).addEventListener('click', () => {
         const v = $('textarea', aiArea).value.trim();
-        if (words(v) < 6) { $('.fb', aiArea).innerHTML = '<p class="no">Be specific — what did you try, and what happened? (at least 6 words) A vague prompt gets a vague answer.</p>'; return; }
+        if (words(v) < 6) { $('.fb', aiArea).innerHTML = '<p class="no">Be specific: what did you try, and what happened? (at least 6 words) A vague prompt gets a vague answer.</p>'; return; }
         r.assisted = true; r.stuck = v; save();
         drawAI(); ctx.refreshNav(); announce('The AI assistant answered.');
       });
@@ -1202,6 +1260,7 @@ function renderBuild(ctx) {
       if (afterShown) return;
       afterShown = true;
       afterWrap.append(frag('<div class="success"><h2><span aria-hidden="true">✓</span> All checks pass</h2><p>Working code is the halfway point. Now show you understand it.</p></div>'));
+      if (c.ways) afterWrap.append(waysBlock(c.ways, true));
       const toExplain = () => {
         explainBox(afterWrap, c, r, 'Step ' + (step + 1) + ' · Explain your code', () => {
           if (!r.assisted && c.solution) {
@@ -1229,7 +1288,7 @@ function renderBuild(ctx) {
       renderCoach(coach, analyzeCode(code, { required: requiredNames(c), expectReturn: c.expectReturn }));
       drawAI(); ctx.refreshNav();
       const pass = !res.syntax && !res.timeout && !res.error && res.results.every(x => x && x.pass);
-      announce(pass ? 'All checks pass.' : 'Run finished. Some checks did not pass — see the output.');
+      announce(pass ? 'All checks pass.' : 'Run finished. Some checks did not pass. See the output.');
       if (pass) { r.passed = true; save(); showAfter(); }
     });
     if (r.passed) showAfter();
@@ -1247,7 +1306,7 @@ function renderOpen(ctx) {
   const sec = frag('<div>' +
     '<h2>1 · Define the problem</h2><div class="field"><label for="' + p + 'prob">Who is it for? What goes in, what comes out, and what are the rules? (at least 15 words)</label><textarea id="' + p + 'prob"></textarea></div>' +
     '<h2>2 · Decide how you\'ll use AI</h2><fieldset><legend>How will AI help with this program?</legend>' +
-      ['None — I\'ll write it all myself', 'Explanations and hints only', 'It generated parts, and I wrote the rest', 'It generated most of it, and I reviewed and tested it'].map((t, i) => '<label><input type="radio" name="' + p + 'ai" value="' + esc(t) + '"> ' + esc(t) + '</label>').join('') + '</fieldset>' +
+      ['None: I\'ll write it all myself', 'Explanations and hints only', 'It generated parts, and I wrote the rest', 'It generated most of it, and I reviewed and tested it'].map((t, i) => '<label><input type="radio" name="' + p + 'ai" value="' + esc(t) + '"> ' + esc(t) + '</label>').join('') + '</fieldset>' +
     '<h2>3 · Build it</h2><div class="editor-label">Your program</div><div class="editor-host"></div>' +
     '<div class="runbar"><button type="button" class="btn run">▶ Run &amp; review</button></div><div class="out" hidden></div><div class="coach" hidden></div>' +
     '<h2>4 · Explain and justify it</h2><div class="field"><label for="' + p + 'exp">Explain how your code works, part by part, as if to a reviewer (at least 25 words)</label><textarea id="' + p + 'exp"></textarea></div>' +
@@ -1285,14 +1344,14 @@ function renderOpen(ctx) {
 }
 
 /* ---------- page: workshop ---------- */
-const WORKSHOP_START = '// Paste any JavaScript here — your own, or code an AI wrote for you.\n// Run it, read the coach\'s description, then practice explaining it.\n\nconst prices = [4.5, 12, 7.25];\nlet total = 0;\nfor (const p of prices) {\n  total = total + p;\n}\nconsole.log("Total: " + total);\n';
+const WORKSHOP_START = '// Paste any JavaScript here: your own, or code an AI wrote for you.\n// Run it, read the coach\'s description, then practice explaining it.\n\nconst prices = [4.5, 12, 7.25];\nlet total = 0;\nfor (const p of prices) {\n  total = total + p;\n}\nconsole.log("Total: " + total);\n';
 function renderWorkshop() {
   const w = store.workshop || (store.workshop = { code: WORKSHOP_START, notes: '' });
-  main.innerHTML = '<h1>Workshop</h1><p class="lead">A free practice space. Paste code — yours or an AI\'s — run it, and the coach will describe what it does and suggest improvements. Nothing here affects your progress.</p>' +
+  main.innerHTML = '<h1>Workshop</h1><p class="lead">A free practice space. Paste code (yours or an AI\'s), run it, and the coach will describe what it does and suggest improvements. Nothing here affects your progress.</p>' +
     '<div class="editor-label">Code</div><div class="editor-host"></div>' +
     '<div class="runbar"><button type="button" class="btn run">▶ Run &amp; review</button><button type="button" class="btn ghost reset">Clear</button></div><div class="out" hidden></div><div class="coach" hidden></div>' +
     '<div class="field"><label for="wsNotes">Practice explaining: what does this code do, and would you trust it? Why?</label><textarea id="wsNotes"></textarea></div>' +
-    '<details><summary>A checklist for reviewing code you didn\'t write</summary><ol><li>What problem is it supposed to solve? Write the inputs, outputs and rules.</li><li>Predict the output for one normal input and one edge case <em>before</em> running.</li><li>Run it. Did your prediction match? If not, who was wrong — you or the code?</li><li>Is every name it calls actually defined? Are any inputs unused?</li><li>Does it change data it shouldn\'t (mutation)?</li><li>Could you explain each line to a classmate? If not, that\'s the line to study.</li></ol></details>';
+    '<details><summary>A checklist for reviewing code you didn\'t write</summary><ol><li>What problem is it supposed to solve? Write the inputs, outputs and rules.</li><li>Predict the output for one normal input and one edge case <em>before</em> running.</li><li>Run it. Did your prediction match? If not, who was wrong: you or the code?</li><li>Is every name it calls actually defined? Are any inputs unused?</li><li>Does it change data it shouldn\'t (mutation)?</li><li>Could you explain each line to a classmate? If not, that\'s the line to study.</li></ol></details>';
   const runBtn = $('.run');
   const ed = makeEditor($('.editor-host'), w.code, 'Workshop code editor', () => runBtn.focus());
   const notes = $('#wsNotes');
@@ -1326,7 +1385,7 @@ function stats() {
 
 function buildReport() {
   const st = stats();
-  const lines = ['# JS Reasoning Quest — Progress Report', '', '**Student:** ' + (store.name || '(name not entered)') + '  ', '**Generated:** ' + new Date().toLocaleString(), '',
+  const lines = ['# JS Reasoning Quest: Progress Report', '', '**Student:** ' + (store.name || '(name not entered)') + '  ', '**Generated:** ' + new Date().toLocaleString(), '',
     '## Summary by skill', '', '| Skill | Complete | Independent | With AI | First-try answers |', '|---|---|---|---|---|'];
   Object.keys(SKILLS).forEach(k => { const s = st.by[k]; lines.push('| ' + SKILLS[k].label + ' | ' + s.done + ' / ' + s.total + ' | ' + s.independent + ' | ' + s.assisted + ' | ' + s.firstTry + ' / ' + s.answered + ' |'); });
   lines.push('', 'Hints used: ' + st.hints + ' · AI assists: ' + st.assists + ' · Code runs: ' + st.runs, '', '## Journal');
@@ -1351,7 +1410,7 @@ function renderProfile() {
     '<table><caption class="sr-only">Progress by skill</caption><thead><tr><th scope="col">Skill</th><th scope="col">Complete</th><th scope="col">Independent</th><th scope="col">With AI</th><th scope="col">First-try answers</th></tr></thead><tbody>' +
     Object.keys(SKILLS).map(k => { const s = st.by[k]; return '<tr><th scope="row">' + SKILLS[k].icon + ' ' + SKILLS[k].label + '</th><td>' + s.done + ' / ' + s.total + '</td><td>' + s.independent + '</td><td>' + s.assisted + '</td><td>' + s.firstTry + ' / ' + s.answered + '</td></tr>'; }).join('') +
     '</tbody></table><p>Hints used: <strong>' + st.hints + '</strong> · AI assists: <strong>' + st.assists + '</strong> · Code runs: <strong>' + st.runs + '</strong></p>' +
-    '<p class="muted">“First-try answers” counts questions you got right before any wrong guess. Wrong guesses aren\'t failures — each one came with an explanation.</p>' +
+    '<p class="muted">“First-try answers” counts questions you got right before any wrong guess. Wrong guesses aren\'t failures; each one came with an explanation.</p>' +
     '<div class="btn-row">' + (window.JSRQ_NO_DOWNLOAD ? '' : '<button type="button" class="btn" id="dl">Download report (.md)</button>') + '<button type="button" class="btn' + (window.JSRQ_NO_DOWNLOAD ? '' : ' ghost') + '" id="cp">Copy report</button><button type="button" class="btn ghost" id="rs">Reset all progress</button></div><div class="fb" id="pfb" aria-live="polite"></div>' +
     '<details><summary>Show the report text</summary><label for="reportText" class="sr-only">Report text</label><textarea id="reportText" class="report-text" readonly></textarea></details>' +
     '<h2>Journal</h2><div id="journal"></div>';
@@ -1375,7 +1434,7 @@ function renderProfile() {
     try { await navigator.clipboard.writeText(buildReport()); $('#pfb').innerHTML = '<p class="ok">Report copied to the clipboard.</p>'; }
     catch (e) {
       const ta = $('#reportText'); ta.closest('details').open = true; ta.focus(); ta.select();
-      $('#pfb').innerHTML = '<p class="no">Couldn\'t copy automatically. The report text is selected below — press Ctrl+C (or ⌘C) to copy it.</p>';
+      $('#pfb').innerHTML = '<p class="no">Couldn\'t copy automatically. The report text is selected below. Press Ctrl+C (or ⌘C) to copy it.</p>';
     }
   });
   $('#rs').addEventListener('click', e => confirmInline(e.currentTarget, 'Erase all progress, code and explanations in this browser? This can\'t be undone.', () => {
@@ -1404,11 +1463,11 @@ function route() {
       const ci = parseInt(parts[2], 10) || 0;
       const c = LEVELS[li].challenges[ci];
       if (!c) { renderLevels('That challenge doesn\'t exist.'); }
-      else { renderChallenge(li, ci); title = c.title + ' — Level ' + li + ' — ' + title; }
+      else { renderChallenge(li, ci); title = c.title + ' · Level ' + li + ' · ' + title; }
     }
-  } else if (page === 'levels') { renderLevels(); title = 'Levels — ' + title; }
-  else if (page === 'workshop') { renderWorkshop(); title = 'Workshop — ' + title; }
-  else if (page === 'profile') { renderProfile(); title = 'My Progress — ' + title; }
+  } else if (page === 'levels') { renderLevels(); title = 'Levels · ' + title; }
+  else if (page === 'workshop') { renderWorkshop(); title = 'Workshop · ' + title; }
+  else if (page === 'profile') { renderProfile(); title = 'My Progress · ' + title; }
   else renderHome();
   document.title = title;
   window.scrollTo(0, 0);
