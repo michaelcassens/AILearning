@@ -10,6 +10,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  color-scheme:dark;
   --bg:#0d0d1a;--surface:#15152e;--surface2:#1c1c3a;--border:#3a3a72;
   --text:#ececf8;--muted:#b9b9da;--accent:#2fe0c0;--accent2:#b39dfb;
   --ok:#5ee68f;--bad:#ff8f9a;--warn:#ffd166;--focus:#ffd166;
@@ -55,6 +56,8 @@ li{margin:4px 0}
 .btn.ghost:hover{background:rgba(47,224,192,.12)}
 .btn.purple{background:var(--accent2);border-color:var(--accent2);color:#1b0f3d}
 .btn:disabled,.btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.confirm-row{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center}
+.report-text{font-family:var(--mono);font-size:.85rem;min-height:220px}
 .btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:12px 0}
@@ -371,6 +374,15 @@ const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
 function esc(s) { return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
 function frag(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
 function announce(msg) { live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 40); }
+// In-page "are you sure?" — some hosts (like embedded viewers) block confirm()
+function confirmInline(btn, question, onYes) {
+  const row = frag('<span class="confirm-row" role="group" aria-label="Confirm"><span>' + question + '</span><button type="button" class="btn yes">Yes</button><button type="button" class="btn ghost no">Cancel</button></span>');
+  btn.after(row); btn.hidden = true;
+  $('.no', row).focus();
+  const close = () => { row.remove(); btn.hidden = false; btn.focus(); };
+  $('.no', row).addEventListener('click', close);
+  $('.yes', row).addEventListener('click', () => { close(); onYes(); });
+}
 function words(s) { return (s.trim().match(/\S+/g) || []).length; }
 function plural(n, word, pl) { return n + ' ' + (n === 1 ? word : (pl || word + 's')); }
 function norm(s) { return String(s).toLowerCase().replace(/[\s"'`$]/g, ''); }
@@ -1184,7 +1196,7 @@ function renderBuild(ctx) {
     };
     drawAI();
 
-    $('.reset', wb).addEventListener('click', () => { if (confirm('Replace your code with the starter code?')) ed.set(c.starter); });
+    $('.reset', wb).addEventListener('click', e => confirmInline(e.currentTarget, 'Replace your code with the starter code?', () => ed.set(c.starter)));
     let afterShown = false;
     const showAfter = () => {
       if (afterShown) return;
@@ -1293,7 +1305,7 @@ function renderWorkshop() {
     ed.markLine(errorLine(res));
     renderCoach($('.coach'), analyzeCode(code, {}));
   });
-  $('.reset').addEventListener('click', () => { if (confirm('Clear the workshop editor?')) { ed.set(''); w.code = ''; save(); } });
+  $('.reset').addEventListener('click', e => confirmInline(e.currentTarget, 'Clear the workshop editor?', () => { ed.set(''); w.code = ''; save(); }));
 }
 
 /* ---------- page: profile / report ---------- */
@@ -1340,7 +1352,8 @@ function renderProfile() {
     Object.keys(SKILLS).map(k => { const s = st.by[k]; return '<tr><th scope="row">' + SKILLS[k].icon + ' ' + SKILLS[k].label + '</th><td>' + s.done + ' / ' + s.total + '</td><td>' + s.independent + '</td><td>' + s.assisted + '</td><td>' + s.firstTry + ' / ' + s.answered + '</td></tr>'; }).join('') +
     '</tbody></table><p>Hints used: <strong>' + st.hints + '</strong> · AI assists: <strong>' + st.assists + '</strong> · Code runs: <strong>' + st.runs + '</strong></p>' +
     '<p class="muted">“First-try answers” counts questions you got right before any wrong guess. Wrong guesses aren\'t failures — each one came with an explanation.</p>' +
-    '<div class="btn-row"><button type="button" class="btn" id="dl">Download report (.md)</button><button type="button" class="btn ghost" id="cp">Copy report</button><button type="button" class="btn ghost" id="rs">Reset all progress</button></div><div class="fb" id="pfb" aria-live="polite"></div>' +
+    '<div class="btn-row">' + (window.JSRQ_NO_DOWNLOAD ? '' : '<button type="button" class="btn" id="dl">Download report (.md)</button>') + '<button type="button" class="btn' + (window.JSRQ_NO_DOWNLOAD ? '' : ' ghost') + '" id="cp">Copy report</button><button type="button" class="btn ghost" id="rs">Reset all progress</button></div><div class="fb" id="pfb" aria-live="polite"></div>' +
+    '<details><summary>Show the report text</summary><label for="reportText" class="sr-only">Report text</label><textarea id="reportText" class="report-text" readonly></textarea></details>' +
     '<h2>Journal</h2><div id="journal"></div>';
   const nm = $('#profName');
   nm.value = store.name || '';
@@ -1349,7 +1362,8 @@ function renderProfile() {
   LEVELS.forEach((L, li) => L.challenges.forEach((c, ci) => { const r = peek(c.id); if (r && r.explanation) entries.push({ L, li, c, ci, r }); }));
   $('#journal').innerHTML = entries.length ? entries.map(e => '<div class="journal-entry"><h3><a href="#c/' + e.L.id + '/' + e.ci + '">Level ' + e.li + ' · ' + esc(e.c.title) + '</a>' + (e.r.assisted ? ' <span class="chip">◐ AI-assisted</span>' : '') + '</h3><p>' + esc(e.r.explanation).replace(/\n/g, '<br>') + '</p></div>').join('')
     : '<p class="muted">Your explanations will collect here as you complete challenges.</p>';
-  $('#dl').addEventListener('click', () => {
+  $('#reportText').value = buildReport();
+  if ($('#dl')) $('#dl').addEventListener('click', () => {
     const blob = new Blob([buildReport()], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1359,11 +1373,14 @@ function renderProfile() {
   });
   $('#cp').addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(buildReport()); $('#pfb').innerHTML = '<p class="ok">Report copied to the clipboard.</p>'; }
-    catch (e) { $('#pfb').innerHTML = '<p class="no">Couldn\'t copy automatically — use Download instead.</p>'; }
+    catch (e) {
+      const ta = $('#reportText'); ta.closest('details').open = true; ta.focus(); ta.select();
+      $('#pfb').innerHTML = '<p class="no">Couldn\'t copy automatically. The report text is selected below — press Ctrl+C (or ⌘C) to copy it.</p>';
+    }
   });
-  $('#rs').addEventListener('click', () => {
-    if (confirm('Erase all progress, code and explanations in this browser? This can\'t be undone.')) { const name = store.name; store = fresh(); store.name = name; save(); renderProfile(); }
-  });
+  $('#rs').addEventListener('click', e => confirmInline(e.currentTarget, 'Erase all progress, code and explanations in this browser? This can\'t be undone.', () => {
+    const name = store.name; store = fresh(); store.name = name; save(); renderProfile();
+  }));
 }
 
 /* ---------- router ---------- */
