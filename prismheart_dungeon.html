@@ -641,7 +641,7 @@ function newState(heroId){
     // Level 2
     q2:{ met:false, vials:'none', moss:'none', chains:'none' }, vials:0, chainKills:0, vaultOpen:false,
     boss2Defeated:false, won2:false, metMoss2:false, cleared:{}, moved:{},
-    lit:{}, levers:{}, pods:{}, seedsUsed:{},
+    lit:{}, levers:{}, pods:{}, seedsUsed:{}, seeds:{},
     stats:{ searches:0, kills:0, deaths:0 },
   };
 }
@@ -2081,6 +2081,7 @@ function enterRoom(id, at){
   const rn = $('#roomname'); rn.textContent = room.def.name; rn.classList.add('show');
   clearTimeout(enterRoom._t); enterRoom._t = setTimeout(() => rn.classList.remove('show'), 2200);
   $('#mm-label').textContent = room.def.name;
+  regrowPods(room);
   musicForRoom();
   save();
   if (firstVisit && id === 'vault') setTimeout(() => dialog('narrator', [
@@ -2092,13 +2093,27 @@ function startTrans(to, at){ if (trans) return; trans = { phase:'out', t:0, to, 
 
 /* ---------- pushing crates, barrels and chests ---------- */
 const PUSHABLE = { crate:1, barrel:1, chest:1 };
+// vine seeds you are carrying for a room (older saves derive it from pods picked minus seeds used)
+function seedCount(id){
+  S.seeds = S.seeds || {};
+  if (S.seeds[id] == null) S.seeds[id] = Math.max(0, Object.keys(S.pods).filter(k => k.startsWith(id + ':')).length - (S.seedsUsed[id] || 0));
+  return S.seeds[id];
+}
+// never leave the hero stuck: if seeds in hand plus pods still growing can't make a bridge, the pods regrow
+function regrowPods(r){
+  if (!r.pods.length || !r.t.some(row => row.includes(T_PIT))) return;
+  const growing = r.pods.filter(pd => !S.pods[pd.key]).length;
+  if (seedCount(r.id) + growing >= 2) return;
+  for (const pd of r.pods) delete S.pods[pd.key];
+  setTimeout(() => toast('Fresh seed pods have grown along the edge of the chasm.', 3500), 1200);
+}
 // multi-step puzzles: what each gem power needs in its room first
 const roomFlags = (r, type, flag) => r.objs.filter(o => o.type === type).map(o => !!S[flag][o.key]);
 function powerReady(kind){
   if (kind === 'ice'){ const lit = roomFlags(room, 'brazier', 'lit'); return { ok: lit.every(Boolean), have: lit.filter(Boolean).length, need: lit.length, why: 'The ice is too cold for the Ruby alone. Light the frozen braziers in this room first.', what:'braziers lit' }; }
   if (kind === 'deep'){ const pulled = roomFlags(room, 'lever', 'levers'); return { ok: pulled.every(Boolean), have: pulled.filter(Boolean).length, need: pulled.length, why: 'The water is too deep for the Sapphire to still. Find the drain levers in this room and pull them first.', what:'levers pulled' }; }
-  const have = Object.keys(S.pods).filter(k => k.startsWith(room.id + ':')).length - (S.seedsUsed[room.id] || 0);
-  return { ok: have >= 2, have: Math.max(0, have), need: 2, why: 'The Emerald needs vine seeds to grow a bridge. Two seed pods will make one bridge. Look for glowing pods in this room.', what:'vine seeds' };
+  const have = seedCount(room.id);
+  return { ok: have >= 2, have, need: 2, why: 'The Emerald needs vine seeds to grow a bridge. Two seed pods will make one bridge. Look for glowing pods in this room.', what:'vine seeds' };
 }
 function tryPush(ix, iy, dt){
   const horiz = Math.abs(ix) > Math.abs(iy), dx = horiz ? Math.sign(ix) : 0, dy = horiz ? 0 : Math.sign(iy);
@@ -2208,7 +2223,7 @@ function usePower(ref){
   if (!S.gems[P.gem]){ toast(`You need the ${GEMS[P.gem].name} to clear this.`); return; }
   const rd = powerReady(ref.kind);
   if (!rd.ok){ toast(rd.why + ` (${rd.have}/${rd.need} ${rd.what})`, 4500); SFX.empty(); return; }
-  if (ref.kind === 'pit') S.seedsUsed[room.id] = (S.seedsUsed[room.id] || 0) + 2;
+  if (ref.kind === 'pit'){ S.seeds[room.id] = seedCount(room.id) - 2; S.seedsUsed[room.id] = (S.seedsUsed[room.id] || 0) + 2; }
   const r = room, W = r.W, seen = new Uint8Array(W*r.H), q = [[ref.x, ref.y]], tiles = [];
   while (q.length){
     const [x, y] = q.pop();
@@ -2714,9 +2729,9 @@ function update(dt){
   for (const pd of room.pods){
     if (S.pods[pd.key]) continue;
     if (dist(hero.x, hero.y, (pd.x+.5)*TS, (pd.y+.5)*TS) < 20){
-      S.pods[pd.key] = 1; SFX.pick();
+      const have = seedCount(room.id) + 1;
+      S.pods[pd.key] = 1; S.seeds[room.id] = have; SFX.pick();
       burst((pd.x+.5)*TS, (pd.y+.5)*TS, 16, ['#6cc04f','#b6f08a','#ffffff'], { speed:50, glow:true, grav:-30 });
-      const have = Object.keys(S.pods).filter(k => k.startsWith(room.id + ':')).length - (S.seedsUsed[room.id] || 0);
       floatText(hero.x, hero.y - 24, `Vine seed (${have})`, '#b6f08a');
       if (have === 2) toast('Two vine seeds: enough for the Emerald to grow a bridge.');
       save();
