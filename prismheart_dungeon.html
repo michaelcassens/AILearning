@@ -441,15 +441,22 @@ const layerCache = {};
 /* ---------- hidden gem placement (new spot every game) ---------- */
 // wall tiles that face open floor, away from doorways and the starting cell
 function gemCandidates(id){
-  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, FLOOR = '.~=+ge';
+  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@';
   const exits = [], starts = [], out = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
     if ('NSEWGF'.includes(m[y][x])) exits.push([x, y]);
     if (m[y][x] === '@') starts.push([x, y]);
   }
+  // flood fill from the start and every doorway, treating chests, tombs, pillars and the like as solid,
+  // so a gem is never sealed behind furniture
+  const reach = new Uint8Array(W*H), q = [];
+  const visit = (x, y) => { if (x < 0 || y < 0 || x >= W || y >= H || reach[y*W + x] || !WALK.includes(m[y][x])) return; reach[y*W + x] = 1; q.push([x, y]); };
+  starts.forEach(([x, y]) => visit(x, y));
+  exits.forEach(([x, y]) => { visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); });
+  while (q.length){ const [x, y] = q.shift(); visit(x+1, y); visit(x-1, y); visit(x, y+1); visit(x, y-1); }
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
     if (m[y][x] !== '#' && m[y][x] !== 'L') continue;
-    const faces = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const n = (m[y+dy] || '')[x+dx]; return !!n && FLOOR.includes(n); });
+    const faces = [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && reach[ny*W + nx]; });
     if (!faces) continue;
     if (exits.some(([ex, ey]) => Math.abs(ex - x) + Math.abs(ey - y) < 3)) continue;
     if (starts.some(([sx, sy]) => Math.abs(sx - x) + Math.abs(sy - y) < 4)) continue;
@@ -586,6 +593,12 @@ function buildRoom(id){
     r.t.push(row);
   }
   if (!r.start) r.start = { x:W*TS/2, y:H*TS/2 };
+  S.moved = S.moved || {};
+  for (const o of r.objs){
+    const mv = S.moved[o.key];
+    if (mv){ r.solidObj[o.y*W + o.x] = 0; o.x = mv[0]; o.y = mv[1]; r.solidObj[o.y*W + o.x] = 1; }
+    if (o.type === 'rubble' && S.searched[o.key]) r.solidObj[o.y*W + o.x] = 0;
+  }
   const spot = S.gemSpots && S.gemSpots[id];
   r.looseAt = -1;
   if (spot){ const [x, y] = spot; r.objs.push({ type:'loose', x, y, key:id+':'+x+','+y, ph:Math.random()*6 }); r.looseAt = y*W + x; }
@@ -975,7 +988,8 @@ function drawGemShape(c, x, y, s, col){
 
 /* ---------- objects ---------- */
 function drawObj(c, o){
-  const px = o.x*TS, py = o.y*TS, done = !!S.searched[o.key];
+  if (o.ox || o.oy){ const k = Math.max(0, 1 - 1/60*14); o.ox = Math.abs(o.ox) < .5 ? 0 : o.ox*k; o.oy = Math.abs(o.oy) < .5 ? 0 : o.oy*k; }
+  const px = o.x*TS + (o.ox || 0), py = o.y*TS + (o.oy || 0), done = !!S.searched[o.key];
   switch (o.type){
     case 'crate': {
       shadow(c, px+16, py+27, 12, 3);
@@ -996,18 +1010,35 @@ function drawObj(c, o){
     }
     case 'chest': {
       const x = px+4, y = py+10, w = 24;
+      // lid swings open on a hinge along the back edge (eased, with a small bounce at the end)
+      let p = done ? (o.openAt != null ? clamp((time - o.openAt)/0.6, 0, 1) : 1) : 0;
+      const ease = p < 1 ? 1 - Math.pow(1 - p, 3) + Math.sin(p*Math.PI)*0.12 : 1;
+      const th = ease*1.85, L = 9, hingeY = y - 2, endY = hingeY + L*Math.cos(th) - 9*Math.sin(th), lift = Math.sin(th)*2.2;
       shadow(c, px+16, py+27, 13, 3);
+      // body
       c.fillStyle = '#6b3d1c'; c.fillRect(x, y+5, w, 12);
+      c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x, y+14, w, 3);
       c.fillStyle = '#d4a94a'; c.fillRect(x+3, y+5, 2, 12); c.fillRect(x+w-5, y+5, 2, 12);
-      if (!done){
-        c.fillStyle = '#7d4a22'; rr(c, x, y-2, w, 9, 3); c.fill();
-        c.fillStyle = '#d4a94a'; c.fillRect(x, y+5, w, 2); c.fillRect(x+w/2-2.5, y+3, 5, 6);
-        c.fillStyle = '#5a3a10'; c.fillRect(x+w/2-.7, y+5, 1.4, 2);
-      } else {
-        c.fillStyle = '#170d05'; c.fillRect(x+2, y+5, w-4, 4);
-        c.fillStyle = '#7d4a22'; c.fillRect(x, y-7, w, 7);
-        c.fillStyle = '#d4a94a'; c.fillRect(x, y-1, w, 1.5);
+      // open mouth of the chest: dark inside with a golden glint as the lid rises
+      if (th > 0.05){
+        const mouth = Math.min(1, th/1.2);
+        c.fillStyle = '#170d05'; c.fillRect(x+2, hingeY, w-4, 7*mouth);
+        c.fillStyle = `rgba(255,214,110,${0.55*mouth})`; c.beginPath(); c.ellipse(x+w/2, hingeY + 4*mouth, 7*mouth, 2*mouth, 0, 0, TAU); c.fill();
       }
+      // hinge pins
+      c.fillStyle = '#3a2410'; c.fillRect(x+3, hingeY-1, 3, 2); c.fillRect(x+w-6, hingeY-1, 3, 2);
+      // the lid: outside face while it tips back, underside once it passes upright
+      const under = endY < hingeY;   // once it rises past the hinge you see the lid's inside
+      c.fillStyle = under ? '#4a2a12' : '#7d4a22';
+      c.beginPath(); c.moveTo(x, hingeY); c.lineTo(x + w, hingeY); c.lineTo(x + w + lift, endY); c.lineTo(x - lift, endY); c.closePath(); c.fill();
+      // lid front lip (thickness) facing you while mostly closed
+      if (!under){ c.fillStyle = '#5e3416'; c.fillRect(x - lift, endY, w + lift*2, 2.5*Math.max(0, Math.cos(th)) + .5); }
+      else { c.strokeStyle = '#7d4a22'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(x - lift, endY); c.lineTo(x + w + lift, endY); c.stroke(); }
+      // gold band and lock plate ride on the lid
+      const midY = (hingeY + endY)/2;
+      c.fillStyle = '#d4a94a'; c.fillRect(x - lift*.5, midY - .8, w + lift, 1.6);
+      if (!under){ c.fillRect(x + w/2 - 2.5, endY - 1, 5, 4*Math.max(.3, Math.cos(th))); c.fillStyle = '#5a3a10'; c.fillRect(x + w/2 - .7, endY, 1.4, 1.6); }
+      c.fillStyle = '#d4a94a'; c.fillRect(x, y+5, w, 1.6);
       break;
     }
     case 'sarc': case 'sarcZ': {
@@ -1529,6 +1560,30 @@ function enterRoom(id, at){
 }
 function startTrans(to, at){ if (trans) return; trans = { phase:'out', t:0, to, at }; SFX.door(); }
 
+/* ---------- pushing crates, barrels and chests ---------- */
+const PUSHABLE = { crate:1, barrel:1, chest:1 };
+function tryPush(ix, iy, dt){
+  const horiz = Math.abs(ix) > Math.abs(iy), dx = horiz ? Math.sign(ix) : 0, dy = horiz ? 0 : Math.sign(iy);
+  const tx = Math.floor((hero.x + dx*11)/TS), ty = Math.floor((hero.y + dy*11)/TS);
+  const o = room.objs.find(ob => PUSHABLE[ob.type] && ob.x === tx && ob.y === ty);
+  // must be pressing straight into it, roughly lined up with it
+  const aligned = horiz ? Math.abs(hero.y - (ty+.5)*TS) < 12 : Math.abs(hero.x - (tx+.5)*TS) < 12;
+  if (!o || !aligned || Math.abs(horiz ? ix : iy) < 0.6){ hero.pushT = 0; return; }
+  hero.pushT = (hero.pushT || 0) + dt;
+  if (hero.pushT < 0.22) return;
+  hero.pushT = 0;
+  const nx = tx + dx, ny = ty + dy;
+  const free = nx > 0 && ny > 0 && nx < room.W - 1 && ny < room.H - 1 &&
+    [T_FLOOR, T_CARPET, T_RAIL].includes(room.t[ny][nx]) && !room.solidObj[ny*room.W + nx] &&
+    !room.caps.some(cp => cp.x === nx && cp.y === ny && !S.capsFound[cp.key]) &&
+    !room.enemies.some(e => !e.dead && Math.floor(e.x/TS) === nx && Math.floor(e.y/TS) === ny);
+  if (!free){ floatText((tx+.5)*TS, ty*TS, 'Stuck', '#bdb2a4'); hero.pushT = -0.6; return; }
+  room.solidObj[ty*room.W + tx] = 0; room.solidObj[ny*room.W + nx] = 1;
+  o.x = nx; o.y = ny; o.ox = -dx*TS; o.oy = -dy*TS;
+  S.moved[o.key] = [nx, ny];
+  tone(110, .16, 'triangle', .05, -30); burst((tx+.5)*TS, (ty+1)*TS - 4, 8, ['#8a7a66','#5e5245'], { speed:40, life:.4 });
+  save();
+}
 function findInteract(){
   let best = null, bs = 1e9;
   const consider = (kind, ref, cx, cy, label) => {
@@ -1564,6 +1619,8 @@ function lootFor(o){
 }
 function resolveSearch(o){
   S.searched[o.key] = 1; S.stats.searches++;
+  if (o.type === 'rubble') room.solidObj[o.y*room.W + o.x] = 0;   // dug through: you can walk over it now
+  if (o.type === 'chest'){ o.openAt = time; tone(140,.35,'triangle',.05,-60); tone(90,.25,'sawtooth',.02,-20,.05); }
   const cx = (o.x+.5)*TS, cy = (o.y+.5)*TS, loot = lootFor(o);
   burst(cx, cy, 12, ['#8a7a66','#5e5245','#b0a090'], { speed:50, life:.6 });
   if (loot.gem){ collectGem(loot.gem, cx, cy); return; }
@@ -1871,6 +1928,7 @@ function update(dt){
     let sp = HEROES[S.heroId].speed;
     if (tileAt(hero.x, hero.y) === T_WATER){ sp *= 0.6; if (Math.random() < 0.2) burst(hero.x, hero.y + 8, 2, 'rgba(170,215,225,.7)', { speed:20, life:.4, grav:0 }); }
     moveEnt(hero, ix*sp*dt, iy*sp*dt, 9, false);
+    tryPush(ix, iy, dt);
     if (S.heroId === 'sprite' && Math.random() < 0.5) burst(hero.x, hero.y - 4, 1, rainbow, { speed:15, glow:true, life:.6, grav:-10, size:1.6 });
   }
   if (Math.abs(hero.kx) + Math.abs(hero.ky) > 1){ moveEnt(hero, hero.kx*dt, hero.ky*dt, 9, false); hero.kx *= Math.max(0, 1 - dt*9); hero.ky *= Math.max(0, 1 - dt*9); }
@@ -2353,7 +2411,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 if (/[?&]debug/.test(location.search)) window.__ph = { get S(){ return S; }, get hero(){ return hero; }, get room(){ return room; }, get boss(){ return boss; },
-  get UI(){ return UI; }, enterRoom, collectGem, resolveSearch, damageBoss, keys, input };
+  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, collectGem, resolveSearch, damageBoss, keys, input };
 resize();
 showTitle();
 requestAnimationFrame(frame);
