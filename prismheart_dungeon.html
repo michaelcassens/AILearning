@@ -181,7 +181,8 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
     <button class="hbtn" id="b-bag" aria-label="Open bag (I)">Bag</button>
     <button class="hbtn" id="b-quests" aria-label="Open quests (Q)">Quests</button>
     <button class="hbtn" id="b-help" aria-label="Help and controls">?</button>
-    <button class="hbtn" id="b-sound" aria-label="Sound" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="snd-on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="snd-off hidden" d="M16 9l5 6M21 9l-5 6"/></svg></button>
+    <button class="hbtn" id="b-music" aria-label="Music" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3" fill="currentColor"/><circle cx="17" cy="16" r="3" fill="currentColor"/><path class="mus-off hidden" d="M3 3l18 18"/></svg></button>
+    <button class="hbtn" id="b-sound" aria-label="Sound effects" aria-pressed="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="snd-on" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/><path class="snd-off hidden" d="M16 9l5 6M21 9l-5 6"/></svg></button>
   </div>
 </div>
 <div id="mm-wrap" class="hidden" role="button" tabindex="0" aria-label="Dungeon map. Activate to enlarge (M)">
@@ -342,9 +343,9 @@ const ET = {
   bone:      { name:'Bonewalker', hp:3, speed:36, chase:66,  sight:140, dmg:1, r:10 },
   bat:       { name:'Ash Bat',    hp:1, speed:64, chase:104, sight:170, dmg:1, r:8  },
   shadeling: { name:'Shadeling',  hp:1, speed:60, chase:88,  sight:999, dmg:1, r:9  },
-  wraith:    { name:'Frost Wraith', hp:3, speed:46, chase:82, sight:160, dmg:1, r:10 },
-  drowned:   { name:'Drowned One',  hp:4, speed:34, chase:60, sight:140, dmg:2, r:11 },
-  thorn:     { name:'Thornling',    hp:3, speed:54, chase:92, sight:150, dmg:1, r:9  },
+  wraith:    { name:'Frost Wraith', hp:4, speed:46, chase:78, sight:190, dmg:1, r:10 },   // throws ice shards
+  drowned:   { name:'Drowned One',  hp:5, speed:34, chase:58, sight:150, dmg:2, r:11 },   // lunges
+  thorn:     { name:'Thornling',    hp:3, speed:54, chase:88, sight:170, dmg:1, r:9  },   // rolls in bursts
 };
 
 const SPEAKERS = {
@@ -364,7 +365,8 @@ const SPEAKERS = {
    R  rubble        P  pillar           H  crystal cluster   K throne
    g  glowcap       Q  Lumen            M  Mossback          @ start
    e  enemy         b  boss             N S E W  exits       G gate/vault door  F freedom door
-   < >  stairs      U  urn (color vial) I  ice wall (Ruby)   D deep water (Sapphire)   O chasm (Emerald) */
+   < >  stairs      U  urn (color vial) I  ice wall (Ruby)   D deep water (Sapphire)   O chasm (Emerald)
+   j  frozen brazier (light with the Ruby)   l  drain lever   p  vine seed pod */
 const ROOM_DEFS = {
   cells: {
     name:'The Forgotten Cells', level:1, grid:[0,1], enemy:'shade', torchR:3.4,
@@ -481,18 +483,18 @@ const ROOM_DEFS = {
     map:[
       '######T#####T#####T#####',
       '#..X.I.......P.........#',
-      '#....I..........e......#',
-      '#.U..I...P.........P...#',
+      '#....I..........j......#',
+      '#.U..I...P........eP...#',
       '#....I.................#',
       '#IIIII......g..........T',
       '#......................#',
-      'T...........e..........E',
+      'T...........e.......e..E',
       '#......................E',
       '#...P.........P........#',
       '#IIIII............IIIII#',
       '#....I.....e......I....#',
-      '#.C..I............I.g..#',
-      '#....I...P........I....#',
+      '#.C..I...e........I.g..#',
+      '#....I...P.....j..I....#',
       '#..B.I............I..R.#',
       '######T#####T###########',
     ]},
@@ -502,7 +504,7 @@ const ROOM_DEFS = {
     map:[
       '######T#####T#####T#####',
       '#~~......DDDD.......X..#',
-      '#~.......DDDD..........#',
+      '#~l......DDDD..........#',
       '#....P...DDDD....P.....#',
       '#........DDDD..........#',
       'T..e.....DDDD.....e....T',
@@ -510,10 +512,10 @@ const ROOM_DEFS = {
       'W..~~....DDDD..g.......#',
       'W..~~....DDDD..........#',
       '#........DDDD....P.....#',
-      'T...P....DDDD..........T',
+      'T...P.e..DDDD..........T',
       '#........DDDD.....U....#',
-      '#.g......DDDD..........#',
-      '#....B...DDDD.......C..#',
+      '#.g......DDDD..e.......#',
+      '#....Bl..DDDD.......C..#',
       '#C.......DDDD.....~~~..#',
       '######T#####T#####T#####',
     ]},
@@ -522,9 +524,9 @@ const ROOM_DEFS = {
     exits:{ N:{to:'vault',at:'S'} },
     map:[
       '#####T####NN######T#####',
-      '#.....P..........P.....#',
-      '#..g.....e.............#',
-      '#......................#',
+      '#p....P..........P.....#',
+      '#..g.....e...p......e..#',
+      '#....................p.#',
       'T...P............P.....T',
       '#OOOOOOOOOOOOOOOOOOOOOO#',
       '#OOOOOOOOOOOOOOOOOOOOOO#',
@@ -534,7 +536,7 @@ const ROOM_DEFS = {
       '#.................g....#',
       '#.....e................#',
       '#..C......P........X...#',
-      '#......................#',
+      '#..............e.......#',
       '#.B..................C.#',
       '#####T#############T####',
     ]},
@@ -578,14 +580,14 @@ let mode = 'title';      // title | select | play
 let time = 0, dpr = 1, vw = 0, vh = 0;
 let isTouch = false, muted = false, mmBig = false;
 const cam = { x:0, y:0, scale:1 };
-let particles = [], texts = [], projectiles = [], bolts = [], marks = [];
+let particles = [], texts = [], projectiles = [], bolts = [], marks = [], rings = [];
 let trans = null, shake = 0, flash = null;
 const layerCache = {};
 
 /* ---------- hidden gem placement (new spot every game) ---------- */
 // wall tiles that face open floor, away from doorways and the starting cell
 function gemCandidates(id){
-  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@<>', OBST = 'IDO';
+  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@<>p', OBST = 'IDO';
   const exits = [], starts = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
     if ('NSEWGF<>'.includes(m[y][x])) exits.push([x, y]);
@@ -639,6 +641,7 @@ function newState(heroId){
     // Level 2
     q2:{ met:false, vials:'none', moss:'none', chains:'none' }, vials:0, chainKills:0, vaultOpen:false,
     boss2Defeated:false, won2:false, metMoss2:false, cleared:{}, moved:{},
+    lit:{}, levers:{}, pods:{}, seedsUsed:{},
     stats:{ searches:0, kills:0, deaths:0 },
   };
 }
@@ -680,6 +683,81 @@ function tone(f, dur, type='square', vol=0.05, slide=0, delay=0){
     o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.02);
   } catch(e) {}
 }
+/* ---------- background music: slow, soft pads with reverb and the odd quiet bell ---------- */
+let musicOn = true;
+const Music = { out:null, mood:null, timer:null, nextT:0, step:0 };
+const MOODS = {
+  keep:  { len:9,  cut:1500, chords:[[50,57,60,64,69],[46,53,57,62,65],[41,53,57,60,64],[48,55,59,62,67]], bells:[62,64,65,69,72,74,76], bell:0.5 },
+  vault: { len:11, cut:1250, chords:[[45,52,57,60,64],[41,53,57,60,64],[40,52,55,59,62],[48,55,59,64,67]], bells:[64,67,69,71,76,79,83], bell:0.65 },
+  boss:  { len:6,  cut:1000, chords:[[38,50,53,57],[38,49,53,56],[34,46,50,53],[36,48,51,55]], bells:[62,65,68,70], bell:0.25, pulse:true },
+};
+const mtof = m => 440*Math.pow(2, (m - 69)/12);
+function musicInit(){
+  if (Music.out) return true;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const c = AC, master = c.createGain(), lp = c.createBiquadFilter(), verb = c.createConvolver(), wet = c.createGain(), dry = c.createGain();
+    master.gain.value = 0; lp.type = 'lowpass'; lp.frequency.value = 1500; lp.Q.value = 0.2;
+    // a soft, long hall: decaying noise as the reverb impulse
+    const len = Math.floor(c.sampleRate*3.8), buf = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++){ const d = buf.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random()*2 - 1)*Math.pow(1 - i/len, 2.4); }
+    verb.buffer = buf; wet.gain.value = 0.7; dry.gain.value = 0.45;
+    master.connect(lp); lp.connect(dry); lp.connect(verb); verb.connect(wet); dry.connect(c.destination); wet.connect(c.destination);
+    Music.out = master; Music.lp = lp;
+    Music.timer = setInterval(musicTick, 250);
+    return true;
+  } catch(e){ return false; }
+}
+function padNote(t, freq, dur, vol){
+  const c = AC;
+  for (const [type, det] of [['sine', -4], ['triangle', 5]]){
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq; o.detune.value = det;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + dur*0.35);
+    g.gain.setValueAtTime(vol, t + dur*0.7); g.gain.linearRampToValueAtTime(0, t + dur*1.25);
+    o.connect(g); g.connect(Music.out); o.start(t); o.stop(t + dur*1.3);
+  }
+}
+function bellNote(t, freq, vol){
+  const c = AC;
+  for (const [mult, v] of [[1, 1], [2.01, 0.25], [3.98, 0.08]]){
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = freq*mult;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol*v, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+    o.connect(g); g.connect(Music.out); o.start(t); o.stop(t + 3.3);
+  }
+}
+function musicTick(){
+  if (!Music.out || !Music.mood || !AC) return;
+  const M = MOODS[Music.mood], now = AC.currentTime;
+  if (Music.nextT < now) Music.nextT = now + 0.1;
+  while (Music.nextT < now + 1.2){
+    const t = Music.nextT, chord = M.chords[Music.step % M.chords.length];
+    Music.lp.frequency.setTargetAtTime(M.cut, t, 1.5);
+    padNote(t, mtof(chord[0] - 12), M.len, 0.05);
+    chord.forEach((n, i) => padNote(t + i*0.12, mtof(n), M.len, i === 0 ? 0.035 : 0.022));
+    const beats = Math.floor(M.len/1.5);
+    for (let k = 1; k < beats; k++){
+      if (Math.random() < M.bell*0.35) bellNote(t + k*1.5 + Math.random()*0.3, mtof(M.bells[Math.floor(Math.random()*M.bells.length)]), 0.03);
+      if (M.pulse){ const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = mtof(chord[0] - 12); g.gain.setValueAtTime(0.0001, t + k*1.5); g.gain.exponentialRampToValueAtTime(0.06, t + k*1.5 + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + k*1.5 + 0.9); o.connect(g); g.connect(Music.out); o.start(t + k*1.5); o.stop(t + k*1.5 + 1); }
+    }
+    Music.step++; Music.nextT += M.len;
+  }
+}
+function setMusic(mood){
+  if (!musicOn){ if (Music.out) Music.out.gain.setTargetAtTime(0, AC.currentTime, 0.5); return; }
+  if (!musicInit()) return;
+  if (AC.state === 'suspended') AC.resume();
+  Music.out.gain.setTargetAtTime(document.hidden ? 0 : 0.55, AC.currentTime, 1.2);
+  if (mood !== Music.mood){
+    const was = Music.mood; Music.mood = mood;
+    if (was){ Music.nextT = AC.currentTime + 0.6; Music.step = 0; }
+  }
+}
+function musicForRoom(){
+  if (!room) return;
+  setMusic(boss && boss.active && !boss.dead ? 'boss' : levelOf(room.id) === 2 ? 'vault' : 'keep');
+}
 const SFX = {
   coin(){ const n = 3 + Math.floor(Math.random()*2); for (let i = 0; i < n; i++){ const f = 2300 + Math.random()*1100, d = i*0.045 + Math.random()*0.02; tone(f, .09, 'sine', .03, 0, d); tone(f*2.76, .05, 'sine', .012, 0, d); tone(f*0.5, .06, 'triangle', .012, 0, d); } },
   gem(){ [523,659,784,1047,1319,1568].forEach((f,i)=>tone(f,.3,'triangle',.07,0,i*.08)); },
@@ -707,7 +785,7 @@ const SFX = {
    ===================================================================== */
 function buildRoom(id){
   const def = ROOM_DEFS[id], map = def.map, H = map.length, W = map[0].length;
-  const r = { id, def, W, H, t:[], objs:[], npcs:[], enemies:[], torches:[], caps:[], spawns:[],
+  const r = { id, def, W, H, t:[], objs:[], npcs:[], enemies:[], torches:[], caps:[], pods:[], spawns:[],
     exits:{}, exitAt:{}, gateTiles:[], freeTiles:[], water:[], solidObj:new Uint8Array(W*H),
     tileLight:new Float32Array(W*H), start:null, sealed:false, sparkles:[], bossSpawn:null };
   if (!SEEN[id] || SEEN[id].length !== W*H) SEEN[id] = new Uint8Array(W*H);
@@ -750,6 +828,9 @@ function buildRoom(id){
         case '<': t = T_STAIRS; exitTile('<'); break;
         case '>': if (S.bossDefeated){ t = T_STAIRS; exitTile('>'); } else t = T_CARPET; break;
         case 'U': obj('urn'); break;
+        case 'j': obj('brazier'); break;
+        case 'l': obj('lever'); break;
+        case 'p': r.pods.push({ x, y, key:id+':'+x+','+y }); break;
         case 'I': t = cleared ? T_FLOOR : T_ICE; break;
         case 'D': t = cleared ? T_WATER : T_DEEP; r.water.push([x,y]); break;
         case 'O': t = cleared ? T_VINE : T_PIT; break;
@@ -794,7 +875,7 @@ function makeEnemy(type, x, y){
 }
 function makeBoss(sp, kind){
   const big = kind === 'unbound';
-  return { kind, x:sp.x, y:sp.y + 16, hp:big ? 36 : 26, max:big ? 36 : 26, r:big ? 28 : 22, scale:big ? 1.3 : 1,
+  return { kind, x:sp.x, y:sp.y + 16, hp:big ? 48 : 30, max:big ? 48 : 30, hitCount:0, r:big ? 28 : 22, scale:big ? 1.3 : 1,
     active:false, dead:false, dying:0, flash:0, ward:true, wardT:4.5,
     atkT:2.2, mode:'move', modeT:0, dx:0, dy:0, spin:0, last:'' };
 }
@@ -809,7 +890,7 @@ function inCalmZone(r, tx, ty){
 }
 function gemKey(){ return ALL_GEMS.map(g => S.gems[g] ? 1 : 0).join(''); }
 function getLayer(r){
-  const nCleared = Object.keys(S.cleared || {}).filter(k => k.startsWith(r.id + ':')).length;
+  const nCleared = Object.keys(S.cleared || {}).filter(k => k.startsWith(r.id + ':')).length + 100*Object.keys(S.levers || {}).filter(k => k.startsWith(r.id + ':')).length;
   const key = r.id + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '') + '|' + nCleared + (S.bossDefeated ? 'b' : '');
   if (layerCache[key]) return layerCache[key];
   const L = document.createElement('canvas'), Q = 2;
@@ -881,8 +962,9 @@ function drawIceTile(c, r, x, y, rnd){
 }
 function drawDeepTile(c, r, x, y, rnd){
   const px = x*TS, py = y*TS;
+  const drained = roomFlags(r, 'lever', 'levers').filter(Boolean).length;
   const g = c.createRadialGradient(px + 16, py + 16, 2, px + 16, py + 16, 26);
-  g.addColorStop(0, '#071420'); g.addColorStop(1, '#0f2638');
+  g.addColorStop(0, ['#071420','#0e2333','#163447'][Math.min(2, drained)]); g.addColorStop(1, ['#0f2638','#183448','#21445a'][Math.min(2, drained)]);
   c.fillStyle = g; c.fillRect(px, py, TS, TS);
   c.strokeStyle = 'rgba(120,175,215,.16)'; c.lineWidth = 1;
   for (let i = 0; i < 3; i++){ const yy = py + 6 + rnd()*22, xx = px + rnd()*16; c.beginPath(); c.moveTo(xx, yy); c.quadraticCurveTo(xx + 6, yy - 2, xx + 12, yy); c.stroke(); }
@@ -1188,7 +1270,7 @@ function drawWraith(c, x, y, t, e){
   c.restore();
 }
 function drawDrowned(c, x, y, t, e){
-  const sway = Math.sin(t*2 + e.ph)*1.5, col = e.flash > 0 ? '#ffffff' : '#4d5254';
+  const sway = Math.sin(t*2 + e.ph)*1.5 + (e.wind > 0 ? Math.sin(t*60)*1.5 : 0), col = e.flash > 0 || e.wind > 0 ? '#c8ccd0' : '#4d5254';
   shadow(c, x, y + 11, 9, 3);
   c.fillStyle = col;
   c.beginPath(); c.moveTo(x - 9, y + 10); c.quadraticCurveTo(x - 10 + sway, y - 8, x + 1 + sway, y - 12); c.quadraticCurveTo(x + 10 + sway, y - 8, x + 9, y + 10); c.closePath(); c.fill();
@@ -1333,6 +1415,25 @@ function drawObj(c, o){
       }
       break;
     }
+    case 'brazier': {
+      const x = px + 16, y = py + 18, lit = !!S.lit[o.key];
+      shadow(c, x, y + 10, 10, 3);
+      c.fillStyle = '#3a3a40'; c.fillRect(x - 2, y - 2, 4, 12); c.fillRect(x - 8, y + 8, 16, 3);
+      c.fillStyle = lit ? '#4a3a30' : '#5a6470'; c.beginPath(); c.moveTo(x - 11, y - 8); c.lineTo(x + 11, y - 8); c.lineTo(x + 7, y); c.lineTo(x - 7, y); c.closePath(); c.fill();
+      if (!lit){ c.fillStyle = 'rgba(220,240,255,.85)'; c.fillRect(x - 10, y - 10, 20, 3); c.fillStyle = 'rgba(200,230,255,.6)'; for (let i = 0; i < 4; i++) c.fillRect(x - 8 + i*5, y - 8, 1.5, 3 + (i%2)*2); }
+      break;
+    }
+    case 'lever': {
+      const x = px + 16, y = py + 20, on = !!S.levers[o.key];
+      shadow(c, x, y + 7, 9, 2.5);
+      c.fillStyle = '#4a4a50'; c.fillRect(x - 9, y - 2, 18, 8);
+      c.fillStyle = '#6a6a72'; c.fillRect(x - 9, y - 2, 18, 2);
+      c.save(); c.translate(x, y); c.rotate(on ? 0.7 : -0.7);
+      c.strokeStyle = '#8a7148'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -16); c.stroke();
+      c.fillStyle = on ? '#7ab8ff' : '#b0402e'; c.beginPath(); c.arc(0, -17, 3.5, 0, TAU); c.fill();
+      c.restore();
+      break;
+    }
     case 'urn': {
       const x = px + 16, y = py + 18;
       shadow(c, x, y + 10, 10, 3);
@@ -1380,6 +1481,13 @@ function drawObj(c, o){
       break;
     }
   }
+}
+function drawPod(c, pd){
+  // a small closed bud: easy to miss in the dark, it only glows faintly
+  const x = (pd.x+.5)*TS, y = (pd.y+.6)*TS, b = Math.sin(time*2 + pd.x)*0.6;
+  c.strokeStyle = '#4f7a3c'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y + 6); c.quadraticCurveTo(x - 3, y + 2, x, y - 2); c.stroke();
+  c.fillStyle = '#5fae48'; c.beginPath(); c.ellipse(x, y - 4 + b, 3.6, 5, 0, 0, TAU); c.fill();
+  c.fillStyle = '#b6f08a'; c.beginPath(); c.ellipse(x - 1, y - 6 + b, 1.2, 2, 0, 0, TAU); c.fill();
 }
 function drawCap(c, cp){
   const x = (cp.x+.5)*TS, y = (cp.y+.5)*TS;
@@ -1477,6 +1585,8 @@ function gatherLights(){
   }
   for (const n of r.npcs){ const x = (n.x+.5)*TS, y = (n.y+.5)*TS; L.push(n.type === 'lumen' ? { x, y, r:2.8*TS, i:0.85 } : { x, y:y-10, r:2.2*TS, i:0.6 }); }
   for (const cp of r.caps) if (!S.capsFound[cp.key]) L.push({ x:(cp.x+.5)*TS, y:(cp.y+.5)*TS, r:1.5*TS, i:0.45 });
+  for (const pd of r.pods) if (!S.pods[pd.key]) L.push({ x:(pd.x+.5)*TS, y:(pd.y+.5)*TS, r:0.9*TS, i:0.3 });
+  for (const o of r.objs) if (o.type === 'brazier' && S.lit[o.key]) L.push({ x:(o.x+.5)*TS, y:o.y*TS + 4, r:3.4*TS, i:0.9 });
   if (r.gateTiles.length && gateFlag(r)){ const [gx, gy] = r.gateTiles[0]; L.push({ x:(gx+1)*TS, y:(gy+.8)*TS, r:3.5*TS, i:0.9 }); }
   if (r.freeTiles.length && bossDone(r.id)){ const [fx, fy] = r.freeTiles[0]; L.push({ x:(fx+1)*TS, y:(fy+1)*TS, r:6*TS, i:1 }); }
   for (const p of projectiles) L.push({ x:p.x, y:p.y, r:1*TS, i:0.35 });
@@ -1657,7 +1767,7 @@ function openBag(){
   openModal({ kind:'bag', title:'Your Bag', portrait:'hero',
     body:`<dl class="kv"><dt>Hero</dt><dd>${HEROES[S.heroId].name}</dd><dt>Hearts</dt><dd>${S.hp} / ${S.maxHp}</dd><dt>Damage</dt><dd>${heroAtk()}</dd><dt>Attack style</dt><dd>${HEROES[S.heroId].style}</dd><dt>Trait</dt><dd>${HEROES[S.heroId].trait}</dd><dt>Gold</dt><dd>${S.gold}</dd></dl>
       <h3 style="margin:14px 0 6px;font-size:16px">${S.visited.vault ? 'Gems' : 'Prism Gems'}</h3><div style="display:flex;flex-wrap:wrap;gap:6px 0">${gems}</div>
-      ${S.visited.vault ? `<p class="si-desc" style="margin:6px 0 0">In the Vaults, stand next to ice, deep water or a chasm and press E (or tap the action button). The Ruby melts ice, the Sapphire calms water and the Emerald grows vine bridges.</p>` : ''}
+      ${S.visited.vault ? `<p class="si-desc" style="margin:6px 0 0">In the Vaults, the Ruby melts ice once the room's braziers are lit, the Sapphire stills deep water once the drain levers are pulled, and the Emerald grows a vine bridge from two seed pods.</p>` : ''}
       <h3 style="margin:14px 0 6px;font-size:16px">Healing Draughts: ${S.potions}</h3>
       <h3 style="margin:14px 0 4px;font-size:16px">Gear</h3>${gear}
       ${S.vials && S.q2.vials !== 'done' ? `<div class="item-line"><div class="si-icon">${itemIcon('potion')}</div><div><b>Vials of Stolen Color (${Math.min(3, S.vials)}/3)</b><div class="si-desc">Bright color the Sovereign locked away. Lumen will know what to do.</div></div></div>` : ''}
@@ -1707,7 +1817,7 @@ function helpHTML(){
   <span><kbd>Space</kbd> / <kbd>J</kbd></span><span>Attack (hold to keep attacking). Each hero attacks differently: the Knight sweeps, the Sprite shoots bolts, the Golem slams the ground.</span>
   <span><kbd>E</kbd> / <kbd>Enter</kbd></span><span>Search, talk, open</span>
   <span><kbd>H</kbd></span><span>Drink a healing draught</span>
-  <span><kbd>I</kbd> &nbsp; <kbd>Q</kbd> &nbsp; <kbd>M</kbd></span><span>Bag &middot; Quests &middot; Enlarge map</span>
+  <span><kbd>I</kbd> &nbsp; <kbd>Q</kbd> &nbsp; <kbd>M</kbd></span><span>Bag &middot; Quests &middot; Enlarge map (the note and speaker buttons turn music and sound effects on or off)</span>
   <span><kbd>Esc</kbd></span><span>Close windows / this help</span></div>
   <h3 style="font-size:16px;margin:12px 0 6px">Touch</h3>
   <p>Drag anywhere on the screen to move. Tap <b>Attack</b> to swing, and the <b>Search</b> button (it glows when something is nearby) to search, talk or open. Tap the map to enlarge it.</p>
@@ -1715,7 +1825,7 @@ function helpHTML(){
   <ul style="padding-left:18px;margin:0">
   <li>Light reveals the room as you move. Torches flare up as you get close.</li>
   <li>Gems hide inside the walls themselves. Watch for a faint glimmer in the stone.</li>
-  <li>In the Vaults, your Prism Gems have powers: stand beside ice, deep water or a chasm and press E to melt, calm or bridge it.</li>
+  <li>In the Vaults, your Prism Gems have powers, but each needs help first: light the braziers before melting ice, pull the levers before calming deep water, and gather seed pods before growing vines.</li>
   <li>Standing still makes you harder for creatures to notice.</li>
   <li>Quests from Lumen pay gold. Spend it with Mossback to prepare for the final battle.</li>
   <li>There is no time limit. If you fall, you wake in your cell with a little less gold.</li></ul>`;
@@ -1775,9 +1885,14 @@ function lumenHint2(){
     const missing = GEAR2.filter(i => !S.items[i.id]).map(i => i.name);
     return missing.length ? `The Vault Door is open. Down here the Sovereign wears an Eclipse Ward. A Prism Lens only weakens it; Mossback’s Radiant Lens can break it. Mossback still has: ${missing.join(', ')}.` : 'You carry the light of six gems. Go, and set the colors free.';
   }
-  if (!S.gems.amethyst) return `The amethyst hides in the Frozen Gallery, to the west, sealed behind walls of ice. Your Ember Ruby can melt them. Look along the ${gemArea('frozen')} walls.`;
-  if (!S.gems.topaz) return `The topaz waits in the Flooded Cistern, to the east, past water too deep to cross. Let your Tide Sapphire calm it. Search the ${gemArea('cistern')} walls.`;
-  if (!S.gems.diamond) return `The diamond sleeps in the Chasm Garden, to the south, across a chasm. Your Grove Emerald can grow a bridge. Try the ${gemArea('garden')} walls.`;
+  const opened = id => Object.keys(S.cleared).some(k => k.startsWith(id + ':'));
+  // Lumen only knows which part of a room once you have broken through its obstacle
+  if (!S.gems.amethyst) return opened('frozen') ? `The amethyst is somewhere past the melted ice in the Frozen Gallery. I sense it near the ${gemArea('frozen')} side, but the glimmer down here is faint. Get close to the walls.`
+    : 'The amethyst hides in the Frozen Gallery, to the west, behind walls of ice too cold for the Ruby alone. Those old braziers were made to hold fire&hellip;';
+  if (!S.gems.topaz) return opened('cistern') ? `The topaz lies beyond the channel in the Flooded Cistern, somewhere along the ${gemArea('cistern')} walls. Search slowly.`
+    : 'The topaz waits in the Flooded Cistern, to the east, past water far too deep. The Sovereign drained that cistern once. Look for the levers they used.';
+  if (!S.gems.diamond) return opened('garden') ? `The diamond sleeps across the chasm in the Chasm Garden, near the ${gemArea('garden')} walls.`
+    : 'The diamond sleeps in the Chasm Garden, to the south, across a chasm. The Emerald cannot grow vines from nothing. Find seed pods on this side first.';
   return 'Keep searching. Light finds what darkness hides.';
 }
 function lumenRewards2(){
@@ -1792,7 +1907,7 @@ function talkLumen2(){
     dialog('lumen', [
       'There you are! When the Sovereign fell, the chain on my lantern broke at last, so I followed your light down the stair.',
       'These are the Vaults, where the Sovereign locked away every color they stole. Their shadow fled to the <b>Heart of the Vault</b>, behind the great Vault Door to the north.',
-      'Your Prism Gems are stronger down here. The <b>Ruby</b> melts ice, the <b>Sapphire</b> calms deep water, and the <b>Emerald</b> grows vine bridges. Stand beside one and use it.',
+      'Your Prism Gems are stronger down here, but the Vaults fight back. The <b>Ruby</b> can melt ice once the old <b>braziers</b> burn. The <b>Sapphire</b> can still deep water once the <b>drain levers</b> are pulled. The <b>Emerald</b> can grow a bridge from <b>vine seeds</b>.',
       'Three new gems hide beyond those obstacles: an <b>amethyst</b>, a <b>topaz</b> and a <b>diamond</b>. Together they open the Vault Door. And if you can, find the <b>chained urns</b>, gather <b>starmoss</b>, and break the creatures guarding this place.',
     ], { onDone:() => {
       S.q2.met = true; S.q2.vials = S.q2.moss = S.q2.chains = 'active';
@@ -1948,7 +2063,7 @@ function moveEnt(e, dx, dy, hs, isEnemy){
 function enterRoom(id, at){
   const firstVisit = !S.visited[id];
   room = buildRoom(id); S.room = id; S.visited[id] = true;
-  projectiles = []; bolts = []; marks = []; particles = []; texts = [];
+  projectiles = []; bolts = []; marks = []; rings = []; particles = []; texts = [];
   let pos;
   if (at === 'start') pos = room.start;
   else if (at && room.exits[at]){
@@ -1966,6 +2081,7 @@ function enterRoom(id, at){
   const rn = $('#roomname'); rn.textContent = room.def.name; rn.classList.add('show');
   clearTimeout(enterRoom._t); enterRoom._t = setTimeout(() => rn.classList.remove('show'), 2200);
   $('#mm-label').textContent = room.def.name;
+  musicForRoom();
   save();
   if (firstVisit && id === 'vault') setTimeout(() => dialog('narrator', [
     'The stair winds down and down, into cold vaults of black iron. The air smells of frost and old rain.',
@@ -1976,6 +2092,14 @@ function startTrans(to, at){ if (trans) return; trans = { phase:'out', t:0, to, 
 
 /* ---------- pushing crates, barrels and chests ---------- */
 const PUSHABLE = { crate:1, barrel:1, chest:1 };
+// multi-step puzzles: what each gem power needs in its room first
+const roomFlags = (r, type, flag) => r.objs.filter(o => o.type === type).map(o => !!S[flag][o.key]);
+function powerReady(kind){
+  if (kind === 'ice'){ const lit = roomFlags(room, 'brazier', 'lit'); return { ok: lit.every(Boolean), have: lit.filter(Boolean).length, need: lit.length, why: 'The ice is too cold for the Ruby alone. Light the frozen braziers in this room first.', what:'braziers lit' }; }
+  if (kind === 'deep'){ const pulled = roomFlags(room, 'lever', 'levers'); return { ok: pulled.every(Boolean), have: pulled.filter(Boolean).length, need: pulled.length, why: 'The water is too deep for the Sapphire to still. Find the drain levers in this room and pull them first.', what:'levers pulled' }; }
+  const have = Object.keys(S.pods).filter(k => k.startsWith(room.id + ':')).length - (S.seedsUsed[room.id] || 0);
+  return { ok: have >= 2, have: Math.max(0, have), need: 2, why: 'The Emerald needs vine seeds to grow a bridge. Two seed pods will make one bridge. Look for glowing pods in this room.', what:'vine seeds' };
+}
 function tryPush(ix, iy, dt){
   const horiz = Math.abs(ix) > Math.abs(iy), dx = horiz ? Math.sign(ix) : 0, dy = horiz ? 0 : Math.sign(iy);
   const tx = Math.floor((hero.x + dx*11)/TS), ty = Math.floor((hero.y + dy*11)/TS);
@@ -2036,6 +2160,10 @@ function findInteract(){
   };
   const L = { crate:'Search crate', barrel:'Search barrel', chest:'Open chest', sarc:'Search tomb', sarcZ:'Search tomb', rubble:'Dig through rubble', loose:'Loose stone?', urn:'Open urn' };
   for (const o of room.objs) if (SEARCHABLE[o.type] && !S.searched[o.key]) consider('search', o, (o.x+.5)*TS, (o.y+.5)*TS, L[o.type]);
+  for (const o of room.objs){
+    if (o.type === 'brazier' && !S.lit[o.key]) consider('brazier', o, (o.x+.5)*TS, (o.y+.5)*TS, 'Light brazier (Ruby)');
+    if (o.type === 'lever' && !S.levers[o.key]) consider('lever', o, (o.x+.5)*TS, (o.y+.5)*TS, 'Pull lever');
+  }
   for (const n of room.npcs) consider('talk', n, (n.x+.5)*TS, (n.y+.5)*TS, n.type === 'lumen' ? 'Talk to Lumen' : 'Talk to Mossback');
   if (!gateFlag(room) && room.gateTiles.length){ for (const [gx, gy] of room.gateTiles) consider('gate', null, (gx+.5)*TS, (gy+.5)*TS, room.def.gate.speaker === 'vault' ? 'Examine vault door' : 'Examine gate'); }
   // obstacles a gem power can clear
@@ -2044,8 +2172,8 @@ function findInteract(){
     if (ty < 0 || tx < 0 || ty >= room.H || tx >= room.W) continue;
     const t = room.t[ty][tx], kind = t === T_ICE ? 'ice' : t === T_DEEP ? 'deep' : t === T_PIT ? 'pit' : null;
     if (!kind) continue;
-    const P = POWERS[kind];
-    consider('power', { x:tx, y:ty, t, kind }, (tx+.5)*TS, (ty+.5)*TS, `${P.label} (${GEMS[P.gem].name.split(' ')[1]})`);
+    const P = POWERS[kind], rd = powerReady(kind);
+    consider('power', { x:tx, y:ty, t, kind }, (tx+.5)*TS, (ty+.5)*TS, rd.ok ? `${P.label} (${GEMS[P.gem].name.split(' ')[1]})` : `${P.label}? (${rd.have}/${rd.need} ${rd.what})`);
   }
   return best;
 }
@@ -2054,11 +2182,33 @@ function doInteract(it){
   else if (it.kind === 'talk') it.ref.type === 'lumen' ? talkLumen() : talkMoss();
   else if (it.kind === 'gate') useGate();
   else if (it.kind === 'power') usePower(it.ref);
+  else if (it.kind === 'brazier') lightBrazier(it.ref);
+  else if (it.kind === 'lever') pullLever(it.ref);
+}
+function lightBrazier(o){
+  if (!S.gems.ruby){ toast('The brazier is crusted with frost. Something hot might light it.'); return; }
+  S.lit[o.key] = 1; SFX.potion(); tone(180, .5, 'sawtooth', .04, 220);
+  burst((o.x+.5)*TS, (o.y+.2)*TS, 40, ['#ff9a3d','#ffd36b','#ff4d7a','#ffffff'], { speed:90, glow:true, life:1, grav:-60 });
+  const lit = roomFlags(room, 'brazier', 'lit'), n = lit.filter(Boolean).length;
+  floatText((o.x+.5)*TS, o.y*TS - 10, `Brazier lit (${n}/${lit.length})`, '#ffb36b');
+  toast(n === lit.length ? 'Warmth spreads through the gallery. The ice walls start to drip. Now the Ruby can melt them.' : `The Ruby kindles the brazier. ${lit.length - n} more to go.`, 3500);
+  save();
+}
+function pullLever(o){
+  S.levers[o.key] = 1; SFX.clank(); tone(70, 1.2, 'sawtooth', .04, -20, .1);
+  shake = Math.max(shake, 0.2);
+  const pulled = roomFlags(room, 'lever', 'levers'), n = pulled.filter(Boolean).length;
+  floatText((o.x+.5)*TS, o.y*TS - 10, `Lever pulled (${n}/${pulled.length})`, '#bcd6ff');
+  toast(n === pulled.length ? 'Far below, water roars down a drain. The channel is shallower now. The Sapphire can still the rest.' : 'A grinding sound, then rushing water somewhere below. Another lever must be nearby.', 3500);
+  room.layer = getLayer(room); save();
 }
 // clear a connected ice wall, deep pool or (a two-tile strip of) chasm with the matching gem
 function usePower(ref){
   const P = POWERS[ref.kind];
   if (!S.gems[P.gem]){ toast(`You need the ${GEMS[P.gem].name} to clear this.`); return; }
+  const rd = powerReady(ref.kind);
+  if (!rd.ok){ toast(rd.why + ` (${rd.have}/${rd.need} ${rd.what})`, 4500); SFX.empty(); return; }
+  if (ref.kind === 'pit') S.seedsUsed[room.id] = (S.seedsUsed[room.id] || 0) + 2;
   const r = room, W = r.W, seen = new Uint8Array(W*r.H), q = [[ref.x, ref.y]], tiles = [];
   while (q.length){
     const [x, y] = q.pop();
@@ -2274,7 +2424,24 @@ function updateEnemies(dt){
     if (e.state === 'chase'){
       let a = Math.atan2(hero.y - e.y, hero.x - e.x);
       if (e.type === 'bat') a += Math.sin(time*5 + e.ph)*0.9;
-      vx = Math.cos(a)*T.chase; vy = Math.sin(a)*T.chase;
+      let sp = T.chase;
+      if (e.type === 'wraith'){
+        // keeps a little distance and throws ice shards
+        e.shotT = (e.shotT ?? 1 + Math.random()*1.5) - dt;
+        if (d < 80) sp = -T.chase*0.6; else if (d < 140) sp = 0;
+        if (e.shotT <= 0 && d < 240){ e.shotT = 2 + Math.random()*1.2; projectiles.push({ x:e.x, y:e.y - 8, vx:Math.cos(a)*150, vy:Math.sin(a)*150, life:3, ice:true }); tone(980, .08, 'sine', .02, -500); }
+      } else if (e.type === 'drowned'){
+        // winds up, then lunges
+        e.lungeT = (e.lungeT ?? 1.5) - dt;
+        if (e.lunge > 0){ e.lunge -= dt; sp = 230; a = e.lungeA; }
+        else if (e.wind > 0){ e.wind -= dt; sp = 0; if (e.wind <= 0){ e.lunge = 0.35; } }
+        else if (e.lungeT <= 0 && d < 110){ e.wind = 0.45; e.lungeA = a; e.lungeT = 2.4 + Math.random(); e.alert = 0.45; }
+      } else if (e.type === 'thorn'){
+        // fast rolling bursts with short pauses
+        const ph = (time*1.1 + e.ph) % 1.4;
+        sp = ph < 0.8 ? T.chase*1.7 : T.chase*0.25;
+      }
+      vx = Math.cos(a)*sp; vy = Math.sin(a)*sp;
     } else {
       e.wt -= dt;
       if (e.wt <= 0){ e.wt = 1 + Math.random()*2.2; e.dir = Math.random() < 0.25 ? null : Math.random()*TAU; }
@@ -2289,7 +2456,7 @@ function updateEnemies(dt){
 
 /* ---------- boss ---------- */
 function startBossFight(){
-  boss.active = true; room.sealed = true; SFX.boss(); shake = 0.5;
+  boss.active = true; room.sealed = true; SFX.boss(); shake = 0.5; setMusic('boss');
   if (boss.kind === 'unbound'){
     dialog('unbound', [
       'You followed me down. Into the dark where I keep every color I have ever taken.',
@@ -2337,6 +2504,17 @@ function updateBoss(dt){
   }
   if (d < b.r + 4) hurtHero(2, b.x, b.y);
 }
+function updateRings(dt){
+  for (const g of rings){
+    g.r += 125*dt;
+    const d = dist(hero.x, hero.y, g.x, g.y);
+    if (Math.abs(d - g.r) < 8){
+      let da = Math.atan2(hero.y - g.y, hero.x - g.x) - g.gap; da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) > g.gw/2) hurtHero(1, g.x, g.y);
+    }
+  }
+  rings = rings.filter(g => g.r < 560);
+}
 function updateMarks(dt){
   for (const m of marks){
     m.t -= dt;
@@ -2352,9 +2530,16 @@ function bossAttack(ax, ay){
   b.atkT = unbound ? (rage ? 1.5 : 2.1) : (rage ? 1.8 : 2.6);
   let opts = unbound ? ['volley','aimed','dash','ashrain'] : ['volley','aimed','dash'];
   if (rage && room.enemies.filter(e => !e.dead).length < 3) opts.push('summon','summon');
+  if (unbound && rage) opts.push('ring','ring');
   opts = opts.filter(o => o !== b.last);
   const pick = opts[Math.floor(Math.random()*opts.length)]; b.last = pick;
-  if (pick === 'volley'){ const n = rage ? 14 : 10; b.spin += 0.37; for (let i = 0; i < n; i++){ const a = b.spin + i*TAU/n; shoot(b.x, b.y - 10, Math.cos(a)*100, Math.sin(a)*100); } tone(110,.3,'sawtooth',.04,-40); }
+  if (pick === 'ring'){
+    // an expanding eclipse ring with one gap to slip through
+    rings.push({ x:b.x, y:b.y - 10, r:20, gap:Math.atan2(hero.y - b.y, hero.x - b.x) + (Math.random() - .5)*2.2, gw:0.8 });
+    floatText(b.x, b.y - 60, 'Eclipse!', '#d0d0d8'); tone(55, 1, 'sawtooth', .06, 10);
+    return;
+  }
+  if (pick === 'volley'){ const n = unbound ? (rage ? 18 : 12) : (rage ? 14 : 10); b.spin += 0.37; for (let i = 0; i < n; i++){ const a = b.spin + i*TAU/n; shoot(b.x, b.y - 10, Math.cos(a)*100, Math.sin(a)*100); } tone(110,.3,'sawtooth',.04,-40); }
   else if (pick === 'aimed'){ const a0 = Math.atan2(hero.y - b.y + 10, hero.x - b.x), n = rage ? 5 : 3; for (let i = 0; i < n; i++){ const a = a0 + (i - (n-1)/2)*0.28; shoot(b.x, b.y - 10, Math.cos(a)*150, Math.sin(a)*150); } tone(140,.2,'sawtooth',.04,-60); }
   else if (pick === 'dash'){ b.mode = 'tele'; b.modeT = 0.75; b.dx = ax; b.dy = ay; }
   else if (pick === 'ashrain'){
@@ -2370,31 +2555,45 @@ function bossAttack(ax, ay){
     for (const s of [-1, 1]){
       let x = b.x + s*40, y = b.y + 20;
       if (blocked(x, y, 8, true)){ x = b.x; y = b.y + 30; }
-      if (!blocked(x, y, 8, true)){ room.enemies.push(makeEnemy('shadeling', x, y)); burst(x, y, 16, ['#2a2a30','#6a6a72'], { speed:60, life:.6 }); }
+      if (!blocked(x, y, 8, true)){ room.enemies.push(makeEnemy(unbound ? 'wraith' : 'shadeling', x, y)); room.enemies[room.enemies.length - 1].state = 'chase'; burst(x, y, 16, ['#2a2a30','#6a6a72'], { speed:60, life:.6 }); }
     }
-    floatText(b.x, b.y - 46, 'Rise, shadows!', '#b8b8c0'); tone(80,.4,'sawtooth',.05,30);
+    floatText(b.x, b.y - 46*b.scale, unbound ? 'Rise, frost!' : 'Rise, shadows!', '#b8b8c0'); tone(80,.4,'sawtooth',.05,30);
   }
 }
 function updateProjectiles(dt){
   for (const p of projectiles){
     p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt;
     if (shotBlocked(Math.floor(p.x/TS), Math.floor(p.y/TS))){ p.life = 0; burst(p.x, p.y, 4, ['#6a6a72','#2a2a30'], { speed:40, life:.3 }); }
-    if (dist(p.x, p.y, hero.x, hero.y - 2) < 13){ p.life = 0; hurtHero(1, p.x, p.y); }
+    if (dist(p.x, p.y, hero.x, hero.y - 2) < (p.ice ? 10 : 13)){ p.life = 0; hurtHero(1, p.x, p.y); }
   }
   projectiles = projectiles.filter(p => p.life > 0);
 }
 function damageBoss(dmg){
   const b = boss;
   if (b.ward){ floatText(b.x, b.y - 46*b.scale, 'Warded!', '#b8b8c0'); SFX.clank(); burst(b.x, b.y - 10, 8, ['#8a8a92','#cfcfd6'], { speed:90, life:.35 }); return; }
-  b.hp -= dmg; b.flash = 0.15; SFX.hit(); floatText(b.x, b.y - 46, `-${dmg}`, '#ffffff');
+  b.hp -= dmg; b.flash = 0.15; SFX.hit();
+  // in its second half, the Sovereign Unbound blinks away after a few hits
+  if (b.kind === 'unbound' && b.hp > 0 && b.hp <= b.max*0.5 && ++b.hitCount >= 3){
+    b.hitCount = 0;
+    for (let tries = 0; tries < 30; tries++){
+      const nx = (2 + Math.random()*(room.W - 4))*TS, ny = (2 + Math.random()*8)*TS;
+      if (!blocked(nx, ny, 12, true) && dist(nx, ny, hero.x, hero.y) > 130){
+        burst(b.x, b.y - 10, 30, ['#2a2a30','#6a6a72','#b8b8c0'], { speed:90, life:.7 });
+        b.x = nx; b.y = ny; b.mode = 'move'; b.atkT = Math.min(b.atkT, 0.8);
+        burst(b.x, b.y - 10, 30, ['#2a2a30','#6a6a72','#b8b8c0'], { speed:90, life:.7 }); tone(300, .25, 'sine', .04, -250);
+        break;
+      }
+    }
+  } floatText(b.x, b.y - 46, `-${dmg}`, '#ffffff');
   burst(b.x, b.y - 10, 10, ['#cfcfd6','#5a5a60'], { speed:90, life:.4 });
   if (b.hp <= 0){
-    b.hp = 0; b.dying = 2.4; projectiles = []; marks = []; shake = 0.9; SFX.die(); SFX.boss();
+    b.hp = 0; b.dying = 2.4; projectiles = []; marks = []; rings = []; shake = 0.9; SFX.die(); SFX.boss();
     for (const e of room.enemies) if (!e.dead){ e.dead = true; burst(e.x, e.y, 12, ['#3a3a40'], { speed:50 }); }
   }
 }
 function finishBoss(){
   boss.dead = true; room.sealed = false; SFX.win();
+  setMusic(levelOf(room.id) === 2 ? 'vault' : 'keep');
   burst(boss.x, boss.y - 10, 160, rainbow, { speed:220, glow:true, life:2, grav:-10, size:2.8 });
   flash = { t:1, max:1, c:'255,255,255' };
   if (boss.kind === 'unbound'){
@@ -2511,13 +2710,25 @@ function update(dt){
       save();
     }
   }
+  // vine seed pods
+  for (const pd of room.pods){
+    if (S.pods[pd.key]) continue;
+    if (dist(hero.x, hero.y, (pd.x+.5)*TS, (pd.y+.5)*TS) < 20){
+      S.pods[pd.key] = 1; SFX.pick();
+      burst((pd.x+.5)*TS, (pd.y+.5)*TS, 16, ['#6cc04f','#b6f08a','#ffffff'], { speed:50, glow:true, grav:-30 });
+      const have = Object.keys(S.pods).filter(k => k.startsWith(room.id + ':')).length - (S.seedsUsed[room.id] || 0);
+      floatText(hero.x, hero.y - 24, `Vine seed (${have})`, '#b6f08a');
+      if (have === 2) toast('Two vine seeds: enough for the Emerald to grow a bridge.');
+      save();
+    }
+  }
   // combat & interaction
   hero.atkCd -= dt; hero.swing -= dt; hero.inv -= dt;
   if ((keys.Space || keys.KeyJ || keys.KeyZ || touchAttack) && hero.atkCd <= 0 && !hero.searching) doAttack();
   hero.target = hero.searching ? null : findInteract();
   if (input.interact){ input.interact = false; if (hero.target && !hero.searching) doInteract(hero.target); }
   if (input.potion){ input.potion = false; usePotion(); }
-  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt); updateBolts(dt); updateMarks(dt);
+  updateEnemies(dt); updateBoss(dt); updateProjectiles(dt); updateBolts(dt); updateMarks(dt); updateRings(dt);
   hero.slam -= dt;
   if (boss && !boss.active && !boss.dead && room.def.boss && hero.y < 11.5*TS) startBossFight();
   updateFx(dt);
@@ -2568,6 +2779,7 @@ function render(){
   const list = [];
   for (const o of room.objs) if (o.type !== 'loose') list.push([(o.y+1)*TS - 2, () => drawObj(ctx, o)]);
   for (const cp of room.caps) if (!S.capsFound[cp.key]) list.push([(cp.y+.5)*TS, () => drawCap(ctx, cp)]);
+  for (const pd of room.pods) if (!S.pods[pd.key]) list.push([(pd.y+.5)*TS, () => drawPod(ctx, pd)]);
   for (const n of room.npcs) list.push([(n.y+1)*TS, () => n.type === 'lumen' ? drawLumen(ctx, (n.x+.5)*TS, (n.y+.5)*TS, time) : drawMossback(ctx, (n.x+.5)*TS, (n.y+.5)*TS, time)]);
   for (const e of room.enemies) if (!e.dead) list.push([e.y + 8, () => {
     if (e.type === 'shade') drawShade(ctx, e.x, e.y, time, e);
@@ -2593,7 +2805,7 @@ function render(){
   for (const d of list) d[1]();
 
   // projectiles (dark core)
-  for (const p of projectiles){ ctx.fillStyle = '#141417'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, TAU); ctx.fill(); }
+  for (const p of projectiles){ if (p.ice) continue; ctx.fillStyle = '#141417'; ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, TAU); ctx.fill(); }
   // golem slam shockwave
   if (hero.slam > 0 && !hero.dead){
     const p = 1 - hero.slam/0.32;
@@ -2637,6 +2849,15 @@ function drawGlows(){
     c.fillStyle = '#fff8e0'; c.fillRect(p.x - 1, p.y - 3, 2, 2.5);
   }
   c.globalCompositeOperation = 'lighter';
+  // lit braziers in the Frozen Gallery
+  for (const o of r.objs){
+    if (o.type !== 'brazier' || !S.lit[o.key]) continue;
+    const bx = (o.x+.5)*TS, by = o.y*TS + 9, f = reduceMotion ? 0 : Math.sin(time*11 + o.x)*0.15;
+    c.globalCompositeOperation = 'source-over';
+    c.fillStyle = '#ff7a1f'; c.beginPath(); c.moveTo(bx - 8, by); c.quadraticCurveTo(bx - 6, by - 14, bx + f*6, by - 20); c.quadraticCurveTo(bx + 6, by - 14, bx + 8, by); c.closePath(); c.fill();
+    c.fillStyle = '#ffd36b'; c.beginPath(); c.moveTo(bx - 4, by); c.quadraticCurveTo(bx - 3, by - 8, bx + f*4, by - 13); c.quadraticCurveTo(bx + 3, by - 8, bx + 4, by); c.closePath(); c.fill();
+    c.globalCompositeOperation = 'lighter';
+  }
   // warm tint where torches reach
   for (const t of r.torches){
     const p = torchPos(r, t), rad = r.def.torchR*TS;
@@ -2676,7 +2897,8 @@ function drawGlows(){
   }
   // hidden gem glimmer: only shows when the hero is close enough. A white-hot core, a slow pulse and
   // rising motes make it read differently from the twinkling veins of gems already found.
-  const reveal = ((S.items.lantern ? 4.8 : 3.2) + (S.heroId === 'sprite' ? 1.6 : 0))*TS;
+  const deep2 = curLevel() === 2;   // in the Vaults a gem only glimmers when you are quite close
+  const reveal = ((deep2 ? 2.2 : 3.2) + (S.items.lantern ? 1.6 : 0) + (S.heroId === 'sprite' ? (deep2 ? 1 : 1.6) : 0))*TS;
   for (const o of r.objs){
     if (o.type !== 'loose' || S.searched[o.key]) continue;
     const x = (o.x+.5)*TS, y = (o.y+.5)*TS, d = dist(x, y, hero.x, hero.y);
@@ -2706,7 +2928,10 @@ function drawGlows(){
     c.globalAlpha = 1;
   }
   // projectile rims, enemy eyes, boss eyes
-  for (const p of projectiles){ c.strokeStyle = 'rgba(190,190,200,.75)'; c.lineWidth = 1.5; c.beginPath(); c.arc(p.x, p.y, 6.5, 0, TAU); c.stroke(); }
+  for (const p of projectiles){
+    if (p.ice){ c.strokeStyle = 'rgba(210,235,255,.9)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(p.x - p.vx*0.04, p.y - p.vy*0.04); c.lineTo(p.x, p.y); c.stroke(); c.fillStyle = 'rgba(230,245,255,.9)'; c.beginPath(); c.arc(p.x, p.y, 2.5, 0, TAU); c.fill(); continue; }
+    c.strokeStyle = 'rgba(190,190,200,.75)'; c.lineWidth = 1.5; c.beginPath(); c.arc(p.x, p.y, 6.5, 0, TAU); c.stroke();
+  }
   for (const e of r.enemies){
     if (e.dead || dist(e.x, e.y, hero.x, hero.y) > 8*TS) continue;
     c.fillStyle = 'rgba(215,215,222,.85)';
@@ -2718,6 +2943,13 @@ function drawGlows(){
     else { c.fillStyle = 'rgba(200,200,210,.6)'; c.fillRect(e.x - 3.5, e.y - 11.5, 2, 2); c.fillRect(e.x + 1.5, e.y - 11.5, 2, 2); }
   }
   if (boss && !boss.dead && room.def.boss && boss.dying <= 0){ const k = boss.scale; c.fillStyle = 'rgba(200,200,208,.9)'; c.fillRect(boss.x - 3.6*k, boss.y - 23*k, 2.2*k, 1.4*k); c.fillRect(boss.x + 1.4*k, boss.y - 23*k, 2.2*k, 1.4*k); }
+  // eclipse rings
+  for (const g of rings){
+    c.lineWidth = 6; c.strokeStyle = 'rgba(200,200,212,.55)';
+    c.beginPath(); c.arc(g.x, g.y, g.r, g.gap + g.gw/2, g.gap - g.gw/2 + TAU); c.stroke();
+    c.lineWidth = 2; c.strokeStyle = 'rgba(240,240,250,.9)';
+    c.beginPath(); c.arc(g.x, g.y, g.r, g.gap + g.gw/2, g.gap - g.gw/2 + TAU); c.stroke();
+  }
   // ash rain warnings
   for (const m of marks){
     const p = 1 - m.t/m.max;
@@ -2877,7 +3109,7 @@ function setPlaying(on){
   ['#hud', '#mm-wrap', '#hint'].forEach(s => $(s).classList.toggle('hidden', !on));
   if (!on) $('#bossbar').classList.add('hidden');
 }
-function showTitle(){ mode = 'title'; setPlaying(false); showScreen('scr-title'); $('#btn-continue').classList.toggle('hidden', !loadSave()); setTimeout(() => $('#btn-new').focus(), 50); }
+function showTitle(){ if (Music.out) Music.out.gain.setTargetAtTime(0, AC.currentTime, 0.6); Music.mood = null; mode = 'title'; setPlaying(false); showScreen('scr-title'); $('#btn-continue').classList.toggle('hidden', !loadSave()); setTimeout(() => $('#btn-new').focus(), 50); }
 function showSelect(){ mode = 'select'; setPlaying(false); showScreen('scr-select'); setTimeout(() => $('.card').focus(), 50); }
 function makeHero(){ return { x:0, y:0, fx:0, fy:1, moving:false, inv:0, atkCd:0, swing:0, slam:0, searching:null, dead:false, deadT:0, kx:0, ky:0, target:null }; }
 function startNew(heroId){
@@ -2961,6 +3193,10 @@ $('#b-help').addEventListener('click', openHelp);
 function syncSound(){ $('#b-sound').setAttribute('aria-pressed', String(!muted)); $('#b-sound .snd-on').classList.toggle('hidden', muted); $('#b-sound .snd-off').classList.toggle('hidden', !muted); }
 $('#b-sound').addEventListener('click', () => { muted = !muted; syncSound(); try { localStorage.setItem('prismheart_muted', muted ? '1' : '0'); } catch(e) {} });
 try { muted = localStorage.getItem('prismheart_muted') === '1'; } catch(e) {}
+try { musicOn = localStorage.getItem('prismheart_music') !== '0'; } catch(e) {}
+function syncMusic(){ $('#b-music').setAttribute('aria-pressed', String(musicOn)); $('#b-music .mus-off').classList.toggle('hidden', musicOn); }
+$('#b-music').addEventListener('click', () => { musicOn = !musicOn; syncMusic(); try { localStorage.setItem('prismheart_music', musicOn ? '1' : '0'); } catch(e) {} if (musicOn) musicForRoom(); else setMusic(null); });
+syncMusic();
 syncSound();
 $('#mm-wrap').addEventListener('click', toggleMap);
 $('#mm-wrap').addEventListener('keydown', e => { if (e.code === 'Enter' || e.code === 'Space'){ e.preventDefault(); e.stopPropagation(); toggleMap(); } });
@@ -2982,7 +3218,7 @@ function resize(){
 }
 addEventListener('resize', resize);
 addEventListener('orientationchange', () => setTimeout(resize, 200));
-document.addEventListener('visibilitychange', () => { if (document.hidden){ resetInput(); save(); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden){ resetInput(); save(); } if (Music.out && AC) Music.out.gain.setTargetAtTime(document.hidden || !musicOn ? 0 : 0.55, AC.currentTime, 0.4); });
 
 /* =====================================================================
    Loop
@@ -3012,7 +3248,7 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 if (/[?&]debug/.test(location.search)) window.__ph = { get S(){ return S; }, get hero(){ return hero; }, get room(){ return room; }, get boss(){ return boss; },
-  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, usePower, get marks(){ return marks; }, collectGem, resolveSearch, damageBoss, keys, input };
+  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, usePower, get marks(){ return marks; }, get rings(){ return rings; }, collectGem, resolveSearch, damageBoss, keys, input };
 resize();
 showTitle();
 requestAnimationFrame(frame);
