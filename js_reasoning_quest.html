@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A level-based JavaScript game about understanding, building, debugging, and explaining code in the age of AI assistants.">
+<title>JS Reasoning Quest — Learn JavaScript by Thinking It Through</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d1a;--surface:#15152e;--surface2:#1c1c3a;--border:#3a3a72;
+  --text:#ececf8;--muted:#b9b9da;--accent:#2fe0c0;--accent2:#b39dfb;
+  --ok:#5ee68f;--bad:#ff8f9a;--warn:#ffd166;--focus:#ffd166;
+  --mono:'Consolas','Menlo','Monaco','Courier New',monospace;
+}
+html{font-size:16px}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh}
+a{color:var(--accent)}
+a:hover{color:#7ff3dd}
+code{font-family:var(--mono);font-size:.92em;background:var(--surface2);padding:1px 5px;border-radius:4px;color:#f6f6ff}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:absolute;left:-999px;top:8px;background:var(--focus);color:#000;padding:8px 14px;border-radius:6px;z-index:10;font-weight:700}
+.skip:focus{left:8px}
+
+/* top bar */
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 20px;
+  background:linear-gradient(135deg,#12122a,#1a1a3e);border-bottom:2px solid var(--accent)}
+.brand{font-weight:800;font-size:1.15rem;text-decoration:none;color:var(--text)}
+.brand span{color:var(--accent)}
+.topbar nav ul{display:flex;flex-wrap:wrap;gap:6px;list-style:none}
+.topbar nav a{display:inline-block;padding:6px 12px;border-radius:6px;text-decoration:none;color:var(--text);border:1px solid transparent}
+.topbar nav a:hover{border-color:var(--border)}
+.topbar nav a[aria-current="page"]{border-color:var(--accent);color:var(--accent)}
+
+main{max-width:1180px;margin:0 auto;padding:26px 20px 60px}
+main:focus{outline:none}
+h1{font-size:1.75rem;line-height:1.25;margin-bottom:10px}
+h2{font-size:1.25rem;margin:26px 0 10px;color:#fff}
+h3{font-size:1.05rem;margin:14px 0 8px}
+h4{font-size:.95rem;margin:10px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+p{margin:8px 0}
+ul,ol{margin:8px 0 8px 22px}
+li{margin:4px 0}
+.muted{color:var(--muted)}
+.lead{font-size:1.1rem;color:var(--muted);max-width:760px}
+
+/* buttons */
+.btn{font:inherit;font-weight:700;cursor:pointer;border-radius:8px;padding:9px 16px;border:2px solid var(--accent);
+  background:var(--accent);color:#04211c;text-decoration:none;display:inline-block}
+.btn:hover{background:#7ff3dd;border-color:#7ff3dd}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.ghost:hover{background:rgba(47,224,192,.12)}
+.btn.purple{background:var(--accent2);border-color:var(--accent2);color:#1b0f3d}
+.btn:disabled,.btn[aria-disabled="true"]{opacity:.55;cursor:not-allowed}
+.btn-row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:12px 0}
+.chip{display:inline-block;font-size:.8rem;padding:2px 9px;border-radius:999px;border:1px solid var(--border);background:var(--surface2);margin:2px 4px 2px 0;color:var(--text)}
+.chip.understand{border-color:#74b9ff}
+.chip.build{border-color:var(--accent)}
+.chip.debug{border-color:var(--bad)}
+.chip.explain{border-color:var(--accent2)}
+
+/* home */
+.hero{padding:10px 0 6px}
+.hero h1{font-size:2.2rem;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:14px 0}
+.skills-grid .card{margin:0}
+.skills-grid h3{margin-top:0}
+.ladder{counter-reset:step;list-style:none;margin:10px 0;padding:0}
+.ladder li{counter-increment:step;position:relative;padding:10px 12px 10px 52px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:8px 0}
+.ladder li::before{content:counter(step);position:absolute;left:12px;top:9px;width:28px;height:28px;border-radius:50%;background:var(--accent2);color:#1b0f3d;font-weight:800;display:flex;align-items:center;justify-content:center}
+.field{margin:12px 0}
+.field label{display:block;font-weight:600;margin-bottom:4px}
+input[type=text],textarea{font:inherit;width:100%;max-width:640px;background:#0a0a17;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 11px}
+textarea{min-height:110px;max-width:none;resize:vertical}
+
+/* level list */
+.levels{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.level{display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.level.locked{opacity:.7}
+.level.complete{border-color:var(--ok)}
+.level-num{font-size:1.6rem;font-weight:800;color:var(--accent2);text-align:center}
+.level h2{margin:0 0 4px;font-size:1.1rem}
+.level p{margin:2px 0}
+progress{width:180px;height:10px;accent-color:var(--accent);vertical-align:middle}
+.teacher{margin:10px 0 18px;padding:10px 14px;border:1px dashed var(--border);border-radius:10px}
+
+/* challenge layout */
+.ch-layout{display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start}
+.ch-nav{position:sticky;top:12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px}
+.ch-nav .lvl-name{font-weight:700;margin:0 0 6px}
+.ch-nav ol{list-style:none;margin:0;padding:0}
+.ch-nav a{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:6px;text-decoration:none;color:var(--text);font-size:.92rem}
+.ch-nav a:hover{background:var(--surface2)}
+.ch-nav a[aria-current="page"]{background:var(--surface2);outline:1px solid var(--accent)}
+.ch-nav .st{width:1.2em;flex:none;text-align:center}
+.st.done{color:var(--ok)}
+.st.assisted{color:var(--accent2)}
+.st.started{color:var(--warn)}
+.ch-layout > *,.build-grid > *{min-width:0}
+.crumbs{color:var(--muted);font-size:.9rem;margin:0}
+.meta{margin:4px 0 12px}
+.intro{max-width:820px}
+.intro ul,.intro ol{margin-left:22px}
+
+/* code viewer */
+.codewrap{margin:14px 0}
+.code-title{font-size:1rem;margin:18px 0 4px}
+.codeview{background:#0a0a17;border:1px solid var(--border);border-radius:10px;padding:8px 0;overflow-x:auto;font-family:var(--mono);font-size:.93rem}
+.ln{display:flex;width:100%;min-width:max-content;text-align:left;background:none;border:0;border-left:4px solid transparent;color:var(--text);font:inherit;padding:1px 12px 1px 0;cursor:default}
+.ln .lnum{display:inline-block;width:3em;padding-right:12px;text-align:right;color:#9a9ac4;flex:none;user-select:none}
+.ln code{background:none;padding:0;white-space:pre;color:#f2f2ff;font-size:1em}
+.codeview.selectable .ln{cursor:pointer}
+.codeview.selectable .ln:hover{background:rgba(255,209,102,.12);border-left-color:var(--warn)}
+.ln.picked-wrong{background:rgba(255,143,154,.12)}
+.ln.bugline{background:rgba(255,209,102,.16);border-left-color:var(--warn)}
+.ln.bugline::after{content:"◀ found it";color:var(--warn);margin-left:14px;font-family:'Segoe UI',system-ui,sans-serif;font-size:.85rem}
+.t-kw{color:#ff79c6}.t-str{color:#f1fa8c}.t-num{color:#c7a8ff}.t-com{color:#9aa6d4;font-style:italic}.t-fn{color:#6ef59a}
+.runbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0}
+.runnote{color:var(--muted);font-size:.9rem}
+
+/* output */
+.out{background:#0a0a17;border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:10px 0}
+.out h3{margin:2px 0 6px;font-size:.95rem;color:var(--muted)}
+.console{font-family:var(--mono);font-size:.9rem;white-space:pre-wrap;word-break:break-word;margin:0 0 6px;max-height:260px;overflow:auto}
+.log-warn{color:var(--warn)}.log-error{color:var(--bad)}
+.diag{border-radius:8px;padding:8px 12px;margin:8px 0;border:1px solid}
+.diag p{margin:4px 0}
+.diag-syntax{border-color:var(--bad);background:rgba(255,143,154,.08)}
+.diag-runtime{border-color:var(--warn);background:rgba(255,209,102,.08)}
+.diag-logic{border-color:var(--accent2);background:rgba(179,157,251,.08)}
+.diag-ok{border-color:var(--ok);background:rgba(94,230,143,.08)}
+.tests{list-style:none;margin:6px 0;padding:0}
+.tests li{padding:4px 0;border-bottom:1px solid #24244a;font-size:.93rem}
+.tests li:last-child{border-bottom:0}
+.tests .pass{color:var(--ok);font-weight:700}
+.tests .fail{color:var(--bad);font-weight:700}
+.tests .detail{display:block;color:var(--muted);font-family:var(--mono);font-size:.85rem;margin-left:1.6em}
+.spec li{font-family:var(--mono);font-size:.88rem}
+
+/* questions */
+.q{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin:12px 0}
+.q.answered{border-color:#2f6e55}
+.q h3{margin:0 0 10px;font-size:1.02rem;line-height:1.45}
+.q h3:focus{outline:none}
+.qnum{display:block;font-size:.8rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.opts{display:grid;gap:8px}
+.opt{font:inherit;text-align:left;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:9px 12px;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.right{border-color:var(--ok);background:rgba(94,230,143,.1)}
+.opt.right::before{content:"✓ ";color:var(--ok);font-weight:800}
+.opt.wrongpick{border-color:var(--bad);background:rgba(255,143,154,.08);text-decoration:line-through;text-decoration-color:rgba(255,143,154,.6)}
+.opt.wrongpick::before{content:"✗ ";color:var(--bad);font-weight:800;text-decoration:none;display:inline-block}
+.opt:disabled{cursor:default}
+.opt:disabled:not(.right):not(.wrongpick){opacity:.75}
+.text-ans{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.text-ans label{width:100%;font-weight:600}
+.text-ans input{flex:1;min-width:200px;font-family:var(--mono)}
+.fb p{margin:10px 0 0}
+.fb .ok{color:#d9ffe7}
+.fb .ok strong{color:var(--ok)}
+.fb .no{color:#ffe1e4}
+.fb .no strong{color:var(--bad)}
+.review-ans{font-family:var(--mono);color:var(--ok)}
+.symptom{background:rgba(255,209,102,.08);border:1px solid var(--warn);border-radius:10px;padding:10px 14px;margin:12px 0}
+.ai-box{background:rgba(179,157,251,.07);border:1px solid var(--accent2);border-radius:10px;padding:10px 14px;margin:12px 0}
+.ai-box blockquote{border-left:3px solid var(--accent2);padding:4px 12px;margin:6px 0;font-style:italic}
+.ai-label{font-weight:700;color:var(--accent2);margin:4px 0}
+
+/* build */
+.build-grid{display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:18px;align-items:start}
+.build-left .card:first-child{margin-top:0}
+.build-left h3{margin-top:0}
+.editor-label{font-weight:700;margin-bottom:6px}
+.editor-host .CodeMirror{height:340px;border:1px solid var(--border);border-radius:10px;font-family:var(--mono);font-size:14px}
+.cm-errline{background:rgba(255,143,154,.18)!important}
+.fallback-editor{width:100%;min-height:340px;font-family:var(--mono);font-size:14px;tab-size:2}
+.hint-item{background:var(--surface2);border-left:3px solid var(--warn);border-radius:6px;padding:8px 10px;margin:8px 0}
+.hint-item strong{color:var(--warn)}
+.coach{background:var(--surface);border:1px solid var(--accent2);border-radius:12px;padding:12px 16px;margin:12px 0}
+.coach h3{margin-top:0;color:var(--accent2)}
+.coach ul{margin-left:18px}
+.coach .tips{list-style:none;margin-left:0}
+.coach .tips li{padding:6px 0;border-bottom:1px solid #24244a}
+.coach .tips li:last-child{border-bottom:0}
+.coach .tag{font-weight:700;font-size:.82rem;padding:1px 7px;border-radius:5px;margin-right:6px;white-space:nowrap}
+.coach .warn .tag{background:rgba(255,209,102,.18);color:var(--warn)}
+.coach .tip .tag{background:rgba(47,224,192,.14);color:var(--accent)}
+.coach .lref{font-family:var(--mono);color:var(--muted)}
+.success{border:1px solid var(--ok);background:rgba(94,230,143,.08);border-radius:12px;padding:12px 16px;margin:16px 0}
+.success h2{margin-top:0;color:var(--ok)}
+.locked-note{color:var(--muted);font-size:.93rem}
+details{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0}
+summary{cursor:pointer;font-weight:700}
+.coverage{list-style:none;margin:8px 0;padding:0}
+.coverage li::before{content:"○ ";color:var(--muted)}
+.coverage li.hit::before{content:"✓ ";color:var(--ok);font-weight:800}
+.model{border-left:3px solid var(--accent2);padding:6px 12px;margin:8px 0;color:#e6e0ff}
+.wordcount{font-size:.88rem;color:var(--muted)}
+fieldset{border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:12px 0}
+legend{font-weight:700;padding:0 6px}
+fieldset label{display:block;margin:4px 0;cursor:pointer}
+table{border-collapse:collapse;width:100%;margin:10px 0;background:var(--surface);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
+th{background:var(--surface2)}
+.journal-entry{border-left:3px solid var(--accent);padding:4px 12px;margin:12px 0}
+.journal-entry pre{font-family:var(--mono);font-size:.85rem;background:#0a0a17;padding:8px;border-radius:6px;overflow-x:auto;white-space:pre}
+
+@media (max-width:900px){
+  .build-grid{grid-template-columns:1fr}
+  .ch-layout{grid-template-columns:1fr}
+  .ch-nav{position:static}
+  .level{grid-template-columns:44px 1fr}
+  .level .level-action{grid-column:1 / -1}
+}
+@media (max-width:520px){
+  main{padding:18px 16px 50px}
+  .hero h1{font-size:1.7rem}
+  h1{font-size:1.45rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <a class="brand" href="#home">JS <span>Reasoning</span> Quest</a>
+  <nav aria-label="Main">
+    <ul>
+      <li><a href="#home" data-nav="home">Home</a></li>
+      <li><a href="#levels" data-nav="levels">Levels</a></li>
+      <li><a href="#workshop" data-nav="workshop">Workshop</a></li>
+      <li><a href="#profile" data-nav="profile">My Progress</a></li>
+    </ul>
+  </nav>
+</header>
+<main id="main" tabindex="-1"></main>
+<div id="live" class="sr-only" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://unpkg.com/acorn@8.11.3/dist/acorn.js"></script>
+<!-- All levels, challenges, hints and explanations live in this file. Edit it to change the curriculum. -->
+<script src="js/js_reasoning_quest_levels.js"></script>
+<script>
+/* =====================================================================
+   JS Reasoning Quest — game engine
+   ===================================================================== */
+
+/* ---------- Sandboxed code runner (shared by the worker and the fallback) ---------- */
+
+// Turn any value into the text a console would show
+function show(v, depth) {
+  depth = depth || 0;
+  if (typeof v === 'string') return depth ? JSON.stringify(v) : v;
+  if (v === null) return 'null';
+  if (v === undefined) return 'undefined';
+  if (typeof v === 'function') return '[Function: ' + (v.name || 'anonymous') + ']';
+  if (typeof v !== 'object') return String(v);
+  if (depth > 4) return Array.isArray(v) ? '[Array]' : '[Object]';
+  if (Array.isArray(v)) return '[' + v.map(function (x) { return show(x, depth + 1); }).join(', ') + ']';
+  var keys = Object.keys(v);
+  if (!keys.length) return '{}';
+  return '{ ' + keys.map(function (k) { return k + ': ' + show(v[k], depth + 1); }).join(', ') + ' }';
+}
+
+function deepEqual(a, b, approx) {
+  if (typeof a === 'number' && typeof b === 'number') {
+    if (isNaN(a) && isNaN(b)) return true;
+    return approx ? Math.abs(a - b) <= 0.005 : a === b;
+  }
+  if (a === b) return true;
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  var ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every(function (k) { return Object.prototype.hasOwnProperty.call(b, k) && deepEqual(a[k], b[k], approx); });
+}
+
+// Runs student code with a fake console, then runs each test in the same scope
+function runCore(code, tests) {
+  tests = tests || [];
+  var logs = [];
+  function push(kind) {
+    return function () {
+      logs.push({ kind: kind, text: Array.prototype.map.call(arguments, function (a) { return show(a, 0); }).join(' ') });
+    };
+  }
+  var con = { log: push('log'), info: push('log'), warn: push('warn'), error: push('error'), table: push('log') };
+  var codeLines = code.split('\n').length;
+  // Find how far this engine shifts line numbers inside new Function bodies
+  var offset = 0;
+  try { new Function('throw new Error("probe")')(); } catch (pe) {
+    var pm = /(?:^|[\s(,])(?:<anonymous>|Function):(\d+):\d+/.exec(pe.stack || '');
+    if (pm) offset = parseInt(pm[1], 10) - 1;
+  }
+  function lineOf(err) {
+    var m = /(?:^|[\s(,])(?:<anonymous>|Function):(\d+):(\d+)/.exec((err && err.stack) || '');
+    if (!m) return null;
+    var line = parseInt(m[1], 10) - offset - 1; // -1 for the "use strict" line
+    return line >= 1 && line <= codeLines ? line : null;
+  }
+  var mainCount = -1;
+  var results = tests.map(function () { return null; });
+  var __t = function (i, f) {
+    try {
+      var v = f();
+      var t = tests[i];
+      results[i] = { got: show(v, 1), pass: Object.prototype.hasOwnProperty.call(t, 'expect') ? deepEqual(v, t.expect, t.approx) : !!v };
+    } catch (te) {
+      results[i] = { pass: false, error: (te && te.name ? te.name + ': ' + te.message : String(te)), line: lineOf(te) };
+    }
+  };
+  var __done = function () { mainCount = logs.length; };
+  var testSrc = '';
+  tests.forEach(function (t, i) { if (t.expr) testSrc += '\n__t(' + i + ', function () { return (' + t.expr + '); });'; });
+  var error = null;
+  try {
+    var fn = new Function('console', '__t', '__done', '"use strict";\n' + code + '\n;__done();' + testSrc);
+    fn(con, __t, __done);
+  } catch (err) {
+    error = { name: (err && err.name) || 'Error', message: (err && err.message) || String(err), line: lineOf(err) };
+  }
+  if (mainCount < 0) mainCount = logs.length;
+  var mainLogs = logs.slice(0, mainCount).map(function (l) { return l.text; });
+  tests.forEach(function (t, i) {
+    if (t.log !== undefined) {
+      results[i] = { pass: mainLogs.some(function (x) { return x.trim() === String(t.log).trim(); }), got: mainLogs.length ? mainLogs.join(' | ') : '(nothing printed)' };
+    }
+  });
+  return { logs: logs.slice(0, 500), error: error, results: results, mainCount: mainCount };
+}
+
+(function () {
+'use strict';
+
+const LEVELS = window.JSRQ_LEVELS || [];
+const STORE_KEY = 'jsrq_progress_v1';
+const main = document.getElementById('main');
+const live = document.getElementById('live');
+let uid = 0;
+
+const SKILLS = {
+  understand: { label: 'Understand', icon: '🧭', desc: 'Read a problem, find the inputs, outputs, rules and edge cases — before any code exists.' },
+  build:      { label: 'Build',      icon: '🛠️', desc: 'Write code yourself, run it against tests, and get coaching on how to improve it.' },
+  debug:      { label: 'Debug',      icon: '🐞', desc: 'Find the line, name the kind of error (syntax, runtime, logic), and choose the right fix.' },
+  explain:    { label: 'Explain & Judge', icon: '💬', desc: 'Predict what code does, judge AI-written code against requirements, and explain it in your own words.' }
+};
+const VARIANT = { learn: 'Learn', plan: 'Plan first', predict: 'Predict', bug: 'Bug hunt', ai: 'Read the AI', judge: 'Judge the AI', build: 'Build', open: 'Open build' };
+
+/* ---------- storage ---------- */
+function fresh() { return { name: '', unlockAll: false, ch: {}, workshop: null }; }
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(STORE_KEY)); return s && s.ch ? s : fresh(); } catch (e) { return fresh(); }
+}
+let store = load();
+function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { /* private mode: progress lasts this visit only */ } }
+function rec(id) {
+  return store.ch[id] || (store.ch[id] = { done: false, qDone: 0, planDone: 0, solDone: 0, answered: 0, firstTry: 0, wrong: 0, hints: 0, runs: 0, assisted: false, passed: false, explanation: '', code: null, stuck: '' });
+}
+function peek(id) { return store.ch[id]; }
+
+/* ---------- small helpers ---------- */
+const $ = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+function esc(s) { return String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+function frag(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function announce(msg) { live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 40); }
+function words(s) { return (s.trim().match(/\S+/g) || []).length; }
+function plural(n, word, pl) { return n + ' ' + (n === 1 ? word : (pl || word + 's')); }
+function norm(s) { return String(s).toLowerCase().replace(/[\s"'`$]/g, ''); }
+function shuffled(arr, seedStr) {
+  let h = 2166136261;
+  for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619); }
+  const rand = () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; };
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function dots(n) { return '●'.repeat(n) + '○'.repeat(5 - n); }
+
+/* ---------- progress logic ---------- */
+function isDone(c) { const r = peek(c.id); return !!(r && r.done); }
+function levelDone(L) { return L.challenges.every(isDone); }
+function levelUnlocked(i) { return store.unlockAll || i === 0 || levelDone(LEVELS[i - 1]); }
+function statusOf(c) {
+  const r = peek(c.id);
+  if (!r) return { cls: '', icon: '○', text: 'not started' };
+  if (r.done && r.assisted) return { cls: 'assisted', icon: '◐', text: 'complete, with AI assistance' };
+  if (r.done) return { cls: 'done', icon: '✓', text: 'complete' };
+  if (r.qDone || r.runs || r.planDone) return { cls: 'started', icon: '•', text: 'in progress' };
+  return { cls: '', icon: '○', text: 'not started' };
+}
+
+/* ---------- syntax highlighting for read-only code ---------- */
+const KW = new Set('const let var function return if else for while do of in new true false null undefined this typeof break continue switch case default class extends try catch finally throw async await'.split(' '));
+function hl(line) {
+  const re = /(\/\/.*$)|("(?:[^"\\]|\\.)*"?|'(?:[^'\\]|\\.)*'?|`(?:[^`\\]|\\.)*`?)|(\b\d+(?:\.\d+)?\b)|([A-Za-z_$][\w$]*)|([\s\S])/g;
+  let out = '', m;
+  while ((m = re.exec(line))) {
+    if (m[1]) out += '<span class="t-com">' + esc(m[1]) + '</span>';
+    else if (m[2]) out += '<span class="t-str">' + esc(m[2]) + '</span>';
+    else if (m[3]) out += '<span class="t-num">' + m[3] + '</span>';
+    else if (m[4]) out += KW.has(m[4]) ? '<span class="t-kw">' + m[4] + '</span>' : (line[re.lastIndex] === '(' ? '<span class="t-fn">' + m[4] + '</span>' : esc(m[4]));
+    else out += esc(m[5]);
+  }
+  return out;
+}
+
+/* ---------- running code ---------- */
+const WORKER_SRC = [show, deepEqual, runCore].map(String).join('\n') +
+  '\nself.onmessage = function (e) { self.postMessage(runCore(e.data.code, e.data.tests)); };';
+let workerURL = null;
+
+function syntaxCheck(code) {
+  if (!window.acorn) return null;
+  try { window.acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'script', locations: true }); return null; }
+  catch (e) { return { message: e.message.replace(/\s*\(\d+:\d+\)\s*$/, ''), line: e.loc ? e.loc.line : null, col: e.loc ? e.loc.column : null, pastEnd: e.loc ? e.loc.line > code.replace(/\s+$/, '').split('\n').length || e.pos >= code.replace(/\s+$/, '').length : false }; }
+}
+
+function runCode(code, tests) {
+  return new Promise(resolve => {
+    const syn = syntaxCheck(code);
+    if (syn) return resolve({ syntax: syn, logs: [], results: [] });
+    let w;
+    try {
+      if (!workerURL) workerURL = URL.createObjectURL(new Blob([WORKER_SRC], { type: 'text/javascript' }));
+      w = new Worker(workerURL);
+    } catch (e) {
+      return resolve(runCore(code, tests || [])); // no workers available: run on the page
+    }
+    // A safety stop for runaway loops — not a speed limit on the student.
+    const timer = setTimeout(() => { w.terminate(); resolve({ timeout: true, logs: [], results: [] }); }, 2500);
+    w.onmessage = e => { clearTimeout(timer); w.terminate(); resolve(e.data); };
+    w.onerror = e => { e.preventDefault(); clearTimeout(timer); w.terminate(); resolve(runCore(code, tests || [])); };
+    w.postMessage({ code: code, tests: tests || [] });
+  });
+}
+
+function syntaxAdvice(s) {
+  const m = s.message;
+  if (/Unterminated string/i.test(m)) return 'A string is missing its closing quote. Every <code>"</code> or <code>\'</code> needs a partner on the same line.';
+  if (/Unterminated template/i.test(m)) return 'A template literal is missing its closing backtick <code>`</code>.';
+  if (/already been declared/i.test(m)) return 'The same name is declared twice with <code>let</code>/<code>const</code>. Declare it once, then change it without the keyword.';
+  if (/rvalue|left-hand/i.test(m)) return 'The left side of <code>=</code> must be a variable or property. Did you mean <code>===</code> (compare) instead of <code>=</code> (assign)?';
+  if (s.pastEnd) return 'The code ended while something was still open — usually a missing <code>}</code> or <code>)</code>. The real mistake is often far above where the error is reported: match up every opening bracket.';
+  if (/Unexpected token/i.test(m)) return 'JavaScript found something it didn\'t expect. Check this line <em>and the line before it</em> for a missing <code>)</code>, <code>}</code>, <code>]</code>, comma, or quote.';
+  return 'JavaScript couldn\'t read the code, so <strong>nothing ran</strong>. Check the reported line and the one before it.';
+}
+function runtimeAdvice(err) {
+  const m = err.message;
+  let x;
+  if ((x = /^(.+) is not defined$/.exec(m))) return 'The name <code>' + esc(x[1]) + '</code> doesn\'t exist where it\'s used. Is it misspelled (JavaScript is case-sensitive), declared inside a different <code>{ }</code> block, or never declared with <code>let</code>/<code>const</code>?';
+  if (/before initialization/.test(m)) return 'A variable was used on a line <em>before</em> the line that declares it. Move the declaration up.';
+  if (/constant variable/.test(m)) return 'The code tried to change a <code>const</code>. If the value really needs to change, declare it with <code>let</code>.';
+  if (/is not a function/.test(m)) return 'The code called something that isn\'t a function. Check the spelling, check that it exists, and check that you\'re calling it on the right kind of value.';
+  if (/Cannot read propert|undefined|null/.test(m)) return 'The code used <code>.</code> or <code>[ ]</code> on <code>undefined</code> or <code>null</code>. A value you expected (an array item? an object property?) isn\'t there. Trace back to where it should have come from.';
+  if (/call stack/.test(m)) return 'A function keeps calling itself and never stops.';
+  return 'The program started, then crashed. Read the message, find the line, and ask: what value did I expect here, and what was it really?';
+}
+
+// Turns a run result into a plain-language diagnosis
+function diagnose(res, tests) {
+  if (res.syntax) return { kind: 'syntax', badge: 'Syntax error', line: res.syntax.line, title: (res.syntax.line ? 'Line ' + res.syntax.line + ': ' : '') + esc(res.syntax.message), text: syntaxAdvice(res.syntax) };
+  if (res.timeout) return { kind: 'runtime', badge: 'Runtime problem', title: 'The program never finished.', text: 'It was stopped after a couple of seconds. That almost always means a loop whose condition never becomes false (an infinite loop). Which variable is supposed to change so the loop can end?' };
+  if (res.error) {
+    if (res.error.name === 'SyntaxError') return { kind: 'syntax', badge: 'Syntax error', line: res.error.line, title: esc(res.error.message), text: syntaxAdvice({ message: res.error.message }) };
+    return { kind: 'runtime', badge: 'Runtime error', line: res.error.line, title: (res.error.line ? 'Line ' + res.error.line + ': ' : '') + esc(res.error.name + ': ' + res.error.message), text: runtimeAdvice(res.error) };
+  }
+  if (tests && tests.length) {
+    const failed = res.results.filter(r => !r || !r.pass).length;
+    if (failed) {
+      const crashed = res.results.find(r => r && r.error);
+      if (crashed) return { kind: 'runtime', badge: 'Runtime error', line: crashed.line, title: 'A test crashed: ' + esc(crashed.error), text: runtimeAdvice({ message: crashed.error.replace(/^\w+: /, '') }) };
+      return { kind: 'logic', badge: 'Logic error', title: failed + ' of ' + tests.length + ' checks didn\'t match.', text: 'Your code runs, but some results aren\'t what the problem asks for. Pick <em>one</em> failing check, work out by hand what each line does with that input, and find where your trace and the code disagree.' };
+    }
+    return { kind: 'ok', badge: 'All checks pass', title: '', text: 'Every requirement listed is met.' };
+  }
+  return null;
+}
+function errorLine(res) { const d = diagnose(res, null); return d && d.line; }
+
+function testLabel(t) {
+  if (t.label) return t.label;
+  if (t.log !== undefined) return 'prints ' + t.log;
+  return t.expr + ' → ' + show(t.expect, 1);
+}
+
+function renderOutput(out, res, tests) {
+  out.hidden = false;
+  const logs = res.logs || [];
+  let html = '<h3>Output</h3>';
+  html += logs.length
+    ? '<pre class="console">' + logs.slice(0, 200).map(l => '<span class="log-' + l.kind + '">' + esc(l.text) + '</span>').join('\n') + (logs.length > 200 ? '\n… more output hidden' : '') + '</pre>'
+    : '<p class="muted">(Nothing was printed.)</p>';
+  const d = diagnose(res, tests);
+  if (d) html += '<div class="diag diag-' + d.kind + '"><p><strong>' + d.badge + (d.title ? ' — ' : '') + '</strong>' + d.title + '</p><p>' + d.text + '</p></div>';
+  if (tests && tests.length && !res.syntax && !res.timeout) {
+    html += '<ul class="tests" aria-label="Checks">' + tests.map((t, i) => {
+      const r = res.results[i];
+      const pass = r && r.pass;
+      let detail = '';
+      if (!r) detail = 'didn\'t run (the program crashed first)';
+      else if (!pass && r.error) detail = r.error;
+      else if (!pass && t.log !== undefined) detail = 'printed: ' + r.got;
+      else if (!pass) detail = 'expected ' + show(t.expect, 1) + ', got ' + r.got;
+      return '<li><span class="' + (pass ? 'pass' : 'fail') + '">' + (pass ? '✓ Pass' : '✗ Fail') + '</span> ' + esc(testLabel(t)) + (detail ? '<span class="detail">' + esc(detail) + '</span>' : '') + '</li>';
+    }).join('') + '</ul>';
+  }
+  out.innerHTML = html;
+}
+
+/* ---------- code coach (static analysis) ---------- */
+const KNOWN_OBJ = new Set(['Math', 'Number', 'Object', 'JSON', 'Array', 'String']);
+
+function analyzeCode(code, opts) {
+  opts = opts || {};
+  const res = { summary: [], strengths: [], tips: [], error: null };
+  if (!code.trim()) { res.summary.push('The editor is empty — write something to analyze.'); return res; }
+  if (!window.acorn) return regexCoach(code, res);
+  const comments = [];
+  let ast;
+  try { ast = window.acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'script', locations: true, onComment: comments }); }
+  catch (e) { res.error = { line: e.loc ? e.loc.line : null, message: e.message.replace(/\s*\(\d+:\d+\)\s*$/, '') }; return res; }
+
+  const required = new Set(opts.required || []);
+  const decls = [], fns = [], fnStack = [];
+  const uses = Object.create(null);
+  const assigned = new Set();
+  const n = { ifs: 0, ternary: 0, switches: 0, arrays: 0, objects: 0, logs: 0, templates: 0, spreads: 0, strictEq: 0 };
+  const loops = {};
+  const methods = new Set();
+  const loose = [], condAssign = [], empty = [], unreachable = [], offByOne = [];
+  const magic = new Map();
+  let concat = 0, maxDepth = 0, depthLine = 0;
+  const CONTROL = { IfStatement: 1, ForStatement: 1, ForOfStatement: 1, ForInStatement: 1, WhileStatement: 1, DoWhileStatement: 1, SwitchStatement: 1 };
+  const LOOPN = { ForStatement: 'for', ForOfStatement: 'for...of', ForInStatement: 'for...in', WhileStatement: 'while', DoWhileStatement: 'do...while' };
+  const isFnNode = x => x && (x.type === 'FunctionDeclaration' || x.type === 'FunctionExpression' || x.type === 'ArrowFunctionExpression');
+  const isStr = x => x && ((x.type === 'Literal' && typeof x.value === 'string') || x.type === 'TemplateLiteral' || (x.type === 'BinaryExpression' && x.operator === '+' && (isStr(x.left) || isStr(x.right))));
+  const rootIdent = x => { while (x && x.type === 'MemberExpression') x = x.object; return x && x.type === 'Identifier' ? x.name : null; };
+  const patNames = p => {
+    if (!p) return [];
+    if (p.type === 'Identifier') return [p.name];
+    if (p.type === 'AssignmentPattern') return patNames(p.left);
+    if (p.type === 'RestElement') return patNames(p.argument);
+    if (p.type === 'ArrayPattern') return p.elements.flatMap(patNames);
+    if (p.type === 'ObjectPattern') return p.properties.flatMap(pp => patNames(pp.value || pp.argument));
+    return [];
+  };
+  const fnNameOf = (node, parent, key) => {
+    if (node.id) return node.id.name;
+    if (parent && parent.type === 'VariableDeclarator' && parent.id.type === 'Identifier') return parent.id.name;
+    if (parent && (parent.type === 'Property' || parent.type === 'MethodDefinition') && parent.key && key === 'value') return parent.key.name || parent.key.value;
+    if (parent && parent.type === 'AssignmentExpression' && parent.left.type === 'Identifier') return parent.left.name;
+    return null;
+  };
+  const curFn = () => fnStack[fnStack.length - 1];
+  const alwaysReturns = st => {
+    if (!st) return false;
+    if (st.type === 'ReturnStatement' || st.type === 'ThrowStatement') return true;
+    if (st.type === 'BlockStatement') return st.body.some(alwaysReturns);
+    if (st.type === 'IfStatement') return alwaysReturns(st.consequent) && alwaysReturns(st.alternate);
+    return false;
+  };
+
+  function walk(node, parent, key, depth) {
+    if (!node || typeof node.type !== 'string') return;
+    const line = node.loc.start.line;
+    const isFn = isFnNode(node);
+    if (isFn) {
+      const f = { name: fnNameOf(node, parent, key), params: node.params.flatMap(patNames), line: line, end: node.loc.end.line,
+        returns: node.type === 'ArrowFunctionExpression' && node.expression, logs: 0, uses: Object.create(null),
+        callback: !!(parent && (parent.type === 'CallExpression' || parent.type === 'NewExpression') && key === 'arguments'),
+        aliases: Object.create(null), mutates: new Set(),
+        allPaths: node.body.type !== 'BlockStatement' || alwaysReturns(node.body) };
+      fns.push(f); fnStack.push(f);
+      if (node.type === 'FunctionDeclaration') decls.push({ name: f.name, kind: 'function', line: line });
+    }
+    switch (node.type) {
+      case 'VariableDeclaration': {
+        const forInit = !!(parent && ((parent.type === 'ForStatement' && key === 'init') || ((parent.type === 'ForOfStatement' || parent.type === 'ForInStatement') && key === 'left')));
+        node.declarations.forEach(dd => patNames(dd.id).forEach(nm => decls.push({ name: nm, kind: node.kind, line: dd.loc.start.line, forInit: forInit, fnValue: isFnNode(dd.init) })));
+        break;
+      }
+      case 'Identifier': {
+        if (parent && ((parent.type === 'MemberExpression' && key === 'property' && !parent.computed) ||
+            ((parent.type === 'Property' || parent.type === 'MethodDefinition' || parent.type === 'PropertyDefinition') && key === 'key' && !parent.computed && !parent.shorthand))) break;
+        uses[node.name] = (uses[node.name] || 0) + 1;
+        fnStack.forEach(f => { f.uses[node.name] = (f.uses[node.name] || 0) + 1; });
+        break;
+      }
+      case 'AssignmentExpression':
+      case 'UpdateExpression': {
+        const target = node.type === 'AssignmentExpression' ? node.left : node.argument;
+        if (target.type === 'Identifier') assigned.add(target.name);
+        else if (target.type === 'MemberExpression') {
+          const f = curFn(), root = rootIdent(target);
+          if (f && root && (f.params.includes(root) || f.aliases[root])) f.mutates.add(f.aliases[root] || root);
+        }
+        break;
+      }
+      case 'BinaryExpression':
+        if (node.operator === '==' || node.operator === '!=') loose.push(line);
+        if (node.operator === '===' || node.operator === '!==') n.strictEq++;
+        if (node.operator === '+' && (isStr(node.left) || isStr(node.right)) &&
+            !(node.left.type === 'Literal' && node.right.type === 'Literal') &&
+            !(parent && parent.type === 'BinaryExpression' && parent.operator === '+')) concat++;
+        break;
+      case 'IfStatement': n.ifs++; if (node.test.type === 'AssignmentExpression') condAssign.push(line); break;
+      case 'WhileStatement': case 'DoWhileStatement': if (node.test.type === 'AssignmentExpression') condAssign.push(line); break;
+      case 'ConditionalExpression': n.ternary++; break;
+      case 'SwitchStatement': n.switches++; break;
+      case 'ArrayExpression': n.arrays++; break;
+      case 'ObjectExpression': n.objects++; break;
+      case 'TemplateLiteral': if (node.expressions.length) n.templates++; break;
+      case 'SpreadElement': n.spreads++; break;
+      case 'ReturnStatement': if (curFn() && node.argument) curFn().returns = true; break;
+      case 'CallExpression': {
+        const cal = node.callee;
+        if (cal.type === 'MemberExpression' && !cal.computed) {
+          const obj = cal.object.type === 'Identifier' ? cal.object.name : null;
+          const prop = cal.property.name;
+          if (obj === 'console') { n.logs++; if (curFn()) curFn().logs++; }
+          else if (obj && KNOWN_OBJ.has(obj)) methods.add(obj + '.' + prop + '()');
+          else methods.add('.' + prop + '()');
+        }
+        break;
+      }
+      case 'Literal':
+        if (typeof node.value === 'number' && ![0, 1, 2, -1, 10, 100].includes(node.value) && parent &&
+            ['BinaryExpression', 'ReturnStatement', 'ConditionalExpression', 'LogicalExpression'].includes(parent.type) ||
+            (typeof node.value === 'number' && parent && parent.type === 'AssignmentExpression' && key === 'right' && ![0, 1, 2, -1, 10, 100].includes(node.value))) {
+          if (!magic.has(node.value)) magic.set(node.value, line);
+        }
+        break;
+      case 'BlockStatement': {
+        if (!node.body.length && !isFnNode(parent)) empty.push(line);
+        const stop = node.body.findIndex(s => ['ReturnStatement', 'BreakStatement', 'ContinueStatement', 'ThrowStatement'].includes(s.type));
+        if (stop >= 0) { const after = node.body.slice(stop + 1).find(s => s.type !== 'FunctionDeclaration'); if (after) unreachable.push(after.loc.start.line); }
+        break;
+      }
+    }
+    if (LOOPN[node.type]) {
+      loops[LOOPN[node.type]] = (loops[LOOPN[node.type]] || 0) + 1;
+      if (node.type === 'ForStatement' && node.test && node.test.type === 'BinaryExpression' && node.test.operator === '<=' &&
+          node.test.right.type === 'MemberExpression' && !node.test.right.computed && node.test.right.property.name === 'length') offByOne.push(line);
+      if (node.type === 'ForOfStatement' && curFn() && node.right.type === 'Identifier' && curFn().params.includes(node.right.name) && node.left.type === 'VariableDeclaration') {
+        patNames(node.left.declarations[0].id).forEach(nm => { curFn().aliases[nm] = node.right.name; });
+      }
+    }
+    const d = CONTROL[node.type] ? depth + 1 : (isFn ? 0 : depth);
+    if (d > maxDepth) { maxDepth = d; depthLine = line; }
+    for (const k in node) {
+      if (k === 'loc' || k === 'type' || k === 'start' || k === 'end') continue;
+      if (node.type === 'VariableDeclarator' && k === 'id') continue;
+      if (isFn && k === 'id') continue;
+      if (isFn && k === 'params') { node.params.forEach(p => { if (p.type === 'AssignmentPattern') walk(p.right, p, 'right', d); }); continue; }
+      const v = node[k];
+      if (Array.isArray(v)) v.forEach(ch => walk(ch, node, k, d));
+      else if (v && typeof v.type === 'string') walk(v, node, k, d);
+    }
+    if (isFn) fnStack.pop();
+  }
+  walk(ast, null, null, 0);
+
+  const tip = (level, line, text) => res.tips.push({ level, line, text });
+  const codeList = (arr, max) => arr.slice(0, max || 6).map(x => '<code>' + esc(x) + '</code>').join(', ') + (arr.length > (max || 6) ? ', …' : '');
+  const named = fns.filter(f => !f.callback && f.name);
+  const callbacks = fns.filter(f => f.callback);
+  const vars = decls.filter(d => d.kind !== 'function' && !d.fnValue);
+  const loc = code.split('\n').filter(l => l.trim() && !/^\s*\/\//.test(l)).length;
+
+  // --- What you built ---
+  res.summary.push(plural(loc, 'line') + ' of code' + (comments.length ? ' and ' + plural(comments.length, 'comment') : '') + '.');
+  if (named.length) res.summary.push('Defines ' + plural(named.length, 'function') + ': ' + named.map(f =>
+    '<code>' + esc(f.name) + '(' + f.params.map(esc).join(', ') + ')</code>' + (f.returns ? (f.allPaths ? ' — returns a value' : ' — returns a value on some paths') : (f.logs ? ' — prints, but doesn\'t return' : ' — doesn\'t return anything'))).join('; ') + '.');
+  if (vars.length) {
+    const kinds = ['const', 'let', 'var'].map(k => { const c = vars.filter(v => v.kind === k).length; return c ? c + ' ' + k : ''; }).filter(Boolean).join(', ');
+    res.summary.push('Declares ' + plural(vars.length, 'variable') + ' (' + kinds + '): ' + codeList([...new Set(vars.map(v => v.name))]) + '.');
+  }
+  const dec = [];
+  if (n.ifs) dec.push(plural(n.ifs, '<code>if</code> check'));
+  if (n.ternary) dec.push(plural(n.ternary, 'ternary (<code>? :</code>)', 'ternaries (<code>? :</code>)'));
+  if (n.switches) dec.push(plural(n.switches, '<code>switch</code>'));
+  if (dec.length) res.summary.push('Makes decisions with ' + dec.join(' and ') + '.');
+  const lp = Object.keys(loops).map(k => plural(loops[k], '<code>' + k + '</code> loop'));
+  if (lp.length) res.summary.push('Repeats work with ' + lp.join(' and ') + '.');
+  const data = [];
+  if (n.arrays) data.push(plural(n.arrays, 'array'));
+  if (n.objects) data.push(plural(n.objects, 'object'));
+  if (data.length) res.summary.push('Builds ' + data.join(' and ') + ' to hold data.');
+  if (methods.size) res.summary.push('Uses built-in tools: ' + codeList([...methods], 8) + '.');
+  if (callbacks.length) res.summary.push('Passes ' + plural(callbacks.length, 'callback function') + ' to other functions (for example to <code>.map()</code> or <code>.filter()</code>).');
+  if (n.logs) res.summary.push('Prints with <code>console.log</code> in ' + plural(n.logs, 'place') + '.');
+  if (res.summary.length === 1) res.summary.push('No variables, functions, decisions, or loops yet.');
+
+  // --- Suggestions ---
+  if (opts.expectReturn) {
+    const f = named.find(x => x.name === opts.expectReturn);
+    if (!f) tip('warn', null, 'This challenge needs a function named <code>' + esc(opts.expectReturn) + '</code>, but none was found. Check the spelling — JavaScript is case-sensitive.');
+    else if (f.returns && !f.allPaths) tip('warn', f.line, 'Some paths through <code>' + esc(f.name) + '</code> reach the end without a <code>return</code>, so for those inputs it gives back <code>undefined</code>. Does every case have an answer?');
+    else if (!f.returns) tip('warn', f.line, '<code>' + esc(f.name) + '</code> never <code>return</code>s a value' + (f.logs ? ' — it prints instead. Printing shows a human the answer; <code>return</code> hands it back to the code that asked.' : '. Without <code>return</code>, calling it gives <code>undefined</code>.'));
+  }
+  condAssign.forEach(l => tip('warn', l, 'A condition uses <code>=</code>, which <em>assigns</em> a value. To compare, use <code>===</code>.'));
+  offByOne.forEach(l => tip('warn', l, 'The loop runs while <code>i &lt;= ….length</code>. The last index is <code>length - 1</code>, so this goes one step too far (off-by-one). Use <code>&lt;</code>.'));
+  unreachable.forEach(l => tip('warn', l, 'This line can never run — it comes right after a <code>return</code>/<code>break</code>.'));
+  loose.slice(0, 2).forEach(l => tip('tip', l, '<code>==</code>/<code>!=</code> convert types before comparing (so <code>"5" == 5</code> is true). Prefer <code>===</code>/<code>!==</code> so surprises can\'t sneak in.'));
+  named.concat(callbacks).forEach(f => f.params.forEach(p => {
+    if (!f.uses[p] && !p.startsWith('_')) tip('warn', f.line, 'Parameter <code>' + esc(p) + '</code> of ' + (f.name ? '<code>' + esc(f.name) + '</code>' : 'a function') + ' is never used. Unused inputs often mean a requirement was forgotten.');
+  }));
+  fns.forEach(f => f.mutates.forEach(p => tip('tip', f.line, (f.name ? '<code>' + esc(f.name) + '</code>' : 'A function') + ' changes properties of <code>' + esc(p) + '</code>, which belongs to whoever called it. If that\'s not intended, build and return a new object/array instead (for example with <code>{ ...obj }</code> or <code>.map()</code>).')));
+  decls.filter(d => d.kind === 'var').slice(0, 1).forEach(d => tip('tip', d.line, '<code>var</code> is the old way to declare variables and ignores <code>{ }</code> blocks. Use <code>const</code> (or <code>let</code> if it must change).'));
+  vars.filter(d => d.kind === 'let' && !assigned.has(d.name)).slice(0, 3).forEach(d => tip('tip', d.line, '<code>' + esc(d.name) + '</code> is never changed after it\'s created, so it can be <code>const</code>. That tells readers "this won\'t change."'));
+  vars.filter(d => !uses[d.name] && !required.has(d.name) && !d.name.startsWith('_')).slice(0, 3).forEach(d => tip('tip', d.line, '<code>' + esc(d.name) + '</code> is declared but never used. Remove it, or ask why it\'s there.'));
+  const OK_SHORT = 'ijknxy_';
+  const shorts = vars.filter(d => d.name.length === 1 && !d.forInit && !OK_SHORT.includes(d.name)).map(d => d.name)
+    .concat(named.flatMap(f => f.params.filter(p => p.length === 1 && !OK_SHORT.includes(p))));
+  if (shorts.length) tip('tip', null, 'Short names like ' + codeList([...new Set(shorts)], 4) + ' hide meaning. A name such as <code>score</code> or <code>price</code> makes the code explain itself.');
+  if (magic.size) tip('tip', [...magic.values()][0], 'Unnamed numbers ' + codeList([...magic.keys()].map(String), 4) + ' appear in calculations. Naming them (<code>const TAX_RATE = 0.08;</code>) explains what they mean and gives one place to change them.');
+  if (concat && !n.templates) tip('tip', null, 'Text is built with <code>+</code>. A template literal (<code>`Total: ${total}`</code>) is often easier to read.');
+  if (maxDepth > 3) tip('tip', depthLine, 'Code is nested ' + maxDepth + ' levels deep. Consider returning early or moving part into its own function.');
+  named.filter(f => f.end - f.line > 25).forEach(f => tip('tip', f.line, '<code>' + esc(f.name) + '</code> is ' + (f.end - f.line + 1) + ' lines long. Long functions are hard to explain — could part of it be its own function?'));
+  named.filter(f => f.params.length > 4).forEach(f => tip('tip', f.line, '<code>' + esc(f.name) + '</code> takes ' + f.params.length + ' parameters. Passing one object is easier to read and harder to mix up.'));
+  empty.slice(0, 1).forEach(l => tip('tip', l, 'This block <code>{ }</code> is empty. Is something missing?'));
+  if (loc > 15 && !comments.length) tip('tip', null, 'No comments yet. One short comment on <em>why</em> a tricky part works will help you (and a reviewer) later.');
+  res.tips.sort((a, b) => (a.level === b.level ? 0 : a.level === 'warn' ? -1 : 1));
+  res.tips = res.tips.slice(0, 8);
+
+  // --- Strengths ---
+  const kinds = vars.map(v => v.kind);
+  if (kinds.length && !kinds.includes('var')) res.strengths.push('Uses <code>let</code>/<code>const</code> rather than <code>var</code>.');
+  if (kinds.filter(k => k === 'const').length >= Math.max(1, kinds.filter(k => k === 'let').length)) res.strengths.push('Defaults to <code>const</code> for values that don\'t change.');
+  if (n.strictEq && !loose.length) res.strengths.push('Compares with strict equality (<code>===</code>/<code>!==</code>).');
+  if (n.templates) res.strengths.push('Builds text with template literals.');
+  if (named.length && named.every(f => f.returns && f.allPaths && f.end - f.line <= 15)) res.strengths.push('Functions are short and return their results.');
+  const avg = vars.length ? vars.reduce((s, v) => s + v.name.length, 0) / vars.length : 0;
+  if (vars.length >= 2 && avg >= 5 && !shorts.length) res.strengths.push('Names describe what they hold.');
+  if (n.spreads && !fns.some(f => f.mutates.size)) res.strengths.push('Copies data with spread (<code>...</code>) instead of changing originals.');
+  if (comments.length) res.strengths.push('Includes comments.');
+  return res;
+}
+
+function regexCoach(code, res) {
+  res.summary.push('Detailed analysis needs the parser library, which didn\'t load (are you offline?). Basic checks only.');
+  code.split('\n').forEach((l, i) => {
+    if (/\bvar\s/.test(l)) res.tips.push({ level: 'tip', line: i + 1, text: 'Prefer <code>const</code>/<code>let</code> over <code>var</code>.' });
+    if (/[^=!]==[^=]|!=[^=]/.test(l)) res.tips.push({ level: 'tip', line: i + 1, text: 'Prefer <code>===</code> over <code>==</code>.' });
+  });
+  return res;
+}
+
+function renderCoach(el, a) {
+  el.hidden = false;
+  if (a.error) {
+    el.innerHTML = '<h3>Code coach</h3><p>The coach can\'t read the code until the syntax error' + (a.error.line ? ' on line ' + a.error.line : '') + ' is fixed: <code>' + esc(a.error.message) + '</code></p>';
+    return;
+  }
+  el.innerHTML = '<h3>Code coach</h3>' +
+    '<h4>What you built</h4><ul>' + a.summary.map(s => '<li>' + s + '</li>').join('') + '</ul>' +
+    (a.strengths.length ? '<h4>Working well</h4><ul>' + a.strengths.map(s => '<li>' + s + '</li>').join('') + '</ul>' : '') +
+    '<h4>Suggestions</h4>' + (a.tips.length
+      ? '<ul class="tips">' + a.tips.map(t => '<li class="' + t.level + '"><span class="tag">' + (t.level === 'warn' ? '⚠ Check this' : '💡 Tip') + '</span>' + (t.line ? '<span class="lref">Line ' + t.line + ':</span> ' : '') + t.text + '</li>').join('') + '</ul>'
+      : '<p>No suggestions — clean work. The real test: can you explain every line?</p>');
+}
+
+function requiredNames(c) {
+  const names = new Set();
+  (c.tests || []).forEach(t => { (String(t.expr || '').match(/[A-Za-z_$][\w$]*/g) || []).forEach(x => names.add(x)); });
+  return [...names];
+}
+
+/* ---------- editor ---------- */
+function makeEditor(host, value, label, onEscape) {
+  if (window.CodeMirror) {
+    const cm = window.CodeMirror(host, {
+      value: value, mode: 'javascript', theme: 'dracula', lineNumbers: true, indentUnit: 2, tabSize: 2,
+      matchBrackets: true, inputStyle: 'contenteditable',
+      extraKeys: {
+        Tab: c => { if (c.somethingSelected()) c.indentSelection('add'); else c.replaceSelection('  '); },
+        'Shift-Tab': 'indentLess',
+        Esc: c => { c.getInputField().blur(); if (onEscape) onEscape(); }
+      }
+    });
+    cm.getInputField().setAttribute('aria-label', label + '. Tab inserts spaces; press Escape to leave the editor.');
+    let marked = null;
+    setTimeout(() => cm.refresh(), 0);
+    return {
+      get: () => cm.getValue(),
+      set: v => cm.setValue(v),
+      markLine(nLine) {
+        if (marked !== null) cm.removeLineClass(marked, 'background', 'cm-errline');
+        marked = null;
+        if (nLine && nLine <= cm.lineCount()) { marked = nLine - 1; cm.addLineClass(marked, 'background', 'cm-errline'); }
+      }
+    };
+  }
+  const ta = document.createElement('textarea');
+  ta.className = 'fallback-editor'; ta.value = value; ta.spellcheck = false; ta.setAttribute('aria-label', label);
+  host.append(ta);
+  return { get: () => ta.value, set: v => { ta.value = v; }, markLine() {} };
+}
+
+/* ---------- read-only code block with selectable lines ---------- */
+function codeBlock(parent, code, opts) {
+  opts = opts || {};
+  const lines = code.replace(/\n+$/, '').split('\n');
+  const wrap = frag('<div class="codewrap"><div class="codeview" role="group" aria-label="Code listing, ' + lines.length + ' lines">' +
+    lines.map((ln, i) => '<button type="button" class="ln" data-n="' + (i + 1) + '" tabindex="-1" aria-disabled="true" aria-label="Line ' + (i + 1) + ': ' + esc(ln.trim() || 'blank') + '"><span class="lnum">' + (i + 1) + '</span><code>' + (hl(ln) || ' ') + '</code></button>').join('') +
+    '</div>' + (opts.runnable ? '<div class="runbar"><button type="button" class="btn ghost run">▶ Run this code</button><span class="runnote"></span></div><div class="out" hidden></div>' : '') + '</div>');
+  parent.append(wrap);
+  const view = $('.codeview', wrap);
+  let onPick = null;
+  view.addEventListener('click', e => {
+    const b = e.target.closest('.ln');
+    if (!b || !onPick) return;
+    const nLine = +b.dataset.n;
+    const ok = onPick(nLine);
+    if (ok === false) { b.classList.add('picked-wrong'); setTimeout(() => b.classList.remove('picked-wrong'), 900); }
+  });
+  const api = {
+    setSelectable(fn) {
+      onPick = fn;
+      view.classList.toggle('selectable', !!fn);
+      $$('.ln', view).forEach(b => { b.tabIndex = fn ? 0 : -1; b.setAttribute('aria-disabled', fn ? 'false' : 'true'); });
+    },
+    mark(nLine) {
+      const b = $('.ln[data-n="' + nLine + '"]', view);
+      if (b) { b.classList.add('bugline'); b.setAttribute('aria-label', b.getAttribute('aria-label') + ' (identified)'); }
+    },
+    focusFirst() { const b = $('.ln', view); if (b) b.focus(); },
+    unlockRun() { const rb = $('.run', wrap); if (rb) { rb.disabled = false; $('.runnote', wrap).textContent = ''; } }
+  };
+  if (opts.runnable) {
+    const rb = $('.run', wrap), out = $('.out', wrap);
+    if (opts.lockRun) { rb.disabled = true; $('.runnote', wrap).textContent = 'Predict first — Run unlocks when you\'ve answered the questions.'; }
+    rb.addEventListener('click', async () => {
+      rb.disabled = true;
+      const res = await runCode(code, []);
+      rb.disabled = false;
+      renderOutput(out, res, null);
+    });
+  }
+  return api;
+}
+
+/* ---------- questions ---------- */
+function correctText(q) {
+  if (q.kind === 'mcq') return q.options.find(o => o.ok).t;
+  if (q.kind === 'line') return 'Line ' + [].concat(q.answer).join(' or ');
+  return esc([].concat(q.answer)[0]);
+}
+
+function answeredQ(q, i, total, ctx) {
+  if (q.kind === 'line' && ctx.viewer) ctx.viewer.mark([].concat(q.answer)[0]);
+  return frag('<div class="q answered"><h3><span class="qnum">Question ' + (i + 1) + ' of ' + total + ' · answered</span>' + q.q + '</h3>' +
+    '<p><span aria-hidden="true">✓</span> <span class="review-ans">' + correctText(q) + '</span></p>' +
+    (q.kind === 'mcq' ? '<p class="muted">' + (q.options.find(o => o.ok).why || '') + '</p>' : (q.why ? '<p class="muted">' + q.why + '</p>' : '')) + '</div>');
+}
+
+function askQ(q, i, total, ctx, onCorrect) {
+  const id = 'q' + (++uid);
+  const r = ctx.r;
+  const el = frag('<div class="q" role="group" aria-labelledby="' + id + '"><h3 id="' + id + '" tabindex="-1"><span class="qnum">Question ' + (i + 1) + ' of ' + total + '</span>' + q.q + '</h3><div class="q-body"></div><div class="fb" aria-live="polite"></div></div>');
+  const body = $('.q-body', el), fb = $('.fb', el);
+  let wrong = 0, finished = false;
+  const win = why => {
+    if (finished) return; finished = true;
+    fb.innerHTML = '<p class="ok"><span aria-hidden="true">✓</span> <strong>Correct.</strong> ' + (why || '') + '</p>';
+    el.classList.add('answered');
+    onCorrect(wrong === 0);
+  };
+  const miss = why => {
+    wrong++; r.wrong = (r.wrong || 0) + 1; save();
+    fb.innerHTML = '<p class="no"><span aria-hidden="true">✗</span> <strong>Not quite.</strong> ' + (why || 'Trace it one step at a time and try again.') + '</p>';
+  };
+
+  if (q.kind === 'mcq') {
+    const opts = q.noShuffle ? q.options : shuffled(q.options, q.q);
+    body.innerHTML = '<div class="opts">' + opts.map((o, k) => '<button type="button" class="opt" data-k="' + k + '">' + o.t + '</button>').join('') + '</div>';
+    $$('.opt', body).forEach(b => b.addEventListener('click', () => {
+      if (finished) return;
+      const o = opts[+b.dataset.k];
+      if (o.ok) {
+        b.classList.add('right');
+        b.insertAdjacentHTML('beforeend', '<span class="sr-only"> (correct answer)</span>');
+        $$('.opt', body).forEach(x => { x.disabled = true; });
+        win(o.why);
+      } else {
+        b.classList.add('wrongpick'); b.disabled = true;
+        b.insertAdjacentHTML('beforeend', '<span class="sr-only"> (ruled out)</span>');
+        miss(o.why);
+        const nextOpt = $$('.opt', body).find(x => !x.disabled);
+        if (nextOpt) nextOpt.focus();
+      }
+    }));
+  } else if (q.kind === 'line') {
+    const answers = [].concat(q.answer);
+    body.innerHTML = '<p class="muted">Select a line in the code above — click it, or Tab to it and press Enter.</p><button type="button" class="btn ghost jump">Go to the code</button>';
+    $('.jump', body).addEventListener('click', () => ctx.viewer.focusFirst());
+    ctx.viewer.setSelectable(nLine => {
+      if (finished) return true;
+      if (answers.includes(nLine)) {
+        ctx.viewer.setSelectable(null);
+        ctx.viewer.mark(nLine);
+        $('.jump', body).remove();
+        win(q.why);
+        return true;
+      }
+      miss((q.wrong && q.wrong[nLine]) || q.hint || ('Line ' + nLine + ' isn\'t the one. Re-read what\'s supposed to happen, then trace what each line actually does.'));
+      return false;
+    });
+  } else if (q.kind === 'text') {
+    const inId = id + 'in';
+    body.innerHTML = '<div class="text-ans"><label for="' + inId + '">Your answer</label><input id="' + inId + '" type="text" autocomplete="off" spellcheck="false"><button type="button" class="btn check">Check</button></div><div class="reveal"></div>';
+    const inp = $('input', body), btn = $('.check', body);
+    const check = () => {
+      if (finished) return;
+      const v = inp.value;
+      if (!v.trim()) { fb.innerHTML = '<p class="no">Type an answer first.</p>'; return; }
+      if ([].concat(q.answer).some(a => norm(a) === norm(v))) { inp.readOnly = true; btn.disabled = true; win(q.why); return; }
+      miss(q.miss || 'That\'s not what this code produces. Go line by line and write down each variable\'s value as it changes.');
+      if (wrong >= 2 && !$('.show-me', body)) {
+        const sb = frag('<button type="button" class="btn ghost show-me">Show me the answer</button>');
+        $('.reveal', body).append(sb);
+        sb.addEventListener('click', () => { inp.value = [].concat(q.answer)[0]; inp.readOnly = true; btn.disabled = true; sb.remove(); win('The answer is <code>' + esc(inp.value) + '</code>. ' + (q.why || '')); });
+      }
+    };
+    btn.addEventListener('click', check);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+  }
+  return el;
+}
+
+// Shows a sequence of questions one at a time; resumes where the student left off
+function runQuestions(container, qs, ctx, onAll) {
+  const r = ctx.r;
+  let idx = ctx.review ? qs.length : Math.min(r[ctx.key] || 0, qs.length);
+  for (let i = 0; i < idx; i++) container.append(answeredQ(qs[i], i, qs.length, ctx));
+  let first = true;
+  const next = () => {
+    if (idx >= qs.length) { onAll(); return; }
+    const i = idx;
+    const el = askQ(qs[i], i, qs.length, ctx, firstTry => {
+      r.answered = (r.answered || 0) + 1;
+      if (firstTry) r.firstTry = (r.firstTry || 0) + 1;
+      r[ctx.key] = i + 1;
+      save();
+      idx++;
+      next();
+    });
+    container.append(el);
+    if (!first) $('h3', el).focus();
+    first = false;
+  };
+  next();
+}
+
+/* ---------- explanation box ---------- */
+function explainBox(parent, c, r, heading, onDone) {
+  const ex = c.explain;
+  const id = 'ex' + (++uid);
+  const min = ex.minWords || 12;
+  const sec = frag('<section class="explain"><h2>' + heading + '</h2><p>' + ex.prompt + '</p>' +
+    '<div class="field"><label for="' + id + '">Your explanation (at least ' + min + ' words, in your own words)</label><textarea id="' + id + '" aria-describedby="' + id + 'wc"></textarea><div class="wordcount" id="' + id + 'wc"></div></div>' +
+    '<button type="button" class="btn purple">Check my explanation</button><div class="fb" aria-live="polite"></div></section>');
+  parent.append(sec);
+  const ta = $('textarea', sec), wc = $('.wordcount', sec), fb = $('.fb', sec), btn = $('button', sec);
+  ta.value = r.explanation || '';
+  const count = () => { wc.textContent = words(ta.value) + ' words'; };
+  ta.addEventListener('input', count); count();
+  const feedback = (complete) => {
+    const text = ta.value.toLowerCase();
+    const groups = ex.keywords || [];
+    const hits = groups.map(g => g.any.some(w => text.includes(w.toLowerCase())));
+    let html = '';
+    if (groups.length) html += '<p>Strong explanations of this code usually touch on:</p><ul class="coverage">' + groups.map((g, i) => '<li class="' + (hits[i] ? 'hit' : '') + '">' + g.label + '<span class="sr-only">' + (hits[i] ? ' — you covered this' : ' — not mentioned yet') + '</span></li>').join('') + '</ul>';
+    if (complete && ex.model) html += '<details open><summary>Compare with an example explanation</summary><p class="model">' + ex.model + '</p><p class="muted">Yours doesn\'t need to match — but did you cover the same ideas? Revise anytime.</p></details>';
+    return { html, hits: hits.filter(Boolean).length, total: groups.length };
+  };
+  btn.addEventListener('click', () => {
+    const w = words(ta.value);
+    if (w < min) { fb.innerHTML = '<p class="no"><strong>Keep going.</strong> Aim for at least ' + min + ' words — say <em>what</em> the code does and <em>why</em>.</p>'; return; }
+    const f = feedback(true);
+    if (f.total && f.hits === 0) { fb.innerHTML = '<p class="no"><strong>Almost.</strong> Your explanation doesn\'t mention any key ideas yet. Point at specific parts of the code.</p>' + feedback(false).html; return; }
+    r.explanation = ta.value.trim(); save();
+    fb.innerHTML = '<p class="ok"><strong>Saved to your journal.</strong> You covered ' + f.hits + ' of ' + f.total + ' key ideas.</p>' + f.html;
+    onDone();
+  });
+  if (r.done && r.explanation) fb.innerHTML = feedback(true).html;
+}
+
+/* ---------- page: home ---------- */
+function renderHome() {
+  main.innerHTML = '<section class="hero"><h1>JS Reasoning Quest</h1><p class="lead">Learn JavaScript the way it\'s actually used now: alongside AI assistants. Writing code is only half the job — the other half is <strong>knowing whether code is right and being able to explain why.</strong></p></section>' +
+    '<h2>No timers. No speed scores.</h2><p>You progress by understanding. Wrong answers explain themselves, so take as long as you need. What gets tracked is <em>how</em> you reasoned: first-try answers, hints used, and whether you built something independently or with AI help (both are fine — just be honest about it).</p>' +
+    '<h2>Four skills you\'ll practice</h2><div class="skills-grid">' + Object.keys(SKILLS).map(k => '<div class="card"><h3>' + SKILLS[k].icon + ' ' + SKILLS[k].label + '</h3><p>' + SKILLS[k].desc + '</p></div>').join('') + '</div>' +
+    '<h2>The Try-First Ladder</h2><p>Whenever you\'re stuck, climb one rung at a time:</p><ol class="ladder">' +
+    '<li><strong>Understand the problem.</strong> Inputs, outputs, rules, edge cases. Work one example by hand.</li>' +
+    '<li><strong>Try it yourself.</strong> A wrong attempt is useful — it shows you exactly what you don\'t know yet.</li>' +
+    '<li><strong>Take a hint.</strong> Hints get more specific one at a time.</li>' +
+    '<li><strong>Ask the AI assistant</strong> — with a specific question about what you tried. It unlocks after your first attempt.</li>' +
+    '<li><strong>Explain it back.</strong> Always. Whoever wrote the code, you should be able to justify every line.</li></ol>' +
+    '<div class="field"><label for="studentName">Your name (used only on the progress report you export)</label><input type="text" id="studentName" autocomplete="name"></div>' +
+    '<div class="btn-row"><a class="btn" href="#levels">' + (Object.keys(store.ch).length ? 'Continue the quest' : 'Start at Level 0') + '</a><a class="btn ghost" href="#workshop">Open the Workshop</a></div>' +
+    '<p class="muted">Progress is saved in this browser only. Use <a href="#profile">My Progress</a> to export a report for your instructor.</p>';
+  const nm = $('#studentName');
+  nm.value = store.name || '';
+  nm.addEventListener('input', () => { store.name = nm.value; save(); });
+}
+
+/* ---------- page: levels ---------- */
+function renderLevels(notice) {
+  main.innerHTML = '<h1>Levels</h1>' + (notice ? '<p class="symptom" role="alert">' + notice + '</p>' : '') +
+    '<p class="lead">Each level mixes four kinds of challenges: understanding the problem, building, debugging, and explaining. Bug hunts get harder as you go. Finish a level to unlock the next.</p>' +
+    '<div class="teacher"><label><input type="checkbox" id="unlockAll"' + (store.unlockAll ? ' checked' : '') + '> Instructor preview: unlock all levels</label></div>' +
+    '<ol class="levels">' + LEVELS.map((L, i) => {
+      const done = L.challenges.filter(isDone).length, total = L.challenges.length;
+      const open = levelUnlocked(i);
+      const complete = done === total;
+      return '<li class="level' + (open ? '' : ' locked') + (complete ? ' complete' : '') + '">' +
+        '<div class="level-num" aria-hidden="true">' + i + '</div>' +
+        '<div><h2>Level ' + i + ': ' + esc(L.title) + '</h2><p class="muted">' + L.blurb + '</p>' +
+        '<p>' + (L.concepts || []).map(x => '<span class="chip">' + esc(x) + '</span>').join('') + '</p>' +
+        '<p><label>' + done + ' of ' + total + ' challenges complete <progress max="' + total + '" value="' + done + '">' + done + ' of ' + total + '</progress></label></p></div>' +
+        '<div class="level-action">' + (open
+          ? '<a class="btn' + (complete ? ' ghost' : '') + '" href="#level/' + L.id + '">' + (complete ? 'Review' : done ? 'Continue' : 'Start') + '<span class="sr-only"> level ' + i + '</span></a>'
+          : '<span class="locked-note"><span aria-hidden="true">🔒</span> Finish Level ' + (i - 1) + ' to unlock</span>') + '</div></li>';
+    }).join('') + '</ol>';
+  $('#unlockAll').addEventListener('change', e => { store.unlockAll = e.target.checked; save(); renderLevels(); });
+}
+
+/* ---------- page: challenge ---------- */
+function navHTML(L, li, ci) {
+  return '<p class="lvl-name">Level ' + li + ': ' + esc(L.title) + '</p><ol>' + L.challenges.map((x, i) => {
+    const s = statusOf(x);
+    return '<li><a href="#c/' + L.id + '/' + i + '"' + (i === ci ? ' aria-current="page"' : '') + '><span class="st ' + s.cls + '" aria-hidden="true">' + s.icon + '</span><span>' + esc(x.title) + '<span class="sr-only"> — ' + s.text + '</span></span></a></li>';
+  }).join('') + '</ol><p><a href="#levels">← All levels</a></p>';
+}
+
+function renderChallenge(li, ci) {
+  const L = LEVELS[li], c = L.challenges[ci];
+  const variant = c.type === 'quiz' ? c.variant : c.type;
+  main.innerHTML = '<div class="ch-layout"><nav class="ch-nav" aria-label="Challenges in this level"></nav><section class="ch-body"></section></div>';
+  const nav = $('.ch-nav'), body = $('.ch-body');
+  nav.innerHTML = navHTML(L, li, ci);
+  const sk = SKILLS[c.skill] || SKILLS.understand;
+  body.innerHTML = '<p class="crumbs">Level ' + li + ' · Challenge ' + (ci + 1) + ' of ' + L.challenges.length + ' · ' + VARIANT[variant] + '</p>' +
+    '<h1>' + esc(c.title) + '</h1><p class="meta"><span class="chip ' + c.skill + '">' + sk.icon + ' ' + sk.label + '</span>' +
+    (c.difficulty ? '<span class="chip">Bug difficulty <span aria-hidden="true">' + dots(c.difficulty) + '</span><span class="sr-only">' + c.difficulty + ' of 5</span></span>' : '') + '</p>';
+  const ctx = { L, li, c, ci, body, refreshNav: () => { nav.innerHTML = navHTML(L, li, ci); } };
+  if (c.type === 'build') renderBuild(ctx);
+  else if (c.type === 'open') renderOpen(ctx);
+  else renderQuiz(ctx);
+}
+
+function completeChallenge(ctx, r) {
+  if (!r.done) {
+    r.done = true; save(); ctx.refreshNav();
+    announce('Challenge complete.');
+  }
+  const { L, li, ci, c } = ctx;
+  const old = $('.complete-panel', ctx.body); if (old) old.remove();
+  const last = ci === L.challenges.length - 1;
+  const lvlDone = levelDone(L);
+  let next;
+  if (!last) next = '<a class="btn" href="#c/' + L.id + '/' + (ci + 1) + '">Next challenge →</a>';
+  else if (lvlDone && LEVELS[li + 1]) next = '<a class="btn" href="#level/' + LEVELS[li + 1].id + '">Start Level ' + (li + 1) + ' →</a>';
+  else next = '<a class="btn" href="#levels">Back to levels</a>';
+  const firstOpen = L.challenges.findIndex(x => !isDone(x));
+  const panel = frag('<section class="success complete-panel"><h2><span aria-hidden="true">✓</span> Challenge complete' + (r.assisted ? ' (with AI assistance)' : '') + '</h2>' +
+    (c.takeaway ? '<p><strong>Takeaway:</strong> ' + c.takeaway + '</p>' : '') +
+    (last && lvlDone ? '<p><strong>Level ' + li + ' complete!</strong> ' + (LEVELS[li + 1] ? 'Level ' + (li + 1) + ' is unlocked.' : 'You finished the whole quest. Export your report from My Progress.') + '</p>' : '') +
+    (last && !lvlDone && firstOpen >= 0 ? '<p>Some challenges in this level are still open — <a href="#c/' + L.id + '/' + firstOpen + '">go to the first one</a>.</p>' : '') +
+    '<div class="btn-row">' + next + '<a class="btn ghost" href="#profile">My Progress</a></div></section>');
+  ctx.body.append(panel);
+}
+
+/* quiz-style challenges: learn, plan, predict, bug, ai, judge */
+function renderQuiz(ctx) {
+  const { c, body } = ctx;
+  const r = rec(c.id);
+  if (c.intro) body.append(frag('<div class="intro">' + c.intro + '</div>'));
+  if (c.symptom) body.append(frag('<div class="symptom"><p><strong><span aria-hidden="true">🐞</span> Bug report:</strong> ' + c.symptom + '</p></div>'));
+  if (c.ai) body.append(frag('<div class="ai-box"><p class="ai-label"><span aria-hidden="true">🤖</span> Someone asked an AI assistant:</p><blockquote>' + esc(c.ai) + '</blockquote><p class="ai-label">It answered with this code:</p></div>'));
+  let viewer = null;
+  const total = c.questions.length;
+  if (c.code) viewer = codeBlock(body, c.code, { runnable: c.runnable !== false, lockRun: c.runAfter && !r.done && (r.qDone || 0) < total });
+  (c.codes || []).forEach((x, i) => {
+    body.append(frag('<h2 class="code-title">' + esc(x.label) + '</h2>'));
+    const v = codeBlock(body, x.code, { runnable: true });
+    if (i === 0 && !viewer) viewer = v;
+  });
+  const qsec = frag('<section aria-label="Questions"><h2>' + (c.variant === 'bug' ? 'Investigate' : 'Questions') + '</h2><div class="qlist"></div></section>');
+  body.append(qsec);
+  const after = document.createElement('div');
+  body.append(after);
+  const finish = () => {
+    if (c.fixed) {
+      after.append(frag('<h2>The fixed version</h2>'));
+      codeBlock(after, c.fixed, { runnable: true });
+    }
+    completeChallenge(ctx, r);
+  };
+  runQuestions($('.qlist', qsec), c.questions, { viewer, r, key: 'qDone', review: r.done }, () => {
+    if (viewer) viewer.unlockRun();
+    if (c.explain) explainBox(after, c, r, c.variant === 'bug' ? 'Explain the bug to a teammate' : 'Explain it in your own words', finish);
+    else finish();
+  });
+}
+
+/* build challenges: plan → write code → explain */
+function renderBuild(ctx) {
+  const { c, body } = ctx;
+  const r = rec(c.id);
+  body.append(frag('<div class="intro">' + c.intro + '</div>'));
+  const planWrap = document.createElement('div');
+  body.append(planWrap);
+  let step = 1, wbShown = false;
+  if (c.plan && c.plan.length) {
+    planWrap.append(frag('<section><h2>Step 1 · Understand the problem</h2><p class="muted">Answer these before you code. Thinking it through first is the point.</p><div class="qlist"></div></section>'));
+    step = 2;
+    runQuestions($('.qlist', planWrap), c.plan, { r, key: 'planDone', review: r.done || (r.planDone || 0) >= c.plan.length }, showWorkbench);
+  } else showWorkbench();
+
+  function showWorkbench() {
+    if (wbShown) return;
+    wbShown = true;
+    const edId = 'ed' + (++uid);
+    const wb = frag('<section class="workbench"><h2>Step ' + step + ' · Build it</h2><div class="build-grid">' +
+      '<div class="build-left">' +
+        '<div class="card"><h3>Your code must…</h3><ul class="tests spec">' + c.tests.map(t => '<li>' + esc(testLabel(t)) + '</li>').join('') + '</ul></div>' +
+        '<div class="card"><h3>Hints</h3><p class="muted">Each hint gives away a bit more. Try before you peek.</p><div class="hint-list" aria-live="polite"></div><button type="button" class="btn ghost hint-btn"></button></div>' +
+        '<div class="card"><h3><span aria-hidden="true">🤖</span> AI assistant</h3><div class="ai-area"></div></div>' +
+      '</div><div class="build-right">' +
+        '<div class="editor-label" id="' + edId + '">Your code</div><div class="editor-host"></div>' +
+        '<div class="runbar"><button type="button" class="btn run">▶ Run &amp; review</button><button type="button" class="btn ghost reset">Reset to starter code</button></div>' +
+        '<div class="out" hidden></div><div class="coach" hidden aria-live="polite"></div>' +
+      '</div></div></section>');
+    body.append(wb);
+    const runBtn = $('.run', wb), out = $('.out', wb), coach = $('.coach', wb);
+    const ed = makeEditor($('.editor-host', wb), r.code != null ? r.code : c.starter, 'Code editor for ' + c.title, () => runBtn.focus());
+    const afterWrap = document.createElement('div');
+    body.append(afterWrap);
+
+    // hints
+    const hintList = $('.hint-list', wb), hintBtn = $('.hint-btn', wb);
+    const drawHints = () => {
+      hintList.innerHTML = c.hints.slice(0, r.hints || 0).map((h, i) => '<div class="hint-item"><strong>Hint ' + (i + 1) + ':</strong> ' + h + '</div>').join('');
+      const left = c.hints.length - (r.hints || 0);
+      hintBtn.textContent = left ? 'Show hint ' + ((r.hints || 0) + 1) + ' of ' + c.hints.length : 'No more hints';
+      hintBtn.disabled = !left;
+    };
+    hintBtn.addEventListener('click', () => { r.hints = (r.hints || 0) + 1; save(); drawHints(); });
+    drawHints();
+
+    // AI assistant
+    const aiArea = $('.ai-area', wb);
+    const drawAI = () => {
+      if (r.assisted) {
+        aiArea.innerHTML = '<p class="muted">You asked: “' + esc(r.stuck || '') + '”</p><p>Here\'s the assistant\'s solution. <strong>Read it before you use it</strong> — can you predict what each line does? To finish, you\'ll answer questions about it and explain it.</p>';
+        codeBlock(aiArea, c.solution, {});
+        const lb = frag('<button type="button" class="btn ghost">Load into my editor (replaces my code)</button>');
+        aiArea.append(lb);
+        lb.addEventListener('click', () => { ed.set(c.solution); announce('Solution loaded into the editor.'); });
+        return;
+      }
+      if (!(r.runs > 0)) {
+        aiArea.innerHTML = '<p class="locked-note"><span aria-hidden="true">🔒</span> Unlocks after your first <strong>Run</strong>. Even a wrong attempt shows you what you don\'t know yet — which is what makes the AI\'s answer meaningful.</p>';
+        return;
+      }
+      const tid = 'ask' + (++uid);
+      aiArea.innerHTML = '<p>Using AI is allowed. Good use starts with a specific question.</p><div class="field"><label for="' + tid + '">What would you tell the assistant? Describe what you tried and where you\'re stuck.</label><textarea id="' + tid + '" style="min-height:80px"></textarea></div><button type="button" class="btn purple">Ask the AI</button><div class="fb" aria-live="polite"></div><p class="muted">Assisted completions are marked ◐ in your progress. That\'s honest record-keeping, not a penalty.</p>';
+      $('button', aiArea).addEventListener('click', () => {
+        const v = $('textarea', aiArea).value.trim();
+        if (words(v) < 6) { $('.fb', aiArea).innerHTML = '<p class="no">Be specific — what did you try, and what happened? (at least 6 words) A vague prompt gets a vague answer.</p>'; return; }
+        r.assisted = true; r.stuck = v; save();
+        drawAI(); ctx.refreshNav(); announce('The AI assistant answered.');
+      });
+    };
+    drawAI();
+
+    $('.reset', wb).addEventListener('click', () => { if (confirm('Replace your code with the starter code?')) ed.set(c.starter); });
+    let afterShown = false;
+    const showAfter = () => {
+      if (afterShown) return;
+      afterShown = true;
+      afterWrap.append(frag('<div class="success"><h2><span aria-hidden="true">✓</span> All checks pass</h2><p>Working code is the halfway point. Now show you understand it.</p></div>'));
+      const toExplain = () => {
+        explainBox(afterWrap, c, r, 'Step ' + (step + 1) + ' · Explain your code', () => {
+          if (!r.assisted && c.solution) {
+            const d = frag('<details><summary>Compare: how an AI assistant might have written it</summary><p class="muted">Neither version is automatically better. What\'s different? Which would be easier for a teammate to read?</p></details>');
+            afterWrap.append(d);
+            codeBlock(d, c.solution, {});
+          }
+          completeChallenge(ctx, r);
+        });
+      };
+      if (r.assisted && c.solutionQuestions && c.solutionQuestions.length) {
+        const s = frag('<section><h2>Check your understanding of the AI\'s code</h2><p class="muted">You used the assistant\'s solution, so show you can reason about it.</p><div class="qlist"></div></section>');
+        afterWrap.append(s);
+        runQuestions($('.qlist', s), c.solutionQuestions, { r, key: 'solDone', review: r.done }, toExplain);
+      } else toExplain();
+    };
+    runBtn.addEventListener('click', async () => {
+      const code = ed.get();
+      r.code = code; r.runs = (r.runs || 0) + 1; save();
+      runBtn.disabled = true; runBtn.textContent = 'Running…';
+      const res = await runCode(code, c.tests);
+      runBtn.disabled = false; runBtn.textContent = '▶ Run & review';
+      renderOutput(out, res, c.tests);
+      ed.markLine(errorLine(res));
+      renderCoach(coach, analyzeCode(code, { required: requiredNames(c), expectReturn: c.expectReturn }));
+      drawAI(); ctx.refreshNav();
+      const pass = !res.syntax && !res.timeout && !res.error && res.results.every(x => x && x.pass);
+      announce(pass ? 'All checks pass.' : 'Run finished. Some checks did not pass — see the output.');
+      if (pass) { r.passed = true; save(); showAfter(); }
+    });
+    if (r.passed) showAfter();
+  }
+}
+
+/* open-ended capstone: student defines the problem, builds, and explains */
+function renderOpen(ctx) {
+  const { c, body } = ctx;
+  const r = rec(c.id);
+  r.open = r.open || { problem: '', aiUse: '', explain: '', testing: '' };
+  const o = r.open;
+  body.append(frag('<div class="intro">' + c.intro + '</div>'));
+  const p = 'op' + (++uid);
+  const sec = frag('<div>' +
+    '<h2>1 · Define the problem</h2><div class="field"><label for="' + p + 'prob">Who is it for? What goes in, what comes out, and what are the rules? (at least 15 words)</label><textarea id="' + p + 'prob"></textarea></div>' +
+    '<h2>2 · Decide how you\'ll use AI</h2><fieldset><legend>How will AI help with this program?</legend>' +
+      ['None — I\'ll write it all myself', 'Explanations and hints only', 'It generated parts, and I wrote the rest', 'It generated most of it, and I reviewed and tested it'].map((t, i) => '<label><input type="radio" name="' + p + 'ai" value="' + esc(t) + '"> ' + esc(t) + '</label>').join('') + '</fieldset>' +
+    '<h2>3 · Build it</h2><div class="editor-label">Your program</div><div class="editor-host"></div>' +
+    '<div class="runbar"><button type="button" class="btn run">▶ Run &amp; review</button></div><div class="out" hidden></div><div class="coach" hidden></div>' +
+    '<h2>4 · Explain and justify it</h2><div class="field"><label for="' + p + 'exp">Explain how your code works, part by part, as if to a reviewer (at least 25 words)</label><textarea id="' + p + 'exp"></textarea></div>' +
+    '<div class="field"><label for="' + p + 'test">How did you test it? List inputs you tried, what you expected, and what happened (at least 10 words)</label><textarea id="' + p + 'test"></textarea></div>' +
+    '<button type="button" class="btn purple finish">Submit capstone</button><div class="fb" aria-live="polite"></div></div>');
+  body.append(sec);
+  const prob = $('#' + p + 'prob', sec), exp = $('#' + p + 'exp', sec), test = $('#' + p + 'test', sec);
+  prob.value = o.problem; exp.value = o.explain; test.value = o.testing;
+  $$('input[type=radio]', sec).forEach(rb => { rb.checked = rb.value === o.aiUse; rb.addEventListener('change', () => { o.aiUse = rb.value; save(); }); });
+  [[prob, 'problem'], [exp, 'explain'], [test, 'testing']].forEach(([el, k]) => el.addEventListener('input', () => { o[k] = el.value; save(); }));
+  const runBtn = $('.run', sec);
+  const ed = makeEditor($('.editor-host', sec), r.code != null ? r.code : c.starter, 'Code editor for your capstone program', () => runBtn.focus());
+  runBtn.addEventListener('click', async () => {
+    const code = ed.get(); r.code = code; r.runs = (r.runs || 0) + 1;
+    const res = await runCode(code, []);
+    renderOutput($('.out', sec), res, null);
+    ed.markLine(errorLine(res));
+    renderCoach($('.coach', sec), analyzeCode(code, {}));
+    r.cleanRun = !res.syntax && !res.timeout && !res.error && res.logs.length > 0;
+    save(); ctx.refreshNav();
+  });
+  $('.finish', sec).addEventListener('click', () => {
+    const missing = [];
+    if (words(o.problem) < 15) missing.push('Describe the problem in at least 15 words.');
+    if (!o.aiUse) missing.push('Choose how you used AI.');
+    if (!r.cleanRun) missing.push('Run your program so it finishes without errors and prints at least one result.');
+    if (words(o.explain) < 25) missing.push('Explain your code in at least 25 words.');
+    if (words(o.testing) < 10) missing.push('Describe your testing in at least 10 words.');
+    if (missing.length) { $('.fb', sec).innerHTML = '<p class="no"><strong>Not yet:</strong></p><ul>' + missing.map(m => '<li>' + m + '</li>').join('') + '</ul>'; return; }
+    r.explanation = o.explain; r.assisted = /generated/i.test(o.aiUse);
+    $('.fb', sec).innerHTML = '';
+    completeChallenge(ctx, r);
+  });
+  if (r.done) completeChallenge(ctx, r);
+}
+
+/* ---------- page: workshop ---------- */
+const WORKSHOP_START = '// Paste any JavaScript here — your own, or code an AI wrote for you.\n// Run it, read the coach\'s description, then practice explaining it.\n\nconst prices = [4.5, 12, 7.25];\nlet total = 0;\nfor (const p of prices) {\n  total = total + p;\n}\nconsole.log("Total: " + total);\n';
+function renderWorkshop() {
+  const w = store.workshop || (store.workshop = { code: WORKSHOP_START, notes: '' });
+  main.innerHTML = '<h1>Workshop</h1><p class="lead">A free practice space. Paste code — yours or an AI\'s — run it, and the coach will describe what it does and suggest improvements. Nothing here affects your progress.</p>' +
+    '<div class="editor-label">Code</div><div class="editor-host"></div>' +
+    '<div class="runbar"><button type="button" class="btn run">▶ Run &amp; review</button><button type="button" class="btn ghost reset">Clear</button></div><div class="out" hidden></div><div class="coach" hidden></div>' +
+    '<div class="field"><label for="wsNotes">Practice explaining: what does this code do, and would you trust it? Why?</label><textarea id="wsNotes"></textarea></div>' +
+    '<details><summary>A checklist for reviewing code you didn\'t write</summary><ol><li>What problem is it supposed to solve? Write the inputs, outputs and rules.</li><li>Predict the output for one normal input and one edge case <em>before</em> running.</li><li>Run it. Did your prediction match? If not, who was wrong — you or the code?</li><li>Is every name it calls actually defined? Are any inputs unused?</li><li>Does it change data it shouldn\'t (mutation)?</li><li>Could you explain each line to a classmate? If not, that\'s the line to study.</li></ol></details>';
+  const runBtn = $('.run');
+  const ed = makeEditor($('.editor-host'), w.code, 'Workshop code editor', () => runBtn.focus());
+  const notes = $('#wsNotes');
+  notes.value = w.notes || '';
+  notes.addEventListener('input', () => { w.notes = notes.value; save(); });
+  runBtn.addEventListener('click', async () => {
+    const code = ed.get(); w.code = code; save();
+    const res = await runCode(code, []);
+    renderOutput($('.out'), res, null);
+    ed.markLine(errorLine(res));
+    renderCoach($('.coach'), analyzeCode(code, {}));
+  });
+  $('.reset').addEventListener('click', () => { if (confirm('Clear the workshop editor?')) { ed.set(''); w.code = ''; save(); } });
+}
+
+/* ---------- page: profile / report ---------- */
+function stats() {
+  const by = {};
+  Object.keys(SKILLS).forEach(k => { by[k] = { total: 0, done: 0, independent: 0, assisted: 0, answered: 0, firstTry: 0 }; });
+  let hints = 0, assists = 0, runs = 0;
+  LEVELS.forEach(L => L.challenges.forEach(c => {
+    const s = by[c.skill]; if (!s) return;
+    s.total++;
+    const r = peek(c.id); if (!r) return;
+    hints += r.hints || 0; runs += r.runs || 0; if (r.assisted) assists++;
+    s.answered += r.answered || 0; s.firstTry += r.firstTry || 0;
+    if (r.done) { s.done++; if (r.assisted) s.assisted++; else s.independent++; }
+  }));
+  return { by, hints, assists, runs };
+}
+
+function buildReport() {
+  const st = stats();
+  const lines = ['# JS Reasoning Quest — Progress Report', '', '**Student:** ' + (store.name || '(name not entered)') + '  ', '**Generated:** ' + new Date().toLocaleString(), '',
+    '## Summary by skill', '', '| Skill | Complete | Independent | With AI | First-try answers |', '|---|---|---|---|---|'];
+  Object.keys(SKILLS).forEach(k => { const s = st.by[k]; lines.push('| ' + SKILLS[k].label + ' | ' + s.done + ' / ' + s.total + ' | ' + s.independent + ' | ' + s.assisted + ' | ' + s.firstTry + ' / ' + s.answered + ' |'); });
+  lines.push('', 'Hints used: ' + st.hints + ' · AI assists: ' + st.assists + ' · Code runs: ' + st.runs, '', '## Journal');
+  LEVELS.forEach((L, li) => L.challenges.forEach(c => {
+    const r = peek(c.id);
+    if (!r || !(r.explanation || r.code)) return;
+    lines.push('', '### Level ' + li + ' · ' + c.title + ' (' + (VARIANT[c.type === 'quiz' ? c.variant : c.type]) + (r.done ? '' : ', in progress') + (r.assisted ? ', AI-assisted' : '') + ')');
+    if (r.open) {
+      lines.push('', '**Problem:** ' + r.open.problem, '', '**AI use:** ' + r.open.aiUse, '', '**Testing:** ' + r.open.testing);
+    }
+    if (r.stuck) lines.push('', '**Question asked of the AI:** ' + r.stuck);
+    if (r.explanation) lines.push('', '**Explanation:**', '', r.explanation.split('\n').map(x => '> ' + x).join('\n'));
+    if (r.code && (c.type === 'build' || c.type === 'open')) lines.push('', '```js', r.code.replace(/\s+$/, ''), '```');
+  }));
+  return lines.join('\n') + '\n';
+}
+
+function renderProfile() {
+  const st = stats();
+  main.innerHTML = '<h1>My Progress</h1><p class="lead">This is a record of how you reason, not how fast you are.</p>' +
+    '<div class="field"><label for="profName">Your name (for the exported report)</label><input type="text" id="profName" autocomplete="name"></div>' +
+    '<table><caption class="sr-only">Progress by skill</caption><thead><tr><th scope="col">Skill</th><th scope="col">Complete</th><th scope="col">Independent</th><th scope="col">With AI</th><th scope="col">First-try answers</th></tr></thead><tbody>' +
+    Object.keys(SKILLS).map(k => { const s = st.by[k]; return '<tr><th scope="row">' + SKILLS[k].icon + ' ' + SKILLS[k].label + '</th><td>' + s.done + ' / ' + s.total + '</td><td>' + s.independent + '</td><td>' + s.assisted + '</td><td>' + s.firstTry + ' / ' + s.answered + '</td></tr>'; }).join('') +
+    '</tbody></table><p>Hints used: <strong>' + st.hints + '</strong> · AI assists: <strong>' + st.assists + '</strong> · Code runs: <strong>' + st.runs + '</strong></p>' +
+    '<p class="muted">“First-try answers” counts questions you got right before any wrong guess. Wrong guesses aren\'t failures — each one came with an explanation.</p>' +
+    '<div class="btn-row"><button type="button" class="btn" id="dl">Download report (.md)</button><button type="button" class="btn ghost" id="cp">Copy report</button><button type="button" class="btn ghost" id="rs">Reset all progress</button></div><div class="fb" id="pfb" aria-live="polite"></div>' +
+    '<h2>Journal</h2><div id="journal"></div>';
+  const nm = $('#profName');
+  nm.value = store.name || '';
+  nm.addEventListener('input', () => { store.name = nm.value; save(); });
+  const entries = [];
+  LEVELS.forEach((L, li) => L.challenges.forEach((c, ci) => { const r = peek(c.id); if (r && r.explanation) entries.push({ L, li, c, ci, r }); }));
+  $('#journal').innerHTML = entries.length ? entries.map(e => '<div class="journal-entry"><h3><a href="#c/' + e.L.id + '/' + e.ci + '">Level ' + e.li + ' · ' + esc(e.c.title) + '</a>' + (e.r.assisted ? ' <span class="chip">◐ AI-assisted</span>' : '') + '</h3><p>' + esc(e.r.explanation).replace(/\n/g, '<br>') + '</p></div>').join('')
+    : '<p class="muted">Your explanations will collect here as you complete challenges.</p>';
+  $('#dl').addEventListener('click', () => {
+    const blob = new Blob([buildReport()], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'js-reasoning-quest-' + (store.name || 'report').replace(/[^\w-]+/g, '_') + '.md';
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#cp').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(buildReport()); $('#pfb').innerHTML = '<p class="ok">Report copied to the clipboard.</p>'; }
+    catch (e) { $('#pfb').innerHTML = '<p class="no">Couldn\'t copy automatically — use Download instead.</p>'; }
+  });
+  $('#rs').addEventListener('click', () => {
+    if (confirm('Erase all progress, code and explanations in this browser? This can\'t be undone.')) { const name = store.name; store = fresh(); store.name = name; save(); renderProfile(); }
+  });
+}
+
+/* ---------- router ---------- */
+function route() {
+  const parts = (location.hash.replace(/^#/, '') || 'home').split('/');
+  const page = parts[0];
+  $$('[data-nav]').forEach(a => {
+    const on = a.dataset.nav === page || (a.dataset.nav === 'levels' && (page === 'c' || page === 'level'));
+    if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+  });
+  let title = 'JS Reasoning Quest';
+  if (page === 'c' || page === 'level') {
+    const li = LEVELS.findIndex(L => L.id === parts[1]);
+    if (li < 0) { renderLevels('That level doesn\'t exist.'); }
+    else if (!levelUnlocked(li)) { renderLevels('Level ' + li + ' is locked. Finish Level ' + (li - 1) + ' first.'); }
+    else if (page === 'level') {
+      const first = LEVELS[li].challenges.findIndex(x => !isDone(x));
+      location.replace('#c/' + LEVELS[li].id + '/' + Math.max(0, first));
+      return;
+    } else {
+      const ci = parseInt(parts[2], 10) || 0;
+      const c = LEVELS[li].challenges[ci];
+      if (!c) { renderLevels('That challenge doesn\'t exist.'); }
+      else { renderChallenge(li, ci); title = c.title + ' — Level ' + li + ' — ' + title; }
+    }
+  } else if (page === 'levels') { renderLevels(); title = 'Levels — ' + title; }
+  else if (page === 'workshop') { renderWorkshop(); title = 'Workshop — ' + title; }
+  else if (page === 'profile') { renderProfile(); title = 'My Progress — ' + title; }
+  else renderHome();
+  document.title = title;
+  window.scrollTo(0, 0);
+  main.focus({ preventScroll: true });
+}
+window.addEventListener('hashchange', route);
+if (!LEVELS.length) main.innerHTML = '<h1>Levels didn\'t load</h1><p>The file <code>js/js_reasoning_quest_levels.js</code> is missing. Keep it next to this page.</p>';
+else route();
+
+// Exposed for automated checks
+window.JSRQ = { analyzeCode, runCode, diagnose };
+})();
+</script>
+</body>
+</html>
