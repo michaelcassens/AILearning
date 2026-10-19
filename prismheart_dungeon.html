@@ -1437,6 +1437,19 @@ function gemArea(id){
   const ns = y < H/3 ? 'north' : y > H*2/3 ? 'south' : '', ew = x < W/3 ? 'west' : x > W*2/3 ? 'east' : '';
   return (ns + ew) || 'inner';
 }
+// rewards for every finished task; quest status changes only once the gold is actually paid
+function lumenRewards(){
+  const pages = [], done = []; let reward = 0;
+  if (S.q.locket === 'active' && S.locket){ pages.push('My locket! I thought it lost forever. Thank you, truly. Please, take these <b>35 gold</b>.'); reward += 35; done.push('locket'); }
+  if (S.q.caps === 'active' && capsCount() >= 6){ pages.push('Six glowcaps! My flame feels brighter already. Here are <b>40 gold</b> for your trouble.'); reward += 40; done.push('caps'); }
+  if (S.q.shadows === 'active' && S.shadowKills >= 6){ pages.push('The halls feel a little less cold. You have banished the shadows. Please take <b>50 gold</b>.'); reward += 50; done.push('shadows'); }
+  return { pages, reward, done };
+}
+function payLumen(r){
+  if (!r.done.some(k => S.q[k] === 'active')) return;
+  r.done.forEach(k => S.q[k] = 'done');
+  addGold(r.reward, hero.x, hero.y - 20); SFX.quest(); save();
+}
 function talkLumen(){
   if (!S.q.met){
     dialog('lumen', [
@@ -1447,16 +1460,15 @@ function talkLumen(){
     ], { onDone:() => {
       S.q.met = true; S.q.locket = S.q.caps = S.q.shadows = 'active';
       SFX.quest(); toast('New quests added to your Quest Log.'); save();
+      // anything already done before we met (like a locket found early) is handed in right away
+      const r = lumenRewards();
+      if (r.reward){ r.pages[0] = 'Wait&hellip; you have already been busy! ' + r.pages[0]; dialog('lumen', r.pages, { onDone:() => payLumen(r) }); }
     }});
     return;
   }
-  const pages = []; let reward = 0;
-  if (S.q.locket === 'active' && S.locket){ pages.push('My locket! I thought it lost forever. Thank you, truly. Please, take these <b>35 gold</b>.'); reward += 35; S.q.locket = 'done'; }
-  if (S.q.caps === 'active' && capsCount() >= 6){ pages.push('Six glowcaps! My flame feels brighter already. Here are <b>40 gold</b> for your trouble.'); reward += 40; S.q.caps = 'done'; }
-  if (S.q.shadows === 'active' && S.shadowKills >= 6){ pages.push('The halls feel a little less cold. You have banished the shadows. Please take <b>50 gold</b>.'); reward += 50; S.q.shadows = 'done'; }
-  if (reward){
-    dialog('lumen', pages, { onDone:() => { addGold(reward, hero.x, hero.y - 20); SFX.quest(); save(); } });
-  } else dialog('lumen', [lumenHint()]);
+  const r = lumenRewards();
+  if (r.reward) dialog('lumen', r.pages, { onDone:() => payLumen(r) });
+  else dialog('lumen', [lumenHint()]);
 }
 function talkMoss(){
   const quips = ['Shells and spells, trinkets and kettles! What’ll it be?', 'Slow and steady fills the purse. Yours, ideally, into mine.', 'Everything here was found, not stolen. Mostly.', 'The Sovereign never shops here. Terrible taste in everything.'];
@@ -1578,12 +1590,40 @@ function tryPush(ix, iy, dt){
     !room.caps.some(cp => cp.x === nx && cp.y === ny && !S.capsFound[cp.key]) &&
     !room.enemies.some(e => !e.dead && Math.floor(e.x/TS) === nx && Math.floor(e.y/TS) === ny);
   if (!free){ floatText((tx+.5)*TS, ty*TS, 'Stuck', '#bdb2a4'); hero.pushT = -0.6; return; }
+  if (!pushKeepsPathsOpen(ty*room.W + tx, ny*room.W + nx)){ floatText((tx+.5)*TS, ty*TS, 'That would block the way', '#ffe08a'); hero.pushT = -0.8; return; }
   room.solidObj[ty*room.W + tx] = 0; room.solidObj[ny*room.W + nx] = 1;
   o.x = nx; o.y = ny; o.ox = -dx*TS; o.oy = -dy*TS;
   S.moved[o.key] = [nx, ny];
   tone(110, .16, 'triangle', .05, -30); burst((tx+.5)*TS, (ty+1)*TS - 4, 8, ['#8a7a66','#5e5245'], { speed:40, life:.4 });
   save();
 }
+// count the things the hero must be able to reach: hidden gem walls, doorways, the gate, NPCs and glowcaps
+function reachGoals(fromIdx, toIdx){
+  const W = room.W, H = room.H, reach = new Uint8Array(W*H);
+  const blockedAt = i => {
+    if (i === toIdx) return true;
+    const x = i % W, y = (i/W)|0, t = room.t[y][x];
+    if (t === T_WALL || t === T_BARS || t === T_GATE || t === T_FREE || t === T_EXIT) return true;
+    return i !== fromIdx && room.solidObj[i] === 1;
+  };
+  const start = Math.floor(hero.y/TS)*W + Math.floor(hero.x/TS), q = [start]; reach[start] = 1;
+  while (q.length){
+    const i = q.pop(), x = i % W, y = (i/W)|0;
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx = x + dx, ny = y + dy, j = ny*W + nx;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || reach[j] || blockedAt(j)) continue;
+      reach[j] = 1; q.push(j);
+    }
+  }
+  const nextTo = (x, y) => [[1,0],[-1,0],[0,1],[0,-1]].some(([dx, dy]) => { const nx = x + dx, ny = y + dy; return nx >= 0 && ny >= 0 && nx < W && ny < H && reach[ny*W + nx]; });
+  let n = 0;
+  for (const o of room.objs) if (o.type === 'loose' && !S.searched[o.key] && nextTo(o.x, o.y)) n++;
+  for (const ch in room.exits) for (const [x, y] of room.exits[ch]) if (nextTo(x, y)) n++;
+  for (const nn of room.npcs) if (nextTo(nn.x, nn.y)) n++;
+  for (const cp of room.caps) if (!S.capsFound[cp.key] && reach[cp.y*W + cp.x]) n++;
+  return n;
+}
+function pushKeepsPathsOpen(fromIdx, toIdx){ return reachGoals(fromIdx, toIdx) >= reachGoals(-1, -1); }
 function findInteract(){
   let best = null, bs = 1e9;
   const consider = (kind, ref, cx, cy, label) => {
