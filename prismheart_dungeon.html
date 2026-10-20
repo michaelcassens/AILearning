@@ -121,6 +121,19 @@ h1{font-family:"Palatino Linotype",Palatino,Georgia,serif;font-size:clamp(40px,1
 .link{background:none;border:none;color:var(--muted);text-decoration:underline;margin-top:18px;padding:8px;font-size:15px}
 
 /* ---------- Modal ---------- */
+#intro{position:fixed;inset:0;z-index:28;background:#030205;touch-action:none}
+#intro-cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+#intro-cap{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));width:min(680px,calc(100vw - 32px));
+  display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+#intro-text{margin:0;font-family:"Palatino Linotype",Palatino,Georgia,serif;font-size:clamp(16px,2.3vw,20px);line-height:1.55;color:#f1ebe0;
+  text-shadow:0 2px 8px #000;min-height:4.7em;opacity:0;transition:opacity .9s ease}
+#intro-text.show{opacity:1}
+.intro-nav{display:flex;align-items:center;gap:16px}
+#intro-dots{display:flex;gap:7px}
+#intro-dots i{width:8px;height:8px;border-radius:50%;background:#3a3242}
+#intro-dots i.on{background:#d4b0ff}
+#intro-skip{position:absolute;top:calc(12px + env(safe-area-inset-top));right:calc(12px + env(safe-area-inset-right))}
+@media (prefers-reduced-motion: reduce){#intro-text{transition:none}}
 #modal{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(3,2,5,.6);touch-action:pan-y}
 .m-box{width:min(560px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;background:linear-gradient(180deg,#1d1724,#120e17);
   border:1px solid var(--edge);border-radius:16px;box-shadow:0 18px 60px rgba(0,0,0,.7);overflow:hidden}
@@ -219,6 +232,7 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
     <div class="menu">
       <button id="btn-continue" class="big hidden">Continue</button>
       <button id="btn-new" class="big primary">New Game</button>
+      <button id="btn-intro" class="big">Watch the Intro</button>
       <button id="btn-how" class="big">How to Play</button>
     </div>
   </div>
@@ -234,6 +248,15 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
   </div>
   <button id="btn-back" class="link">Back</button>
 </section>
+
+<div id="intro" class="hidden" role="dialog" aria-modal="true" aria-label="Story introduction">
+  <canvas id="intro-cv" aria-hidden="true"></canvas>
+  <div id="intro-cap">
+    <p id="intro-text" aria-live="polite"></p>
+    <div class="intro-nav"><span id="intro-dots" aria-hidden="true"></span><button id="intro-next" class="mbtn primary">Next &#9656;</button></div>
+  </div>
+  <button id="intro-skip" class="hbtn">Skip intro</button>
+</div>
 
 <div id="modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="m-title">
   <div class="m-box">
@@ -1837,10 +1860,7 @@ function openHelp(){ openModal({ kind:'help', title:'How to Play', portrait:'nar
    ===================================================================== */
 function openStory(){
   dialog('narrator', [
-    'Your kingdom once shimmered with color. Then the <b>Hollow Sovereign</b> came. They are a ruler of ash and silence who drains the color from everything they touch.',
-    'You stood against them. For that, you were seized in the night and thrown into the deepest dungeon of the Hollow Keep.',
-    'But the Keep holds a secret: three <b>Prism Gems</b>, hidden in its very walls. Together they open the <b>Prism Gate</b>, the path to freedom and to saving your people.',
-    'There is no hurry. Explore, search, and grow stronger. When you are ready, the gate and the Sovereign will be waiting.',
+    'You wake on cold stone in the deepest cell of the Hollow Keep. Somewhere in these walls, three <b>Prism Gems</b> are hidden. Together they open the <b>Prism Gate</b>, the way to freedom.<br><br>There is no hurry. Explore, search, and grow stronger. When you are ready, the gate and the Sovereign will be waiting.',
   ], { doneLabel:'Begin', onDone:() => toast(isTouch ? 'A lantern spirit glows nearby. Walk close and tap Talk.' : 'A lantern spirit glows nearby. Walk close and press E to talk.', 5000) });
 }
 function lumenHint(){
@@ -3116,6 +3136,187 @@ function drawPreviews(){
 }
 
 /* =====================================================================
+   Intro cutscene: six illustrated scenes with narration
+   ===================================================================== */
+const icv = $('#intro-cv'), icx = icv.getContext('2d');
+const Intro = { on:false, i:0, t:0, hero:'knight', done:null };
+const SW = 480, SH = 270;   // stage size the scenes are drawn in
+function iSky(c, top, bot){ const g = c.createLinearGradient(0, 0, 0, SH); g.addColorStop(0, top); g.addColorStop(1, bot); c.fillStyle = g; c.fillRect(0, 0, SW, SH); }
+function iStars(c, t, n){ const rnd = mulberry32(7); for (let i = 0; i < n; i++){ const x = rnd()*SW, y = rnd()*150, a = 0.3 + 0.7*Math.abs(Math.sin(t*1.3 + i)); c.fillStyle = `rgba(255,255,255,${a*0.7})`; c.fillRect(x, y, 1.2, 1.2); } }
+function iHill(c, col, y, amp, seed){ c.fillStyle = col; c.beginPath(); c.moveTo(0, SH); for (let x = 0; x <= SW; x += 8) c.lineTo(x, y + Math.sin(x*0.012 + seed)*amp + Math.sin(x*0.031 + seed*2)*amp*0.4); c.lineTo(SW, SH); c.closePath(); c.fill(); }
+const HOUSES = [[60,198,0],[105,206,60],[150,194,200],[200,204,300],[248,196,130],[296,205,40],[342,197,260],[392,206,170]];
+function iVillage(c, t){
+  iSky(c, '#6fa8e8', '#ffd9a8');
+  // a faint rainbow over the land
+  c.lineWidth = 5; for (let i = 0; i < 6; i++){ c.strokeStyle = hsl(i*55, 90, 65, 0.22); c.beginPath(); c.arc(240, 250, 190 - i*5, Math.PI*1.08, Math.PI*1.92); c.stroke(); }
+  iHill(c, '#7cc47a', 190, 10, 1); iHill(c, '#5fae6b', 214, 8, 3);
+  for (const [x, y, h] of HOUSES){
+    c.fillStyle = hsl(h, 55, 82); c.fillRect(x - 15, y - 18, 30, 22);
+    c.fillStyle = hsl(h, 80, 52); c.beginPath(); c.moveTo(x - 19, y - 18); c.lineTo(x, y - 34); c.lineTo(x + 19, y - 18); c.closePath(); c.fill();
+    c.fillStyle = '#ffe9a0'; c.fillRect(x - 9, y - 12, 6, 6); c.fillRect(x + 3, y - 12, 6, 6);
+    // banners
+    c.strokeStyle = '#6b5a44'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x + 15, y - 18); c.lineTo(x + 15, y - 42); c.stroke();
+    c.fillStyle = hsl(h + 120, 90, 60); c.beginPath(); c.moveTo(x + 15, y - 42); c.quadraticCurveTo(x + 22, y - 40 + Math.sin(t*4 + x)*2, x + 28, y - 38 + Math.sin(t*4 + x)*3); c.lineTo(x + 15, y - 34); c.closePath(); c.fill();
+  }
+  // people dancing
+  for (let i = 0; i < 14; i++){ const x = 40 + i*30, y = 236 - Math.abs(Math.sin(t*3 + i))*5; c.fillStyle = hsl(i*47, 85, 62); c.beginPath(); c.ellipse(x, y, 4, 6, 0, 0, TAU); c.fill(); c.beginPath(); c.arc(x, y - 9, 3.4, 0, TAU); c.fill(); }
+}
+function iFireworks(c, t){
+  for (let k = 0; k < 3; k++){
+    const cyc = (t*0.45 + k*0.33) % 1, cx = 90 + k*150, cy = 55 + k*12, r = cyc*36;
+    for (let i = 0; i < 14; i++){ const a = i*TAU/14; c.fillStyle = hsl(k*110 + i*20, 100, 70, 1 - cyc); c.beginPath(); c.arc(cx + Math.cos(a)*r, cy + Math.sin(a)*r + cyc*cyc*10, 1.8, 0, TAU); c.fill(); }
+  }
+}
+function iDesaturate(c, x0){
+  c.save(); c.beginPath(); c.rect(x0, 0, SW - x0, SH); c.clip();
+  c.globalCompositeOperation = 'saturation'; c.fillStyle = '#808080'; c.fillRect(0, 0, SW, SH);
+  c.globalCompositeOperation = 'multiply'; c.fillStyle = '#9a9aa0'; c.fillRect(0, 0, SW, SH);
+  c.restore();
+}
+function iKeep(c, x, y, col){
+  c.fillStyle = col;
+  c.fillRect(x - 40, y - 30, 80, 40); c.fillRect(x - 52, y - 52, 18, 62); c.fillRect(x + 34, y - 52, 18, 62); c.fillRect(x - 10, y - 66, 20, 36);
+  for (const tx of [x - 52, x + 34]) for (let i = 0; i < 3; i++) c.fillRect(tx + i*7, y - 58, 4, 6);
+  c.beginPath(); c.moveTo(x - 12, y - 66); c.lineTo(x, y - 82); c.lineTo(x + 12, y - 66); c.closePath(); c.fill();
+}
+const INTRO = [
+  { text:'Long ago, at the heart of the kingdom of Lumenor, stood the First Prism. It caught the sunlight and split it into every color the world had ever known.',
+    draw(c, t, p){
+      iSky(c, '#0b0f2a', '#2a1d4a'); iStars(c, t, 70);
+      iHill(c, '#1d1834', 214, 14, 1); iHill(c, '#120f22', 232, 10, 2);
+      const px = 220, py = 150, spread = 0.04 + 0.32*smooth(0, 0.55, p);
+      c.globalCompositeOperation = 'lighter';
+      c.strokeStyle = 'rgba(255,250,230,.85)'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(0, 46); c.lineTo(px - 8, py - 4); c.stroke();
+      for (let i = 0; i < 7; i++){
+        const a = (i/6 - 0.5)*spread*2 + 0.12, len = 320;
+        c.fillStyle = hsl(i*51, 100, 62, 0.45);
+        c.beginPath(); c.moveTo(px + 14, py + 2); c.lineTo(px + 14 + Math.cos(a - 0.03)*len, py + 2 + Math.sin(a - 0.03)*len); c.lineTo(px + 14 + Math.cos(a + 0.03)*len, py + 2 + Math.sin(a + 0.03)*len); c.closePath(); c.fill();
+      }
+      const gl = c.createRadialGradient(px, py, 2, px, py, 60); gl.addColorStop(0, 'rgba(255,255,255,.6)'); gl.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gl; c.fillRect(px - 60, py - 60, 120, 120);
+      c.globalCompositeOperation = 'source-over';
+      const g = c.createLinearGradient(px - 20, py - 30, px + 20, py + 20); g.addColorStop(0, 'rgba(240,235,255,.95)'); g.addColorStop(1, 'rgba(170,150,230,.75)');
+      c.fillStyle = g; c.beginPath(); c.moveTo(px, py - 34); c.lineTo(px + 24, py + 18); c.lineTo(px - 24, py + 18); c.closePath(); c.fill();
+      c.strokeStyle = '#ffffff'; c.lineWidth = 1.2; c.stroke();
+    }},
+  { text:'Color flowed into everything: rivers, fields, banners and the people themselves. Every festival painted the sky, and every home glowed with a color of its own.',
+    draw(c, t, p){ iVillage(c, t); iFireworks(c, t); }},
+  { text:'Then the Hollow Sovereign came from the gray lands beyond the mountains, where nothing grows. They brought no army. They brought silence, and wherever their shadow passed, the color drained away.',
+    draw(c, t, p){
+      iVillage(c, t);
+      const front = SW - smooth(0.1, 1, p)*(SW + 40);
+      iDesaturate(c, Math.max(0, front));
+      const fg = c.createLinearGradient(front - 30, 0, front + 40, 0); fg.addColorStop(0, 'rgba(120,120,128,0)'); fg.addColorStop(1, 'rgba(120,120,128,.45)');
+      c.fillStyle = fg; c.fillRect(front - 30, 0, 70, SH);
+      c.save(); c.globalAlpha = Math.min(1, p*3); c.translate(420, 182); c.scale(2.3, 2.3); drawSovereign(c, 0, 0, t, false); c.restore();
+    }},
+  { text:'Field by field and home by home, the Sovereign stole the kingdom’s color and locked it deep beneath the Hollow Keep. The people grew quiet. The songs stopped.',
+    draw(c, t, p){
+      iVillage(c, t); iDesaturate(c, 0);
+      iKeep(c, 410, 150, '#1c1b20');
+      const kg = c.createRadialGradient(410, 120, 4, 410, 120, 70); kg.addColorStop(0, 'rgba(0,0,0,.6)'); kg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = kg; c.fillRect(330, 40, 160, 160);
+      // streams of color pulled out of the village into the Keep
+      for (let k = 0; k < 48; k++){
+        const [hx, hy, hh] = HOUSES[k % HOUSES.length], u = (t*0.22 + k*0.061) % 1, e2 = u*u;
+        const x = hx + (410 - hx)*e2, y = hy - 20 + (130 - hy + 20)*e2 - Math.sin(u*Math.PI)*40;
+        c.fillStyle = hsl(hh + k*9, 100, 65, 1 - u*0.6); c.beginPath(); c.arc(x, y, 2.2*(1 - u*0.5), 0, TAU); c.fill();
+      }
+    }},
+  { text:'You were the last light left: a hero of living color who stood against them. For that, you were seized in the night and thrown into the deepest cell of the Keep.',
+    draw(c, t, p){
+      iSky(c, '#0c0a10', '#1b1622');
+      c.fillStyle = '#2a2430'; c.fillRect(0, 214, SW, 56);
+      const land = smooth(0.45, 0.58, p), sh2 = p > 0.58 && p < 0.66 ? (Math.random() - .5)*4 : 0;
+      c.save(); c.translate(sh2, 0);
+      c.save(); c.translate(150, 206); c.scale(3, 3); drawSovereign(c, 0, 0, t, false); c.restore();
+      const hx = 340, hy = 196;
+      const ag = c.createRadialGradient(hx, hy - 20, 4, hx, hy - 20, 70); ag.addColorStop(0, hsl(t*60, 100, 70, 0.35*(1 - land*0.7))); ag.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = ag; c.fillRect(hx - 80, hy - 100, 160, 160);
+      c.save(); c.translate(hx, hy); c.scale(3.2, 3.2); HEROES[Intro.hero].draw(c, 0, 0, t, -1, 0.3, false); c.restore();
+      if (land > 0){
+        const by = -170 + land*170;
+        for (let i = 0; i < 7; i++){ const bx = 286 + i*18; c.fillStyle = '#2b2b30'; c.fillRect(bx, by + 60, 6, 160); c.fillStyle = '#7d7d86'; c.fillRect(bx, by + 60, 2, 160); }
+        c.fillStyle = '#3a3a40'; c.fillRect(280, by + 70, 126, 6); c.fillRect(280, by + 160, 126, 6);
+        c.fillStyle = `rgba(5,4,8,${0.45*smooth(0.6, 1, p)})`; c.fillRect(0, 0, SW, SH);
+      }
+      c.restore();
+    }},
+  { text:'But the Keep’s first builders left a secret in its walls. Three Prism Gems wait there, hidden in the stone. Find them, grow strong, and win back the color of your people.',
+    draw(c, t, p){
+      c.fillStyle = '#26252b'; c.fillRect(0, 0, SW, SH);
+      for (let row = 0; row < 17; row++) for (let col = -1; col < 17; col++){
+        const x = col*32 + (row % 2)*16, y = row*16, sh3 = 70 + (hashStr(col + ',' + row) % 22);
+        c.fillStyle = `rgb(${sh3},${sh3},${sh3 + 6})`; c.fillRect(x + 1, y + 1, 30, 14);
+      }
+      const vg = c.createRadialGradient(240, 135, 40, 240, 135, 280); vg.addColorStop(0, 'rgba(0,0,0,.15)'); vg.addColorStop(1, 'rgba(0,0,0,.85)'); c.fillStyle = vg; c.fillRect(0, 0, SW, SH);
+      [[140, 112, 'ruby', 0.08], [240, 150, 'sapphire', 0.22], [340, 108, 'emerald', 0.36]].forEach(([x, y, g, at]) => {
+        const a = smooth(at, at + 0.12, p); if (a <= 0) return;
+        const col = GEMS[g].color, pulse = 0.8 + Math.sin(t*2.4 + x)*0.2;
+        c.globalCompositeOperation = 'lighter';
+        const gg = c.createRadialGradient(x, y, 0, x, y, 46*pulse); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)');
+        c.globalAlpha = a*0.8; c.fillStyle = gg; c.fillRect(x - 50, y - 50, 100, 100);
+        c.globalCompositeOperation = 'source-over'; c.globalAlpha = a;
+        drawGemShape(c, x, y, 9, col);
+        c.globalAlpha = 1;
+      });
+      const ta = smooth(0.6, 0.85, p);
+      if (ta > 0){
+        c.globalAlpha = ta; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = '700 40px "Palatino Linotype", Palatino, Georgia, serif';
+        const tg = c.createLinearGradient(140, 0, 340, 0); ['#ff7aa2','#ffd36b','#7dffc4','#7ab8ff','#d4a0ff'].forEach((col, i) => tg.addColorStop(i/4, col));
+        c.fillStyle = tg; c.fillText('PRISMHEART', 240, 222);
+        c.globalAlpha = 1;
+      }
+    }},
+];
+function introResize(){
+  const w = Math.round(vw*dpr), h = Math.round(vh*dpr);
+  if (icv.width !== w || icv.height !== h){ icv.width = w; icv.height = h; }
+}
+function drawIntro(){
+  introResize();
+  const c = icx;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.fillStyle = '#030205'; c.fillRect(0, 0, vw, vh);
+  const capH = Math.min(230, Math.max(170, vh*0.3));
+  const sw = Math.min(vw - 24, (vh - capH - 30)*16/9, 1000), sh = sw*9/16;
+  // keep the picture and its caption together, centered on the screen
+  const ox = (vw - sw)/2, oy = Math.max(56, (vh - capH - sh)/2);
+  const cap = $('#intro-cap'), capTop = Math.round(oy + sh + 16) + 'px';
+  if (cap.style.top !== capTop){ cap.style.top = capTop; cap.style.bottom = 'auto'; }
+  const sc = INTRO[Intro.i], p = clamp(Intro.t/sc.dur, 0, 1);
+  c.save(); c.beginPath(); c.rect(ox, oy, sw, sh); c.clip(); c.translate(ox, oy); c.scale(sw/SW, sw/SW);
+  sc.draw(c, time, p);
+  const last = Intro.i === INTRO.length - 1;   // the final scene holds on the title instead of fading out
+  const fade = clamp(Math.min(Intro.t/0.8, last ? 1 : (sc.dur - Intro.t)/0.6), 0, 1);
+  c.fillStyle = `rgba(3,2,5,${1 - fade})`; c.fillRect(0, 0, SW, SH);
+  c.restore();
+  c.strokeStyle = 'rgba(138,113,72,.55)'; c.lineWidth = 1; c.strokeRect(ox + .5, oy + .5, sw - 1, sh - 1);
+}
+function introCaption(){
+  const el = $('#intro-text'), last = Intro.i === INTRO.length - 1;
+  el.classList.remove('show'); el.textContent = INTRO[Intro.i].text;
+  setTimeout(() => el.classList.add('show'), 60);
+  $('#intro-dots').innerHTML = INTRO.map((_, i) => `<i class="${i <= Intro.i ? 'on' : ''}"></i>`).join('');
+  $('#intro-next').textContent = last ? (Intro.fromTitle ? 'Back to title' : 'Begin') : 'Next \u25B8';
+}
+function playIntro(heroId, done, fromTitle = false){
+  Intro.on = true; Intro.i = 0; Intro.t = 0; Intro.hero = heroId || 'knight'; Intro.done = done; Intro.fromTitle = fromTitle;
+  // each scene lasts long enough to read its line comfortably
+  INTRO.forEach(sc => { sc.dur = Math.max(8, sc.text.length/17); });
+  $('#intro').classList.remove('hidden'); resetInput(); introCaption();
+  setMusic('keep');
+  setTimeout(() => $('#intro-next').focus({ preventScroll:true }), 60);
+}
+function introNext(){ if (!Intro.on) return; if (++Intro.i >= INTRO.length) return endIntro(); Intro.t = 0; introCaption(); }
+function endIntro(){
+  if (!Intro.on) return;
+  Intro.on = false; $('#intro').classList.add('hidden');
+  const d = Intro.done; Intro.done = null; if (d) d();
+}
+$('#intro-next').addEventListener('click', introNext);
+$('#intro-skip').addEventListener('click', endIntro);
+icv.addEventListener('pointerdown', e => { e.preventDefault(); introNext(); });
+
+/* =====================================================================
    Flow
    ===================================================================== */
 function showScreen(id){ $$('.screen').forEach(s => s.classList.toggle('hidden', s.id !== id)); }
@@ -3124,13 +3325,14 @@ function setPlaying(on){
   ['#hud', '#mm-wrap', '#hint'].forEach(s => $(s).classList.toggle('hidden', !on));
   if (!on) $('#bossbar').classList.add('hidden');
 }
-function showTitle(){ if (Music.out) Music.out.gain.setTargetAtTime(0, AC.currentTime, 0.6); Music.mood = null; mode = 'title'; setPlaying(false); showScreen('scr-title'); $('#btn-continue').classList.toggle('hidden', !loadSave()); setTimeout(() => $('#btn-new').focus(), 50); }
+function showTitle(){ if (Music.out && !Intro.on) Music.out.gain.setTargetAtTime(0, AC.currentTime, 0.6); if (!Intro.on) Music.mood = null; mode = 'title'; setPlaying(false); showScreen('scr-title'); $('#btn-continue').classList.toggle('hidden', !loadSave()); setTimeout(() => $('#btn-new').focus(), 50); }
 function showSelect(){ mode = 'select'; setPlaying(false); showScreen('scr-select'); setTimeout(() => $('.card').focus(), 50); }
 function makeHero(){ return { x:0, y:0, fx:0, fy:1, moving:false, inv:0, atkCd:0, swing:0, slam:0, searching:null, dead:false, deadT:0, kx:0, ky:0, target:null }; }
 function startNew(heroId){
   S = newState(heroId); SEEN = {}; for (const k in layerCache) delete layerCache[k];
   hero = makeHero(); mode = 'play'; showScreen(null); setPlaying(true); hudKey = '';
-  enterRoom('cells', 'start'); openStory();
+  enterRoom('cells', 'start');
+  playIntro(heroId, openStory);
 }
 function continueGame(){
   const d = loadSave(); if (!d) return showSelect();
@@ -3149,6 +3351,11 @@ function continueGame(){
    Input wiring
    ===================================================================== */
 addEventListener('keydown', e => {
+  if (Intro.on){
+    if (e.code === 'Escape'){ e.preventDefault(); endIntro(); }
+    else if (!e.repeat && ['Space','ArrowRight','KeyE'].includes(e.code)){ e.preventDefault(); introNext(); }
+    return;   // Enter activates the focused Next button natively
+  }
   if (UI.open){
     if (e.code === 'Escape'){ e.preventDefault(); dismissModal(); }
     else if (e.code === 'KeyE' && !e.repeat && UI.open === 'dialog'){ e.preventDefault(); primaryAction(); }
@@ -3222,6 +3429,7 @@ $('#btn-new').addEventListener('click', showSelect);
 $('#btn-continue').addEventListener('click', continueGame);
 $('#btn-how').addEventListener('click', () => { openModal({ kind:'help', title:'How to Play', portrait:'narrator', body:helpHTML(), actions:[{ label:'Got it', primary:true }] }); });
 $('#btn-back').addEventListener('click', showTitle);
+$('#btn-intro').addEventListener('click', () => { const pick = ['knight','sprite','golem'][Math.floor(Math.random()*3)]; playIntro(pick, () => showTitle(), true); });
 $$('.card').forEach(c => c.addEventListener('click', () => startNew(c.dataset.hero)));
 
 function resize(){
@@ -3242,7 +3450,7 @@ let last = performance.now();
 function frame(now){
   const dt = Math.min(0.05, (now - last)/1000); last = now; time += dt;
   if (mode === 'play' && room){
-    if (!UI.open) update(dt);
+    if (!UI.open && !Intro.on) update(dt);
     updateHUD();
     mmTimer -= dt; if (mmTimer <= 0){ drawMinimap(); mmTimer = 0.1; }
     const bb = $('#bossbar'), showBoss = boss && boss.active && !boss.dead && room.def.boss;
@@ -3258,12 +3466,13 @@ function frame(now){
     ta.classList.toggle('ready', !!hero.target);
   }
   render();
+  if (Intro.on){ Intro.t += dt; if (Intro.t > INTRO[Intro.i].dur && Intro.i < INTRO.length - 1) introNext(); if (Intro.on) drawIntro(); }
   if (mode === 'select') drawPreviews();
   if (UI.portrait) drawPortrait();
   requestAnimationFrame(frame);
 }
 if (/[?&]debug/.test(location.search)) window.__ph = { get S(){ return S; }, get hero(){ return hero; }, get room(){ return room; }, get boss(){ return boss; },
-  get UI(){ return UI; }, get time(){ return time; }, cam, gemCandidates, enterRoom, usePower, get marks(){ return marks; }, get rings(){ return rings; }, collectGem, resolveSearch, damageBoss, keys, input };
+  get UI(){ return UI; }, get time(){ return time; }, Intro, INTRO, cam, gemCandidates, enterRoom, usePower, get marks(){ return marks; }, get rings(){ return rings; }, collectGem, resolveSearch, damageBoss, keys, input };
 resize();
 showTitle();
 requestAnimationFrame(frame);
