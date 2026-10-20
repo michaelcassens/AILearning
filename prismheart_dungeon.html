@@ -188,6 +188,7 @@ kbd{display:inline-block;min-width:24px;padding:2px 6px;border:1px solid #5a4d63
       <span title="Gold"><span class="coin"></span><span id="gold">0</span></span>
       <span class="gems" id="gems" role="img" aria-label="Prism gems"></span>
       <span title="Healing draughts"><span class="vial"></span><span id="potions">0</span></span>
+      <span title="Rusty keys" id="keys-wrap" class="hidden"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" style="vertical-align:-2px;margin-right:3px"><circle cx="7" cy="12" r="4.5" fill="none" stroke="#e8c878" stroke-width="2.4"/><path d="M11 12h10M17 12v4M20 12v3" stroke="#e8c878" stroke-width="2.4" stroke-linecap="round"/></svg><span id="keys">0</span></span>
     </div>
   </div>
   <div id="hud-btns">
@@ -366,6 +367,7 @@ const ET = {
   bone:      { name:'Bonewalker', hp:3, speed:36, chase:66,  sight:140, dmg:1, r:10 },
   bat:       { name:'Ash Bat',    hp:1, speed:64, chase:104, sight:170, dmg:1, r:8  },
   shadeling: { name:'Shadeling',  hp:1, speed:60, chase:88,  sight:999, dmg:1, r:9  },
+  captain:   { name:'Bone Captain', hp:9, speed:38, chase:70, sight:180, dmg:2, r:12 },   // carries the Barracks Key
   wraith:    { name:'Frost Wraith', hp:4, speed:46, chase:78, sight:190, dmg:1, r:10 },   // throws ice shards
   drowned:   { name:'Drowned One',  hp:5, speed:34, chase:58, sight:150, dmg:2, r:11 },   // lunges
   thorn:     { name:'Thornling',    hp:3, speed:54, chase:88, sight:170, dmg:1, r:9  },   // rolls in bursts
@@ -378,6 +380,7 @@ const SPEAKERS = {
   narrator:  'The Hollow Keep',
   gate:      'The Prism Gate',
   vault:     'The Vault Door',
+  journal:   'A Guard’s Journal',
   unbound:   'The Sovereign Unbound',
 };
 
@@ -389,74 +392,94 @@ const SPEAKERS = {
    g  glowcap       Q  Lumen            M  Mossback          @ start
    e  enemy         b  boss             N S E W  exits       G gate/vault door  F freedom door
    < >  stairs      U  urn (color vial) I  ice wall (Ruby)   D deep water (Sapphire)   O chasm (Emerald)
-   j  frozen brazier (light with the Ruby)   l  drain lever   p  vine seed pod */
+   j  frozen brazier (light with the Ruby)   l  drain lever   p  vine seed pod
+   k  barracks door (Barracks Key)   c  cracked wall (break it to find a secret room)   x  locked chest (rusty key)
+   A  the Bone Captain   u  bunk   r  weapon rack   J  guard's journal   V  pedestal with a treasure */
 const ROOM_DEFS = {
   cells: {
-    name:'The Forgotten Cells', level:1, grid:[0,1], enemy:'shade', torchR:3.4,
+    name:'The Forgotten Cells', level:1, grid:[1,1], enemy:'shade', torchR:3.4,
     gate:{ gems:GEM_ORDER, flag:'gateOpen', speaker:'gate' },
-    exits:{ E:{to:'crypt',at:'W'}, S:{to:'mines',at:'N'}, G:{to:'throne',at:'S'} },
+    exits:{ E:{to:'crypt',at:'W'}, S:{to:'mines',at:'N'}, G:{to:'throne',at:'S'}, k:{to:'barracks',at:'E'} },
     map:[
-      '####T#####GG#####T######',
-      '#C...|.........|...B..X#',
-      '#.@..|.........|.......#',
-      '#....|....Q....|..g....#',
-      '##.|||.........|||.|||##',
-      'T......................T',
-      '#......................#',
-      '#..P.......M......P....E',
-      '#......................E',
-      '#.....e................#',
-      '##.|||.........|||.|||##',
-      '#....|.........|.......#',
-      '#.B..|..C......|...g..C#',
-      'L....|.........|......X#',
-      '#C...|.........|.....B.#',
-      '#####T#####SS#####T#####',
+      '#####T########GG#########T######',
+      '#C.....|................|....BX#',
+      '#.@....|................|......#',
+      '#......|.......Q........|...g..#',
+      '#......|................|......#',
+      '#||.||||................||||.||#',
+      '#..............................#',
+      'T..P.........................P.T',
+      '#.......C..............C.......#',
+      '#...e..........M...............#',
+      'k..............................E',
+      'k..P.......................P...E',
+      '#.........e.........x..........#',
+      '#..B........................B..#',
+      'T.......P..........P...........T',
+      '#..............................#',
+      '#||.||||................||||.||#',
+      '#......|................|......#',
+      '#.B....|.......g........|..C...#',
+      '#......|................|....x.#',
+      '#C.....|................|....BX#',
+      '#####T#########SS########T######',
     ]},
   crypt: {
-    name:'The Sunken Crypt', level:1, grid:[1,1], enemy:'bone', torchR:3.2,
-    exits:{ W:{to:'cells',at:'E'} },
+    name:'The Sunken Crypt', level:1, grid:[2,1], enemy:'bone', torchR:3.2,
+    exits:{ W:{to:'cells',at:'E'}, c:{to:'apothecary',at:'S'} },
     map:[
-      '######T#####T#####T#####',
-      '#~~....Y...#...Y....~~X#',
-      '#~.....Y...#...Y.....~.#',
-      '#......Y...#...Z.......#',
-      '#..P.............g..P..#',
-      'T......................T',
-      '#....~~~.....e.....B...#',
-      'W....~~~~.............C#',
-      'W.....~~.....P.....e...#',
-      '#......................#',
-      '#..P.......g.......P...#',
-      '#......................T',
-      '#.Y..Y..Y.....~~..Y..Y.#',
-      '#..........e..~~~......#',
-      '#B.Y..Y..Y.....~...Y.CX#',
-      '##########L#############',
+      '######T########T#######cc#######',
+      '#~~.....Y.....#.....Y.......~~X#',
+      '#~......Y.....#.....Y........~.#',
+      '#.......Y.....#.....Z..........#',
+      '#..P..........#..........g..P..#',
+      '#.............#................#',
+      'T......~~~.........e.......B...T',
+      '#.....~~~~.....................#',
+      '#......~~..........P......A....#',
+      '#..............................#',
+      'W.........e..............x.....#',
+      'W..P...........P...........P...#',
+      '#..............................#',
+      '#.Y..Y..Y......~~......Y..Y..C.#',
+      '#..........e....~~~............T',
+      '#.Y..Y..Y.......~......Y..Y....#',
+      '#..............................#',
+      '#..P........g.........e....P...#',
+      '#..............................#',
+      '#.Y..Y..Y..........Y..Y..Y..x..#',
+      '#B.......................C...X.#',
+      '######T########T#######T########',
     ]},
   mines: {
-    name:'The Crystal Mines', level:1, grid:[0,2], enemy:'bat', torchR:3.2,
-    exits:{ N:{to:'cells',at:'S'} },
+    name:'The Crystal Mines', level:1, grid:[1,2], enemy:'bat', torchR:3.2,
+    exits:{ N:{to:'cells',at:'S'}, c:{to:'shrine',at:'W'} },
     map:[
-      '#####T#####NN#####T#####',
-      '#H....R....=.....R....H#',
-      '#.....R....=......X....#',
-      '#..HH.......=......HH..#',
-      '#..H....e...=.......H..#',
-      'T...........=..........T',
-      '#.R....g....=====......#',
-      '#.R..P...........=..P..#',
-      '#...........e.....=....#',
-      '#..HHH............=..R.#',
-      '#..H..............=..RX#',
-      'T.........g.......=....T',
-      '#....R....e.......=....#',
-      '#.H..R.......B....=..H.#',
-      '#HH....C......HHH.===.H#',
-      '#################L######',
+      '#####T#########NN########T######',
+      '#H.....R.......=........R.....H#',
+      '#......R.......=.........X.....#',
+      '#..HH...........=........HH....#',
+      '#..H.....e......=.........H....#',
+      'T...............=..............T',
+      '#.R.....g.......======.........#',
+      '#.R..P...............=....P....#',
+      '#............e.......=.........#',
+      '#..HHH...............=.....R...#',
+      '#..H.................=.....R...c',
+      'T...........g........=.........c',
+      '#.....R.....e........=...x.....#',
+      '#.H...R.......B......=......H..#',
+      '#.....................=........#',
+      '#..HH.......e.........=.....HH.#',
+      '#.....P...............=..P.....#',
+      '#..R.................====......#',
+      '#..R......C.............R..X...#',
+      '#H....................x.......H#',
+      '#HH.....C.......HHH...........H#',
+      '#####T##########T#########T#####',
     ]},
   throne: {
-    name:'Throne of the Hollow Sovereign', level:1, grid:[0,0], enemy:null, torchR:2.6, boss:'sovereign',
+    name:'Throne of the Hollow Sovereign', level:1, grid:[1,0], enemy:null, torchR:2.6, boss:'sovereign',
     exits:{ S:{to:'cells',at:'G'}, '>':{to:'vault',at:'<'} },
     map:[
       '#####T#####FF#####T#####',
@@ -475,6 +498,58 @@ const ROOM_DEFS = {
       '#.........++++.........#',
       '#.........++++.........#',
       '##########SS############',
+    ]},
+
+  barracks: {
+    name:'The Guard Barracks', level:1, grid:[0,1], enemy:'bone', torchR:3.2,
+    exits:{ E:{to:'cells',at:'k'} },
+    map:[
+      '######T#####T#####T#####',
+      '#uu.uu.uu.uu....r.r.r.X#',
+      '#.....................C#',
+      '#..e........P.........x#',
+      '#......................#',
+      'T......................T',
+      '#...C......J...........#',
+      '#........P.....e.......E',
+      '#.....B................E',
+      '#......................#',
+      'T..P.........e......P..T',
+      '#......................#',
+      '#uu.uu.uu.uu......X....#',
+      '#.....................C#',
+      '#B..r.r.r.........x....#',
+      '######T#####T#####T#####',
+    ]},
+  apothecary: {
+    name:'The Forgotten Apothecary', level:1, grid:[2,0], enemy:null, torchR:2.8, secret:true, treasure:'elixir',
+    exits:{ S:{to:'crypt',at:'c'} },
+    map:[
+      '####T######T####',
+      '#..B.......B...#',
+      '#.....~~.......#',
+      '#..C...V....C..#',
+      '#.............x#',
+      '#..B...........#',
+      '#..............#',
+      '#.X..........C.#',
+      '#..............#',
+      '#######SS#######',
+    ]},
+  shrine: {
+    name:'The Hidden Shrine', level:1, grid:[2,2], enemy:null, torchR:2.8, secret:true, treasure:'shard',
+    exits:{ W:{to:'mines',at:'c'} },
+    map:[
+      '####T######T####',
+      '#H............H#',
+      '#...H......H...#',
+      '#......+++.....#',
+      'W......+V+.....#',
+      'W......+++.....#',
+      '#...H......H...#',
+      '#..x........X..#',
+      '#H............H#',
+      '####T######T####',
     ]},
 
   /* ---------------- Level 2: the Vaults beneath the Keep ---------------- */
@@ -586,11 +661,11 @@ const ROOM_DEFS = {
     ]},
 };
 const T_FLOOR=0, T_WALL=1, T_WATER=2, T_BARS=3, T_EXIT=4, T_GATE=5, T_FREE=6, T_CARPET=7, T_RAIL=8,
-      T_STAIRS=9, T_ICE=10, T_DEEP=11, T_PIT=12, T_VINE=13;
+      T_STAIRS=9, T_ICE=10, T_DEEP=11, T_PIT=12, T_VINE=13, T_LOCK=14, T_CRACK=15;
 const levelOf = id => (ROOM_DEFS[id] && ROOM_DEFS[id].level) || 1;
 const bossDone = id => id === 'heart' ? S.boss2Defeated : S.bossDefeated;
 const gateFlag = r => !!(r.def.gate && S[r.def.gate.flag]);
-const SEARCHABLE = { crate:1, barrel:1, chest:1, sarc:1, sarcZ:1, rubble:1, loose:1, urn:1 };
+const SEARCHABLE = { crate:1, barrel:1, chest:1, sarc:1, sarcZ:1, rubble:1, loose:1, urn:1, lockchest:1 };
 const SAVE_KEY = 'prismheart_save_v1';
 
 /* =====================================================================
@@ -610,10 +685,10 @@ const layerCache = {};
 /* ---------- hidden gem placement (new spot every game) ---------- */
 // wall tiles that face open floor, away from doorways and the starting cell
 function gemCandidates(id){
-  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@<>p', OBST = 'IDO';
+  const m = ROOM_DEFS[id].map, H = m.length, W = m[0].length, WALK = '.~=+ge@<>pA', OBST = 'IDO';
   const exits = [], starts = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++){
-    if ('NSEWGF<>'.includes(m[y][x])) exits.push([x, y]);
+    if ('NSEWGF<>kc'.includes(m[y][x])) exits.push([x, y]);
     if (m[y][x] === '@') starts.push([x, y]);
   }
   // flood fill from the start and every doorway, treating chests, tombs, pillars and the like as solid,
@@ -654,6 +729,14 @@ function classicGemSpots(){
   for (const g of GEM_ORDER){ const id = GEMS[g].room; ROOM_DEFS[id].map.forEach((row, y) => { const x = row.indexOf('L'); if (x >= 0) o[id] = [x, y]; }); }
   return o;
 }
+// ten rusty keys hide in random crates, barrels, tombs and rubble across the Keep, one for each locked chest
+function rollKeySpots(){
+  const spots = [];
+  for (const id of ['cells','crypt','mines','barracks']) ROOM_DEFS[id].map.forEach((row, y) => [...row].forEach((ch, x) => { if ('CBYR'.includes(ch)) spots.push(id + ':' + x + ',' + y); }));
+  const n = Object.values(ROOM_DEFS).reduce((a, d) => a + d.map.join('').split('x').length - 1, 0);
+  for (let i = spots.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [spots[i], spots[j]] = [spots[j], spots[i]]; }
+  return spots.slice(0, n);
+}
 function newState(heroId){
   const h = HEROES[heroId];
   return {
@@ -665,6 +748,8 @@ function newState(heroId){
     q2:{ met:false, vials:'none', moss:'none', chains:'none' }, vials:0, chainKills:0, vaultOpen:false,
     boss2Defeated:false, won2:false, metMoss2:false, cleared:{}, moved:{},
     lit:{}, levers:{}, pods:{}, seedsUsed:{}, seeds:{},
+    // Level 1 secrets
+    mapVer:2, keys:0, keySpots:rollKeySpots(), barracksKey:false, barracksOpen:false, cracked:{}, crackHits:{}, taken:{}, relics:{},
     stats:{ searches:0, kills:0, deaths:0 },
   };
 }
@@ -849,6 +934,14 @@ function buildRoom(id){
         case 'G': t = T_GATE; r.gateTiles.push([x,y]); r.exitAt[idx] = 'G'; (r.exits.G = r.exits.G || []).push([x,y]); break;
         case 'F': t = T_FREE; r.freeTiles.push([x,y]); break;
         case '<': t = T_STAIRS; exitTile('<'); break;
+        case 'k': if (S.barracksOpen){ t = T_EXIT; exitTile('k'); } else { t = T_LOCK; (r.exits.k = r.exits.k || []).push([x,y]); } break;
+        case 'c': if (S.cracked[id]){ t = T_EXIT; exitTile('c'); } else { t = T_CRACK; (r.exits.c = r.exits.c || []).push([x,y]); } break;
+        case 'x': obj('lockchest'); break;
+        case 'u': obj('bunk'); break;
+        case 'r': obj('rack'); break;
+        case 'J': obj('journal'); break;
+        case 'V': obj('pedestal', { item:def.treasure }); break;
+        case 'A': if (!S.barracksKey) r.spawns.push({ x:cx, y:cy, type:'captain' }); break;
         case '>': if (S.bossDefeated){ t = T_STAIRS; exitTile('>'); } else t = T_CARPET; break;
         case 'U': obj('urn'); break;
         case 'j': obj('brazier'); break;
@@ -886,7 +979,7 @@ function buildRoom(id){
     if (!open) continue;
     for (let i = 0; i < 3; i++) r.sparkles.push({ tx:x, ty:y, x:(x+rnd())*TS, y:(y+rnd())*TS, g:Math.floor(rnd()*ALL_GEMS.length), ph:rnd()*TAU, sp:1.2+rnd()*2.2 });
   }
-  if (def.enemy) for (const s of r.spawns) r.enemies.push(makeEnemy(def.enemy, s.x, s.y));
+  for (const s2 of r.spawns){ const ty = s2.type || def.enemy; if (ty) r.enemies.push(makeEnemy(ty, s2.x, s2.y)); }
   boss = (def.boss && !bossDone(id)) ? makeBoss(r.bossSpawn, def.boss) : null;
   r.layer = getLayer(r);
   return r;
@@ -914,7 +1007,7 @@ function inCalmZone(r, tx, ty){
 function gemKey(){ return ALL_GEMS.map(g => S.gems[g] ? 1 : 0).join(''); }
 function getLayer(r){
   const nCleared = Object.keys(S.cleared || {}).filter(k => k.startsWith(r.id + ':')).length + 100*Object.keys(S.levers || {}).filter(k => k.startsWith(r.id + ':')).length;
-  const key = r.id + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '') + '|' + nCleared + (S.bossDefeated ? 'b' : '');
+  const key = r.id + (S.barracksOpen ? 'o' : '') + (S.cracked[r.id] ? 'c' : '') + '|' + gemKey() + '|' + r.looseAt + (r.looseAt >= 0 && inCalmZone(r, r.looseAt % r.W, Math.floor(r.looseAt / r.W)) ? 'h' : '') + '|' + nCleared + (S.bossDefeated ? 'b' : '');
   if (layerCache[key]) return layerCache[key];
   const L = document.createElement('canvas'), Q = 2;
   L.width = r.W*TS*Q; L.height = r.H*TS*Q;
@@ -922,6 +1015,8 @@ function getLayer(r){
   for (let y = 0; y < r.H; y++) for (let x = 0; x < r.W; x++){
     const t = r.t[y][x], px = x*TS, py = y*TS, rnd = mulberry32(hashStr(r.id+':'+x+','+y));
     if (t === T_WALL) { drawWallTile(c, r, x, y); continue; }
+    if (t === T_CRACK){ drawWallTile(c, r, x, y); drawCrack(c, x, y, rnd); continue; }
+    if (t === T_LOCK){ drawFloorTile(c, px, py, rnd); continue; }
     if (t === T_ICE) { drawFloorTile(c, px, py, rnd); drawIceTile(c, r, x, y, rnd); continue; }
     if (t === T_DEEP) { drawDeepTile(c, r, x, y, rnd); continue; }
     if (t === T_PIT || t === T_VINE) { drawPitTile(c, r, x, y, rnd); if (t === T_VINE) drawVineTile(c, r, x, y, rnd); continue; }
@@ -973,6 +1068,15 @@ function getLayer(r){
   return L;
 }
 
+function drawCrack(c, x, y, rnd){
+  // the builders' mark: a crack you can spot when your light is on it
+  const px = x*TS, py = y*TS;
+  c.strokeStyle = 'rgba(15,12,16,.85)'; c.lineWidth = 1.6;
+  c.beginPath(); let cx = px + 6 + rnd()*20, cy = py + 2; c.moveTo(cx, cy);
+  for (let i = 0; i < 5; i++){ cx += (rnd() - .5)*12; cy += 6; c.lineTo(cx, cy); } c.stroke();
+  c.lineWidth = 1; c.beginPath(); c.moveTo(px + 8, py + 12); c.lineTo(px + 15, py + 17); c.lineTo(px + 23, py + 14); c.stroke();
+  c.fillStyle = 'rgba(255,240,210,.10)'; c.fillRect(px + 10, py + 18, 9, 1);
+}
 function drawIceTile(c, r, x, y, rnd){
   const px = x*TS, py = y*TS;
   const g = c.createLinearGradient(px, py - 6, px + TS, py + TS);
@@ -1438,6 +1542,46 @@ function drawObj(c, o){
       }
       break;
     }
+    case 'lockchest': {
+      drawObj(c, Object.assign({}, o, { type:'chest' }));
+      if (!done){ const x = px + 16, y = py + 18; c.fillStyle = '#7d7d86'; c.fillRect(x - 3.5, y - 2, 7, 6); c.strokeStyle = '#9a9aa2'; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y - 2, 2.6, Math.PI, 0); c.stroke(); c.fillStyle = '#1a1a1e'; c.fillRect(x - .6, y, 1.2, 2.4); }
+      break;
+    }
+    case 'bunk': {
+      shadow(c, px + 16, py + 27, 13, 3);
+      c.fillStyle = '#5a4026'; c.fillRect(px + 3, py + 4, 26, 22);
+      c.fillStyle = '#8a8478'; c.fillRect(px + 5, py + 6, 22, 18);
+      c.fillStyle = '#b0aa9a'; c.fillRect(px + 6, py + 7, 9, 5);
+      c.fillStyle = '#6e685c'; c.fillRect(px + 5, py + 15, 22, 9);
+      break;
+    }
+    case 'rack': {
+      shadow(c, px + 16, py + 28, 12, 3);
+      c.fillStyle = '#4a3420'; c.fillRect(px + 4, py + 2, 3, 26); c.fillRect(px + 25, py + 2, 3, 26); c.fillRect(px + 4, py + 6, 24, 3);
+      c.strokeStyle = '#8a8a92'; c.lineWidth = 2;
+      for (let i = 0; i < 3; i++){ c.beginPath(); c.moveTo(px + 10 + i*6, py + 6); c.lineTo(px + 10 + i*6, py + 27); c.stroke(); }
+      c.fillStyle = '#6a6a72'; for (let i = 0; i < 3; i++) c.fillRect(px + 8 + i*6, py + 9, 5, 2);
+      break;
+    }
+    case 'journal': {
+      shadow(c, px + 16, py + 26, 12, 3);
+      c.fillStyle = '#4a3420'; c.fillRect(px + 4, py + 12, 24, 12); c.fillRect(px + 6, py + 24, 3, 5); c.fillRect(px + 23, py + 24, 3, 5);
+      c.fillStyle = '#e8dcc0'; c.fillRect(px + 9, py + 8, 14, 9);
+      c.fillStyle = '#7a1e2a'; c.fillRect(px + 15.5, py + 8, 1, 9);
+      c.strokeStyle = 'rgba(80,60,40,.6)'; c.lineWidth = .8; for (let i = 0; i < 3; i++){ c.beginPath(); c.moveTo(px + 10, py + 10 + i*2.5); c.lineTo(px + 14.5, py + 10 + i*2.5); c.stroke(); }
+      break;
+    }
+    case 'pedestal': {
+      const x = px + 16, y = py + 20, taken = !!S.taken[o.key];
+      shadow(c, x, y + 9, 11, 3);
+      c.fillStyle = '#6a6a72'; c.fillRect(x - 10, y + 2, 20, 6); c.fillStyle = '#85858e'; c.fillRect(x - 7, y - 8, 14, 11); c.fillStyle = '#9a9aa2'; c.fillRect(x - 9, y - 10, 18, 3);
+      if (!taken){
+        const bob = Math.sin(time*2)*1.5;
+        if (o.item === 'elixir'){ c.fillStyle = '#f2c14e'; c.beginPath(); c.ellipse(x, y - 17 + bob, 4.5, 5.5, 0, 0, TAU); c.fill(); c.fillStyle = '#fff3c0'; c.fillRect(x - 1.5, y - 25 + bob, 3, 4); c.fillStyle = '#ffffff'; c.fillRect(x - 2, y - 19 + bob, 1.4, 2); }
+        else { const g = c.createLinearGradient(x - 5, y - 26, x + 5, y - 10); g.addColorStop(0, '#ff7aa2'); g.addColorStop(.5, '#7dffc4'); g.addColorStop(1, '#7ab8ff'); c.fillStyle = g; c.beginPath(); c.moveTo(x, y - 27 + bob); c.lineTo(x + 5, y - 15 + bob); c.lineTo(x, y - 11 + bob); c.lineTo(x - 5, y - 15 + bob); c.closePath(); c.fill(); c.fillStyle = 'rgba(255,255,255,.8)'; c.fillRect(x - 1, y - 24 + bob, 1.4, 6); }
+      }
+      break;
+    }
     case 'brazier': {
       const x = px + 16, y = py + 18, lit = !!S.lit[o.key];
       shadow(c, x, y + 10, 10, 3);
@@ -1564,6 +1708,15 @@ function drawGateAndDoors(c){
       g.addColorStop(0, 'rgba(255,240,190,.2)'); g.addColorStop(1, 'rgba(255,250,225,1)'); c.fillStyle = g; c.fillRect(x0, y0, w, TS);
     }
   }
+  if (r.exits.k && !S.barracksOpen){
+    const [kx] = r.exits.k[0], ky = Math.min(...r.exits.k.map(q => q[1])), px = kx*TS, py = ky*TS, h = r.exits.k.length*TS;
+    c.fillStyle = '#2a2622'; c.fillRect(px, py - 2, TS, h + 4);
+    c.fillStyle = '#5a4630'; c.fillRect(px + 3, py, TS - 6, h);
+    c.fillStyle = '#3a3a40'; c.fillRect(px + 3, py + 8, TS - 6, 3); c.fillRect(px + 3, py + h - 11, TS - 6, 3);
+    for (let i = 0; i < 4; i++){ c.fillStyle = '#6a6a72'; c.fillRect(px + 6 + (i%2)*16, py + 4 + Math.floor(i/2)*(h - 10), 3, 3); }
+    c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(px + TS - 9, py + h/2, 3.5, 0, TAU); c.fill();
+    c.fillStyle = '#1a1410'; c.fillRect(px + TS - 10, py + h/2 - 1, 2, 4);
+  }
   if (r.sealed && r.exits.S){
     for (const [x, y] of r.exits.S){ const px = x*TS, py = y*TS; for (let i = 0; i < 4; i++){ c.fillStyle = '#2b2b30'; c.fillRect(px+3+i*8, py, 3, TS); c.fillStyle = '#80808a'; c.fillRect(px+3+i*8, py, 1, TS); } c.fillStyle = '#3a3a40'; c.fillRect(px, py+4, TS, 3); }
   }
@@ -1609,6 +1762,7 @@ function gatherLights(){
   for (const n of r.npcs){ const x = (n.x+.5)*TS, y = (n.y+.5)*TS; L.push(n.type === 'lumen' ? { x, y, r:2.8*TS, i:0.85 } : { x, y:y-10, r:2.2*TS, i:0.6 }); }
   for (const cp of r.caps) if (!S.capsFound[cp.key]) L.push({ x:(cp.x+.5)*TS, y:(cp.y+.5)*TS, r:1.5*TS, i:0.45 });
   for (const pd of r.pods) if (!S.pods[pd.key]) L.push({ x:(pd.x+.5)*TS, y:(pd.y+.5)*TS, r:0.9*TS, i:0.3 });
+  for (const o of r.objs) if (o.type === 'pedestal' && !S.taken[o.key]) L.push({ x:(o.x+.5)*TS, y:o.y*TS, r:2.4*TS, i:0.75 });
   for (const o of r.objs) if (o.type === 'brazier' && S.lit[o.key]) L.push({ x:(o.x+.5)*TS, y:o.y*TS + 4, r:3.4*TS, i:0.9 });
   if (r.gateTiles.length && gateFlag(r)){ const [gx, gy] = r.gateTiles[0]; L.push({ x:(gx+1)*TS, y:(gy+.8)*TS, r:3.5*TS, i:0.9 }); }
   if (r.freeTiles.length && bossDone(r.id)){ const [fx, fy] = r.freeTiles[0]; L.push({ x:(fx+1)*TS, y:(fy+1)*TS, r:6*TS, i:1 }); }
@@ -1685,12 +1839,13 @@ function toast(msg, ms = 3000){
 let hudKey = '';
 function updateHUD(){
   if (!S) return;
-  const key = [S.hp, S.maxHp, S.gold, S.potions, gemKey()].join('|');
+  const key = [S.hp, S.maxHp, S.gold, S.potions, gemKey(), S.keys, S.stats.keysFound].join('|');
   if (key === hudKey) return; hudKey = key;
   let h = '';
   for (let i = 0; i < S.maxHp; i++) h += `<span class="heart${i < S.hp ? '' : ' empty'}">&#9829;</span>`;
   $('#hearts').innerHTML = h; $('#hearts').setAttribute('aria-label', `Health ${S.hp} of ${S.maxHp}`);
   $('#gold').textContent = S.gold;
+  $('#keys').textContent = S.keys; $('#keys-wrap').classList.toggle('hidden', !(S.keys || S.stats.keysFound));
   $('#potions').textContent = S.potions; $('#t-pot-n').textContent = S.potions;
   const shown = S.visited.vault ? ALL_GEMS : GEM_ORDER;
   $('#gems').innerHTML = shown.map(g => `<span class="gem-ico${S.gems[g] ? ' on' : ''}" style="${S.gems[g] ? `background:${GEMS[g].color};color:${GEMS[g].color}` : ''}"></span>`).join('');
@@ -1793,6 +1948,9 @@ function openBag(){
       ${S.visited.vault ? `<p class="si-desc" style="margin:6px 0 0">In the Vaults, the Ruby melts ice once the room's braziers are lit, the Sapphire stills deep water once the drain levers are pulled, and the Emerald grows a vine bridge from two seed pods.</p>` : ''}
       <h3 style="margin:14px 0 6px;font-size:16px">Healing Draughts: ${S.potions}</h3>
       <h3 style="margin:14px 0 4px;font-size:16px">Gear</h3>${gear}
+      ${S.keys || S.barracksKey ? `<div class="item-line"><div class="si-icon"><svg viewBox="0 0 24 24"><circle cx="7" cy="12" r="4.5" fill="none" stroke="#e8c878" stroke-width="2.4"/><path d="M11 12h10M17 12v4M20 12v3" stroke="#e8c878" stroke-width="2.4" stroke-linecap="round"/></svg></div><div><b>Keys</b><div class="si-desc">${S.keys} rusty ${S.keys === 1 ? 'key' : 'keys'} (each opens one locked chest)${S.barracksKey ? '. The heavy Barracks Key.' : '.'}</div></div></div>` : ''}
+      ${S.items.elixir ? `<div class="item-line"><div class="si-icon">${itemIcon('potion')}</div><div><b>Elixir of Dawn</b><div class="si-desc">If you would fall, it revives you once with full hearts.</div></div></div>` : ''}
+      ${S.relics.shard ? `<h3 style="margin:14px 0 4px;font-size:16px">Relics</h3><div class="item-line"><div class="si-icon">${itemIcon('lens')}</div><div><b>The First Prism Shard</b><div class="si-desc">A sliver of the great crystal that once colored all of Lumenor, hidden by the Keep’s builders so the light would never be truly lost. It hums with faint festival music.</div></div></div>` : ''}
       ${S.vials && S.q2.vials !== 'done' ? `<div class="item-line"><div class="si-icon">${itemIcon('potion')}</div><div><b>Vials of Stolen Color (${Math.min(3, S.vials)}/3)</b><div class="si-desc">Bright color the Sovereign locked away. Lumen will know what to do.</div></div></div>` : ''}
       ${S.locket && S.q.locket !== 'done' ? `<div class="item-line"><div class="si-icon">${itemIcon('locket')}</div><div><b>Silver Locket</b><div class="si-desc">Lumen’s keepsake. Bring it back to them.</div></div></div>` : ''}`,
     actions:[{ label:`Drink draught (${S.potions})`, disabled: S.potions < 1 || S.hp >= S.maxHp, fn:() => { usePotion(); openBag(); } }, { label:'Close', primary:true }] });
@@ -1824,7 +1982,15 @@ function questsHTML(){
     ]);
     return h + one;
   }
-  let h = one;
+  const lockTotal = Object.values(ROOM_DEFS).reduce((a, d) => a + d.map.join('').split('x').length - 1, 0);
+  const lockOpen = Object.keys(S.searched).filter(k => { const [id, xy] = k.split(':'), [x, y] = xy.split(',').map(Number); return ROOM_DEFS[id] && ROOM_DEFS[id].map[y] && ROOM_DEFS[id].map[y][x] === 'x'; }).length;
+  const secrets = ['apothecary','shrine'].filter(id => S.visited[id]).length;
+  const secretsHTML = `<div class="q"><h3>Secrets of the Keep</h3><div class="meta">Optional discoveries.</div><ul>
+    <li class="${S.barracksOpen ? 'done' : ''}">${S.barracksOpen ? '✓' : '•'} Open the Guard Barracks</li>
+    <li class="${secrets === 2 ? 'done' : ''}">${secrets === 2 ? '✓' : '•'} Hidden rooms found: ${secrets}/2</li>
+    <li class="${lockOpen === lockTotal ? 'done' : ''}">${lockOpen === lockTotal ? '✓' : '•'} Locked chests opened: ${lockOpen}/${lockTotal}</li>
+    <li class="${S.relics.shard ? 'done' : ''}">${S.relics.shard ? '✓' : '•'} Relics found: ${S.relics.shard ? 1 : 0}/1</li></ul></div>`;
+  let h = one + secretsHTML;
   if (!S.q.met) return h + `<div class="q"><h3>Side quests</h3><div class="meta">Speak with Lumen, the lantern spirit in the Forgotten Cells, to learn of tasks that pay gold.</div></div>`;
   return h + sideHTML(S.q, [
     ['locket', 'Lumen’s Lost Locket', 'Find Lumen’s silver locket somewhere in the Sunken Crypt.', S.locket ? 'Found' : 'Not found', 35, S.locket],
@@ -1850,6 +2016,7 @@ function helpHTML(){
   <li>Gems hide inside the walls themselves. Watch for a faint glimmer in the stone.</li>
   <li>In the Vaults, your Prism Gems have powers, but each needs help first: light the braziers before melting ice, pull the levers before calming deep water, and gather seed pods before growing vines.</li>
   <li>Standing still makes you harder for creatures to notice.</li>
+  <li>Rusty keys hide in crates, barrels, tombs and rubble. Each one opens a locked chest. Cracked walls may hide something: strike them.</li>
   <li>Quests from Lumen pay gold. Spend it with Mossback to prepare for the final battle.</li>
   <li>There is no time limit. If you fall, you wake in your cell with a little less gold.</li></ul>`;
 }
@@ -1872,7 +2039,8 @@ function lumenHint(){
     const missing = GEAR.filter(i => !S.items[i.id]).map(i => i.name);
     return missing.length ? `The gate is open. You could face the Sovereign now&hellip; but Mossback still has ${missing.join(', ')}. Their shadow ward turns aside ordinary steel. Only prism light pierces it.` : 'You are as ready as any hero has ever been. Go, and bring back the color.';
   }
-  if (!S.gems.ruby) return `Every room hides one gem inside its walls. The ruby is here in the Cells. I have seen a red glimmer along the ${gemArea('cells')} walls.`;
+  const rumor = !S.barracksKey ? ' Oh, and the Bone Captain who haunts the Sunken Crypt still carries the key to the old guard barracks, just west of here.' : '';
+  if (!S.gems.ruby) return rumor.trim() && Math.random() < 0.5 ? rumor.trim().replace('Oh, and the', 'The') : `Every room hides one gem inside its walls. The ruby is here in the Cells. I have seen a red glimmer along the ${gemArea('cells')} walls.`;
   if (!S.gems.sapphire) return `The sapphire waits in the Sunken Crypt, to the east. Search the ${gemArea('crypt')} walls and watch for blue light in the stone.`;
   if (!S.gems.emerald) return `The emerald sleeps in the Crystal Mines, to the south. The crystals there are dull and gray now&hellip; but one stone along the ${gemArea('mines')} walls is not.`;
   return 'Keep searching. Light finds what darkness hides.';
@@ -2038,7 +2206,7 @@ function tileAt(px, py){ const tx = Math.floor(px/TS), ty = Math.floor(py/TS); r
 function solidTile(tx, ty, isEnemy){
   if (tx < 0 || ty < 0 || tx >= room.W || ty >= room.H) return true;
   const t = room.t[ty][tx];
-  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_DEEP || t === T_PIT) return true;
+  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_DEEP || t === T_PIT || t === T_LOCK || t === T_CRACK) return true;
   if (t === T_GATE) return isEnemy || !gateFlag(room);
   if (t === T_FREE) return isEnemy || !bossDone(room.id);
   if (t === T_STAIRS) return isEnemy;
@@ -2049,7 +2217,8 @@ function solidTile(tx, ty, isEnemy){
 function shotBlocked(tx, ty){
   if (tx < 0 || ty < 0 || tx >= room.W || ty >= room.H) return true;
   const t = room.t[ty][tx];
-  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_EXIT || t === T_STAIRS) return true;
+  if (t === T_WALL || t === T_BARS || t === T_ICE || t === T_EXIT || t === T_STAIRS || t === T_LOCK) return true;
+  if (t === T_CRACK){ crackHit(tx, ty, 1); return true; }
   if (t === T_GATE) return !gateFlag(room);
   if (t === T_FREE) return !bossDone(room.id);
   return room.solidObj[ty*room.W + tx] === 1;
@@ -2164,7 +2333,7 @@ function reachGoals(fromIdx, toIdx){
   const blockedAt = i => {
     if (i === toIdx) return true;
     const x = i % W, y = (i/W)|0, t = room.t[y][x];
-    if (t === T_WALL || t === T_BARS || t === T_GATE || t === T_FREE || t === T_EXIT || t === T_STAIRS || t === T_ICE || t === T_DEEP || t === T_PIT) return true;
+    if (t === T_WALL || t === T_BARS || t === T_GATE || t === T_FREE || t === T_EXIT || t === T_STAIRS || t === T_ICE || t === T_DEEP || t === T_PIT || t === T_LOCK || t === T_CRACK) return true;
     return i !== fromIdx && room.solidObj[i] === 1;
   };
   const start = Math.floor(hero.y/TS)*W + Math.floor(hero.x/TS), q = [start]; reach[start] = 1;
@@ -2194,7 +2363,17 @@ function findInteract(){
     if (sc < bs){ bs = sc; best = { kind, ref, x:cx, y:cy, label }; }
   };
   const L = { crate:'Search crate', barrel:'Search barrel', chest:'Open chest', sarc:'Search tomb', sarcZ:'Search tomb', rubble:'Dig through rubble', loose:'Loose stone?', urn:'Open urn' };
-  for (const o of room.objs) if (SEARCHABLE[o.type] && !S.searched[o.key]) consider('search', o, (o.x+.5)*TS, (o.y+.5)*TS, L[o.type]);
+  for (const o of room.objs){
+    if (!SEARCHABLE[o.type] || S.searched[o.key]) continue;
+    if (o.type === 'lockchest') consider('lockchest', o, (o.x+.5)*TS, (o.y+.5)*TS, S.keys > 0 ? `Unlock chest (keys: ${S.keys})` : 'Locked chest (needs a key)');
+    else consider('search', o, (o.x+.5)*TS, (o.y+.5)*TS, L[o.type]);
+  }
+  for (const o of room.objs){
+    if (o.type === 'journal') consider('journal', o, (o.x+.5)*TS, (o.y+.5)*TS, 'Read journal');
+    if (o.type === 'pedestal' && !S.taken[o.key]) consider('pedestal', o, (o.x+.5)*TS, (o.y+.5)*TS, o.item === 'elixir' ? 'Take the elixir' : 'Take the shard');
+  }
+  if (room.exits.k && !S.barracksOpen) for (const [kx, ky] of room.exits.k) consider('door', null, (kx+.5)*TS, (ky+.5)*TS, S.barracksKey ? 'Unlock door (Barracks Key)' : 'Locked door');
+  if (room.exits.c && !S.cracked[room.id]) for (const [cx2, cy2] of room.exits.c) consider('crack', null, (cx2+.5)*TS, (cy2+.5)*TS, 'Cracked wall (strike it)');
   for (const o of room.objs){
     if (o.type === 'brazier' && !S.lit[o.key]) consider('brazier', o, (o.x+.5)*TS, (o.y+.5)*TS, 'Light brazier (Ruby)');
     if (o.type === 'lever' && !S.levers[o.key]) consider('lever', o, (o.x+.5)*TS, (o.y+.5)*TS, 'Pull lever');
@@ -2218,7 +2397,42 @@ function doInteract(it){
   else if (it.kind === 'gate') useGate();
   else if (it.kind === 'power') usePower(it.ref);
   else if (it.kind === 'brazier') lightBrazier(it.ref);
+  else if (it.kind === 'lockchest'){
+    if (S.keys < 1){ toast('The chest is locked tight. Rusty keys are hidden in crates, barrels, tombs and rubble around the Keep.', 4000); SFX.empty(); return; }
+    tone(900, .08, 'square', .03); tone(600, .1, 'square', .03, 0, .08);
+    floatText((it.ref.x+.5)*TS, it.ref.y*TS - 6, 'Click!', '#e8c878');
+    hero.searching = { obj:it.ref, t:0, dur:0.5 };
+  }
+  else if (it.kind === 'journal') readJournal();
+  else if (it.kind === 'pedestal') takeTreasure(it.ref);
+  else if (it.kind === 'door'){
+    if (!S.barracksKey){ toast('A heavy iron door, locked fast. The Bone Captain who haunts the Sunken Crypt is said to carry its key.', 4500); SFX.empty(); return; }
+    S.barracksOpen = true; SFX.door(); tone(500, .12, 'square', .03, -200); shake = 0.3;
+    for (const [kx, ky] of room.exits.k){ room.t[ky][kx] = T_EXIT; room.exitAt[ky*room.W + kx] = 'k'; }
+    room.layer = getLayer(room); toast('The Barracks Key turns with a groan. The door swings open.'); save();
+  }
+  else if (it.kind === 'crack') toast('The stone here is cracked, as if something was walled up behind it. Strike it a few times.', 3500);
   else if (it.kind === 'lever') pullLever(it.ref);
+}
+function readJournal(){
+  dialog('journal', [
+    '<i>Day 1.</i> The new ruler arrived without a single soldier. They simply walked through the gate, and the gate let them. The banners over the barracks went gray by supper.',
+    '<i>Day 9.</i> Orders came to seal the old cells. The Captain says the Keep’s builders hid something in these walls, “lights that would not go out.” We are to search, but every stone we pry loose is just stone.',
+    '<i>Day 30.</i> The Captain no longer sleeps. None of us remember the color of our own doors. If anyone reads this: the builders marked their hiding places with <b>cracked stones</b>. Strike them. There is more to this Keep than the Sovereign knows.',
+  ]);
+}
+function takeTreasure(o){
+  S.taken[o.key] = 1; SFX.gem(); flash = { t:0.5, max:0.5, c:'255,240,200' };
+  burst((o.x+.5)*TS, o.y*TS, 60, o.item === 'elixir' ? ['#f2c14e','#fff3c0','#ffffff'] : rainbow, { speed:120, glow:true, life:1.3, grav:-20 });
+  if (o.item === 'elixir'){
+    S.items.elixir = true;
+    dialog('narrator', ['<b>The Elixir of Dawn.</b> A vial of liquid sunrise, brewed by the Keep’s last apothecary before the gray came.<br><br>If you would fall, it pours itself over you and you rise again with full hearts. It works only once.']);
+  } else {
+    S.relics.shard = true;
+    dialog('narrator', ['<b>The First Prism Shard.</b> A sliver of the great crystal that once colored all of Lumenor, warm as sunlight in your hand.',
+      'When the Sovereign came, the builders of the Keep chipped this shard from the Prism and hid it here, so that one day a hero would know the light was never truly lost. Holding it, you hear faint music, like a festival far away.']);
+  }
+  save();
 }
 function lightBrazier(o){
   if (!S.gems.ruby){ toast('The brazier is crusted with frost. Something hot might light it.'); return; }
@@ -2278,9 +2492,15 @@ function usePower(ref){
 }
 function addGold(n, x, y){ S.gold += n; floatText(x, y, `+${n} gold`, '#ffd76a'); SFX.coin(); burst(x, y, 10, ['#ffd76a','#fff3b0'], { speed:60, glow:true, life:.6 }); }
 function lootFor(o){
+  const base = lootBase(o);
+  if (S.keySpots && S.keySpots.includes(o.key)) return Object.assign({}, base, { rkey:1 });
+  return base;
+}
+function lootBase(o){
   const rnd = mulberry32(hashStr('loot' + o.key)), r = rnd();
   switch (o.type){
     case 'chest':  return { gold:10 + Math.floor(rnd()*7) };
+    case 'lockchest': return r < .35 ? { gold:16 + Math.floor(rnd()*8), potion:1 } : { gold:18 + Math.floor(rnd()*10) };
     case 'crate':  return r < .55 ? { gold:2 + Math.floor(rnd()*4) } : r < .7 ? { potion:1 } : {};
     case 'barrel': return r < .45 ? { gold:1 + Math.floor(rnd()*4) } : r < .62 ? { potion:1 } : {};
     case 'sarc':   return r < .6 ? { gold:4 + Math.floor(rnd()*6) } : {};
@@ -2294,7 +2514,8 @@ function lootFor(o){
 function resolveSearch(o){
   S.searched[o.key] = 1; S.stats.searches++;
   if (o.type === 'rubble') room.solidObj[o.y*room.W + o.x] = 0;   // dug through: you can walk over it now
-  if (o.type === 'chest'){ o.openAt = time; tone(140,.35,'triangle',.05,-60); tone(90,.25,'sawtooth',.02,-20,.05); }
+  if (o.type === 'lockchest') S.keys = Math.max(0, S.keys - 1);   // the key is used once the lock actually opens
+  if (o.type === 'chest' || o.type === 'lockchest'){ o.openAt = time; tone(140,.35,'triangle',.05,-60); tone(90,.25,'sawtooth',.02,-20,.05); }
   const cx = (o.x+.5)*TS, cy = (o.y+.5)*TS, loot = lootFor(o);
   burst(cx, cy, 12, ['#8a7a66','#5e5245','#b0a090'], { speed:50, life:.6 });
   if (loot.gem){ collectGem(loot.gem, cx, cy); return; }
@@ -2304,6 +2525,11 @@ function resolveSearch(o){
     S.vials++; got = true; floatText(cx, cy - 18, 'Vial of stolen color!', '#ffffff');
     burst(cx, cy - 8, 40, rainbow, { speed:90, glow:true, life:1.1, grav:-30 }); SFX.quest();
     toast(S.q2.met ? `A vial of stolen color! (${Math.min(3, S.vials)}/3) Lumen will want to see it.` : `A vial of stolen color! (${Math.min(3, S.vials)}/3) Someone down here may know what it is.`);
+  }
+  if (loot.rkey){
+    S.keys++; got = true; floatText(cx, cy - 26, 'Rusty Key!', '#e8c878'); SFX.pick();
+    if (!S.stats.keysFound){ setTimeout(() => toast('A rusty key! It will open one of the locked chests in the Keep.', 4000), 300); }
+    S.stats.keysFound = (S.stats.keysFound || 0) + 1;
   }
   if (loot.gold){ addGold(loot.gold, cx, cy - 4); got = true; }
   if (loot.potion){ S.potions++; got = true; floatText(cx, cy - 18, '+1 Healing Draught', '#ff8fb0'); SFX.pick(); }
@@ -2353,6 +2579,14 @@ function hurtHero(dmg, sx, sy){
   hero.kx = Math.cos(a)*220*kb; hero.ky = Math.sin(a)*220*kb;
   floatText(hero.x, hero.y - 26, `-${dmg}`, '#ff6b97');
   burst(hero.x, hero.y, 10, ['#ff6b97','#ffffff'], { speed:70, life:.5 });
+  if (S.hp <= 0 && S.items.elixir){
+    S.items.elixir = false; S.hp = S.maxHp; hero.inv = 2.2; SFX.potion(); SFX.gem();
+    flash = { t:0.8, max:0.8, c:'255,226,150' };
+    burst(hero.x, hero.y - 6, 80, ['#f2c14e','#fff3c0','#ffffff'], { speed:150, glow:true, life:1.2, grav:-40 });
+    floatText(hero.x, hero.y - 30, 'Elixir of Dawn!', '#ffe08a', true);
+    toast('The Elixir of Dawn pours over you like sunrise. You rise again with full hearts!', 4500);
+    save(); return;
+  }
   if (S.hp <= 0){ S.hp = 0; heroDie(); }
 }
 function shieldEffect(){
@@ -2407,6 +2641,27 @@ function hitArea(range, minDot, dmg, kb){
     if (d < range + boss.r && (dot >= minDot - 0.1 || d < boss.r)) damageBoss(dmg);
   }
 }
+// cracked walls give way after a few blows (a Golem slam counts triple)
+function crackHit(tx, ty, power){
+  if (!room.exits.c || S.cracked[room.id] || room.t[ty][tx] !== T_CRACK) return;
+  if (hero.crackCd > 0) return;
+  hero.crackCd = 0.25;
+  S.crackHits[room.id] = (S.crackHits[room.id] || 0) + power;
+  burst((tx+.5)*TS, (ty+.6)*TS, 10, ['#8a8a92','#5a5651','#b0a090'], { speed:70, life:.5 });
+  tone(120, .1, 'square', .04, -40); shake = Math.max(shake, 0.1);
+  if (S.crackHits[room.id] < 3){ floatText((tx+.5)*TS, ty*TS + 6, 'Crack!', '#d8c8a8'); return; }
+  S.cracked[room.id] = true;
+  for (const [x, y] of room.exits.c){ room.t[y][x] = T_EXIT; room.exitAt[y*room.W + x] = 'c'; burst((x+.5)*TS, (y+.5)*TS, 24, ['#8a8a92','#5a5651','#b0a090','#ffe9a8'], { speed:110, life:.8 }); }
+  room.layer = getLayer(room); SFX.door(); shake = 0.4;
+  toast('The cracked wall crumbles away, revealing a hidden passage!', 4000); save();
+}
+function crackInFront(power, around){
+  const dirs = around ? [[1,0],[-1,0],[0,1],[0,-1]] : [[hero.fx, hero.fy]];
+  for (const [dx, dy] of dirs) for (const d of [16, 30, 42]){
+    const tx = Math.floor((hero.x + dx*d)/TS), ty = Math.floor((hero.y + dy*d)/TS);
+    if (ty >= 0 && tx >= 0 && ty < room.H && tx < room.W && room.t[ty][tx] === T_CRACK){ crackHit(tx, ty, power); return; }
+  }
+}
 function doAttack(){
   const H = HEROES[S.heroId], dmg = heroAtk();
   hero.atkCd = H.cd;
@@ -2418,10 +2673,12 @@ function doAttack(){
     burst(hero.x, hero.y + 8, 18, ['#8a7a66','#b0a090','#ffffff'], { speed:110, life:.45, grav:80 });
     hero.slamR = S.items.blade2 ? 90 : S.items.blade ? 72 : 54;
     hitArea(hero.slamR, -1, dmg, 340);
+    crackInFront(3, true);
   } else {
     hero.swing = 0.18; SFX.swing();
     hero.swingR = S.items.blade2 ? 38 : S.items.blade ? 30 : 22;
     hitArea(S.items.blade2 ? 60 : S.items.blade ? 50 : 40, S.items.blade2 ? -0.1 : 0.2, dmg, 240);
+    crackInFront(1, false);
   }
 }
 function updateBolts(dt){
@@ -2441,6 +2698,13 @@ function updateBolts(dt){
 }
 function killEnemy(e){
   e.dead = true; S.stats.kills++;
+  if (e.type === 'captain' && !S.barracksKey){
+    S.barracksKey = true; SFX.quest();
+    floatText(e.x, e.y - 30, 'Barracks Key!', '#e8c878', true);
+    burst(e.x, e.y, 30, ['#e8c878','#ffffff'], { speed:90, glow:true, life:1 });
+    setTimeout(() => toast('The Bone Captain crumbles and drops a heavy iron key: the key to the Guard Barracks, west of the Cells.', 5000), 400);
+    save();
+  }
   burst(e.x, e.y, 22, ['#55555c','#8a8a92','#2a2a30'], { speed:80, life:.8, grav:-20 });
   if (curLevel() === 1 && S.q.shadows === 'active'){ S.shadowKills++; if (S.shadowKills === 6) toast('Shadows banished! Return to Lumen for your reward.'); }
   if (curLevel() === 2 && S.q2.chains === 'active'){ S.chainKills++; if (S.chainKills === 8) toast('The Vault guards are broken! Return to Lumen for your reward.'); }
@@ -2758,7 +3022,7 @@ function update(dt){
     }
   }
   // combat & interaction
-  hero.atkCd -= dt; hero.swing -= dt; hero.inv -= dt;
+  hero.atkCd -= dt; hero.swing -= dt; hero.inv -= dt; hero.crackCd = (hero.crackCd || 0) - dt;
   if ((keys.Space || keys.KeyJ || keys.KeyZ || touchAttack) && hero.atkCd <= 0 && !hero.searching) doAttack();
   hero.target = hero.searching ? null : findInteract();
   if (input.interact){ input.interact = false; if (hero.target && !hero.searching) doInteract(hero.target); }
@@ -2820,6 +3084,9 @@ function render(){
     if (e.type === 'shade') drawShade(ctx, e.x, e.y, time, e);
     else if (e.type === 'shadeling') drawShade(ctx, e.x, e.y, time, e, 0.8);
     else if (e.type === 'bone') drawBone(ctx, e.x, e.y, time, e);
+    else if (e.type === 'captain'){ ctx.save(); ctx.translate(e.x, e.y); ctx.scale(1.35, 1.35); drawBone(ctx, 0, 0, time, e);
+      ctx.fillStyle = '#6a6a72'; ctx.beginPath(); ctx.arc(0, -12, 6.5, Math.PI, 0); ctx.fill(); ctx.fillRect(-7, -13, 14, 2); ctx.fillStyle = '#8a8a92'; ctx.fillRect(-1, -20, 2, 5);
+      ctx.fillStyle = '#4a4a50'; ctx.beginPath(); ctx.ellipse(-9, 2, 4, 6, 0, 0, TAU); ctx.fill(); ctx.restore(); }
     else if (e.type === 'wraith') drawWraith(ctx, e.x, e.y, time, e);
     else if (e.type === 'drowned') drawDrowned(ctx, e.x, e.y, time, e);
     else if (e.type === 'thorn') drawThorn(ctx, e.x, e.y, time, e);
@@ -3038,35 +3305,42 @@ function drawOverlays(){
 
 /* ---------- minimap ---------- */
 const MM_COL = { '#':'#6d6d75', T:'#6d6d75', L:'#6d6d75', '|':'#3d3d44', '~':'#2b5560', N:'#d8c48a', S:'#d8c48a', E:'#d8c48a', W:'#d8c48a', F:'#ffe9a8', '+':'#4a4650',
-  C:'#8a5a32', B:'#8a5a32', X:'#c9a24a', Y:'#7b766d', Z:'#7b766d', R:'#7b766d', P:'#8a8a90', H:'#8a8a90', K:'#5a5a60', U:'#7b7b84' };
+  C:'#8a5a32', B:'#8a5a32', X:'#c9a24a', Y:'#7b766d', Z:'#7b766d', R:'#7b766d', P:'#8a8a90', H:'#8a8a90', K:'#5a5a60', U:'#7b7b84', x:'#e0b84a', u:'#6b5a44', r:'#7b766d', J:'#c9b27a', V:'#e0c8ff', A:'#5b4834' };
 let mmTimer = 0;
 function drawMinimap(){
   const lvl = curLevel(), ids = Object.keys(ROOM_DEFS).filter(id => levelOf(id) === lvl);
   const cols = Math.max(...ids.map(id => ROOM_DEFS[id].grid[0])) + 1, rows = Math.max(...ids.map(id => ROOM_DEFS[id].grid[1])) + 1;
-  // a three-wide map is drawn a little smaller on narrow phones so it clears the HUD buttons
-  const p = mmBig ? (vw < 480 && cols > 2 ? 4 : 5) : (vw < 480 && cols > 2 ? 1.5 : 2), RW = 24, RH = 16, gap = mmBig ? 10 : 5, pad = 2;
-  const w = pad*2 + cols*RW*p + (cols - 1)*gap, h = pad*2 + rows*RH*p + (rows - 1)*gap;
+  const dims = id => [ROOM_DEFS[id].map[0].length, ROOM_DEFS[id].map.length];
+  const CW = Math.max(...ids.map(id => dims(id)[0])), CH = Math.max(...ids.map(id => dims(id)[1]));
+  // tiles per pixel chosen so the whole level fits a small box (and clears the HUD on narrow phones)
+  const small = vw < 480 ? 104 : 150, p = mmBig ? Math.min(5, 360/(cols*CW)) : Math.min(2, small/(cols*CW)), gap = mmBig ? 10 : 5, pad = 2;
+  const w = Math.ceil(pad*2 + cols*CW*p + (cols - 1)*gap), h = Math.ceil(pad*2 + rows*CH*p + (rows - 1)*gap);
   if (mmc._w !== w || mmc._h !== h || mmc._d !== dpr){ mmc.width = w*dpr; mmc.height = h*dpr; mmc.style.width = w + 'px'; mmc.style.height = h + 'px'; mmc._w = w; mmc._h = h; mmc._d = dpr; }
   const c = mctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
-  const org = id => { const g = ROOM_DEFS[id].grid; return [pad + g[0]*(RW*p + gap), pad + g[1]*(RH*p + gap)]; };
+  const org = id => { const g = ROOM_DEFS[id].grid, [RW, RH] = dims(id); return [pad + g[0]*(CW*p + gap) + (CW - RW)*p/2, pad + g[1]*(CH*p + gap) + (CH - RH)*p/2]; };
+  const shown = id => S.visited[id] || !ROOM_DEFS[id].secret;
   // corridors drawn from each visited room's doorways
   for (const id of ids){
     if (!S.visited[id]) continue;
-    const def = ROOM_DEFS[id], [ox, oy] = org(id);
+    const def = ROOM_DEFS[id], [ox, oy] = org(id), [RW, RH] = dims(id);
     for (const ch in def.exits){
       if (ch === '<' || ch === '>' || levelOf(def.exits[ch].to) !== lvl) continue;
+      if (ch === 'c' && !S.cracked[id]) continue;
+      if (ROOM_DEFS[def.exits[ch].to].secret && !S.visited[def.exits[ch].to] && ch !== 'c') continue;
       const pts = []; def.map.forEach((row, y) => [...row].forEach((cc, x) => { if (cc === ch) pts.push([x, y]); }));
       if (!pts.length) continue;
       const x0 = Math.min(...pts.map(q => q[0])), y0 = Math.min(...pts.map(q => q[1])), x1 = Math.max(...pts.map(q => q[0])), y1 = Math.max(...pts.map(q => q[1]));
-      c.fillStyle = ch === 'G' ? (gateFlag({ def }) ? '#d4b0ff' : '#4a3e5a') : '#8a7550';
-      if (y0 === 0) c.fillRect(ox + x0*p, oy - gap, (x1 - x0 + 1)*p, gap);
-      else if (y1 === RH - 1) c.fillRect(ox + x0*p, oy + RH*p, (x1 - x0 + 1)*p, gap);
-      else if (x0 === 0) c.fillRect(ox - gap, oy + y0*p, gap, (y1 - y0 + 1)*p);
-      else c.fillRect(ox + RW*p, oy + y0*p, gap, (y1 - y0 + 1)*p);
+      const tgt = org(def.exits[ch].to), [TW, TH] = dims(def.exits[ch].to);
+      c.fillStyle = ch === 'G' ? (gateFlag({ def }) ? '#d4b0ff' : '#4a3e5a') : ch === 'k' ? (S.barracksOpen ? '#8a7550' : '#5a4630') : '#8a7550';
+      if (y0 === 0) c.fillRect(ox + x0*p, tgt[1] + TH*p, (x1 - x0 + 1)*p, oy - (tgt[1] + TH*p));
+      else if (y1 === RH - 1) c.fillRect(ox + x0*p, oy + RH*p, (x1 - x0 + 1)*p, tgt[1] - (oy + RH*p));
+      else if (x0 === 0) c.fillRect(tgt[0] + TW*p, oy + y0*p, ox - (tgt[0] + TW*p), (y1 - y0 + 1)*p);
+      else c.fillRect(ox + RW*p, oy + y0*p, tgt[0] - (ox + RW*p), (y1 - y0 + 1)*p);
     }
   }
   for (const id of ids){
-    const [ox, oy] = org(id), def = ROOM_DEFS[id];
+    if (!shown(id)) continue;
+    const [ox, oy] = org(id), def = ROOM_DEFS[id], [RW, RH] = dims(id);
     if (!S.visited[id]){
       c.strokeStyle = 'rgba(196,184,166,.35)'; c.lineWidth = 1; c.setLineDash([3, 3]); c.strokeRect(ox + .5, oy + .5, RW*p - 1, RH*p - 1); c.setLineDash([]);
       c.fillStyle = 'rgba(196,184,166,.6)'; c.font = `700 ${mmBig ? 18 : 10}px system-ui`; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -3085,12 +3359,14 @@ function drawMinimap(){
       else if (ch === 'O') col = cl ? '#4f9a3c' : '#0b0b0e';
       else if (ch === '<' || (ch === '>' && S.bossDefeated)) col = '#e0c890';
       else if (ch === '>') col = MM_COL['+'];
-      c.fillStyle = col; c.fillRect(ox + x*p, oy + y*p, p, p);
+      else if (ch === 'k') col = S.barracksOpen ? '#d8c48a' : '#8a6a3a';
+      else if (ch === 'c') col = S.cracked[id] ? '#d8c48a' : MM_COL['#'];
+      c.fillStyle = col; c.fillRect(ox + x*p, oy + y*p, Math.max(1, p), Math.max(1, p));
     }
     for (const [x, y, ch] of [].concat(...def.map.map((row, y) => [...row].map((ch, x) => [x, y, ch])))){
       if (!seen || !seen[y*RW + x]) continue;
-      if (ch === 'Q' || ch === 'M'){ c.fillStyle = ch === 'Q' ? '#ffd36b' : '#7dffc4'; c.beginPath(); c.arc(ox + (x+.5)*p, oy + (y+.5)*p, p*1.1, 0, TAU); c.fill(); }
-      if (S.gemSpots[id] && S.gemSpots[id][0] === x && S.gemSpots[id][1] === y && S.searched[id + ':' + x + ',' + y]){ c.fillStyle = GEMS[gemRoomOf(id)].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6, p*1.6); }
+      if (ch === 'Q' || ch === 'M'){ c.fillStyle = ch === 'Q' ? '#ffd36b' : '#7dffc4'; c.beginPath(); c.arc(ox + (x+.5)*p, oy + (y+.5)*p, Math.max(1.5, p*1.1), 0, TAU); c.fill(); }
+      if (S.gemSpots[id] && S.gemSpots[id][0] === x && S.gemSpots[id][1] === y && S.searched[id + ':' + x + ',' + y]){ c.fillStyle = GEMS[gemRoomOf(id)].color; c.fillRect(ox + x*p - p*.3, oy + y*p - p*.3, p*1.6 + 1, p*1.6 + 1); }
     }
     if (id === room.id){ c.strokeStyle = '#f2c14e'; c.lineWidth = 1; c.strokeRect(ox - .5, oy - .5, RW*p + 1, RH*p + 1); }
   }
@@ -3336,10 +3612,22 @@ function startNew(heroId){
 }
 function continueGame(){
   const d = loadSave(); if (!d) return showSelect();
+  if (!d.gemSpots) d.gemSpots = classicGemSpots();
+  if (!d.mapVer || d.mapVer < 2){
+    // Level 1 rooms were rebuilt bigger: forget old positions there, keep everything you earned
+    const l1 = k => /^(cells|crypt|mines):/.test(k);
+    for (const bag of ['searched', 'moved']) if (d[bag]) for (const k of Object.keys(d[bag])) if (l1(k)) delete d[bag][k];
+    if (d.gemSpots) for (const id of ['cells','crypt','mines']){
+      if (!(d.gems || {})[gemRoomOf(id)]) delete d.gemSpots[id];
+      else if (d.gemSpots[id]){ d.searched = d.searched || {}; d.searched[id + ':' + d.gemSpots[id][0] + ',' + d.gemSpots[id][1]] = 1; }   // a found gem stays found
+    }
+    for (const id of ['cells','crypt','mines']) if (d.seenStr) delete d.seenStr[id];
+    if ((d.room || 'cells') !== 'throne' && levelOf(d.room || 'cells') === 1) d.pos = null;
+    d.mapVer = 2; d.keySpots = rollKeySpots();
+  }
   SEEN = {};
   for (const k in (d.seenStr || {})) SEEN[k] = Uint8Array.from(d.seenStr[k].split(''), Number);
   delete d.seenStr;
-  if (!d.gemSpots) d.gemSpots = classicGemSpots();
   S = Object.assign(newState(d.heroId), d);
   for (const k in layerCache) delete layerCache[k];
   hero = makeHero(); mode = 'play'; showScreen(null); setPlaying(true); hudKey = '';
