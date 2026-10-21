@@ -480,7 +480,7 @@ function kill(e, cause) {
   releasePointerFor(e);
 }
 function gainSouls(n, x, y) {
-  G.souls += n; G.score += 50 * n;
+  G.souls += n; G.score += 100 * n;
   addText(x, y, '+' + n + ' ghost' + (n > 1 ? 's' : ''), '#8fd3ff', 20, 1.4);
   sfx.soul();
 }
@@ -762,7 +762,7 @@ function eat(e) {
   e.eaten = true;
   burst(c.x, c.y, 18, BLOOD, 200, 4);
   addText(c.x, c.y - 50, 'CHOMP!', '#ff7b5a', 28, 1.2);
-  gainSouls(G.use.altar >= 1 ? 15 : 10, c.x, c.y - 76);
+  gainSouls(G.use.altar >= 1 ? 6 : 4, c.x, c.y - 76);
   sfx.chomp(); buzz(40); G.shake = 0.25;
 }
 
@@ -953,7 +953,7 @@ function burnInPit(e) {
   G.pitHeat = 1; G.beamT = 1.1;
   burst(x, GROUND - 6, 30, FIRE, 260, 7, -100, 0.9);
   addText(x, GROUND - 70, 'BURNED!', '#ff9a3c', 24, 1.2);
-  gainSouls(5, x, GROUND - 96);
+  gainSouls(2, x, GROUND - 96);
   sfx.burn(); buzz(25);
 }
 
@@ -1044,9 +1044,9 @@ const SECTIONS = [
     { id: 'door3', cat: 'door', tier: 3, name: 'Runed Gate', desc: '1100 strength, slowly mends itself', cost: [2000, 120] },
   ] },
   { title: 'Offerings', items: [
-    { id: 'hellgate', cat: 'sac', name: 'Ember Pit', desc: 'A pit of undying fire. Throw knights in to burn them. +5 ghosts each', cost: [200, 0] },
-    { id: 'altar0', cat: 'altar', tier: 0, name: 'Worm Spire', desc: 'Hang a knight on the hook and the Worm comes to feed. +10 ghosts, double gold', cost: [350, 0] },
-    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Worm Spire', desc: 'The Worm arrives faster and scorches the ground as it swoops. +15 ghosts', cost: [1400, 90] },
+    { id: 'hellgate', cat: 'sac', name: 'Ember Pit', desc: 'A pit of undying fire. Throw knights in to burn them. +2 ghosts each', cost: [200, 0] },
+    { id: 'altar0', cat: 'altar', tier: 0, name: 'Worm Spire', desc: 'Hang a knight on the hook and the Worm comes to feed. +4 ghosts, double gold', cost: [350, 0] },
+    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Worm Spire', desc: 'The Worm arrives faster and scorches the ground as it swoops. +6 ghosts', cost: [1400, 90] },
   ] },
   { title: 'Falling Stones', items: [0, 1, 2].map(t => ({ id: 'boulder' + t, cat: 'boulder', tier: t, name: TOWER.boulder.names[t],
     desc: ['Crushes a small group', 'Wider impact', 'Flattens a crowd'][t], cost: [[250, 0], [600, 25], [1000, 60]][t] })) },
