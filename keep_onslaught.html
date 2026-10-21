@@ -48,7 +48,7 @@
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
   .card { font: inherit; text-align: center; color: #f5e6c8; cursor: pointer; background: rgba(10, 20, 26, .55); border: 2px solid #4d6470;
     border-radius: 10px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 120px; }
-  .card canvas { position: static; width: 64px; height: 48px; pointer-events: none; }
+  .card canvas { position: static; width: 80px; height: 60px; pointer-events: none; }
   .card .nm { font-weight: 700; font-size: 14px; color: #9ff09a; }
   .card .ds { font-size: 12px; color: #c7d2d6; flex: 1; }
   .card .pr { font-weight: 700; font-size: 13px; color: #ffe066; }
@@ -79,7 +79,7 @@
     <p class="sub">A castle-defense tribute to the 2009 iPhone classic <em>Knights Onrush</em></p>
     <ul class="how">
       <li><b>Grab</b> a knight and <b>fling</b> him. A high drop or a slam into the wall finishes him.</li>
-      <li>Throw knights into the <b>Hell Gate</b> fire pit to burn them and collect their <b>souls</b>.</li>
+      <li>Buy the <b>Hell Gate</b> fire pit, then throw knights into it to burn them and collect their <b>souls</b>.</li>
       <li>Buy the <b>Dragon Altar</b>, then hang a knight on its hook. The dragon swoops in to eat him.</li>
       <li>Spend gold and souls in the <b>Castle Shop</b> on doors, boulders, columns, fireballs and guns.</li>
     </ul>
@@ -270,8 +270,8 @@ function newGame(levelIdx) {
   G = {
     level: levelIdx, L, state: 'play', day: 0, gold: L.gold, souls: 0, score: 0, kills: 0, dayKills: 0,
     gateHP: DOORS[0].hp, gateMax: DOORS[0].hp,
-    owned: new Set(['door0', 'hellgate']),
-    use: { door: 0, boulder: -1, column: -1, fireball: -1, gun: null },
+    owned: new Set(['door0']),
+    use: { door: 0, altar: -1, boulder: -1, column: -1, fireball: -1, gun: null },
     cd: { boulder: 0, column: 0, fireball: 0, gun: 0 },
     enemies: [], projectiles: [], particles: [], texts: [], spawnQueue: [], spawnTimer: 0, dayTotal: 1,
     aim: null, aimPos: { x: W / 2, y: GROUND }, shake: 0, gateShake: 0, gateMarks: [],
@@ -495,9 +495,11 @@ function endPointer(ev) {
   const h = rec.hist, a = h[0], b = h[h.length - 1];
   const dt = Math.max(16, b.t - a.t) / 1000;
   const heavy = e.def.grab === 2 ? 0.7 : 1;
-  let vx = (b.x - a.x) / dt * heavy, vy = (b.y - a.y) / dt * heavy;
-  const sp = Math.hypot(vx, vy), max = 2600;
+  let vx = (b.x - a.x) / dt * heavy * 0.75, vy = (b.y - a.y) / dt * heavy * 0.75;
+  const sp = Math.hypot(vx, vy), max = 1700;
   if (sp > max) { vx *= max / sp; vy *= max / sp; }
+  // an upward toss peaks no higher than near the top of the screen
+  vy = Math.max(vy, -Math.sqrt(2 * GRAV * Math.max(0, e.y - e.def.h - 40)));
   if (performance.now() - b.t > 120) { vx = 0; vy = 0; } // finger held still before lifting
   e.state = 'fly'; e.vx = vx; e.vy = vy; e.vr = clamp(vx * 0.012, -14, 14); e.hitSet = new Set();
 }
@@ -527,7 +529,7 @@ function update(dt) {
   }
 
   // Dragon Altar: a knight brought to the hook is hung there
-  if (G.owned.has('altar') && !G.hooked && !G.dragon) {
+  if (G.use.altar >= 0 && !G.hooked && !G.dragon) {
     for (const e of G.enemies) {
       if (e.dead || !human(e) || (e.state !== 'held' && e.state !== 'fly')) continue;
       const c = bodyCenter(e);
@@ -593,7 +595,7 @@ function hookKnight(e) {
   G.hooked = e;
   sfx.grab();
   addText(HOOK.x, HOOK.y - 30, 'Hooked!', '#ffd27a', 18, 1);
-  G.dragon = { t: -0.7, ate: false };
+  G.dragon = { t: G.use.altar >= 1 ? -0.25 : -0.7, ate: false };
   setTimeout(sfx.roar, 500);
 }
 // The dragon swoops in from the top left, dives to the hook and climbs away to the right.
@@ -623,6 +625,15 @@ function updateDragon(dt) {
     const c = bodyCenter(e);
     if (Math.hypot(c.x - p.x, c.y - p.y) < 50) eat(e);
   }
+  // the golden altar's dragon scorches the ground beneath its dive
+  if (G.use.altar >= 1 && s > 0.28 && s < 0.78) {
+    for (const e of G.enemies) if (!e.dead && onGround(e) && Math.abs(e.x - p.x) < 75) hurt(e, 80 * dt, 'fire');
+    for (let i = 0; i < 4; i++) {
+      const a = p.a + rand(0.9, 1.5);
+      G.particles.push({ x: p.x + Math.cos(p.a) * 30, y: p.y + 10, vx: Math.cos(a) * rand(300, 450), vy: Math.abs(Math.sin(a)) * rand(380, 520), life: 0.7, max: 0.7,
+        color: FIRE[(Math.random() * 3) | 0], size: rand(7, 13), grav: 200, glow: true });
+    }
+  }
   if (!D.ate && s >= 0.5) {
     D.ate = true;
     if (G.hooked && !G.hooked.dead) eat(G.hooked);
@@ -635,7 +646,7 @@ function eat(e) {
   e.eaten = true;
   burst(c.x, c.y, 18, BLOOD, 200, 4);
   addText(c.x, c.y - 50, 'CHOMP!', '#ff7b5a', 28, 1.2);
-  gainSouls(2, c.x, c.y - 76);
+  gainSouls(G.use.altar >= 1 ? 3 : 2, c.x, c.y - 76);
   sfx.chomp(); buzz(40); G.shake = 0.25;
 }
 
@@ -785,7 +796,7 @@ function updateEnemy(e, dt) {
       if (e.x > W - 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = W - 6; e.vx = -Math.abs(e.vx) * 0.35; if (e.dead) return; }
       if (e.y >= GROUND) {
         e.y = GROUND;
-        if (e.x > PIT.x0 + 8 && e.x < PIT.x1 - 8 && human(e)) { burnInPit(e); return; }
+        if (G.owned.has('hellgate') && e.x > PIT.x0 + 8 && e.x < PIT.x1 - 8 && human(e)) { burnInPit(e); return; }
         impact(e, e.vy, 'ground');
         if (e.dead) { e.vx = 0; e.vy = 0; return; }
         if (e.vy > 260) { e.vy = -e.vy * 0.28; e.vx *= 0.55; e.vr *= 0.5; }
@@ -867,8 +878,9 @@ const SECTIONS = [
     { id: 'door3', cat: 'door', tier: 3, name: 'Magic Door', desc: '1100 strength, mends itself', cost: [2000, 20] },
   ] },
   { title: 'Sacrifices', items: [
-    { id: 'hellgate', cat: 'sac', name: 'Hell Gate', desc: 'Throw knights into the fire pit. +1 soul each', cost: [0, 0] },
-    { id: 'altar', cat: 'sac', name: 'Dragon Altar', desc: 'Hang a knight on the hook to feed the dragon. +2 souls, double gold', cost: [300, 0] },
+    { id: 'hellgate', cat: 'sac', name: 'Hell Gate', desc: 'A fire pit. Throw knights in to burn them. +1 soul each', cost: [200, 0] },
+    { id: 'altar0', cat: 'altar', tier: 0, name: 'Dragon Altar', desc: 'Hang a knight on the hook to feed the dragon. +2 souls, double gold', cost: [350, 0] },
+    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Dragon Altar', desc: 'The dragon arrives faster and scorches the ground as it swoops. +3 souls', cost: [1400, 15] },
   ] },
   { title: 'Tower Upgrades 1', items: [0, 1, 2].map(t => ({ id: 'boulder' + t, cat: 'boulder', tier: t, name: TOWER.boulder.names[t],
     desc: ['Crushes a small group', 'Wider impact', 'Flattens a crowd'][t], cost: [[250, 0], [600, 5], [1000, 12]][t] })) },
@@ -885,7 +897,7 @@ const SECTIONS = [
 const ALL_ITEMS = SECTIONS.flatMap(s => s.items);
 function itemState(it) {
   const owned = G.owned.has(it.id);
-  const inUse = (it.cat === 'door' && G.use.door === it.tier) || (it.cat === 'sac' && owned) ||
+  const inUse = (it.cat === 'door' && G.use.door === it.tier) || (it.cat === 'sac' && owned) || (it.cat === 'altar' && G.use.altar === it.tier) ||
     (TOWER[it.cat] && G.use[it.cat] === it.tier) || (it.cat === 'gun' && G.use.gun === it.id);
   const prereq = it.tier > 0 ? G.owned.has(it.cat + (it.tier - 1)) : true;
   const afford = G.gold >= it.cost[0] && G.souls >= it.cost[1];
@@ -916,7 +928,7 @@ function renderShop() {
       const canBuy = !st.owned && st.prereq && st.afford;
       const canSwitch = st.owned && !st.inUse && it.cat === 'gun';
       b.disabled = !(canBuy || canSwitch);
-      const icon = document.createElement('canvas'); icon.width = 128; icon.height = 96;
+      const icon = document.createElement('canvas'); icon.width = 160; icon.height = 120;
       drawShopIcon(icon.getContext('2d'), it);
       b.appendChild(icon);
       b.insertAdjacentHTML('beforeend', `<div class="nm">${it.name}</div><div class="ds">${it.desc}</div><div class="pr">${price}</div>`);
@@ -941,7 +953,7 @@ function buy(it) {
   G.gold -= it.cost[0]; G.souls -= it.cost[1];
   G.owned.add(it.id);
   if (it.cat === 'door') { G.use.door = it.tier; G.gateMax = DOORS[it.tier].hp; G.gateHP = G.gateMax; }
-  else if (TOWER[it.cat]) G.use[it.cat] = Math.max(G.use[it.cat], it.tier);
+  else if (TOWER[it.cat] || it.cat === 'altar') G.use[it.cat] = Math.max(G.use[it.cat], it.tier);
   else if (it.cat === 'gun') G.use.gun = it.id;
   audioUnlock(); sfx.coin();
   renderShop();
@@ -1171,9 +1183,23 @@ function drawAltar() {
   g.addColorStop(0, '#4f7a78'); g.addColorStop(0.5, '#7fb0a8'); g.addColorStop(1, '#3d5f5d');
   ctx.fillStyle = '#4b5a58'; ctx.fillRect(x - 38, GROUND - 24, 76, 26);
   ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(x - 28, GROUND - 24); ctx.lineTo(x - 14, 170); ctx.lineTo(x, 140); ctx.lineTo(x + 14, 170); ctx.lineTo(x + 28, GROUND - 24); ctx.closePath(); ctx.fill();
+  if (G.use.altar >= 1) {
+    ctx.strokeStyle = '#f2c24e'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x - 28, GROUND - 24); ctx.lineTo(x - 14, 170); ctx.lineTo(x, 140); ctx.lineTo(x + 14, 170); ctx.lineTo(x + 28, GROUND - 24); ctx.stroke();
+    for (const bx of [x - 48, x + 48]) {   // flaming braziers either side
+      ctx.fillStyle = '#c99a2e'; ctx.beginPath(); ctx.moveTo(bx - 9, GROUND - 22); ctx.lineTo(bx + 9, GROUND - 22); ctx.lineTo(bx + 4, GROUND - 12); ctx.lineTo(bx - 4, GROUND - 12); ctx.fill();
+      ctx.fillRect(bx - 2, GROUND - 12, 4, 12);
+      for (let i = 0; i < 3; i++) { ctx.fillStyle = FIRE[i]; const f = Math.sin(G.time * 11 + i + bx) * 2;
+        ctx.beginPath(); ctx.moveTo(bx - 8 + i * 2, GROUND - 22); ctx.quadraticCurveTo(bx, GROUND - 40 + i * 5 + f, bx + 8 - i * 2, GROUND - 22); ctx.fill(); }
+    }
+  }
   ctx.strokeStyle = 'rgba(20,40,40,0.5)'; ctx.lineWidth = 1.5;
   for (let y = 200; y < GROUND - 30; y += 34) { ctx.beginPath(); ctx.moveTo(x - 22 + (y - 170) * 0.03, y); ctx.lineTo(x + 22 - (y - 170) * 0.03, y); ctx.stroke(); }
   // dragon medallion
+  if (G.use.altar >= 1) {
+    const mg = ctx.createRadialGradient(x, 330, 10, x, 330, 50); mg.addColorStop(0, 'rgba(255,200,80,0.6)'); mg.addColorStop(1, 'rgba(255,120,40,0)');
+    ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(x, 330, 50, 0, Math.PI * 2); ctx.fill();
+  }
   ctx.fillStyle = '#c99a2e'; ctx.beginPath(); ctx.arc(x, 330, 27, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#7a1f12'; ctx.beginPath(); ctx.arc(x, 330, 21, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = '#f2c24e'; ctx.lineWidth = 3;
@@ -1735,19 +1761,70 @@ function drawIcon(c, k, x, y, r, tier = 2) {
   else { c.rotate(-0.35); c.scale(r / 40, r / 40); c.translate(-8, -2); GUN_SHAPES[k](c); }
   c.restore();
 }
+function drawHellGateIcon(c) {
+  const glow = c.createRadialGradient(32, 34, 2, 32, 30, 30); glow.addColorStop(0, 'rgba(255,150,40,0.7)'); glow.addColorStop(1, 'rgba(255,80,20,0)');
+  c.fillStyle = glow; c.fillRect(0, 0, 64, 48);
+  const lava = c.createRadialGradient(32, 36, 1, 32, 36, 22); lava.addColorStop(0, '#fff2a0'); lava.addColorStop(0.45, '#ff8a24'); lava.addColorStop(1, '#a3200f');
+  c.fillStyle = lava; c.beginPath(); c.ellipse(32, 36, 22, 6.5, 0, 0, Math.PI * 2); c.fill();
+  for (let i = 0; i < 4; i++) {
+    c.fillStyle = FIRE[i % 3]; const fx = 20 + i * 8;
+    c.beginPath(); c.moveTo(fx - 4, 36); c.quadraticCurveTo(fx - 1, 22 - (i % 2) * 8, fx + 1, 14 + (i % 2) * 4); c.quadraticCurveTo(fx + 3, 26, fx + 5, 36); c.fill();
+  }
+  for (let i = 0; i < 14; i++) {
+    const a = i / 14 * Math.PI * 2, sx = 32 + Math.cos(a) * 24, sy = 37 + Math.sin(a) * 7.5;
+    const sg = c.createLinearGradient(0, sy - 3, 0, sy + 3); sg.addColorStop(0, '#c9cdca'); sg.addColorStop(1, '#6f7572');
+    c.fillStyle = sg; c.beginPath(); c.ellipse(sx, sy, 4.5, 3, 0, 0, Math.PI * 2); c.fill();
+  }
+}
+function drawAltarIcon(c, tier) {
+  const gold = tier >= 1;
+  // halo behind the pillar
+  const halo = c.createRadialGradient(32, 22, 2, 32, 22, 30);
+  halo.addColorStop(0, gold ? 'rgba(255,210,90,0.85)' : 'rgba(255,120,60,0.55)'); halo.addColorStop(1, 'rgba(255,120,60,0)');
+  c.fillStyle = halo; c.fillRect(0, 0, 64, 48);
+  // dragon wing silhouettes for the golden altar
+  if (gold) {
+    c.fillStyle = 'rgba(160,30,20,0.85)';
+    for (const dir of [-1, 1]) {
+      c.beginPath(); c.moveTo(32, 14); c.quadraticCurveTo(32 + dir * 14, 2, 32 + dir * 30, 4);
+      c.quadraticCurveTo(32 + dir * 24, 10, 32 + dir * 26, 16); c.quadraticCurveTo(32 + dir * 18, 14, 32 + dir * 18, 22);
+      c.quadraticCurveTo(32 + dir * 12, 18, 32, 24); c.fill();
+    }
+  }
+  // stepped stone base
+  c.fillStyle = '#56625f'; c.fillRect(17, 42, 30, 5);
+  c.fillStyle = '#6d7a77'; c.fillRect(21, 38, 22, 5);
+  // obelisk
+  const og = c.createLinearGradient(25, 0, 39, 0);
+  og.addColorStop(0, '#3d5f5d'); og.addColorStop(0.4, '#8cc2b9'); og.addColorStop(1, '#2f4b49');
+  c.fillStyle = og; c.beginPath(); c.moveTo(25, 38); c.lineTo(29, 8); c.lineTo(32, 3); c.lineTo(35, 8); c.lineTo(39, 38); c.closePath(); c.fill();
+  c.strokeStyle = gold ? '#f2c24e' : 'rgba(20,40,40,0.6)'; c.lineWidth = gold ? 1.4 : 0.8; c.stroke();
+  // medallion with a coiled dragon
+  c.fillStyle = gold ? '#ffd760' : '#c99a2e'; c.beginPath(); c.arc(32, 25, 6.5, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#7a1f12'; c.beginPath(); c.arc(32, 25, 5, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = '#f2c24e'; c.lineWidth = 1.2; c.beginPath(); c.arc(31.5, 24.5, 2.6, 0.4, Math.PI * 1.7); c.stroke();
+  c.beginPath(); c.moveTo(33.5, 26); c.quadraticCurveTo(35, 29, 31, 29.5); c.stroke();
+  // iron hook
+  c.strokeStyle = '#22272b'; c.lineWidth = 1.8; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(32, 4); c.lineTo(32, 0.5); c.quadraticCurveTo(30, -0.5, 27, 1.5); c.quadraticCurveTo(24, 4, 26, 7.5); c.quadraticCurveTo(27.5, 9, 29, 7); c.stroke();
+  // sparkles
+  c.fillStyle = gold ? '#fff3c4' : '#ffd27a';
+  for (const [sx, sy, r] of [[14, 12, 1.4], [50, 9, 1.2], [47, 30, 1], [16, 32, 1]]) {
+    c.beginPath(); c.moveTo(sx, sy - r * 2.5); c.lineTo(sx + r * 0.6, sy); c.lineTo(sx, sy + r * 2.5); c.lineTo(sx - r * 0.6, sy); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(sx - r * 2.5, sy); c.lineTo(sx, sy + r * 0.6); c.lineTo(sx + r * 2.5, sy); c.lineTo(sx, sy - r * 0.6); c.closePath(); c.fill();
+  }
+}
 function drawShopIcon(c, it) {
-  c.scale(2, 2);
+  c.scale(2.5, 2.5);
   const x = 32, y = 24;
   if (it.cat === 'door') {
     const cols = [['#8c5a28', '#a36b33'], ['#7e98a8', '#c9dbe4'], ['#b8862a', '#ffe28a'], ['#1d7a4a', '#8fffc0']][it.tier];
     const g = c.createLinearGradient(20, 0, 44, 0); g.addColorStop(0, cols[0]); g.addColorStop(0.5, cols[1]); g.addColorStop(1, cols[0]);
     c.fillStyle = g; c.beginPath(); c.moveTo(20, 46); c.lineTo(20, 14); c.arc(32, 14, 12, Math.PI, 0); c.lineTo(44, 46); c.fill();
   } else if (it.id === 'hellgate') {
-    c.fillStyle = '#ff7a1f'; c.beginPath(); c.ellipse(x, 32, 24, 7, 0, 0, Math.PI * 2); c.fill();
-    c.strokeStyle = '#9a9f9c'; c.lineWidth = 4; c.stroke();
-  } else if (it.id === 'altar') {
-    c.fillStyle = '#6a9a94'; c.beginPath(); c.moveTo(26, 46); c.lineTo(30, 6); c.lineTo(34, 2); c.lineTo(38, 6); c.lineTo(42, 46); c.fill();
-    c.fillStyle = '#c99a2e'; c.beginPath(); c.arc(34, 28, 6, 0, Math.PI * 2); c.fill();
+    drawHellGateIcon(c);
+  } else if (it.cat === 'altar') {
+    drawAltarIcon(c, it.tier);
   } else if (TOWER[it.cat]) {
     drawIcon(c, it.cat, x, y, 26 + it.tier * 6, it.tier);
   } else drawIcon(c, it.id, x, y, 30);
@@ -1813,7 +1890,7 @@ function drawHUD() {
   if (G.hintT > 0) {
     ctx.globalAlpha = clamp(G.hintT, 0, 1);
     ctx.font = 'bold 20px system-ui'; ctx.fillStyle = '#fff'; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 4;
-    const msg = 'Grab a knight and fling him, or drop him in the fire pit!';
+    const msg = 'Grab a knight, lift him up and drop him, or slam him into the wall!';
     ctx.strokeText(msg, W / 2, 230); ctx.fillText(msg, W / 2, 230);
     ctx.globalAlpha = 1;
   }
@@ -1866,8 +1943,8 @@ function render(dt) {
   ctx.drawImage(bg, 0, 0);
   const prog = drawSky(dt);
   if (!G) { ctx.drawImage(castleImg, 0, 0); ctx.restore(); return; }
-  drawPit();
-  if (G.owned.has('altar')) drawAltar();
+  if (G.owned.has('hellgate')) drawPit();
+  if (G.use.altar >= 0) drawAltar();
   ctx.drawImage(castleImg, 0, 0);
   drawDoor();
   drawCastleWeapons();
