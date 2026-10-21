@@ -1398,15 +1398,49 @@ function crenels(c, x, y, w, n) {
   const step = w / n;
   for (let i = 0; i < n; i += 2) stoneWall(c, x + i * step, y - 16, step, 16);
 }
+function seeded(n) { let t = Math.abs(n) % 233280; return () => (t = (t * 9301 + 49297) % 233280) / 233280; }
+// tall, spindly trees: a slender trunk forking into thin branches with small leaf clusters at the tips,
+// or now and then a narrow pine
 function tree(b, x, y, s, dark) {
-  b.fillStyle = dark ? '#4a3a24' : '#6b5232';
-  b.beginPath(); b.moveTo(x - 12 * s, y); b.quadraticCurveTo(x - 6 * s, y - 60 * s, x - 8 * s, y - 120 * s);
-  b.lineTo(x + 8 * s, y - 120 * s); b.quadraticCurveTo(x + 6 * s, y - 60 * s, x + 14 * s, y); b.fill();
-  const greens = dark ? ['#2f5226', '#3a6230', '#447039'] : ['#3d6b2c', '#4f8236', '#5f9640'];
-  const blobs = [[0, -150, 52], [-40, -130, 38], [40, -128, 40], [-20, -175, 34], [25, -170, 36]];
-  for (let i = 0; i < blobs.length; i++) {
-    const [dx, dy, r] = blobs[i];
-    b.fillStyle = greens[i % 3]; b.beginPath(); b.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2); b.fill();
+  const rnd = seeded(Math.round(x * 7 + y * 3));
+  const bark = dark ? '#4a3a26' : '#5e4630';
+  const greens = dark ? ['#2f5226', '#3a6230', '#466f3a'] : ['#3d6b2c', '#4f8236', '#62993f'];
+  b.lineCap = 'round';
+  if (rnd() < 0.3) {
+    const h = (210 + rnd() * 40) * s;
+    b.strokeStyle = bark; b.lineWidth = 4 * s;
+    b.beginPath(); b.moveTo(x, y); b.lineTo(x, y - h); b.stroke();
+    for (let k = 0; k < 8; k++) {
+      const ty = y - h * (0.28 + k * 0.09), wdt = (30 - k * 3.2) * s, th = 22 * s;
+      b.fillStyle = greens[k % 3];
+      b.beginPath(); b.moveTo(x, ty - th); b.quadraticCurveTo(x - wdt * 0.4, ty - th * 0.3, x - wdt, ty + 4 * s);
+      b.quadraticCurveTo(x, ty - 2 * s, x + wdt, ty + 4 * s); b.quadraticCurveTo(x + wdt * 0.4, ty - th * 0.3, x, ty - th); b.fill();
+    }
+    return;
+  }
+  const tips = [];
+  const branch = (bx, by, ang, len, w, depth) => {
+    const ex = bx + Math.sin(ang) * len, ey = by - Math.cos(ang) * len;
+    b.strokeStyle = bark; b.lineWidth = w;
+    b.beginPath(); b.moveTo(bx, by);
+    b.quadraticCurveTo(bx + Math.sin(ang) * len * 0.5 + (rnd() - 0.5) * len * 0.2, by - Math.cos(ang) * len * 0.5, ex, ey); b.stroke();
+    if (depth === 0) { tips.push([ex, ey]); return; }
+    if (depth < 3 && rnd() < 0.5) tips.push([ex, ey]);
+    const n = rnd() < 0.35 ? 3 : 2;
+    for (let i = 0; i < n; i++) {
+      const na = ang + (i - (n - 1) / 2) * (0.45 + rnd() * 0.35) + (rnd() - 0.5) * 0.3;
+      branch(ex, ey, na, len * (0.6 + rnd() * 0.15), Math.max(0.8, w * 0.6), depth - 1);
+    }
+  };
+  branch(x, y, (rnd() - 0.5) * 0.1, (92 + rnd() * 30) * s, 6.5 * s, 4);
+  for (const [tx, ty] of tips) {
+    const n = 3 + Math.floor(rnd() * 3);
+    for (let k = 0; k < n; k++) {
+      b.fillStyle = greens[Math.floor(rnd() * 3)];
+      b.beginPath();
+      b.ellipse(tx + (rnd() - 0.5) * 16 * s, ty + (rnd() - 0.6) * 12 * s, (5 + rnd() * 7) * s, (3.5 + rnd() * 4) * s, rnd() * Math.PI, 0, Math.PI * 2);
+      b.fill();
+    }
   }
 }
 function buildScenery() {
