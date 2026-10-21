@@ -1411,7 +1411,7 @@ function tree(b, x, y, s, dark) {
     b.strokeStyle = bark; b.lineWidth = 4 * s;
     b.beginPath(); b.moveTo(x, y); b.lineTo(x, y - h); b.stroke();
     for (let k = 0; k < 8; k++) {
-      const ty = y - h * (0.28 + k * 0.09), wdt = (30 - k * 3.2) * s, th = 22 * s;
+      const ty = y - h * (0.26 + k * 0.085), wdt = (34 - k * 3.4) * s, th = 30 * s;
       b.fillStyle = greens[k % 3];
       b.beginPath(); b.moveTo(x, ty - th); b.quadraticCurveTo(x - wdt * 0.4, ty - th * 0.3, x - wdt, ty + 4 * s);
       b.quadraticCurveTo(x, ty - 2 * s, x + wdt, ty + 4 * s); b.quadraticCurveTo(x + wdt * 0.4, ty - th * 0.3, x, ty - th); b.fill();
@@ -1425,7 +1425,7 @@ function tree(b, x, y, s, dark) {
     b.beginPath(); b.moveTo(bx, by);
     b.quadraticCurveTo(bx + Math.sin(ang) * len * 0.5 + (rnd() - 0.5) * len * 0.2, by - Math.cos(ang) * len * 0.5, ex, ey); b.stroke();
     if (depth === 0) { tips.push([ex, ey]); return; }
-    if (depth < 3 && rnd() < 0.5) tips.push([ex, ey]);
+    if (depth <= 2 || (depth === 3 && rnd() < 0.6)) tips.push([ex, ey]);
     const n = rnd() < 0.35 ? 3 : 2;
     for (let i = 0; i < n; i++) {
       const na = ang + (i - (n - 1) / 2) * (0.45 + rnd() * 0.35) + (rnd() - 0.5) * 0.3;
@@ -1433,13 +1433,16 @@ function tree(b, x, y, s, dark) {
     }
   };
   branch(x, y, (rnd() - 0.5) * 0.1, (92 + rnd() * 30) * s, 6.5 * s, 4);
-  for (const [tx, ty] of tips) {
-    const n = 3 + Math.floor(rnd() * 3);
-    for (let k = 0; k < n; k++) {
-      b.fillStyle = greens[Math.floor(rnd() * 3)];
-      b.beginPath();
-      b.ellipse(tx + (rnd() - 0.5) * 16 * s, ty + (rnd() - 0.6) * 12 * s, (5 + rnd() * 7) * s, (3.5 + rnd() * 4) * s, rnd() * Math.PI, 0, Math.PI * 2);
-      b.fill();
+  // dark leaves first, then lighter ones on top, so each canopy has some depth
+  for (let pass = 0; pass < 2; pass++) {
+    for (const [tx, ty] of tips) {
+      const n = pass ? 4 + Math.floor(rnd() * 3) : 3 + Math.floor(rnd() * 3);
+      for (let k = 0; k < n; k++) {
+        b.fillStyle = pass ? greens[1 + Math.floor(rnd() * 2)] : greens[0];
+        b.beginPath();
+        b.ellipse(tx + (rnd() - 0.5) * 26 * s, ty + (rnd() - 0.6) * 20 * s, (6 + rnd() * 8) * s, (4 + rnd() * 5) * s, rnd() * Math.PI, 0, Math.PI * 2);
+        b.fill();
+      }
     }
   }
 }
