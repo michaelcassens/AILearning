@@ -974,7 +974,7 @@ function dayCleared() {
   G.gold += bonus; G.score += bonus * 5;
   pointers.clear(); G.aim = null;
   const last = G.L.days && G.day >= G.L.days;
-  G.banner = { lines: ['SIEGE', 'REPELLED'], t: 2.2, age: 0 };
+  G.banner = { lines: ['SIEGE', 'DEFIED'], t: 2.2, age: 0 };
   sfx.fanfare();
   G.state = 'ending'; G.endT = 2.2; G.endKind = last ? 'win' : 'day'; G.dayBonus = bonus;
 }
@@ -997,7 +997,7 @@ function resumeRun(r) {
   Object.assign(G, { day: r.day, gold: r.gold, souls: r.souls, score: r.score, kills: r.kills, gateHP: r.gateHP, gateMax: r.gateMax,
     owned: new Set(r.owned), use: Object.assign(G.use, r.use), state: 'menu', endKind: 'day', dayKills: 0, dayBonus: 0 });
   document.getElementById('resTitle').textContent = 'Welcome back, Keeper!';
-  document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} repelled`;
+  document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} defied`;
   document.getElementById('resScore').textContent = `Glory: ${G.score}`;
   document.getElementById('nextBtn').textContent = 'Next Siege';
   document.getElementById('shopBtn').hidden = false;
