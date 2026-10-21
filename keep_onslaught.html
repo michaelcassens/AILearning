@@ -561,9 +561,22 @@ cv.addEventListener('pointerdown', ev => {
   moveHeld(e, p);
   sfx.grab(); buzz(10);
 });
+// The castle's outline as a flung knight meets it: the round tower's top, the keep's battlements, then open ground.
+// Queried a few px ahead of a knight's feet so his body, not just his toes, meets the stone.
+const CASTLE_X = WALL_X + 4;
+function surfaceAt(x) {
+  if (x >= 18 && x <= 130) return 92;       // round tower
+  if (x >= 0 && x < WALL_X) return 224;      // keep battlements
+  return GROUND;
+}
+const floorAt = x => surfaceAt(x - 4);
 function moveHeld(e, p) {
-  e.x = clamp(p.x, WALL_X + 16, W - 10);
+  e.x = clamp(p.x, 12, W - 10);
   e.y = clamp(p.y + e.def.h * 0.55, 40, GROUND);
+  const f = floorAt(e.x);
+  if (e.y > f) {   // can't drag a knight through stone: lift him onto the roof or slide him out in front
+    if (e.y - f < CASTLE_X + 6 - e.x) e.y = f; else e.x = CASTLE_X + 6;
+  }
 }
 cv.addEventListener('pointermove', ev => {
   if (!G) return;
@@ -806,7 +819,8 @@ function updateEnemy(e, dt) {
   if (e.bubble > 0) e.bubble -= dt;
   if (e.dead) {
     e.deathT += dt;
-    if (e.state === 'fly' && e.y < GROUND) { e.vy += GRAV * dt; e.y = Math.min(GROUND, e.y + e.vy * dt); e.x += e.vx * dt; }
+    const f = floorAt(e.x);
+    if (e.state === 'fly' && e.y < f) { e.vy += GRAV * dt; e.y = Math.min(f, e.y + e.vy * dt); e.x += e.vx * dt; }
     return;
   }
   if (e.burn > 0) {
@@ -858,12 +872,24 @@ function updateEnemy(e, dt) {
       }
       break;
     case 'held': e.anim += dt * 3; break;
+    case 'roof': {   // a dazed knight wanders along the battlements until he walks off the edge
+      e.anim += dt; e.x += 70 * dt;
+      const f = floorAt(e.x);
+      if (f > e.y + 1) { e.state = 'fly'; e.vx = 90; e.vy = 0; e.vr = 2; e.hitSet = new Set(); }
+      else e.y = f;
+      break;
+    }
     case 'hooked': e.t += dt; e.rot = Math.sin(e.t * 7) * 0.25; break;
     case 'stun':
       e.t -= dt; e.rot *= 0.8;
-      if (e.t <= 0) { e.rot = 0; e.state = 'walk'; }
+      if (e.t <= 0) {
+        e.rot = 0;
+        if (e.onRoof) { e.onRoof = false; e.state = 'roof'; }
+        else e.state = 'walk';
+      }
       break;
     case 'fly': {
+      const px = e.x, py = e.y;
       e.vy += GRAV * dt;
       e.x += e.vx * dt; e.y += e.vy * dt; e.rot += e.vr * dt * (d.machine ? 0.3 : 1);
       const sp = Math.hypot(e.vx, e.vy);
@@ -883,15 +909,25 @@ function updateEnemy(e, dt) {
           }
         }
       }
-      if (e.x < WALL_X + 12) { impact(e, Math.abs(e.vx), 'wall'); e.x = WALL_X + 12; e.vx = Math.abs(e.vx) * 0.35; if (e.dead) return; }
+      if (e.x < 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = 6; e.vx = Math.abs(e.vx) * 0.35; if (e.dead) return; }
       if (e.x > W - 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = W - 6; e.vx = -Math.abs(e.vx) * 0.35; if (e.dead) return; }
-      if (e.y >= GROUND) {
-        e.y = GROUND;
-        if (G.owned.has('hellgate') && e.x > PIT.x0 + 8 && e.x < PIT.x1 - 8 && human(e)) { burnInPit(e); return; }
-        impact(e, e.vy, 'ground');
+      // flying into a castle face (the keep's front or the tower's side) bounces him back
+      const surf = floorAt(e.x);
+      if (e.y > surf && py > surf) {
+        impact(e, Math.abs(e.vx), 'wall');
+        e.x = Math.max(px, e.x + 1); e.vx = Math.abs(e.vx) * 0.35;
+        burst(e.x - 12, e.y - e.def.h / 2, 6, ['#9aa3a4', '#7d8788'], 140, 4);
+        if (e.dead) return;
+      }
+      // coming down from above he lands on whatever is below: tower top, battlements or the field
+      const floor = floorAt(e.x);
+      if (e.y >= floor) {
+        e.y = floor;
+        if (floor === GROUND && G.owned.has('hellgate') && e.x > PIT.x0 + 8 && e.x < PIT.x1 - 8 && human(e)) { burnInPit(e); return; }
+        impact(e, e.vy, floor === GROUND ? 'ground' : 'wall');
         if (e.dead) { e.vx = 0; e.vy = 0; return; }
         if (e.vy > 260) { e.vy = -e.vy * 0.28; e.vx *= 0.55; e.vr *= 0.5; }
-        else { e.vy = 0; e.vx = 0; e.state = 'stun'; e.t = 0.6; }
+        else { e.vy = 0; e.vx = 0; e.state = 'stun'; e.t = 0.6; e.onRoof = floor < GROUND; }
       }
       break;
     }
@@ -1849,13 +1885,13 @@ function drawHuman(e) {
   ctx.translate(e.x, e.y + lane);
   deathFade(e);
   const cy = -d.h / 2;
-  const lying = e.dead && onGround(e);
+  const lying = e.dead && e.y >= floorAt(e.x) - 0.5;
   ctx.translate(0, cy); ctx.rotate(lying ? Math.PI / 2 : e.rot); ctx.translate(0, -cy);
   if (lying) ctx.translate(d.h / 2 - 6, d.h / 2 - 6);
-  ctx.scale(-s, s); // drawn facing right, mirrored to face the castle
+  ctx.scale(e.state === 'roof' ? s : -s, s); // drawn facing right, mirrored to face the castle
   const o = Object.assign({
     metal: d.armor, tunic: d.tunic, plume: d.plume, T: frozen ? 0 : G.time * 18 + e.id, flail: flail && !frozen,
-    walk: e.state === 'walk' && !frozen ? e.anim * 9 : null, attack: e.state === 'attack' || e.state === 'cast' ? e.atkAnim : null, flash: e.flash > 0,
+    walk: (e.state === 'walk' || e.state === 'roof') && !frozen ? e.anim * 9 : null, attack: e.state === 'attack' || e.state === 'cast' ? e.atkAnim : null, flash: e.flash > 0,
   }, KNIGHT_LOOK[e.type] || {});
   if (e.type === 'wizard') drawWizard(o); else drawFigure(o);
   ctx.restore();
@@ -1927,7 +1963,7 @@ function drawCatapult(e) {
   ctx.translate(e.x, e.y + lane);
   deathFade(e);
   const cy = -24;
-  ctx.translate(0, cy); ctx.rotate(e.dead && onGround(e) ? 0.3 : e.rot); ctx.translate(0, -cy);
+  ctx.translate(0, cy); ctx.rotate(e.dead && e.y >= floorAt(e.x) - 0.5 ? 0.3 : e.rot); ctx.translate(0, -cy);
   ctx.scale(-1, 1);
   ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.beginPath(); ctx.ellipse(0, 1, 40, 5, 0, 0, Math.PI * 2); ctx.fill();
   // base frame
