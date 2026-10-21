@@ -84,12 +84,12 @@
 <div class="overlay show" id="menu" role="dialog" aria-label="Main menu">
   <div class="panel">
     <h1>Keep Onslaught</h1>
-    <p class="sub">A castle-defense tribute to the 2009 iPhone classic <em>Knights Onrush</em></p>
+    <p class="sub">Inspired by the castle-defense games I loved on the early iPhone</p>
     <ul class="how">
       <li><b>Grab</b> a knight and <b>fling</b> him. A high drop or a slam into the wall finishes him.</li>
-      <li>Buy the <b>Hell Gate</b> fire pit, then throw knights into it to burn them and collect their <b>souls</b>.</li>
-      <li>Buy the <b>Dragon Altar</b>, then hang a knight on its hook. The dragon swoops in to eat him.</li>
-      <li>Spend gold and souls in the <b>Castle Shop</b> on doors, boulders, columns, fireballs and guns.</li>
+      <li>Buy the <b>Ember Pit</b>, then throw knights into it to burn them and collect their <b>souls</b>.</li>
+      <li>Raise the <b>Worm Spire</b>, then hang a knight on its hook. The Worm swoops in to eat him.</li>
+      <li>Spend gold and souls on the <b>Keeper's Goods</b>: stronger gates, falling stones, pillars, fire and battlement engines.</li>
     </ul>
     <div id="continueRow"></div>
     <div class="levels" id="levels"></div>
@@ -104,24 +104,24 @@
 
 <div class="overlay" id="results" role="dialog" aria-label="Day results">
   <div class="panel">
-    <div class="scroll">Castle Shop</div>
-    <p class="stat" id="resTitle">Day 1 results:</p>
+    <div class="scroll">Siege Report</div>
+    <p class="stat" id="resTitle">Siege 1 report:</p>
     <p class="stat" id="resKills"></p>
     <p class="stat" id="resScore"></p>
     <div class="row">
-      <button class="btn" id="nextBtn">Go Next</button>
-      <button class="btn gold" id="shopBtn">Shop</button>
+      <button class="btn" id="nextBtn">Next Siege</button>
+      <button class="btn gold" id="shopBtn">Keeper's Goods</button>
     </div>
   </div>
 </div>
 
-<div class="overlay" id="shop" role="dialog" aria-label="Castle Shop">
+<div class="overlay" id="shop" role="dialog" aria-label="Keeper's Goods">
   <div class="panel">
-    <div class="scroll">Castle Shop</div>
+    <div class="scroll">Keeper's Goods</div>
     <div class="shopTop">
-      <p><span class="stat" id="shopGold">0</span> gold &nbsp; <span class="stat" style="color:#8fd3ff" id="shopSouls">0</span> souls &nbsp; Door <span id="shopGate"></span></p>
+      <p><span class="stat" id="shopGold">0</span> gold &nbsp; <span class="stat" style="color:#8fd3ff" id="shopSouls">0</span> souls &nbsp; Gate <span id="shopGate"></span></p>
       <button class="btn" id="repairBtn">Repair</button>
-      <button class="btn gold" id="exitBtn">Exit</button>
+      <button class="btn gold" id="exitBtn">Back</button>
     </div>
     <div id="shopBody"></div>
   </div>
@@ -129,11 +129,11 @@
 
 <div class="overlay" id="confirm" role="dialog" aria-label="Confirm purchase">
   <div class="panel" style="max-width:420px">
-    <p class="stat">Are you sure you want to purchase this?</p>
+    <p class="stat">Add this to the keep?</p>
     <p class="stat" style="color:#9ff09a" id="confirmName"></p>
     <div class="row">
-      <button class="btn" id="noBtn">No</button>
-      <button class="btn gold" id="yesBtn">Yes</button>
+      <button class="btn" id="noBtn">Not now</button>
+      <button class="btn gold" id="yesBtn">Buy it</button>
     </div>
   </div>
 </div>
@@ -141,7 +141,7 @@
 <div class="overlay" id="pause" role="dialog" aria-label="Paused">
   <div class="panel" style="max-width:420px">
     <div class="scroll">Paused</div>
-    <p class="sub">Your progress is saved at the end of every day.</p>
+    <p class="sub">Your progress is saved at the end of every siege.</p>
     <div class="row">
       <button class="btn gold" id="resumeBtn">Resume</button>
       <button class="btn" id="quitBtn">Quit to Map</button>
@@ -173,15 +173,15 @@
 'use strict';
 // ================= Constants =================
 const W = 960, H = 540, GROUND = 468, WALL_X = 240, GRAV = 1500;
-const HOOK = { x: 770, y: 150 };          // where a knight hangs on the Dragon Altar
+const HOOK = { x: 770, y: 150 };          // where a knight hangs on the Worm Spire
 const PIT = { cx: 440, x0: 366, x1: 514, rx: 78, ry: 15 };
 const GUN = { x: 236, y: 222 };
 const SAVE_KEY = 'keepOnslaught.v2';
 
 const LEVELS = [
-  { name: 'Hold the Gate',    days: 5,  gold: 150,  off: 0, mix: 'basic',    blurb: 'Survive 5 days', noRams: true },
-  { name: 'Marching Knights', days: 10, gold: 500,  off: 1, mix: 'knights',  blurb: 'Survive 10 days' },
-  { name: 'Machinery',        days: 7,  gold: 1500, off: 4, mix: 'machines', blurb: 'Survive 7 days' },
+  { name: 'Hold the Gate',    days: 5,  gold: 150,  off: 0, mix: 'basic',    blurb: 'Survive 5 sieges', noRams: true },
+  { name: 'The Baron\'s Vanguard', days: 10, gold: 500,  off: 1, mix: 'knights',  blurb: 'Survive 10 sieges' },
+  { name: 'Engines of War',   days: 7,  gold: 1500, off: 4, mix: 'machines', blurb: 'Survive 7 sieges' },
   { name: 'Endless Siege',    days: 0,  gold: 150,  off: 0, mix: 'basic',    blurb: 'How long can you last?' },
 ];
 
@@ -196,23 +196,23 @@ const TYPES = {
 };
 
 const TOWER = {
-  boulder:  { cd: 6,  names: ['Small Boulder', 'Medium Boulder', 'Large Boulder'],
+  boulder:  { cd: 6,  names: ['Fieldstone', 'Millstone', 'Mountain Stone'], label: 'stone',
               tiers: [{ r: 16, R: 55, dmg: 55 }, { r: 24, R: 75, dmg: 95 }, { r: 34, R: 100, dmg: 150 }] },
-  column:   { cd: 12, names: ['Small Column', 'Medium Column', 'Large Column'],
+  column:   { cd: 12, names: ['Cracked Pillar', 'Clay Pillar', 'Marble Pillar'], label: 'pillar',
               tiers: [{ w: 34, dmg: 150 }, { w: 48, dmg: 250 }, { w: 64, dmg: 420 }] },
-  fireball: { cd: 9,  names: ['Small Fireball', 'Medium Fireball', 'Large Fireball'],
+  fireball: { cd: 9,  names: ['Spark', 'Ember Ball', 'Sunfall'], label: 'fire',
               tiers: [{ r: 14, R: 80, dmg: 40, burn: 12 }, { r: 20, R: 110, dmg: 65, burn: 18 }, { r: 28, R: 140, dmg: 100, burn: 26 }] },
 };
 const GUNS = {
-  cannon:  { cd: 2.5, name: 'Cannon' },
-  freezer: { cd: 9,   name: 'Freezer' },
-  flamer:  { cd: 8,   name: 'Flamethrower' },
+  cannon:  { cd: 2.5, name: 'Bombard' },
+  freezer: { cd: 9,   name: 'Frost Lance' },
+  flamer:  { cd: 8,   name: 'Fire Bellows' },
 };
 const DOORS = [
-  { name: 'Wooden Door', hp: 300 },
-  { name: 'Steel Door', hp: 500 },
-  { name: 'Golden Door', hp: 750 },
-  { name: 'Magic Door', hp: 1100, regen: 4 },
+  { name: 'Oak Gate', hp: 300 },
+  { name: 'Iron Gate', hp: 500 },
+  { name: 'Gilded Gate', hp: 750 },
+  { name: 'Runed Gate', hp: 1100, regen: 4 },
 ];
 
 // ================= Canvas / scaling =================
@@ -404,7 +404,7 @@ function startDay() {
   G.clearT = 0; G.dayKills = 0; G.endT = 0;
   G.cd = { boulder: 0, column: 0, fireball: 0, gun: 0 };
   G.gateHP = Math.min(G.gateMax, G.gateHP + G.gateMax * 0.15);
-  G.banner = { lines: ['DAY ' + G.day, 'GET READY!'], t: 2.6, age: 0 };
+  G.banner = { lines: ['SIEGE ' + G.day], t: 2.6, age: 0 };
   if (G.day === 1) G.hintT = 8;
   G.state = 'play';
 }
@@ -554,7 +554,7 @@ cv.addEventListener('pointerdown', ev => {
     e.bubble = 0; const c = bodyCenter(e);
     burst(c.x, c.y, 16, ['#bfe9ff', '#8fd3ff', '#fff'], 200, 3, 200, 0.5); sfx.pop(); return;
   }
-  if (!canGrab(e)) { addText(p.x, p.y - 20, 'Too heavy! Use the tower', '#ffb0a0', 16, 1); sfx.nope(); return; }
+  if (!canGrab(e)) { addText(p.x, p.y - 20, 'Too heavy! Drop stones on it', '#ffb0a0', 16, 1); sfx.nope(); return; }
   e.state = 'held'; e.rot = 0; e.vr = 0; e.hitSet = null;
   pointers.set(ev.pointerId, { e, hist: [{ x: p.x, y: p.y, t: performance.now() }] });
   try { cv.setPointerCapture(ev.pointerId); } catch (err) { /* ignore */ }
@@ -632,7 +632,7 @@ function update(dt) {
     }
   }
 
-  // Dragon Altar: a knight brought to the hook is hung there
+  // Worm Spire: a knight brought to the hook is hung there
   if (G.use.altar >= 0 && !G.hooked && !G.dragon) {
     for (const e of G.enemies) {
       if (e.dead || !human(e) || (e.state !== 'held' && e.state !== 'fly')) continue;
@@ -962,13 +962,13 @@ function dayCleared() {
   G.gold += bonus; G.score += bonus * 5;
   pointers.clear(); G.aim = null;
   const last = G.L.days && G.day >= G.L.days;
-  G.banner = { lines: ['VICTORY!'], t: 2.2, age: 0 };
+  G.banner = { lines: ['SIEGE', 'REPELLED'], t: 2.2, age: 0 };
   sfx.fanfare();
   G.state = 'ending'; G.endT = 2.2; G.endKind = last ? 'win' : 'day'; G.dayBonus = bonus;
 }
 function defeat() {
   pointers.clear(); G.aim = null;
-  G.banner = { lines: ['DEFEAT!', 'CASTLE', 'FALLEN!'], t: 99, age: 0 };
+  G.banner = { lines: ['DESTROYED', 'CASTLE', 'CRUSHED'], t: 99, age: 0 };
   sfx.boom(); sfx.defeat(); buzz([60, 40, 120]);
   G.state = 'ending'; G.endT = 2.6; G.endKind = 'lose';
 }
@@ -985,9 +985,9 @@ function resumeRun(r) {
   Object.assign(G, { day: r.day, gold: r.gold, souls: r.souls, score: r.score, kills: r.kills, gateHP: r.gateHP, gateMax: r.gateMax,
     owned: new Set(r.owned), use: Object.assign(G.use, r.use), state: 'menu', endKind: 'day', dayKills: 0, dayBonus: 0 });
   document.getElementById('resTitle').textContent = 'Welcome back, Keeper!';
-  document.getElementById('resKills').textContent = `${G.L.name}: Day ${G.day}${G.L.days ? ' of ' + G.L.days : ''} complete`;
-  document.getElementById('resScore').textContent = `Score: ${G.score}`;
-  document.getElementById('nextBtn').textContent = 'Go Next';
+  document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} repelled`;
+  document.getElementById('resScore').textContent = `Glory: ${G.score}`;
+  document.getElementById('nextBtn').textContent = 'Next Siege';
   document.getElementById('shopBtn').hidden = false;
   show('results');
 }
@@ -1003,42 +1003,42 @@ function showEnd() {
   }
   const between = G.endKind === 'day';
   if (between) {
-    document.getElementById('resTitle').textContent = `Day ${G.day} results:`;
-    document.getElementById('resKills').textContent = `Enemies Killed: ${G.dayKills}   ·   Bonus: ${G.dayBonus} gold`;
-    document.getElementById('resScore').textContent = `Score: ${G.score}`;
+    document.getElementById('resTitle').textContent = `Siege ${G.day} report:`;
+    document.getElementById('resKills').textContent = `Invaders defeated: ${G.dayKills}   ·   Spoils: ${G.dayBonus} gold`;
+    document.getElementById('resScore').textContent = `Glory: ${G.score}`;
   } else {
-    document.getElementById('resTitle').textContent = G.endKind === 'win' ? 'Victory!' : 'Defeat!';
-    document.getElementById('resKills').textContent = `Day ${G.day} reached.   Total Enemies Killed: ${G.kills}`;
-    document.getElementById('resScore').textContent = `Final Score: ${G.score}`;
+    document.getElementById('resTitle').textContent = G.endKind === 'win' ? 'The keep stands!' : 'Destroyed! The castle is crushed.';
+    document.getElementById('resKills').textContent = `Held out until siege ${G.day}.   Invaders defeated: ${G.kills}`;
+    document.getElementById('resScore').textContent = `Glory: ${G.score}`;
   }
-  document.getElementById('nextBtn').textContent = between ? 'Go Next' : 'Done';
+  document.getElementById('nextBtn').textContent = between ? 'Next Siege' : 'Back to Map';
   document.getElementById('shopBtn').hidden = !between;
   show('results');
 }
 
 // ================= Shop =================
 const SECTIONS = [
-  { title: 'Door Upgrades', items: [
-    { id: 'door0', cat: 'door', tier: 0, name: 'Wooden Door', desc: '300 strength', cost: [0, 0] },
-    { id: 'door1', cat: 'door', tier: 1, name: 'Steel Door', desc: '500 strength', cost: [500, 0] },
-    { id: 'door2', cat: 'door', tier: 2, name: 'Golden Door', desc: '750 strength', cost: [1100, 8] },
-    { id: 'door3', cat: 'door', tier: 3, name: 'Magic Door', desc: '1100 strength, mends itself', cost: [2000, 20] },
+  { title: 'The Gatehouse', items: [
+    { id: 'door0', cat: 'door', tier: 0, name: 'Oak Gate', desc: '300 strength', cost: [0, 0] },
+    { id: 'door1', cat: 'door', tier: 1, name: 'Iron Gate', desc: '500 strength', cost: [500, 0] },
+    { id: 'door2', cat: 'door', tier: 2, name: 'Gilded Gate', desc: '750 strength', cost: [1100, 8] },
+    { id: 'door3', cat: 'door', tier: 3, name: 'Runed Gate', desc: '1100 strength, slowly mends itself', cost: [2000, 20] },
   ] },
-  { title: 'Sacrifices', items: [
-    { id: 'hellgate', cat: 'sac', name: 'Hell Gate', desc: 'A fire pit. Throw knights in to burn them. +1 soul each', cost: [200, 0] },
-    { id: 'altar0', cat: 'altar', tier: 0, name: 'Dragon Altar', desc: 'Hang a knight on the hook to feed the dragon. +2 souls, double gold', cost: [350, 0] },
-    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Dragon Altar', desc: 'The dragon arrives faster and scorches the ground as it swoops. +3 souls', cost: [1400, 15] },
+  { title: 'Offerings', items: [
+    { id: 'hellgate', cat: 'sac', name: 'Ember Pit', desc: 'A pit of undying fire. Throw knights in to burn them. +1 soul each', cost: [200, 0] },
+    { id: 'altar0', cat: 'altar', tier: 0, name: 'Worm Spire', desc: 'Hang a knight on the hook and the Worm comes to feed. +2 souls, double gold', cost: [350, 0] },
+    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Worm Spire', desc: 'The Worm arrives faster and scorches the ground as it swoops. +3 souls', cost: [1400, 15] },
   ] },
-  { title: 'Tower Upgrades 1', items: [0, 1, 2].map(t => ({ id: 'boulder' + t, cat: 'boulder', tier: t, name: TOWER.boulder.names[t],
+  { title: 'Falling Stones', items: [0, 1, 2].map(t => ({ id: 'boulder' + t, cat: 'boulder', tier: t, name: TOWER.boulder.names[t],
     desc: ['Crushes a small group', 'Wider impact', 'Flattens a crowd'][t], cost: [[250, 0], [600, 5], [1000, 12]][t] })) },
-  { title: 'Tower Upgrades 2', items: [0, 1, 2].map(t => ({ id: 'column' + t, cat: 'column', tier: t, name: TOWER.column.names[t],
+  { title: 'Pillars of the Keep', items: [0, 1, 2].map(t => ({ id: 'column' + t, cat: 'column', tier: t, name: TOWER.column.names[t],
     desc: ['Heavy hit in a narrow line', 'Breaks catapults', 'Smashes battering rams'][t], cost: [[600, 4], [1200, 12], [2000, 25]][t] })) },
-  { title: 'Tower Upgrades 3', items: [0, 1, 2].map(t => ({ id: 'fireball' + t, cat: 'fireball', tier: t, name: TOWER.fireball.names[t],
+  { title: 'Brazier Fire', items: [0, 1, 2].map(t => ({ id: 'fireball' + t, cat: 'fireball', tier: t, name: TOWER.fireball.names[t],
     desc: ['Sets a group on fire', 'Bigger blaze', 'Burns half the field'][t], cost: [[400, 3], [900, 10], [1500, 20]][t] })) },
-  { title: 'Gun Weapon', items: [
-    { id: 'cannon', cat: 'gun', name: 'Cannon', desc: 'Fires at the closest enemy', cost: [700, 0] },
-    { id: 'freezer', cat: 'gun', name: 'Freezer', desc: 'Freezes the front line. Drop a frozen knight to shatter him', cost: [1200, 10] },
-    { id: 'flamer', cat: 'gun', name: 'Flamethrower', desc: 'Burns everyone near the door', cost: [1700, 15] },
+  { title: 'Battlement Engines', items: [
+    { id: 'cannon', cat: 'gun', name: 'Bombard', desc: 'Fires an iron ball at the closest enemy', cost: [700, 0] },
+    { id: 'freezer', cat: 'gun', name: 'Frost Lance', desc: 'Freezes the front line. Drop a frozen knight to shatter him', cost: [1200, 10] },
+    { id: 'flamer', cat: 'gun', name: 'Fire Bellows', desc: 'Roasts everyone near the gate', cost: [1700, 15] },
   ] },
 ];
 const ALL_ITEMS = SECTIONS.flatMap(s => s.items);
@@ -1056,7 +1056,7 @@ function renderShop() {
   document.getElementById('shopGate').textContent = `${Math.ceil(G.gateHP)} / ${G.gateMax}`;
   const rc = repairCost();
   const rb = document.getElementById('repairBtn');
-  rb.textContent = rc > 0 ? `Repair (${rc} gold)` : 'Door is whole';
+  rb.textContent = rc > 0 ? `Repair gate (${rc} gold)` : 'Gate is whole';
   rb.disabled = rc <= 0 || G.gold < rc;
   const body = document.getElementById('shopBody');
   body.innerHTML = '';
@@ -1123,7 +1123,7 @@ function renderMenu() {
   if (r && LEVELS[r.level]) {
     const L = LEVELS[r.level], b = document.createElement('button');
     b.className = 'lvl';
-    b.innerHTML = `<b>Continue</b><span>${L.days ? 'Level ' + (r.level + 1) + ': ' : ''}${L.name} · Day ${r.day + 1} next · ${r.gold} gold · ${r.souls} souls</span>`;
+    b.innerHTML = `<b>Continue</b><span>${L.days ? 'Level ' + (r.level + 1) + ': ' : ''}${L.name} · Siege ${r.day + 1} next · ${r.gold} gold · ${r.souls} souls</span>`;
     b.addEventListener('click', () => { audioUnlock(); resumeRun(r); });
     cont.appendChild(b);
   }
@@ -1134,8 +1134,8 @@ function renderMenu() {
     const locked = L.days && i + 1 > save.unlocked;
     const b = document.createElement('button');
     b.className = 'lvl'; b.disabled = !!locked;
-    const best = save.best[i] ? ` · Best score ${save.best[i]}` : '';
-    const extra = !L.days && save.endlessDay ? ` · Best day ${save.endlessDay}` : '';
+    const best = save.best[i] ? ` · Best glory ${save.best[i]}` : '';
+    const extra = !L.days && save.endlessDay ? ` · Best: siege ${save.endlessDay}` : '';
     b.innerHTML = `<b>${L.days ? 'Level ' + (i + 1) + ': ' : ''}${L.name}</b><span>${locked ? 'Win the previous level to unlock' : L.blurb}${best}${extra}</span>`;
     b.addEventListener('click', () => { audioUnlock(); if (i === 0 && !loadSave().seenStory) openStory(() => startLevel(0)); else startLevel(i); });
     box.appendChild(b);
@@ -1181,13 +1181,13 @@ window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 // ================= Intro story =================
 const STORY = [
   { title: 'The Valley of Emberhold', scene: 'keep',
-    text: 'For three hundred years the Keep of Emberhold has guarded this valley. Deep in its stones sleeps an old magic: a fire that never dies, and a red dragon that answers the keeper\'s call.' },
+    text: 'For three hundred years the Keep of Emberhold has guarded this valley. Deep in its stones sleeps an old magic: a fire that never dies, and the Worm, a great red beast that answers the keeper\'s call.' },
   { title: 'The Iron Baron', scene: 'march',
     text: 'Now Baron Varric marches on the keep with an endless army of knights in silver, black and gold, with catapults and battering rams behind them. He wants the old magic for himself.' },
   { title: 'You Are the Keeper', scene: 'grab',
     text: 'The keep\'s magic is yours to command. Reach down onto the battlefield, seize the invaders and hurl them back across the valley.' },
   { title: 'Hold the Gate', scene: 'dragon',
-    text: 'Survive each day of the siege. Earn gold and souls, build defenses in the Castle Shop and wake the dragon. Whatever happens, do not let the door fall!' },
+    text: 'Survive every siege. Earn gold and souls, trade them for the Keeper\'s Goods and wake the Worm. Whatever happens, do not let the gate fall!' },
 ];
 let story = null;
 function openStory(after) {
@@ -1268,8 +1268,8 @@ const TUT = [
   { text: 'A knight is coming! Press and hold on him to grab him.', wait: 'grab' },
   { text: 'Now lift him high into the air, then let go!', wait: 'kill' },
   { text: 'Nice! You can also fling a knight hard into the castle wall or into his friends. Try it!', wait: 'kill2' },
-  { text: 'Knights that reach the door hack away at it. Keep an eye on the door\'s strength at the bottom right.', wait: 'tap', focus: 'door' },
-  { text: 'Every knight you defeat earns gold. Between days, spend it in the Castle Shop on the Hell Gate fire pit, the Dragon Altar and weapons.', wait: 'tap', focus: 'gold' },
+  { text: 'Knights that reach the gate hack away at it. Keep an eye on the gate\'s strength at the bottom right.', wait: 'tap', focus: 'door' },
+  { text: 'Every knight you defeat earns gold. Between sieges, spend it on the Keeper\'s Goods: the Ember Pit, the Worm Spire and weapons for the walls.', wait: 'tap', focus: 'gold' },
   { text: 'That\'s all you need, Keeper. Here comes the rest of the Baron\'s army!', wait: 'time' },
 ];
 const TUT_SKIP = { x: W - 200, y: 12, w: 128, h: 36 };
@@ -2224,7 +2224,7 @@ function drawHUD() {
     ctx.fillStyle = '#f5e6c8'; ctx.font = 'bold 15px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'; ctx.textAlign = 'center'; ctx.fillText(icon, b.x, b.y + 1);
   }
   ctx.textAlign = 'center'; ctx.font = 'bold 16px system-ui';
-  const label = `Day ${G.day}${G.L.days ? ' of ' + G.L.days : ''}   ·   Score ${G.score}`;
+  const label = `Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''}   ·   Glory ${G.score}`;
   const tw = ctx.measureText(label).width + 30;
   ctx.fillStyle = 'rgba(15,22,26,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - tw / 2, 10, tw, 30, 10) : ctx.rect(W / 2 - tw / 2, 10, tw, 30); ctx.fill();
   ctx.fillStyle = '#f2e3b3'; ctx.fillText(label, W / 2, 26);
@@ -2236,7 +2236,7 @@ function drawHUD() {
     const T = TOWER[G.aim].tiers[G.use[G.aim]];
     ctx.beginPath(); ctx.ellipse(x, GROUND, T.R || T.w / 2 + 10, 10, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 18px system-ui'; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 4;
-    const msg = `Tap the field to drop the ${G.aim}`;
+    const msg = `Tap the field to drop the ${TOWER[G.aim].label}`;
     ctx.strokeText(msg, W / 2, 66); ctx.fillText(msg, W / 2, 66);
   }
   if (G.hintT > 0) {
