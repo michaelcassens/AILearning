@@ -179,7 +179,7 @@ const GUN = { x: 236, y: 222 };
 const SAVE_KEY = 'keepOnslaught.v2';
 
 const LEVELS = [
-  { name: 'Hold the Gate',    days: 5,  gold: 150,  off: 0, mix: 'basic',    blurb: 'Survive 5 days' },
+  { name: 'Hold the Gate',    days: 5,  gold: 150,  off: 0, mix: 'basic',    blurb: 'Survive 5 days', noRams: true },
   { name: 'Marching Knights', days: 10, gold: 500,  off: 1, mix: 'knights',  blurb: 'Survive 10 days' },
   { name: 'Machinery',        days: 7,  gold: 1500, off: 4, mix: 'machines', blurb: 'Survive 7 days' },
   { name: 'Endless Siege',    days: 0,  gold: 150,  off: 0, mix: 'basic',    blurb: 'How long can you last?' },
@@ -192,7 +192,7 @@ const TYPES = {
   golden:   { hp: 95,  speed: 36, dmg: 8,  rate: 1.0, gold: 30, w: 24,  h: 48, scale: 1.05, armor: '#e6b83c', plume: '#d8261f', tunic: '#7a1f1f', grab: 1, fallMult: 0.6 },
   wizard:   { hp: 34,  speed: 38, dmg: 0,  rate: 4.0, gold: 25, w: 22,  h: 50, scale: 1, tunic: '#6c3fb0', grab: 1, caster: true },
   catapult: { hp: 90,  speed: 30, dmg: 14, rate: 4.2, gold: 40, w: 74,  h: 50, scale: 1, grab: 2, machine: true, ranged: true },
-  ram:      { hp: 260, speed: 20, dmg: 30, rate: 2.2, gold: 50, w: 124, h: 50, scale: 1, grab: 99, machine: true },
+  ram:      { hp: 150, speed: 20, dmg: 30, rate: 2.2, gold: 50, w: 124, h: 50, scale: 1, grab: 99, machine: true },
 };
 
 const TOWER = {
@@ -371,13 +371,18 @@ function buildDay(L, day) {
   if (d >= 3) pool.push(['catapult', L.mix === 'machines' ? 4 : 1.2]);
   if (d >= 4) pool.push(['wizard', 2]);
   if (d >= 5) pool.push(['golden', 3 + d * 0.2]);
-  if (d >= 5) pool.push(['ram', L.mix === 'machines' ? 2.5 : 0.8]);
+  if (!L.noRams && d >= (L.mix === 'machines' ? 5 : 6)) pool.push(['ram', L.mix === 'machines' ? 2.5 : 0.8]);
   const total = pool.reduce((s, p) => s + p[1], 0);
   const q = [];
   for (let i = 0; i < count; i++) {
     let r = Math.random() * total, t = 'knight';
     for (const [k, w] of pool) { if ((r -= w) <= 0) { t = k; break; } }
     q.push(t);
+  }
+  // never more than one battering ram a day until day 8, then two
+  let rams = 0;
+  for (let i = 0; i < q.length; i++) {
+    if (q[i] === 'ram' && ++rams > (d >= 8 ? 2 : 1)) q[i] = 'knight';
   }
   // knights charge in packs that grow over the days, with a short breather between packs
   const out = [], gap = Math.max(1.6, 4 - d * 0.18), maxPack = Math.min(8, 3 + Math.floor(d * 0.7));
