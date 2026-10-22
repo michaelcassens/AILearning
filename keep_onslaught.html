@@ -1576,7 +1576,23 @@ function buildScenery() {
   c.fillStyle = 'rgba(255,190,100,0.12)'; c.fillRect(wx - wh, ws - 14, wh * 2, 14);   // a little hearth glow inside
   c.fillStyle = '#8e9798'; c.fillRect(wx - wh - 7, ws, wh * 2 + 14, 5);
   c.fillStyle = '#6f7778'; c.fillRect(wx - wh - 7, ws + 5, wh * 2 + 14, 2);
-  c.fillStyle = '#4a86a8'; c.beginPath(); c.moveTo(150, 330); c.lineTo(WALL_X + 6, 316); c.lineTo(WALL_X + 6, 330); c.lineTo(150, 344); c.fill();
+  // dressed-stone arch framing the gate: wedge-shaped stones, a keystone and jamb blocks down each side
+  const ax = 200, ay = GROUND - 96, r0 = 37, r1 = 45, n = 9;
+  const dressed = (shapeFn) => {
+    const g2 = c.createLinearGradient(0, ay - r1, 0, GROUND); g2.addColorStop(0, '#d2d7d6'); g2.addColorStop(1, '#a3aaab');
+    c.fillStyle = g2; c.strokeStyle = '#59605f'; c.lineWidth = 1.2;
+    c.beginPath(); shapeFn(); c.fill(); c.stroke();
+  };
+  for (let i = 0; i < n; i++) {
+    const a0 = Math.PI + (i / n) * Math.PI, a1 = Math.PI + ((i + 1) / n) * Math.PI, key = i === (n - 1) / 2;
+    const ro = key ? r1 + 6 : r1;
+    dressed(() => { c.arc(ax, ay, ro, a0, a1); c.arc(ax, ay, r0, a1, a0, true); c.closePath(); });
+  }
+  for (let y = ay, k = 0; y < GROUND; y += 16, k++) {
+    const h = Math.min(16, GROUND - y), wide = k % 2 === 0;
+    dressed(() => c.rect(ax - r1 - (wide ? 2 : 0), y, r1 - r0 + (wide ? 2 : 0), h));
+    dressed(() => c.rect(ax + r0, y, r1 - r0 + (wide ? 2 : 0), h));
+  }
   for (const [x, y] of [[96, 268], [24, 330], [24, 430]]) {   // crystal orbs
     c.fillStyle = '#5b6b70'; c.beginPath(); c.arc(x, y, 10, 0, Math.PI * 2); c.fill();
     const og = c.createRadialGradient(x - 3, y - 3, 1, x, y, 8); og.addColorStop(0, '#ffffff'); og.addColorStop(1, '#6fc9f0');
