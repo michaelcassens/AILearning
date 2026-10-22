@@ -6,7 +6,7 @@ on:
       - keep_onslaught.html
       - keep_onslaught_icon.png
       - keep_onslaught.webmanifest
-      - 'keep-onslaught-android/**'
+      - 'keep-onslaught-app/**'
       - .github/workflows/keep-onslaught-apk.yml
   workflow_dispatch:
 
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: keep-onslaught-android
+        working-directory: keep-onslaught-app
     steps:
       - uses: actions/checkout@v4
 
@@ -35,7 +35,7 @@ jobs:
         run: npm run sync
 
       - name: Build the APK
-        working-directory: keep-onslaught-android/android
+        working-directory: keep-onslaught-app/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
@@ -46,4 +46,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: keep-onslaught-apk
-          path: keep-onslaught-android/keep-onslaught.apk
+          path: keep-onslaught-app/keep-onslaught.apk
