@@ -606,7 +606,7 @@ function hurtPlayer(p) {
   if (!p || !p.active || p.down) p = pick(act);
   p.torches--; p.hurts++; p.hurtT = 0.7;
   G.hurtFlash = 0.55; cam.shake = reduceMotion ? 2 : 14; sfx('hurt'); lensSplat(2);
-  G.claw = { t: 0, x: rand(260, 700), y: rand(160, 360), a: rand(-0.6, 0.6) };
+  G.claw = { t: 0, x: rand(300, 660), y: rand(200, 340), a: (Math.random() < 0.5 ? -1 : 1) * rand(0.62, 0.95) };
   if (p.torches <= 0) { p.down = true; p.contT = 10; p.ammo = 0; popText(p.i ? W - 170 : 170, 150, 'AGENT DOWN', '#ff6a6a', 30); }
 }
 
@@ -1457,12 +1457,46 @@ function drawArch(z, RW, RH, fog, RB) {
   ctx.strokeStyle = c; ctx.lineWidth = Math.max(2, a.s * 0.35); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(t.x, t.y, b.x, b.y); ctx.stroke();
   for (const s of [-1, 1]) { const p0 = P(s * (RW - 0.15), RH - 1.1, z), p1 = P(s * (RW - 0.15), 0, z); line(p0, p1, c, Math.max(2, p0.s * 0.3)); }
 }
+// a wooden barrel in unit space: origin at the bottom centre, y up is negative.
+// w = width at the bulge, h = height, C maps a colour through fog.
+function barrelShape(w, h, C) {
+  const hw = w / 2, ew = hw * 0.84, ry = hw * 0.32, top = -h;
+  const side = k => ew + (hw - ew) * Math.sin(k * Math.PI); // half-width at height fraction k (0 bottom, 1 top)
+  const body = () => {
+    ctx.beginPath(); ctx.moveTo(-ew, top);
+    ctx.quadraticCurveTo(-hw * 1.16, -h / 2, -ew, 0); ctx.ellipse(0, 0, ew, ry, 0, Math.PI, 0, true);
+    ctx.quadraticCurveTo(hw * 1.16, -h / 2, ew, top); ctx.closePath();
+  };
+  const g = ctx.createLinearGradient(-hw, 0, hw, 0);
+  g.addColorStop(0, C('#2e1c0d')); g.addColorStop(0.3, C('#7a5230')); g.addColorStop(0.45, C('#8a6038')); g.addColorStop(0.8, C('#4a2f17')); g.addColorStop(1, C('#24160a'));
+  body(); ctx.fillStyle = g; ctx.fill();
+  ctx.save(); body(); ctx.clip();
+  // staves curve with the bulge
+  ctx.strokeStyle = C('#22140a'); ctx.lineWidth = 0.012;
+  for (const k of [-0.72, -0.45, -0.16, 0.14, 0.42, 0.7]) {
+    ctx.beginPath(); ctx.moveTo(k * ew, top + ry * Math.sqrt(1 - k * k)); ctx.quadraticCurveTo(k * hw * 1.16, -h / 2, k * ew, ry * Math.sqrt(1 - k * k)); ctx.stroke();
+  }
+  // iron hoops wrap around the front
+  for (const k of [0.13, 0.36, 0.64, 0.87]) {
+    const y = -h * k, sw = side(k), bw = 0.045;
+    ctx.fillStyle = C('#2a2a2c'); ctx.beginPath(); ctx.ellipse(0, y, sw * 1.02, ry, 0, 0, Math.PI); ctx.ellipse(0, y - bw, sw * 1.02, ry, 0, Math.PI, 0, true); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 0.008; ctx.beginPath(); ctx.ellipse(-sw * 0.25, y - bw + ry * 0.97, sw * 0.4, ry * 0.2, 0, Math.PI * 0.15, Math.PI * 0.85); ctx.stroke();
+    ctx.fillStyle = C('#8a8a86'); ctx.beginPath(); ctx.arc(-sw * 0.55, y - bw / 2 + ry * 0.82, 0.012, 0, TAU); ctx.fill();
+  }
+  ctx.restore();
+  // lid: rim, recessed head with planks
+  ctx.fillStyle = C('#3a2410'); ctx.beginPath(); ctx.ellipse(0, top, ew, ry, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = C('#6a4626'); ctx.beginPath(); ctx.ellipse(0, top + ry * 0.12, ew * 0.86, ry * 0.8, 0, 0, TAU); ctx.fill();
+  ctx.save(); ctx.clip(); ctx.strokeStyle = C('#3a2410'); ctx.lineWidth = 0.01;
+  for (const k of [-0.45, -0.15, 0.15, 0.45]) { ctx.beginPath(); ctx.moveTo(k * ew, top - ry); ctx.lineTo(k * ew, top + ry); ctx.stroke(); }
+  ctx.fillStyle = C('#2a1a0a'); ctx.beginPath(); ctx.arc(ew * 0.4, top + ry * 0.2, 0.025, 0, TAU); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.015; body(); ctx.stroke();
+}
 function drawBarrelAt(x, z, fog, RB) {
   if (z < cam.z + 0.6) return;
-  const f = fogT(z, RB), t = P(x, 1.0, z), b = P(x, 0, z), w = 0.38 * t.s;
-  ctx.fillStyle = mix('#4a3018', fog, f); ctx.beginPath(); ctx.ellipse(t.x, (t.y + b.y) / 2, w, (b.y - t.y) / 2, 0, 0, TAU); ctx.fill();
-  ctx.strokeStyle = mix('#1e1e1e', fog, f); ctx.lineWidth = Math.max(1, 0.04 * t.s);
-  [0.25, 0.75].forEach(k => { const y = lerp(t.y, b.y, k); ctx.beginPath(); ctx.moveTo(t.x - w * 0.95, y); ctx.lineTo(t.x + w * 0.95, y); ctx.stroke(); });
+  const f = fogT(z, RB), b = P(x, 0, z);
+  ctx.save(); ctx.translate(b.x, b.y); ctx.scale(b.s, b.s); barrelShape(0.72, 1.0, c => mix(c, fog, f)); ctx.restore();
 }
 function drawChandelier(z, RH, fog, RB) {
   if (z < cam.z + 0.8) return;
@@ -1676,8 +1710,7 @@ function drawBrk(b) {
     ctx.fillStyle = C('#a8b6c6'); ctx.beginPath(); ctx.moveTo(-0.08, -h); ctx.quadraticCurveTo(-0.3, -h * 0.6, -0.16, 0); ctx.lineTo(0.16, 0); ctx.quadraticCurveTo(0.3, -h * 0.6, 0.08, -h); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = C('#3a5a8a'); ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(-0.2, -h * 0.5); ctx.lineTo(0.2, -h * 0.5); ctx.moveTo(-0.18, -h * 0.35); ctx.lineTo(0.18, -h * 0.35); ctx.stroke();
   } else if (b.style === 'barrel') {
-    ctx.fillStyle = C('#5a3a1e'); ctx.beginPath(); ctx.ellipse(0, -h / 2, w / 2, h / 2, 0, 0, TAU); ctx.fill();
-    ctx.strokeStyle = C('#222'); ctx.lineWidth = 0.04; [0.25, 0.75].forEach(k => { ctx.beginPath(); ctx.moveTo(-w / 2 * 0.95, -h * k); ctx.lineTo(w / 2 * 0.95, -h * k); ctx.stroke(); });
+    barrelShape(w, h, C);
   } else if (b.style === 'lantern') {
     ctx.strokeStyle = '#111'; ctx.lineWidth = 0.05; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -h + 0.2); ctx.stroke();
     ctx.restore(); const lp = P(b.x, b.h - 0.1, b.z); glow(lp.x, lp.y, lp.s * 0.8, '#ffb455', 0.35); ctx.fillStyle = '#ffd88a'; ctx.fillRect(lp.x - lp.s * 0.07, lp.y - lp.s * 0.1, lp.s * 0.14, lp.s * 0.2);
@@ -1991,7 +2024,18 @@ function render(dt) {
   vignette();
   if (G.state !== 'play') { if (G.state === 'title') { ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.fillRect(0, 0, W, H); } return; }
   // hurt claw marks
-  if (G.claw) { const c = G.claw; c.t += pdt; const a = clamp(1 - c.t / 0.8, 0, 1); ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a); ctx.strokeStyle = 'rgba(200,20,20,' + a + ')'; ctx.lineWidth = 9; ctx.lineCap = 'round'; for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(-160, k * 34 - 30); ctx.lineTo(160, k * 34 + 30); ctx.stroke(); } ctx.restore(); if (c.t > 0.8) G.claw = null; }
+  if (G.claw) {
+    const c = G.claw; c.t += pdt; const a = clamp(1 - c.t / 0.8, 0, 1), grow = ease(c.t / 0.12);
+    ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(c.a); ctx.lineCap = 'round';
+    // three tapered claw rakes, slightly curved, drawn in the rotated (diagonal) frame
+    for (let k = -1; k <= 1; k++) {
+      const off = k * 38, len = 190 - Math.abs(k) * 30, x0 = -len, x1 = -len + len * 2 * grow;
+      for (const [w, col] of [[12, 'rgba(70,0,0,' + a * 0.7 + ')'], [7, 'rgba(200,20,20,' + a + ')'], [2, 'rgba(255,140,120,' + a * 0.6 + ')']]) {
+        ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x0, off); ctx.quadraticCurveTo((x0 + x1) / 2, off - 22, x1, off + 6); ctx.stroke();
+      }
+    }
+    ctx.restore(); if (c.t > 0.8) G.claw = null;
+  }
   drawSplats(pdt);
   if (G.hurtFlash > 0) { ctx.fillStyle = 'rgba(160,0,0,' + G.hurtFlash * 0.6 + ')'; ctx.fillRect(0, 0, W, H); G.hurtFlash = Math.max(0, G.hurtFlash - pdt); }
   if (G.phase === 'bossCard') drawBossCard();
