@@ -268,18 +268,18 @@ const sfx = {
   chomp() { noise(0.25, 0.5, 900); tone(110, 0.3, 'sawtooth', 0.18, -60); },
   roar()  {   // a short, deep, gurgling bellow: voiced low tones through a throat-like filter, no whoosh
     if (!AC || muted) return;
-    const t = AC.currentTime, dur = 0.75, out = AC.createGain(), f = AC.createBiquadFilter(), f2 = AC.createBiquadFilter();
+    const t = AC.currentTime, dur = 0.42, out = AC.createGain(), f = AC.createBiquadFilter(), f2 = AC.createBiquadFilter();
     f.type = 'lowpass'; f.frequency.setValueAtTime(420, t); f.frequency.exponentialRampToValueAtTime(160, t + dur);
     f2.type = 'peaking'; f2.frequency.value = 240; f2.Q.value = 3; f2.gain.value = 9;   // the "aw" of an open throat
     out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(0.75, t + 0.05);
-    out.gain.setValueAtTime(0.75, t + 0.25); out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    out.gain.setValueAtTime(0.75, t + 0.12); out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     f.connect(f2).connect(out).connect(AC.destination);
     const gurgle = AC.createOscillator(), gg = AC.createGain();   // slow, uneven wobble rather than a buzz
-    gurgle.type = 'triangle'; gurgle.frequency.setValueAtTime(11, t); gurgle.frequency.linearRampToValueAtTime(6, t + dur);
+    gurgle.type = 'triangle'; gurgle.frequency.setValueAtTime(14, t); gurgle.frequency.linearRampToValueAtTime(9, t + dur);
     gg.gain.value = 0.45; gurgle.connect(gg).connect(out.gain); gurgle.start(t); gurgle.stop(t + dur);
     for (const [f0, f1, v, type] of [[62, 38, 0.6, 'sawtooth'], [64, 37, 0.45, 'sawtooth'], [31, 22, 0.5, 'triangle']]) {
       const o = AC.createOscillator(), g = AC.createGain(), wob = AC.createOscillator(), wg = AC.createGain();
-      o.type = type; o.frequency.setValueAtTime(f0 * 1.2, t); o.frequency.linearRampToValueAtTime(f0, t + 0.08); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      o.type = type; o.frequency.setValueAtTime(f0 * 1.2, t); o.frequency.linearRampToValueAtTime(f0, t + 0.05); o.frequency.exponentialRampToValueAtTime(f1, t + dur);
       wob.frequency.value = 7; wg.gain.value = f0 * 0.06; wob.connect(wg).connect(o.frequency);   // pitch flutter
       g.gain.value = v; o.connect(g).connect(f); o.start(t); o.stop(t + dur); wob.start(t); wob.stop(t + dur);
     }
@@ -1710,16 +1710,18 @@ function drawPitRocks(front) {   // jagged, pointed rocks; the left half mirrors
     if ((Math.sin(a) > 0.05) !== front) continue;
     const x = cx + Math.cos(a) * rx, y = GROUND + 2 + Math.sin(a) * ry;
     const m = i <= 13 ? i : 26 - i, mir = i > 13 ? -1 : 1;
-    const rw = 8 + (m * 7 % 3) * 1.4, rh = (front ? 7 : 15) + (m * 5 % 4) * (front ? 1.2 : 2.2), lean = ((m * 3 % 5) - 2) * 1.6 * mir;
+    const rw = 9 + (m * 7 % 3) * 1.4, rh = (front ? 6 : 12) + (m * 5 % 4) * (front ? 1 : 1.6), lean = ((m * 3 % 5) - 2) * 1.6 * mir;
     const rg = ctx.createLinearGradient(0, y - rh, 0, y + 5);
     rg.addColorStop(0, m % 2 ? '#b4b9b6' : '#9fa5a1'); rg.addColorStop(1, m % 2 ? '#6e7470' : '#5e6460');
     ctx.fillStyle = rg; ctx.strokeStyle = 'rgba(35,38,36,0.6)'; ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(x - rw, y + 5); ctx.lineTo(x - rw * 0.8, y - rh * 0.45); ctx.lineTo(x - rw * 0.25 + lean * 0.4, y - rh * 0.8);
-    ctx.lineTo(x + lean, y - rh); ctx.lineTo(x + rw * 0.55 + lean * 0.3, y - rh * 0.55); ctx.lineTo(x + rw, y + 5); ctx.closePath();
+    ctx.moveTo(x - rw, y + 5); ctx.lineTo(x - rw * 0.85, y - rh * 0.5);
+    ctx.quadraticCurveTo(x - rw * 0.55 + lean * 0.4, y - rh * 0.95, x + lean * 0.6, y - rh);   // blunt, rounded crown
+    ctx.quadraticCurveTo(x + rw * 0.6 + lean * 0.3, y - rh * 0.9, x + rw * 0.75, y - rh * 0.45);
+    ctx.lineTo(x + rw, y + 5); ctx.closePath();
     ctx.fill(); ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,0.18)';   // lit facet
-    ctx.beginPath(); ctx.moveTo(x - rw * 0.25 + lean * 0.4, y - rh * 0.8); ctx.lineTo(x + lean, y - rh); ctx.lineTo(x - rw * 0.1, y - rh * 0.2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - rw * 0.6, y - rh * 0.6); ctx.quadraticCurveTo(x - rw * 0.4 + lean * 0.4, y - rh * 0.92, x + lean * 0.6, y - rh * 0.97); ctx.lineTo(x - rw * 0.1, y - rh * 0.3); ctx.closePath(); ctx.fill();
   }
 }
 function drawPit() {
