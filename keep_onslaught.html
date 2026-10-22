@@ -359,7 +359,7 @@ function makeState(levelIdx) {
     enemies: [], projectiles: [], particles: [], texts: [], spawnQueue: [], spawnTimer: 0, dayTotal: 1,
     aim: null, aimPos: { x: W / 2, y: GROUND }, shake: 0, gateShake: 0, gateMarks: [],
     pitHeat: 0, beamT: 0, hooked: null, dragon: null, flameT: 0, sprayT: 0,
-    clearT: 0, banner: null, endT: 0, time: 0, hintT: 0, columns: [], tut: null,
+    clearT: 0, banner: null, endT: 0, time: 0, hintT: 0, columns: [], tut: null, peek: null, peekT: 4,
   };
 }
 function newGame(levelIdx) {
@@ -627,6 +627,7 @@ function update(dt) {
   G.time += dt;
   if (G.banner) { G.banner.t -= dt; G.banner.age += dt; if (G.banner.t <= 0) G.banner = null; }
   if (G.hintT > 0) G.hintT -= dt;
+  updatePeek(dt);
   for (const k in G.cd) G.cd[k] = Math.max(0, G.cd[k] - dt);
   G.shake = Math.max(0, G.shake - dt);
   G.gateShake = Math.max(0, G.gateShake - dt);
@@ -757,6 +758,7 @@ function updateDragon(dt) {
   }
 }
 function eat(e) {
+  startPeek(['Huzzah!', 'Good Worm!', 'Feed it more!'][Math.floor(Math.random() * 3)]);
   const c = bodyCenter(e);
   kill(e, 'dragon');
   e.eaten = true;
@@ -970,6 +972,7 @@ function impact(e, speed, where) {
 
 // ================= Day flow =================
 function dayCleared() {
+  startPeek(['We held!', 'Hurrah!', 'Off they run!'][Math.floor(Math.random() * 3)], true);
   const bonus = 100 + G.day * 25;
   G.gold += bonus; G.score += bonus * 5;
   pointers.clear(); G.aim = null;
@@ -1378,6 +1381,74 @@ function drawArrow(x, y, dir) {   // dir 1 points down, -1 points up
   ctx.restore();
 }
 
+// ================= Folk peeking out of the tower window =================
+const TOWER_WINDOW = { x: 74, top: 128, sill: 170, half: 13 };
+const PEEKERS = ['guard', 'lady', 'elder', 'child'];
+const PEEK_CHATTER = ['Look out!', 'More of them!', 'Hold the gate!', 'Throw him!', 'Is it supper yet?', 'Mind the door!'];
+function startPeek(say, force) {
+  if (!G || (G.peek && !force)) return;
+  const kind = PEEKERS[Math.floor(Math.random() * PEEKERS.length)];
+  G.peek = { kind, t: 0, dur: rand(1.8, 3.2), look: Math.random() < 0.5 ? -1 : 1,
+    say: say || (Math.random() < 0.3 ? PEEK_CHATTER[Math.floor(Math.random() * PEEK_CHATTER.length)] : null) };
+}
+function updatePeek(dt) {
+  if (G.peek) {
+    G.peek.t += dt;
+    if (G.peek.t >= G.peek.dur) { G.peek = null; G.peekT = rand(4, 10); }
+  } else if ((G.peekT -= dt) <= 0) startPeek();
+}
+function drawPeek() {
+  const P = G.peek;
+  if (!P) return;
+  const { x, sill } = TOWER_WINDOW;
+  const k = P.t < 0.35 ? P.t / 0.35 : P.t > P.dur - 0.35 ? Math.max(0, (P.dur - P.t) / 0.35) : 1;
+  const ease = k * k * (3 - 2 * k);
+  const r = P.kind === 'child' ? 6.5 : 8;
+  const hx = x + Math.sin(P.t * 2.2) * 2 * P.look, hy = sill + r + 2 - ease * (r * 2 + 6);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(x - 30, sill - 60, 60, 60); ctx.clip();   // they rise from behind the sill
+  ctx.fillStyle = P.kind === 'guard' ? '#3a5a8c' : P.kind === 'lady' ? '#7a3b5a' : P.kind === 'elder' ? '#6b5a3a' : '#4f7a3a';
+  ctx.beginPath(); ctx.ellipse(hx, hy + r + 7, r + 4, 7, 0, Math.PI, 0); ctx.fill();   // shoulders
+  ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(hx, hy, r, 0, Math.PI * 2); ctx.fill();
+  const ex = P.look * 1.6;   // eyes glance one way
+  ctx.fillStyle = '#222'; ctx.fillRect(hx - 3.5 + ex, hy - 1.5, 1.8, 2); ctx.fillRect(hx + 1.7 + ex, hy - 1.5, 1.8, 2);
+  if (P.say && P.t > 0.4) { ctx.beginPath(); ctx.ellipse(hx + ex * 0.5, hy + 3.5, 1.8, 2.2, 0, 0, Math.PI * 2); ctx.fill(); }
+  else { ctx.strokeStyle = '#7a3b2a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(hx + ex * 0.5, hy + 2, 2.2, 0.2, Math.PI - 0.2); ctx.stroke(); }
+  if (P.kind === 'guard') {
+    ctx.fillStyle = roundGrad(ctx, hx - 9, hx + 9, '#b8c2cc');
+    ctx.beginPath(); ctx.arc(hx, hy - 1, r + 1, Math.PI, 0); ctx.fill(); ctx.fillRect(hx - r - 2, hy - 2, r * 2 + 4, 2.5);
+    ctx.fillStyle = '#2e6ad1'; ctx.beginPath(); ctx.moveTo(hx, hy - r - 1); ctx.quadraticCurveTo(hx - 3, hy - r - 10, hx - 10, hy - r - 5); ctx.quadraticCurveTo(hx - 5, hy - r - 3, hx, hy - r); ctx.fill();
+  } else if (P.kind === 'lady') {
+    ctx.fillStyle = '#f4f1ea';
+    ctx.beginPath(); ctx.arc(hx, hy - 1, r + 1.5, Math.PI * 0.95, Math.PI * 2.05); ctx.lineTo(hx + r + 2, hy + 5); ctx.lineTo(hx + r - 1, hy + 2); ctx.lineTo(hx - r + 1, hy + 2); ctx.lineTo(hx - r - 2, hy + 5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#6b4226'; ctx.fillRect(hx - r + 1.5, hy - 4, r * 2 - 3, 2);
+  } else if (P.kind === 'elder') {
+    ctx.fillStyle = '#f2f2f2';
+    ctx.beginPath(); ctx.moveTo(hx - 6, hy + 1); ctx.quadraticCurveTo(hx, hy + 14, hx + 6, hy + 1); ctx.quadraticCurveTo(hx, hy + 5, hx - 6, hy + 1); ctx.fill();
+    ctx.fillRect(hx - 5, hy - 4, 3.5, 1.5); ctx.fillRect(hx + 1.5, hy - 4, 3.5, 1.5);
+    ctx.beginPath(); ctx.arc(hx - r + 1, hy - 1, 2.5, 0, Math.PI * 2); ctx.arc(hx + r - 1, hy - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.fillStyle = '#e8c04a';
+    for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(hx + i * 3 - 2, hy - r + 3); ctx.lineTo(hx + i * 3 + 1, hy - r - 4); ctx.lineTo(hx + i * 3 + 3, hy - r + 3); ctx.fill(); }
+    ctx.beginPath(); ctx.arc(hx, hy - 1.5, r, Math.PI, 0); ctx.fill();
+  }
+  ctx.restore();
+  if (ease > 0.8) {   // hands gripping the sill
+    ctx.fillStyle = '#f1c27d';
+    ctx.beginPath(); ctx.arc(x - 9, sill + 1, 2.6, 0, Math.PI * 2); ctx.arc(x + 9, sill + 1, 2.6, 0, Math.PI * 2); ctx.fill();
+  }
+  if (P.say && P.t > 0.4 && P.t < P.dur - 0.3) {   // speech bubble
+    ctx.save();
+    ctx.font = 'bold 13px system-ui'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(P.say).width + 16, bx = x + 22, by = sill - 52;
+    ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.strokeStyle = '#3a3a3a'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 24, 10) : ctx.rect(bx, by, tw, 24); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx + 8, by + 23); ctx.lineTo(x + 8, sill - 20); ctx.lineTo(bx + 20, by + 23); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#222'; ctx.textAlign = 'left'; ctx.fillText(P.say, bx + 8, by + 12.5);
+    ctx.restore();
+  }
+}
+
 // ================= Static scenery =================
 const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 const castleImg = document.createElement('canvas'); castleImg.width = W; castleImg.height = H;
@@ -1486,6 +1557,16 @@ function buildScenery() {
   sh.addColorStop(0, 'rgba(0,0,0,0.3)'); sh.addColorStop(0.7, 'rgba(0,0,0,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.15)');
   c.fillStyle = sh; c.fillRect(0, 214, WALL_X, GROUND - 214);
   c.fillStyle = '#1d2226'; c.beginPath(); c.moveTo(60, 400); c.arc(70, 400, 10, Math.PI, 0); c.lineTo(80, 440); c.lineTo(60, 440); c.fill();
+  // arched window in the round tower, where the keep's folk peek out
+  const { x: wx, top: wt, sill: ws, half: wh } = TOWER_WINDOW;
+  c.fillStyle = '#5c6466';
+  c.beginPath(); c.moveTo(wx - wh - 4, ws); c.lineTo(wx - wh - 4, wt + wh); c.arc(wx, wt + wh, wh + 4, Math.PI, 0); c.lineTo(wx + wh + 4, ws); c.closePath(); c.fill();
+  const wg = c.createLinearGradient(0, wt, 0, ws); wg.addColorStop(0, '#0f1214'); wg.addColorStop(1, '#2a2620');
+  c.fillStyle = wg;
+  c.beginPath(); c.moveTo(wx - wh, ws); c.lineTo(wx - wh, wt + wh); c.arc(wx, wt + wh, wh, Math.PI, 0); c.lineTo(wx + wh, ws); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,190,100,0.12)'; c.fillRect(wx - wh, ws - 14, wh * 2, 14);   // a little hearth glow inside
+  c.fillStyle = '#8e9798'; c.fillRect(wx - wh - 7, ws, wh * 2 + 14, 5);
+  c.fillStyle = '#6f7778'; c.fillRect(wx - wh - 7, ws + 5, wh * 2 + 14, 2);
   c.fillStyle = '#4a86a8'; c.beginPath(); c.moveTo(150, 330); c.lineTo(WALL_X + 6, 316); c.lineTo(WALL_X + 6, 330); c.lineTo(150, 344); c.fill();
   for (const [x, y] of [[96, 268], [24, 330], [24, 430]]) {   // crystal orbs
     c.fillStyle = '#5b6b70'; c.beginPath(); c.arc(x, y, 10, 0, Math.PI * 2); c.fill();
@@ -2450,6 +2531,7 @@ function render(dt) {
   ctx.drawImage(castleImg, 0, 0);
   drawDoor();
   drawCastleWeapons();
+  drawPeek();
   for (const c of G.columns) {
     const h = TOWER.column.tiers[c.tier].w * 3.2;
     ctx.save(); ctx.globalAlpha = clamp(c.t * 2, 0, 1); ctx.translate(c.x, GROUND - h / 2 - 4); drawColumn(ctx, TOWER.column.tiers[c.tier].w, c.tier); ctx.restore();
