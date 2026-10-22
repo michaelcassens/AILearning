@@ -1791,6 +1791,9 @@ function drawSpire(c, o) {   // o: { time, gold, open }
   const ring = { x: HOOK.x, y: 131 }, crown = { x: HOOK.x, y: HOOK.y - 3 }, from = { x: mouth.x - 9, y: mouth.y + 4 };
   const cAng = Math.atan2(ring.y - 3 - from.y, ring.x - from.x), cLen = Math.hypot(ring.x - from.x, ring.y - 3 - from.y);
   c.lineCap = 'round'; c.lineJoin = 'round';
+  // the whole chain and grapnel sway gently from the Worm's jaws (barely, while a knight hangs on it)
+  const swing = Math.sin(time * 1.4) * (o.hooked ? 0.04 : 0.15);
+  c.save(); c.translate(from.x, from.y); c.rotate(swing); c.translate(-from.x, -from.y);
   for (let i = 0; i < 3; i++) {   // links alternate face-on and edge-on
     const t = (i + 0.5) / 3;
     c.save(); c.translate(from.x + (ring.x - from.x) * t, from.y + (ring.y - 3 - from.y) * t); c.rotate(cAng);
@@ -1799,9 +1802,9 @@ function drawSpire(c, o) {   // o: { time, gold, open }
     c.restore();
   }
   const forged = (path, w) => {
-    c.strokeStyle = '#3d1f10'; c.lineWidth = w + 2; c.beginPath(); path(); c.stroke();
-    c.strokeStyle = '#94522d'; c.lineWidth = w; c.beginPath(); path(); c.stroke();
-    c.strokeStyle = 'rgba(214,150,98,0.55)'; c.lineWidth = Math.max(0.8, w * 0.3); c.beginPath(); path(); c.stroke();
+    c.strokeStyle = '#2b150a'; c.lineWidth = w + 2; c.beginPath(); path(); c.stroke();
+    c.strokeStyle = '#7a4122'; c.lineWidth = w; c.beginPath(); path(); c.stroke();
+    c.strokeStyle = 'rgba(196,128,80,0.5)'; c.lineWidth = Math.max(0.8, w * 0.3); c.beginPath(); path(); c.stroke();
   };
   forged(() => c.arc(ring.x, ring.y, 3.2, 0, Math.PI * 2), 1.8);                                   // ring
   forged(() => { c.moveTo(ring.x, ring.y + 3); c.lineTo(crown.x, crown.y); }, 3.2);                  // shank
@@ -1810,13 +1813,26 @@ function drawSpire(c, o) {   // o: { time, gold, open }
     forged(() => { c.moveTo(crown.x + dir * 14, crown.y - 9); c.lineTo(crown.x + dir * 10, crown.y - 3); }, 1.6);  // barb
   }
   forged(() => { c.moveTo(crown.x, crown.y); c.quadraticCurveTo(crown.x + 1, crown.y + 9, crown.x + 5, crown.y + 3); }, 2.2);  // prong toward us
-  c.fillStyle = '#7a4122'; c.beginPath(); c.arc(crown.x, crown.y, 3, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#5e321a'; c.beginPath(); c.arc(crown.x, crown.y, 3, 0, Math.PI * 2); c.fill();
   c.fillStyle = 'rgba(96,146,126,0.8)';                                                               // verdigris
   for (const [px, py] of [[0, -9], [-9, 4], [11, -2], [1, 2]]) { c.beginPath(); c.arc(crown.x + px, crown.y + py, 1, 0, Math.PI * 2); c.fill(); }
+  // every few seconds the sun catches a prong tip or the ring
+  const cycle = 3.4, ph = time % cycle;
+  if (time && ph < 0.6) {
+    const spots = [[crown.x + 14, crown.y - 9], [ring.x + 2, ring.y - 2], [crown.x - 14, crown.y - 9]];
+    const [gx, gy] = spots[Math.floor(time / cycle) % spots.length], a = Math.sin(ph / 0.6 * Math.PI);
+    const gl = c.createRadialGradient(gx, gy, 0, gx, gy, 7 * a + 1);
+    gl.addColorStop(0, `rgba(255,236,190,${0.8 * a})`); gl.addColorStop(1, 'rgba(255,220,160,0)');
+    c.fillStyle = gl; c.beginPath(); c.arc(gx, gy, 7 * a + 1, 0, Math.PI * 2); c.fill();
+    c.fillStyle = `rgba(255,248,225,${a})`; const L = 6 * a, t2 = 0.9;
+    c.beginPath(); c.moveTo(gx, gy - L); c.lineTo(gx + t2, gy); c.lineTo(gx, gy + L); c.lineTo(gx - t2, gy); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(gx - L, gy); c.lineTo(gx, gy + t2); c.lineTo(gx + L, gy); c.lineTo(gx, gy - t2); c.closePath(); c.fill();
+  }
+  c.restore();
 }
 function drawAltar() {
   ctx.save();
-  drawSpire(ctx, { time: G.time, gold: G.use.altar >= 1, open: G.hooked ? 0.8 : 0.2 + Math.sin(G.time * 2) * 0.1 });
+  drawSpire(ctx, { time: G.time, gold: G.use.altar >= 1, hooked: !!G.hooked, open: G.hooked ? 0.8 : 0.2 + Math.sin(G.time * 2) * 0.1 });
   if (!G.hooked && !G.dragon) {   // glow hint where to hang a knight
     ctx.globalAlpha = 0.25 + Math.sin(G.time * 4) * 0.15;
     ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(HOOK.x, HOOK.y + 26, 30, 0, Math.PI * 2); ctx.stroke();
@@ -2536,20 +2552,47 @@ function drawBanner(b) {
 }
 
 // ================= Render =================
-const clouds = Array.from({ length: 6 }, (_, i) => ({ x: i * 170, y: 50 + (i * 37) % 100, s: 0.7 + (i % 3) * 0.25, v: 6 + (i % 4) * 3 }));
+// Each cloud is a heap of puffs of different sizes with a flattened base and soft blue-grey shading,
+// pre-drawn once to its own small canvas. Bigger clouds sit lower and drift faster, as if nearer.
+function makeCloud(seed, s) {
+  const rnd = seeded(seed * 131 + 7), w = (90 + rnd() * 90) * s, pad = 34 * s;
+  const cv2 = document.createElement('canvas'); cv2.width = Math.ceil(w + pad * 2); cv2.height = Math.ceil(80 * s + pad);
+  const c = cv2.getContext('2d'), base = cv2.height - 6, puffs = [];
+  const nb = 4 + Math.floor(rnd() * 4);                   // a low row of smaller puffs along the base
+  for (let i = 0; i < nb; i++) { const r = (9 + rnd() * 9) * s; puffs.push([pad + (i + 0.5) * w / nb + (rnd() - 0.5) * 8 * s, base - r * 0.7, r]); }
+  const nt = 2 + Math.floor(rnd() * 3);                    // bigger billows on top, one usually tallest
+  for (let i = 0; i < nt; i++) { const r = (15 + rnd() * 15) * s * (i === 1 ? 1.25 : 1); puffs.push([pad + w * (0.2 + 0.6 * (i + 0.5) / nt) + (rnd() - 0.5) * 12 * s, base - r * 1.1 - 6 * s, r]); }
+  for (let i = 0; i < 3; i++) { const r = (6 + rnd() * 6) * s; puffs.push([pad + w * (0.1 + rnd() * 0.8), base - (12 + rnd() * 18) * s, r]); }   // small puffs tucked into the body
+  const blob = (dx, dy, k) => {
+    c.beginPath();
+    for (const [x, y, r] of puffs) { c.moveTo(x + dx + r * k, y + dy); c.arc(x + dx, y + dy, r * k, 0, Math.PI * 2); }
+    if (k === 1) {   // a solid slab along the bottom closes the gaps between the base puffs
+      const sh = 12 * s; c.moveTo(pad + 4 * s + dx, base + dy);
+      c.roundRect ? c.roundRect(pad + dx, base - sh + dy, w, sh + 2, sh / 2) : c.rect(pad + dx, base - sh + dy, w, sh + 2);
+    }
+    c.fill();
+  };
+  c.fillStyle = '#c5d4e2'; blob(0, 3 * s, 1);              // shaded underside
+  c.fillStyle = '#f7fafc'; blob(0, 0, 1);                  // body
+  c.fillStyle = '#ffffff'; blob(-2 * s, -3 * s, 0.72);     // sunlit tops
+  c.globalCompositeOperation = 'destination-out';          // flatten the base
+  c.fillRect(0, base + 1, cv2.width, cv2.height);
+  return { img: cv2, w: cv2.width, h: cv2.height };
+}
+const clouds = [0.55, 1.3, 0.8, 1.05, 0.6, 1.45, 0.9].map((s, i) => Object.assign(makeCloud(i + 1, s), {
+  x: i * 150 - 40, y: 40 + s * 55 + (i * 23) % 30, v: 3 + s * 6 }));
 function drawSky(dt) {
   const prog = G ? 1 - (G.spawnQueue.length + G.enemies.filter(e => !e.dead).length) / Math.max(1, G.dayTotal) : 0.2;
   const sx = 160 + prog * 600, sy = 70 + prog * prog * 140;
   const g = ctx.createRadialGradient(sx, sy, 10, sx, sy, 90);
   g.addColorStop(0, 'rgba(255,250,220,1)'); g.addColorStop(0.4, 'rgba(255,240,180,0.8)'); g.addColorStop(1, 'rgba(255,240,180,0)');
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, 90, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.globalAlpha = 0.92;
   for (const c of clouds) {
-    c.x += c.v * dt; if (c.x > W + 100) c.x = -120;
-    ctx.beginPath();
-    ctx.arc(c.x, c.y, 22 * c.s, 0, Math.PI * 2); ctx.arc(c.x + 24 * c.s, c.y - 8 * c.s, 26 * c.s, 0, Math.PI * 2);
-    ctx.arc(c.x + 50 * c.s, c.y, 20 * c.s, 0, Math.PI * 2); ctx.fill();
+    c.x += c.v * dt; if (c.x > W + 20) c.x = -c.w - 20;
+    ctx.drawImage(c.img, c.x, c.y - c.h);
   }
+  ctx.globalAlpha = 1;
   return prog;
 }
 function render(dt) {
