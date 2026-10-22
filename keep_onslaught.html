@@ -1787,21 +1787,32 @@ function drawSpire(c, o) {   // o: { time, gold, open }
   c.strokeStyle = '#f2a43a'; c.lineWidth = end.r * 0.8;
   c.beginPath(); c.moveTo(end.x - 3, end.y + 3); c.quadraticCurveTo(end.x + 4, 134, mouth.x + 22, mouth.y + 6); c.stroke();
   drawWormHead(c, mouth.x, mouth.y, o.open || 0.2);
-  // fishing line from the jaws to a barbed fishing hook
-  const eye = { x: HOOK.x, y: 124 };
-  c.strokeStyle = 'rgba(235,235,225,0.9)'; c.lineWidth = 1.2;
-  c.beginPath(); c.moveTo(mouth.x - 8, mouth.y + 3); c.quadraticCurveTo(mouth.x - 12, eye.y - 4, eye.x, eye.y - 3); c.stroke();
-  const hookPath = () => {
-    c.beginPath(); c.moveTo(eye.x, eye.y); c.lineTo(eye.x, HOOK.y - 4);
-    c.arc(eye.x - 7, HOOK.y - 4, 7, 0, Math.PI, false);
-    c.lineTo(eye.x - 14, HOOK.y - 13);
-  };
+  // a short iron chain from the jaws to a hand-forged copper grapnel with three barbed prongs
+  const ring = { x: HOOK.x, y: 131 }, crown = { x: HOOK.x, y: HOOK.y - 3 }, from = { x: mouth.x - 9, y: mouth.y + 4 };
+  const cAng = Math.atan2(ring.y - 3 - from.y, ring.x - from.x), cLen = Math.hypot(ring.x - from.x, ring.y - 3 - from.y);
   c.lineCap = 'round'; c.lineJoin = 'round';
-  c.strokeStyle = '#2b2f33'; c.lineWidth = 4.5; hookPath(); c.stroke();
-  c.strokeStyle = '#b9c2c9'; c.lineWidth = 2.4; hookPath(); c.stroke();
-  c.fillStyle = '#b9c2c9'; c.strokeStyle = '#2b2f33'; c.lineWidth = 1;
-  c.beginPath(); c.moveTo(eye.x - 14, HOOK.y - 15); c.lineTo(eye.x - 10, HOOK.y - 8); c.lineTo(eye.x - 14, HOOK.y - 9); c.closePath(); c.fill(); c.stroke();
-  c.beginPath(); c.arc(eye.x, eye.y - 1, 2.6, 0, Math.PI * 2); c.stroke();
+  for (let i = 0; i < 3; i++) {   // links alternate face-on and edge-on
+    const t = (i + 0.5) / 3;
+    c.save(); c.translate(from.x + (ring.x - from.x) * t, from.y + (ring.y - 3 - from.y) * t); c.rotate(cAng);
+    c.strokeStyle = '#2e2a28'; c.lineWidth = 1.8;
+    c.beginPath(); c.ellipse(0, 0, cLen / 5, i % 2 ? 0.9 : 2.3, 0, 0, Math.PI * 2); c.stroke();
+    c.restore();
+  }
+  const forged = (path, w) => {
+    c.strokeStyle = '#3d1f10'; c.lineWidth = w + 2; c.beginPath(); path(); c.stroke();
+    c.strokeStyle = '#94522d'; c.lineWidth = w; c.beginPath(); path(); c.stroke();
+    c.strokeStyle = 'rgba(214,150,98,0.55)'; c.lineWidth = Math.max(0.8, w * 0.3); c.beginPath(); path(); c.stroke();
+  };
+  forged(() => c.arc(ring.x, ring.y, 3.2, 0, Math.PI * 2), 1.8);                                   // ring
+  forged(() => { c.moveTo(ring.x, ring.y + 3); c.lineTo(crown.x, crown.y); }, 3.2);                  // shank
+  for (const dir of [-1, 1]) {                                                                        // side prongs
+    forged(() => { c.moveTo(crown.x, crown.y); c.quadraticCurveTo(crown.x + dir * 14, crown.y + 7, crown.x + dir * 14, crown.y - 9); }, 2.6);
+    forged(() => { c.moveTo(crown.x + dir * 14, crown.y - 9); c.lineTo(crown.x + dir * 10, crown.y - 3); }, 1.6);  // barb
+  }
+  forged(() => { c.moveTo(crown.x, crown.y); c.quadraticCurveTo(crown.x + 1, crown.y + 9, crown.x + 5, crown.y + 3); }, 2.2);  // prong toward us
+  c.fillStyle = '#7a4122'; c.beginPath(); c.arc(crown.x, crown.y, 3, 0, Math.PI * 2); c.fill();
+  c.fillStyle = 'rgba(96,146,126,0.8)';                                                               // verdigris
+  for (const [px, py] of [[0, -9], [-9, 4], [11, -2], [1, 2]]) { c.beginPath(); c.arc(crown.x + px, crown.y + py, 1, 0, Math.PI * 2); c.fill(); }
 }
 function drawAltar() {
   ctx.save();
