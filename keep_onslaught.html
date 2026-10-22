@@ -87,9 +87,9 @@
     <p class="sub">Inspired by the castle-defense games I loved on the early iPhone</p>
     <ul class="how">
       <li><b>Grab</b> a knight and <b>fling</b> him. A high drop or a slam into the wall finishes him.</li>
-      <li>Buy the <b>Ember Pit</b>, then throw knights into it to burn them and free their <b>ghosts</b>.</li>
+      <li>Buy the <b>Ember Pit</b>, then throw knights into it to burn them and free their <b>spirits</b>.</li>
       <li>Raise the <b>Worm Spire</b>, then hang a knight on its hook. The Worm swoops in to eat him.</li>
-      <li>Spend gold and ghosts on the <b>Keeper's Goods</b>: stronger gates, falling stones, pillars, fire and battlement engines.</li>
+      <li>Spend gold and spirits on the <b>Keeper's Goods</b>: stronger gates, falling stones, pillars, fire and battlement engines.</li>
     </ul>
     <div id="continueRow"></div>
     <div class="levels" id="levels"></div>
@@ -119,7 +119,7 @@
   <div class="panel">
     <div class="scroll">Keeper's Goods</div>
     <div class="shopTop">
-      <p><span class="stat" id="shopGold">0</span> gold &nbsp; <span class="stat" style="color:#8fd3ff" id="shopSouls">0</span> ghosts &nbsp; Gate <span id="shopGate"></span></p>
+      <p><span class="stat" id="shopGold">0</span> gold &nbsp; <span class="stat" style="color:#8fd3ff" id="shopSouls">0</span> spirits &nbsp; Gate <span id="shopGate"></span></p>
       <button class="btn" id="repairBtn">Repair</button>
       <button class="btn gold" id="exitBtn">Back</button>
     </div>
@@ -481,7 +481,7 @@ function kill(e, cause) {
 }
 function gainSouls(n, x, y) {
   G.souls += n; G.score += 100 * n;
-  addText(x, y, '+' + n + ' ghost' + (n > 1 ? 's' : ''), '#8fd3ff', 20, 1.4);
+  addText(x, y, '+' + n + ' spirit' + (n > 1 ? 's' : ''), '#8fd3ff', 20, 1.4);
   sfx.soul();
 }
 function damageGate(d) {
@@ -974,7 +974,7 @@ function dayCleared() {
   G.gold += bonus; G.score += bonus * 5;
   pointers.clear(); G.aim = null;
   const last = G.L.days && G.day >= G.L.days;
-  G.banner = { lines: ['SIEGE', 'DEFIED'], t: 2.2, age: 0 };
+  G.banner = { lines: ['THE KEEP', 'HOLDS'], t: 2.2, age: 0 };
   sfx.fanfare();
   G.state = 'ending'; G.endT = 2.2; G.endKind = last ? 'win' : 'day'; G.dayBonus = bonus;
 }
@@ -997,7 +997,7 @@ function resumeRun(r) {
   Object.assign(G, { day: r.day, gold: r.gold, souls: r.souls, score: r.score, kills: r.kills, gateHP: r.gateHP, gateMax: r.gateMax,
     owned: new Set(r.owned), use: Object.assign(G.use, r.use), state: 'menu', endKind: 'day', dayKills: 0, dayBonus: 0 });
   document.getElementById('resTitle').textContent = 'Welcome back, Keeper!';
-  document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} defied`;
+  document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} survived`;
   document.getElementById('resScore').textContent = `Glory: ${G.score}`;
   document.getElementById('nextBtn').textContent = 'Next Siege';
   document.getElementById('shopBtn').hidden = false;
@@ -1044,9 +1044,9 @@ const SECTIONS = [
     { id: 'door3', cat: 'door', tier: 3, name: 'Runed Gate', desc: '1100 strength, slowly mends itself', cost: [2000, 120] },
   ] },
   { title: 'Offerings', items: [
-    { id: 'hellgate', cat: 'sac', name: 'Ember Pit', desc: 'A pit of undying fire. Throw knights in to burn them. +2 ghosts each', cost: [200, 0] },
-    { id: 'altar0', cat: 'altar', tier: 0, name: 'Worm Spire', desc: 'Hang a knight on the hook and the Worm comes to feed. +4 ghosts, double gold', cost: [350, 0] },
-    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Worm Spire', desc: 'The Worm arrives faster and scorches the ground as it swoops. +6 ghosts', cost: [1400, 90] },
+    { id: 'hellgate', cat: 'sac', name: 'Ember Pit', desc: 'A pit of undying fire. Throw knights in to burn them. +2 spirits each', cost: [200, 0] },
+    { id: 'altar0', cat: 'altar', tier: 0, name: 'Worm Spire', desc: 'Hang a knight on the hook and the Worm comes to feed. +4 spirits, double gold', cost: [350, 0] },
+    { id: 'altar1', cat: 'altar', tier: 1, name: 'Golden Worm Spire', desc: 'The Worm arrives faster and scorches the ground as it swoops. +6 spirits', cost: [1400, 90] },
   ] },
   { title: 'Falling Stones', items: [0, 1, 2].map(t => ({ id: 'boulder' + t, cat: 'boulder', tier: t, name: TOWER.boulder.names[t],
     desc: ['Crushes a small group', 'Wider impact', 'Flattens a crowd'][t], cost: [[250, 0], [600, 25], [1000, 60]][t] })) },
@@ -1090,7 +1090,7 @@ function renderShop() {
       if (st.inUse) price = 'In use';
       else if (st.owned) price = it.cat === 'gun' ? 'Owned · tap to use' : 'Owned';
       else if (!st.prereq) price = 'Needs ' + ALL_ITEMS.find(x => x.id === it.cat + (it.tier - 1)).name;
-      else price = `${it.cost[0]} gold` + (it.cost[1] ? ` · <span class="sl">${it.cost[1]} ghosts</span>` : '');
+      else price = `${it.cost[0]} gold` + (it.cost[1] ? ` · <span class="sl">${it.cost[1]} spirits</span>` : '');
       const canBuy = !st.owned && st.prereq && st.afford;
       const canSwitch = st.owned && !st.inUse && it.cat === 'gun';
       b.disabled = !(canBuy || canSwitch);
@@ -1142,7 +1142,7 @@ function renderMenu() {
   if (r && LEVELS[r.level]) {
     const L = LEVELS[r.level], b = document.createElement('button');
     b.className = 'lvl';
-    b.innerHTML = `<b>Continue</b><span>${L.days ? 'Level ' + (r.level + 1) + ': ' : ''}${L.name} · Siege ${r.day + 1} next · ${r.gold} gold · ${r.souls} ghosts</span>`;
+    b.innerHTML = `<b>Continue</b><span>${L.days ? 'Level ' + (r.level + 1) + ': ' : ''}${L.name} · Siege ${r.day + 1} next · ${r.gold} gold · ${r.souls} spirits</span>`;
     b.addEventListener('click', () => { audioUnlock(); resumeRun(r); });
     cont.appendChild(b);
   }
@@ -1155,7 +1155,7 @@ function renderMenu() {
     b.className = 'lvl'; b.disabled = !!locked;
     const best = save.best[i] ? ` · Best glory ${save.best[i]}` : '';
     const extra = !L.days && save.endlessDay ? ` · Best: siege ${save.endlessDay}` : '';
-    const carried = save.carry && save.carry[i] ? ` · Brings your gear, ${save.carry[i].gold + L.bonus} gold and ${save.carry[i].souls} ghosts` : '';
+    const carried = save.carry && save.carry[i] ? ` · Brings your gear, ${save.carry[i].gold + L.bonus} gold and ${save.carry[i].souls} spirits` : '';
     b.innerHTML = `<b>${L.days ? 'Level ' + (i + 1) + ': ' : ''}${L.name}</b><span>${locked ? 'Win the previous level to unlock' : L.blurb}${carried}${best}${extra}</span>`;
     b.addEventListener('click', () => { audioUnlock(); if (i === 0 && !loadSave().seenStory) openStory(() => startLevel(0)); else startLevel(i); });
     box.appendChild(b);
@@ -1207,7 +1207,7 @@ const STORY = [
   { title: 'You Are the Keeper', scene: 'grab',
     text: 'The keep\'s magic is yours to command. Reach down onto the battlefield, seize the invaders and hurl them back across the valley.' },
   { title: 'Hold the Gate', scene: 'dragon',
-    text: 'Survive every siege. Earn gold and ghosts, trade them for the Keeper\'s Goods and wake the Worm. Whatever happens, do not let the gate fall!' },
+    text: 'Survive every siege. Earn gold and spirits, trade them for the Keeper\'s Goods and wake the Worm. Whatever happens, do not let the gate fall!' },
 ];
 let story = null;
 function openStory(after) {
@@ -2311,7 +2311,7 @@ function drawButton(b, k, cdFrac, active) {
   if (k !== 'gun') { ctx.fillStyle = '#fff'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center'; ctx.fillText('SML'[G.use[k]], b.x + b.r * 0.7, b.y - b.r * 0.6); }
   ctx.restore();
 }
-function drawSkull(x, y) {   // ghost counter icon, centred on (x, y)
+function drawSkull(x, y) {   // spirit counter icon, centred on (x, y)
   ctx.save(); ctx.translate(x, y);
   const g = ctx.createRadialGradient(-3, -6, 1, 0, -3, 12); g.addColorStop(0, '#fffaf0'); g.addColorStop(1, '#c9bfa6');
   ctx.fillStyle = g;
