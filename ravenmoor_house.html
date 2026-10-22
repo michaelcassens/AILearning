@@ -380,11 +380,12 @@ const SCENES = {
   c1a: { ch: 1, name: 'The Iron Gate', bg: 'out', fog: '#0d1316', o: { gate: 9, fence: true, trees: [[-5, 6], [5.5, 8], [-6.5, 12], [6, 14], [-4.6, 17]], mansion: 0.7, path: true },
     lines: [['RADIO', '...this is Dr. Elena Marsh at Ravenmoor House. The specimens are loose. If anyone can hear this—'], ['$1', 'Line just went dead.'], ['$2', 'Then we go in. Stay close.']],
     ev: [[0.5, 'brk', { style: 'crate', x: -2.4, z: 5.5, contains: 'aid' }], [0.6, 'brk', { style: 'lantern', x: 2.2, z: 7 }],
-      [1, 'z', 'shambler', 0.3, 10], [2.4, 'z', 'shambler', -1.4, 11], [3.8, 'z', 'shambler', 1.7, 8, 'side'],
-      [6, 'z', 'runner', 0, 13], [7, 'z', 'shambler', -1.8, 7, 'side'], [7.2, 'z', 'shambler', 2, 7.5, 'side'],
-      [10, 'z', 'axeman', 0.6, 11], [10.4, 'say', '$2', 'Axe! Shoot it out of the air!'],
-      [13, 'z', 'shambler', -0.7, 6, 'rise'], [13.3, 'z', 'shambler', 0.9, 6.5, 'rise'], [13.6, 'say', '$1', "They're crawling out of the ground!"],
-      [16, 'z', 'runner', -1.2, 12], [16.4, 'z', 'runner', 1.2, 12], [18, 'z', 'axeman', -1, 10]],
+      [1.5, 'z', 'shambler', 0.3, 13], [5, 'z', 'shambler', -1.4, 13], [8.5, 'z', 'shambler', 1.6, 12.5],
+      [12, 'z', 'shambler', -1.2, 12], [12.6, 'z', 'shambler', 1.3, 12.5], [15.5, 'z', 'runner', 0, 14],
+      [19, 'z', 'shambler', -1.8, 9, 'side'], [19.4, 'z', 'shambler', 2, 9.5, 'side'],
+      [23, 'z', 'axeman', 0.6, 12], [23.4, 'say', '$2', 'Axe! Shoot it out of the air!'],
+      [27, 'z', 'shambler', -0.7, 7.5, 'rise'], [27.4, 'z', 'shambler', 0.9, 8, 'rise'], [27.7, 'say', '$1', "They're crawling out of the ground!"],
+      [31, 'z', 'runner', -1.2, 13], [31.6, 'z', 'runner', 1.2, 13]],
     next: 'c1b' },
   c1b: { ch: 1, name: 'Fountain Court', bg: 'out', fog: '#0d1316', o: { fountain: 11, fence: true, trees: [[-5.5, 5], [6, 7], [-6, 12], [5.2, 14]], mansion: 0.85, path: true },
     lines: [['$2', 'Someone is screaming by the fountain!']],
@@ -507,11 +508,13 @@ function deco(id) {
 }
 
 // ============================================================ entities
+// the opening scenes ease players in: slower walkers, longer wind-ups, slower axes
+function calm() { const id = G.sceneId || ''; return id === 'c1a' ? 0.68 : id === 'c1b' ? 0.8 : id.startsWith('c1') ? 0.9 : 1; }
 function makeEnemy(type, o) {
   o = o || {};
   const d = ET[type], df = DIFF[G.diff];
   const e = { kind: 'enemy', type, x: o.x || 0, tx: o.x || 0, y: 0, z: o.z || 11, hp: d.hp, max: d.hp,
-    speed: d.speed * rand(0.9, 1.12) * df.spd, size: d.size * rand(0.95, 1.05), score: d.score,
+    speed: d.speed * rand(0.9, 1.12) * df.spd * calm(), size: d.size * rand(0.95, 1.05), score: d.score,
     phase: Math.random() * 6, state: 'appear', t: 0, how: o.how || 'walk', arms: [true, true], headless: false, dead: false, dT: 0, alpha: 1,
     skin: o.skin || pick(SKINS), shirt: o.shirt || pick(SHIRTS), pants: pick(PANTS), hair: pick(HAIRS),
     stains: [[rand(-0.15, 0.15), rand(-1.35, -0.95), rand(0.04, 0.09)], [rand(-0.15, 0.15), rand(-1.35, -0.95), rand(0.03, 0.07)]],
@@ -544,7 +547,7 @@ function makeBrk(o) {
 }
 function makeItem(type, x, y, z) { return { kind: 'item', type, x, y, z, y0: y, t: 0, life: 3.4, dead: false, boxes: [], id: ++G.uid }; }
 function makeProj(style, from, hp) {
-  const T = style === 'orb' ? rand(1.5, 2.0) : rand(1.25, 1.55), tx = rand(-0.5, 0.5), ty = 1.45, tz = 1.1, g = style === 'orb' ? 0 : 3.2;
+  const T = (style === 'orb' ? rand(1.5, 2.0) : rand(1.25, 1.55)) / calm(), tx = rand(-0.5, 0.5), ty = 1.45, tz = 1.1, g = style === 'orb' ? 0 : 3.2;
   return { kind: 'proj', style, x: from.x, y: from.y, z: from.z, vx: (tx - from.x) / T, vz: (tz - from.z) / T, vy: (ty - from.y) / T + 0.5 * g * T, g, rot: 0, hp: hp || 1,
     dead: false, boxes: [], id: ++G.uid, t: 0, wob: rand(0, TAU) };
 }
@@ -728,12 +731,12 @@ function updateEnemy(e, dt) {
       if (e.throws <= 0) { e.state = 'move'; e.t = 0; }
     }
   } else if (e.state === 'windup') {
-    const dur = e.type === 'runner' ? 0.55 : e.type === 'brute' ? 1.05 : 0.85;
+    const dur = (e.type === 'runner' ? 0.55 : e.type === 'brute' ? 1.05 : 0.85) / calm();
     e.reach = 1;
     if (e.t >= dur) { hurtPlayer(null); e.state = 'recover'; e.t = 0; }
   } else if (e.state === 'recover') {
     e.reach = 0.4;
-    if (e.t > 0.9) { e.state = 'windup'; e.t = 0; }
+    if (e.t > 0.9 / calm()) { e.state = 'windup'; e.t = 0; }
   }
 }
 function groanMaybe(e, dt) {
@@ -746,7 +749,7 @@ function updateBat(e, dt) {
     e.y = e.baseY + Math.sin(e.phase * 0.2) * 0.25 - (e.z < 4 ? (4 - e.z) * 0.15 : 0);
     if (e.z < 1.9) { e.state = 'windup'; e.t = 0; sfx('screech', 0.15); }
   } else if (e.state === 'windup') {
-    if (e.t > 0.32) { hurtPlayer(null); e.state = 'leave'; e.t = 0; }
+    if (e.t > 0.32 / calm()) { hurtPlayer(null); e.state = 'leave'; e.t = 0; }
   } else if (e.state === 'leave') {
     e.z += 5 * dt; e.y += 3 * dt; e.alpha = Math.max(0, 1 - e.t / 0.7);
     if (e.t > 0.7) { e.remove = true; e.dead = true; }
@@ -766,7 +769,7 @@ function updateLeaper(e, dt) {
     if (e.z <= ATTACK_Z && e.hopH === 0) { e.z = ATTACK_Z; e.state = 'windup'; e.t = 0; }
   } else if (e.state === 'windup') {
     e.reach = 1;
-    if (e.t > 0.6) { hurtPlayer(null); e.state = 'recover'; e.t = 0; }
+    if (e.t > 0.6 / calm()) { hurtPlayer(null); e.state = 'recover'; e.t = 0; }
   } else if (e.state === 'recover') {
     if (e.t > 0.8) { e.state = 'windup'; e.t = 0; }
   }
@@ -1524,17 +1527,31 @@ function drawEnemy(e) {
   // shadow
   ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0, 0, 0.32 * wide, 0.06, 0, 0, TAU); ctx.fill();
   // legs
-  ctx.strokeStyle = C(e.pants); ctx.lineWidth = 0.15 * wide;
-  ctx.beginPath(); ctx.moveTo(-0.1 * wide, -0.86); ctx.lineTo(-0.11 * wide + lg, -0.42); ctx.lineTo(-0.12 * wide + lg * 1.4, -0.03 - Math.max(0, Math.sin(ph)) * 0.06 * walk);
-  ctx.moveTo(0.1 * wide, -0.86); ctx.lineTo(0.11 * wide - lg, -0.42); ctx.lineTo(0.12 * wide - lg * 1.4, -0.03 - Math.max(0, -Math.sin(ph)) * 0.06 * walk); ctx.stroke();
+  ctx.strokeStyle = C(e.pants); ctx.lineWidth = 0.16 * wide;
+  const feet = [];
+  for (const sd of [-1, 1]) {
+    const k = sd < 0 ? lg : -lg, fx = sd * 0.12 * wide + k * 1.4, fy = -0.05 - Math.max(0, sd < 0 ? Math.sin(ph) : -Math.sin(ph)) * 0.06 * walk;
+    ctx.beginPath(); ctx.moveTo(sd * 0.1 * wide, -0.86); ctx.quadraticCurveTo(sd * 0.13 * wide + k, -0.42, fx, fy); ctx.stroke();
+    feet.push([fx, fy]);
+  }
+  ctx.fillStyle = C('#1e1a16'); feet.forEach(f => { ctx.beginPath(); ctx.ellipse(f[0], f[1] + 0.01, 0.1 * wide, 0.05, 0, 0, TAU); ctx.fill(); });
   ctx.translate(0, -bob);
-  // torso
+  // torso: rounded shoulders, soft belly, ragged hem drawn with curves
+  const tw = 0.24 * wide;
   ctx.fillStyle = C(e.shirt);
-  ctx.beginPath(); ctx.moveTo(-0.24 * wide, -1.47); ctx.lineTo(0.24 * wide, -1.47); ctx.lineTo(0.21 * wide, -0.86); ctx.lineTo(0.12, -0.8); ctx.lineTo(0.04, -0.88); ctx.lineTo(-0.06, -0.79); ctx.lineTo(-0.21 * wide, -0.86); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-tw + 0.07, -1.5);
+  ctx.quadraticCurveTo(0, -1.55, tw - 0.07, -1.5); ctx.quadraticCurveTo(tw + 0.03, -1.48, tw + 0.01, -1.34);
+  ctx.quadraticCurveTo(tw + 0.04, -1.05, 0.2 * wide, -0.88); ctx.quadraticCurveTo(0.14, -0.78, 0.05, -0.85);
+  ctx.quadraticCurveTo(-0.02, -0.78, -0.09, -0.83); ctx.quadraticCurveTo(-0.16, -0.79, -0.2 * wide, -0.88);
+  ctx.quadraticCurveTo(-tw - 0.04, -1.05, -tw - 0.01, -1.34); ctx.quadraticCurveTo(-tw - 0.03, -1.48, -tw + 0.07, -1.5);
+  ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 0.02; ctx.stroke();
-  if (e.type === 'brute') { ctx.fillStyle = C('#3a2a1a'); ctx.fillRect(-0.2, -1.25, 0.4, 0.5); ctx.strokeStyle = C('#888'); ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(-0.28, -1.45); ctx.lineTo(0.28, -0.95); ctx.stroke(); }
+  ctx.save(); ctx.clip();
+  if (e.type === 'brute') { ctx.fillStyle = C('#3a2a1a'); ctx.beginPath(); ctx.ellipse(0, -1.0, 0.2, 0.32, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = C('#888'); ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(-0.28, -1.45); ctx.quadraticCurveTo(0, -1.12, 0.28, -0.95); ctx.stroke(); }
   if (!fl) { ctx.fillStyle = G.green ? 'rgba(50,110,30,.7)' : 'rgba(90,10,12,.7)'; e.stains.forEach(st => { ctx.beginPath(); ctx.arc(st[0], st[1], st[2], 0, TAU); ctx.fill(); }); }
-  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(0.05, -1.47, 0.2 * wide, 0.62);
+  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(tw * 0.85, -1.15, tw * 0.55, 0.42, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.ellipse(-tw * 0.45, -1.32, tw * 0.35, 0.14, -0.2, 0, TAU); ctx.fill();
+  ctx.restore();
   // arms
   const r = e.reach;
   const hands = [];
@@ -1544,7 +1561,8 @@ function drawEnemy(e) {
     const sw = Math.sin(ph + (sd > 0 ? Math.PI : 0)) * 0.05 * walk;
     const ex = sd * (0.32 + 0.05 * r) * wide, ey = -1.17 - 0.2 * r + sw;
     const hx = sd * (0.27 + 0.16 * r) * wide + sw * 0.5, hy = -0.95 - 0.45 * r + (e.state === 'windup' ? Math.sin(e.t * 20) * 0.04 : 0);
-    ctx.strokeStyle = C(e.shirt); ctx.lineWidth = 0.12 * wide; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.fillStyle = C(e.shirt); ctx.beginPath(); ctx.arc(sx, sy + 0.02, 0.08 * wide, 0, TAU); ctx.fill();
+    ctx.strokeStyle = C(e.shirt); ctx.lineWidth = 0.13 * wide; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
     ctx.strokeStyle = C(e.skin); ctx.lineWidth = 0.085 * wide; ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(hx, hy); ctx.stroke();
     ctx.fillStyle = C(e.skin); ctx.beginPath(); ctx.arc(hx, hy, 0.06 * wide * (1 + r * 0.2), 0, TAU); ctx.fill();
     if (e.type === 'axeman' && sd > 0 && e.throws > 0) { ctx.strokeStyle = C('#4a321c'); ctx.lineWidth = 0.04; ctx.beginPath(); ctx.moveTo(hx, hy + 0.1); ctx.lineTo(hx, hy - 0.45); ctx.stroke(); ctx.fillStyle = C('#9aa0a6'); ctx.beginPath(); ctx.moveTo(hx, hy - 0.45); ctx.lineTo(hx + 0.2, hy - 0.52); ctx.lineTo(hx + 0.2, hy - 0.28); ctx.lineTo(hx, hy - 0.33); ctx.fill(); }
