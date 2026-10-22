@@ -1527,13 +1527,22 @@ function buildScenery() {
   b.beginPath(); b.moveTo(0, 360);
   for (let x = 0; x <= W; x += 24) b.lineTo(x, 330 + Math.sin(x * 0.03) * 14 + Math.sin(x * 0.11) * 8);
   b.lineTo(W, GROUND); b.lineTo(0, GROUND); b.fill();
-  for (let i = 0; i < 9; i++) tree(b, 60 + i * 110 + (i % 2) * 30, 420, 0.7, true);
+  for (let i = 0; i < 9; i++) tree(b, 60 + i * 110 + (i % 2) * 30, 436, 0.7, true);   // rooted just below the meadow's edge
   b.fillStyle = 'rgba(200,225,210,0.35)'; b.fillRect(0, 300, W, 140);
   for (let i = 0; i < 6; i++) tree(b, 120 + i * 160 + (i % 2) * 40, 452, 1.05, false);
   // grass field
   g = b.createLinearGradient(0, 420, 0, H);
   g.addColorStop(0, '#6fa548'); g.addColorStop(0.3, '#5c9139'); g.addColorStop(1, '#3d6a25');
   b.fillStyle = g; b.fillRect(0, 430, W, H - 430);
+  // undergrowth along the meadow's edge so every trunk disappears into bushes and grass
+  const brnd = seeded(77);
+  for (let x = -10; x < W + 10; x += 14 + brnd() * 14) {
+    const bw = 14 + brnd() * 18, bh = 7 + brnd() * 9;
+    b.fillStyle = brnd() < 0.5 ? '#4f8a33' : '#5c9a3c';
+    b.beginPath(); b.ellipse(x, 432, bw, bh, 0, Math.PI, 0); b.fill();
+    b.fillStyle = 'rgba(140,200,90,0.35)';
+    b.beginPath(); b.ellipse(x - bw * 0.25, 432 - bh * 0.45, bw * 0.45, bh * 0.4, 0, 0, Math.PI * 2); b.fill();
+  }
   for (let i = 0; i < 260; i++) {
     const x = (i * 37.3) % W, y = 440 + (i * 17) % 100;
     b.strokeStyle = i % 3 ? '#4f8a30' : '#7cb850'; b.lineWidth = 2;
