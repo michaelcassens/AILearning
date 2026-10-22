@@ -302,8 +302,8 @@ function noise(dur, vol = 0.25, freq = 800) {
 }
 const sfx = {
   grab()  { tone(520, 0.07, 'triangle', 0.08, 260); },
-  thud()  { noise(0.16, 0.35, 380); tone(90, 0.12, 'sine', 0.2, -40); },
-  splat() { noise(0.22, 0.4, 1200); tone(160, 0.18, 'sawtooth', 0.08, -100); },
+  thud()  { noise(0.16, 0.1, 380); tone(90, 0.12, 'sine', 0.06, -40); },
+  splat() { noise(0.22, 0.1, 1200); tone(160, 0.18, 'sawtooth', 0.025, -100); },
   chomp() { noise(0.25, 0.5, 900); tone(110, 0.3, 'sawtooth', 0.18, -60); },
   roar()  {   // plays the recorded dragon growl; falls back to a synthesized grunt until it has loaded
     if (playSample('growl', 0.9)) return;
@@ -1065,7 +1065,7 @@ function impact(e, speed, where) {
   const dmg = speed > 330 ? (speed - 300) * 0.11 * fm : 0;
   if (dmg > 0) {
     burst(e.x, e.y - 4, 10, e.def.machine ? WOOD : DUST, 180, 5);
-    if (!playSample('crash', clamp(0.025 + dmg / 800, 0.025, 0.09), rand(0.9, 1.12))) sfx.thud();
+    if (!playSample('crash', clamp(0.012 + dmg / 3000, 0.012, 0.04), rand(0.9, 1.12))) sfx.thud();
     if (dmg > 25) { G.shake = Math.max(G.shake, 0.15); buzz(15); }
     hurt(e, dmg, where);
   }
