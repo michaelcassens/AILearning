@@ -1,0 +1,14 @@
+{
+  "name": "Keep Onslaught",
+  "short_name": "Keep Onslaught",
+  "description": "Castle-defense game: fling invading knights, burn them in the Ember Pit and feed them to the Worm.",
+  "start_url": "keep_onslaught.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#14100c",
+  "theme_color": "#1b1410",
+  "icons": [
+    { "src": "keep_onslaught_icon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

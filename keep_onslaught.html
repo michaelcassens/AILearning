@@ -6,6 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1b1410">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Keep Onslaught">
+<link rel="manifest" href="keep_onslaught.webmanifest">
+<link rel="apple-touch-icon" href="keep_onslaught_icon.png">
 <title>Keep Onslaught</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
@@ -241,6 +245,13 @@ const DOORS = [
 const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 let scale = 1, offX = 0, offY = 0, dpr = 1;
+// The whole 960×540 battlefield always fits on screen; any extra room on wider or taller screens
+// shows more scenery (the view), and the HUD hugs the real screen edges, clear of notches.
+const PADX = 360, PADY = 140;   // how far the scenery extends past the battlefield
+let viewL = 0, viewR = W, viewT = 0, viewB = H, hudL = 0, hudR = W, hudT = 0, hudB = H;
+const safeProbe = document.createElement('div');
+safeProbe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';
+document.body.appendChild(safeProbe);
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   const vw = window.innerWidth, vh = window.innerHeight;
@@ -248,6 +259,13 @@ function resize() {
   cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
   cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
   offX = (vw - W * scale) / 2; offY = (vh - H * scale) / 2;
+  viewL = Math.max(-PADX, -offX / scale); viewR = Math.min(W + PADX, W + offX / scale);
+  viewT = Math.max(-PADY, -offY / scale); viewB = Math.min(H + PADY, H + offY / scale);
+  const cs = getComputedStyle(safeProbe), px = v => parseFloat(v) || 0;
+  hudL = viewL + px(cs.paddingLeft) / scale; hudR = viewR - px(cs.paddingRight) / scale; hudB = viewB - px(cs.paddingBottom) / scale;
+  hudT = viewT + px(cs.paddingTop) / scale;
+  PAUSE_BTN.x = hudR - 30; PAUSE_BTN.y = hudB - 34; MUTE_BTN.x = hudR - 30; MUTE_BTN.y = hudT + 30; TUT_SKIP.y = hudT + 12;
+  TUT_SKIP.x = hudR - 200;
   checkRotate();
 }
 function toGame(e) { return { x: (e.clientX - offX) / scale, y: (e.clientY - offY) / scale }; }
@@ -505,7 +523,7 @@ function spawn(type) {
   const d = TYPES[type], n = G.day + G.L.off;
   const hpScale = 1 + 0.09 * (n - 1);
   G.enemies.push({
-    id: nextId++, type, def: d, x: W + (d.machine ? 70 : 24), y: GROUND, vx: 0, vy: 0,
+    id: nextId++, type, def: d, x: Math.max(W, viewR) + (d.machine ? 70 : 24), y: GROUND, vx: 0, vy: 0,
     hp: d.hp * hpScale, maxHp: d.hp * hpScale, state: 'walk', t: 0, anim: Math.random() * 6,
     lane: rand(-6, 6), rot: 0, vr: 0, bubble: 0, frozen: 0, burn: 0, burnDps: 0, atkT: d.rate * Math.random(), atkAnim: 0, hitSet: null,
     speed: d.speed * Math.min(1.35, 1 + 0.02 * (n - 1)) * rand(0.85, 1.2),
@@ -594,9 +612,9 @@ function weaponButtons() {
   const list = [];
   for (const k of ['boulder', 'column', 'fireball']) if (G.use[k] >= 0) list.push(k);
   if (G.use.gun) list.push('gun');
-  return list.map((k, i) => ({ k, x: 330 + i * 70, y: H - 34, r: 27 }));
+  return list.map((k, i) => ({ k, x: hudL + 330 + i * 70, y: hudB - 34, r: 27 }));
 }
-const PAUSE_BTN = { x: W - 30, y: H - 34, r: 22 };
+const PAUSE_BTN = { x: W - 30, y: H - 34, r: 22 };   // repositioned to the screen edges by resize()
 const MUTE_BTN = { x: W - 30, y: 30, r: 20 };
 function cdMax(k) { return k === 'gun' ? GUNS[G.use.gun].cd : TOWER[k].cd; }
 
@@ -662,7 +680,7 @@ function surfaceAt(x) {
 }
 const floorAt = x => surfaceAt(x - 4);
 function moveHeld(e, p) {
-  e.x = clamp(p.x, 12, W - 10);
+  e.x = clamp(p.x, 12, viewR - 10);
   e.y = clamp(p.y + e.def.h * 0.55, 40, GROUND);
   const f = floorAt(e.x);
   if (e.y > f) {   // can't drag a knight through stone: lift him onto the roof or slide him out in front
@@ -894,7 +912,7 @@ function updateProjectiles(dt) {
       sfx.boom(); sfx.burn(); G.shake = 0.3;
     }
   }
-  G.projectiles = G.projectiles.filter(p => !p.done && p.x > -200 && p.x < W + 100);
+  G.projectiles = G.projectiles.filter(p => !p.done && p.x > -200 && p.x < viewR + 100);
 }
 function blast(x, R, dmg, cause, knock) {
   for (const e of G.enemies) {
@@ -930,7 +948,7 @@ function updateEnemy(e, dt) {
   switch (e.state) {
     case 'walk': {
       e.anim += dt;
-      e.x -= e.speed * dt;
+      e.x -= e.speed * dt * (e.x > W ? 2.5 : 1);   // march in quickly from beyond the battlefield
       if ((d.ranged || d.caster) && e.x <= e.stopX) { e.state = d.ranged ? 'shoot' : 'cast'; e.atkT = d.rate * 0.4; }
       if (e.x - d.w / 2 <= WALL_X - 6) { e.x = WALL_X - 6 + d.w / 2; e.state = 'attack'; e.atkT = 0.3; }
       break;
@@ -1006,7 +1024,7 @@ function updateEnemy(e, dt) {
         }
       }
       if (e.x < 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = 6; e.vx = Math.abs(e.vx) * 0.35; if (e.dead) return; }
-      if (e.x > W - 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = W - 6; e.vx = -Math.abs(e.vx) * 0.35; if (e.dead) return; }
+      if (e.x > viewR - 6) { impact(e, Math.abs(e.vx), 'wall'); e.x = viewR - 6; e.vx = -Math.abs(e.vx) * 0.35; if (e.dead) return; }
       // flying into a castle face (the keep's front or the tower's side) bounces him back
       const surf = floorAt(e.x);
       if (e.y > surf && py > surf) {
@@ -1276,12 +1294,20 @@ document.getElementById('creditsBtn').addEventListener('click', () => show('cred
 document.getElementById('creditsClose').addEventListener('click', () => show('menu'));
 document.getElementById('storySkip').addEventListener('click', endStory);
 document.getElementById('rotDismiss').addEventListener('click', () => { rotateDismissed = true; checkRotate(); });
-document.getElementById('fsBtn').addEventListener('click', () => {
+function goFullscreen() {
   const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
-  if (req) Promise.resolve(req.call(el)).then(() => {
+  if (!req || document.fullscreenElement || document.webkitFullscreenElement) return;
+  Promise.resolve(req.call(el, { navigationUI: 'hide' })).then(() => {
     if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {});
   }).catch(() => {});
-});
+}
+document.getElementById('fsBtn').addEventListener('click', goFullscreen);
+if (window.Capacitor) document.getElementById('fsBtn').hidden = true;   // the Android app is always full screen
+// on phones and tablets, the first tap takes the game full screen (browsers only allow it after a tap)
+if (matchMedia('(pointer: coarse)').matches && !matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches) {
+  document.addEventListener('pointerup', function first() { goFullscreen(); document.removeEventListener('pointerup', first, true); }, true);
+}
+document.addEventListener('fullscreenchange', () => setTimeout(resize, 100));
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); Music.update(); });
 window.addEventListener('resize', resize);
 window.addEventListener('orientationchange', () => setTimeout(resize, 200));
@@ -1424,7 +1450,7 @@ function drawTutorial() {
   const text = st.wait === 'kill' && T.retry ? 'Not high enough! Grab him again, lift him higher, then let go.' : st.text;
   ctx.save();
   ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const lines = wrapText(text, 548), ph = lines.length * 24 + 22, px = W / 2 - 290, py = 52;
+  const lines = wrapText(text, 548), ph = lines.length * 24 + 22, px = W / 2 - 290, py = hudT + 52;
   ctx.fillStyle = 'rgba(15,24,30,0.9)'; ctx.strokeStyle = '#c9a24a'; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(px, py, 580, ph, 12) : ctx.rect(px, py, 580, ph); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#fff3c4';
@@ -1453,7 +1479,7 @@ function drawTutorial() {
     }
   }
   if (st.focus) {
-    const r = st.focus === 'door' ? { x: 644, y: H - 60, w: 256, h: 48 } : { x: 4, y: H - 62, w: 258, h: 54 };
+    const r = st.focus === 'door' ? { x: hudR - 316, y: hudB - 60, w: 256, h: 48 } : { x: hudL + 4, y: hudB - 62, w: 258, h: 54 };
     ctx.strokeStyle = `rgba(255,220,100,${0.4 + pulse * 0.6})`; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.roundRect ? ctx.roundRect(r.x, r.y, r.w, r.h, 12) : ctx.rect(r.x, r.y, r.w, r.h); ctx.stroke();
   }
@@ -1536,8 +1562,8 @@ function drawPeek() {
 }
 
 // ================= Static scenery =================
-const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
-const castleImg = document.createElement('canvas'); castleImg.width = W; castleImg.height = H;
+const bg = document.createElement('canvas'); bg.width = W + PADX * 2; bg.height = H + PADY * 2;
+const castleImg = document.createElement('canvas'); castleImg.width = W + PADX * 2; castleImg.height = H + PADY * 2;
 function stoneWall(c, x, y, w, h) {
   c.fillStyle = '#7d8788'; c.fillRect(x, y, w, h);
   for (let yy = y; yy < y + h; yy += 13) {
@@ -1605,42 +1631,55 @@ function tree(b, x, y, s, dark) {
 }
 function buildScenery() {
   const b = bg.getContext('2d');
-  let g = b.createLinearGradient(0, 0, 0, GROUND);
-  g.addColorStop(0, '#5aa6d6'); g.addColorStop(0.65, '#b7dcef'); g.addColorStop(1, '#e8efd6');
-  b.fillStyle = g; b.fillRect(0, 0, W, H);
+  b.translate(PADX, PADY);   // draw in battlefield coordinates; the canvas reaches PADX/PADY beyond it
+  const X0 = -PADX, X1 = W + PADX, Y0 = -PADY, Y1 = H + PADY;
+  let g = b.createLinearGradient(0, Y0, 0, GROUND);
+  g.addColorStop(0, '#4a97cc'); g.addColorStop(0.3, '#5aa6d6'); g.addColorStop(0.75, '#b7dcef'); g.addColorStop(1, '#e8efd6');
+  b.fillStyle = g; b.fillRect(X0, Y0, X1 - X0, GROUND - Y0);
   // misty far forest
   b.fillStyle = '#86a98a';
-  b.beginPath(); b.moveTo(0, 360);
-  for (let x = 0; x <= W; x += 24) b.lineTo(x, 330 + Math.sin(x * 0.03) * 14 + Math.sin(x * 0.11) * 8);
-  b.lineTo(W, GROUND); b.lineTo(0, GROUND); b.fill();
-  for (let i = 0; i < 9; i++) tree(b, 60 + i * 110 + (i % 2) * 30, 436, 0.7, true);   // rooted just below the meadow's edge
-  b.fillStyle = 'rgba(200,225,210,0.35)'; b.fillRect(0, 300, W, 140);
-  for (let i = 0; i < 6; i++) tree(b, 120 + i * 160 + (i % 2) * 40, 452, 1.05, false);
+  b.beginPath(); b.moveTo(X0, 360);
+  for (let x = X0; x <= X1; x += 24) b.lineTo(x, 330 + Math.sin(x * 0.03) * 14 + Math.sin(x * 0.11) * 8);
+  b.lineTo(X1, GROUND); b.lineTo(X0, GROUND); b.fill();
+  for (let x = X0 + 30, i = 0; x < X1; x += 110, i++) tree(b, x + (i % 2) * 30, 436, 0.7, true);   // rooted just below the meadow's edge
+  b.fillStyle = 'rgba(200,225,210,0.35)'; b.fillRect(X0, 300, X1 - X0, 140);
+  for (let x = X0 + 40, i = 0; x < X1; x += 160, i++) tree(b, x + (i % 2) * 40, 452, 1.05, false);
   // grass field
-  g = b.createLinearGradient(0, 420, 0, H);
-  g.addColorStop(0, '#6fa548'); g.addColorStop(0.3, '#5c9139'); g.addColorStop(1, '#3d6a25');
-  b.fillStyle = g; b.fillRect(0, 430, W, H - 430);
+  g = b.createLinearGradient(0, 420, 0, Y1);
+  g.addColorStop(0, '#6fa548'); g.addColorStop(0.25, '#5c9139'); g.addColorStop(1, '#2f5a1c');
+  b.fillStyle = g; b.fillRect(X0, 430, X1 - X0, Y1 - 430);
   // undergrowth along the meadow's edge so every trunk disappears into bushes and grass
   const brnd = seeded(77);
-  for (let x = -10; x < W + 10; x += 14 + brnd() * 14) {
+  for (let x = X0 - 10; x < X1 + 10; x += 14 + brnd() * 14) {
     const bw = 14 + brnd() * 18, bh = 7 + brnd() * 9;
     b.fillStyle = brnd() < 0.5 ? '#4f8a33' : '#5c9a3c';
     b.beginPath(); b.ellipse(x, 432, bw, bh, 0, Math.PI, 0); b.fill();
     b.fillStyle = 'rgba(140,200,90,0.35)';
     b.beginPath(); b.ellipse(x - bw * 0.25, 432 - bh * 0.45, bw * 0.45, bh * 0.4, 0, 0, Math.PI * 2); b.fill();
   }
-  for (let i = 0; i < 260; i++) {
-    const x = (i * 37.3) % W, y = 440 + (i * 17) % 100;
+  for (let i = 0; i < 520; i++) {
+    const x = X0 + (i * 37.3) % (X1 - X0), y = 440 + (i * 17) % (Y1 - 440);
     b.strokeStyle = i % 3 ? '#4f8a30' : '#7cb850'; b.lineWidth = 2;
     b.beginPath(); b.moveTo(x, y); b.lineTo(x + 2, y - 7); b.stroke();
   }
-  for (let i = 0; i < 18; i++) {
+  for (let i = 0; i < 32; i++) {
     b.fillStyle = ['#f5f5f5', '#ffd84a', '#e85d8a'][i % 3];
-    b.beginPath(); b.arc((i * 97 + 30) % W, 488 + (i * 23) % 40, 2.5, 0, Math.PI * 2); b.fill();
+    b.beginPath(); b.arc(X0 + (i * 97 + 30) % (X1 - X0), 488 + (i * 23) % 40, 2.5, 0, Math.PI * 2); b.fill();
   }
 
   // ---- castle (left) ----
   const c = castleImg.getContext('2d');
+  c.translate(PADX, PADY);
+  // more of the castle stretching off to the left on wide screens: a second tower and the curtain wall
+  stoneWall(c, -230, 150, 96, 150); crenels(c, -230, 150, 96, 6);
+  let sh0 = c.createLinearGradient(-230, 0, -134, 0);
+  sh0.addColorStop(0, 'rgba(0,0,0,0.3)'); sh0.addColorStop(0.45, 'rgba(255,255,255,0.06)'); sh0.addColorStop(1, 'rgba(0,0,0,0.3)');
+  c.fillStyle = sh0; c.fillRect(-230, 134, 96, 166);
+  stoneWall(c, -PADX, 250, PADX, GROUND - 250 + 4); crenels(c, -PADX, 250, PADX, 21);
+  c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(-PADX, 234, PADX, GROUND - 230);
+  c.fillStyle = '#1d2226';
+  for (const wx2 of [-300, -190, -80]) { c.beginPath(); c.moveTo(wx2, 330); c.arc(wx2 + 7, 330, 7, Math.PI, 0); c.lineTo(wx2 + 14, 360); c.lineTo(wx2, 360); c.fill(); }
+  c.beginPath(); c.moveTo(-189, 230); c.arc(-182, 230, 7, Math.PI, 0); c.lineTo(-175, 258); c.lineTo(-189, 258); c.fill();
   stoneWall(c, 18, 96, 112, 200);              // round tower at the back
   crenels(c, 18, 96, 112, 7);
   let sh = c.createLinearGradient(18, 0, 130, 0);
@@ -2609,15 +2648,15 @@ function drawHUD() {
   ctx.save();
   ctx.textBaseline = 'middle';
   // gold and souls
-  ctx.fillStyle = 'rgba(15,22,26,0.72)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(8, H - 58, 250, 46, 12) : ctx.rect(8, H - 58, 250, 46); ctx.fill();
-  ctx.fillStyle = '#ffcc33'; ctx.beginPath(); ctx.arc(30, H - 35, 11, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(30, H - 35, 7, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = '#ffe066'; ctx.font = 'bold 21px system-ui'; ctx.textAlign = 'left'; ctx.fillText(G.gold, 46, H - 34);
-  const sx = 160;
-  drawSkull(sx, H - 36);
-  ctx.fillStyle = '#efe6cf'; ctx.font = 'bold 21px system-ui'; ctx.fillText(G.souls, sx + 18, H - 34);
+  ctx.fillStyle = 'rgba(15,22,26,0.72)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(hudL + 8, hudB - 58, 250, 46, 12) : ctx.rect(hudL + 8, hudB - 58, 250, 46); ctx.fill();
+  ctx.fillStyle = '#ffcc33'; ctx.beginPath(); ctx.arc(hudL + 30, hudB - 35, 11, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hudL + 30, hudB - 35, 7, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#ffe066'; ctx.font = 'bold 21px system-ui'; ctx.textAlign = 'left'; ctx.fillText(G.gold, hudL + 46, hudB - 34);
+  const sx = hudL + 160;
+  drawSkull(sx, hudB - 36);
+  ctx.fillStyle = '#efe6cf'; ctx.font = 'bold 21px system-ui'; ctx.fillText(G.souls, sx + 18, hudB - 34);
   // castle health
-  const bx = 690, by = H - 44, bw = 200, bh = 18, r = G.gateHP / G.gateMax;
+  const bx = hudR - 270, by = hudB - 44, bw = 200, bh = 18, r = G.gateHP / G.gateMax;
   ctx.fillStyle = 'rgba(15,22,26,0.72)'; ctx.fillRect(bx - 40, by - 17, bw + 48, bh + 27);
   drawTinyCastle(bx - 21, by + 18);
   ctx.fillStyle = '#1d2c36'; ctx.fillRect(bx, by, bw, bh);
@@ -2634,8 +2673,8 @@ function drawHUD() {
   ctx.textAlign = 'center'; ctx.font = 'bold 16px system-ui';
   const label = `Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''}   ·   Glory ${G.score}`;
   const tw = ctx.measureText(label).width + 30;
-  ctx.fillStyle = 'rgba(15,22,26,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - tw / 2, 10, tw, 30, 10) : ctx.rect(W / 2 - tw / 2, 10, tw, 30); ctx.fill();
-  ctx.fillStyle = '#f2e3b3'; ctx.fillText(label, W / 2, 26);
+  ctx.fillStyle = 'rgba(15,22,26,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - tw / 2, hudT + 10, tw, 30, 10) : ctx.rect(W / 2 - tw / 2, hudT + 10, tw, 30); ctx.fill();
+  ctx.fillStyle = '#f2e3b3'; ctx.fillText(label, W / 2, hudT + 26);
   for (const b of weaponButtons()) drawButton(b, b.k, G.cd[b.k] / cdMax(b.k), G.aim === b.k);
   if (G.aim) {
     const x = clamp(G.aimPos.x, WALL_X + 10, W);
@@ -2645,7 +2684,7 @@ function drawHUD() {
     ctx.beginPath(); ctx.ellipse(x, GROUND, T.R || T.w / 2 + 10, 10, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 18px system-ui'; ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 4;
     const msg = `Tap the field to drop the ${TOWER[G.aim].label}`;
-    ctx.strokeText(msg, W / 2, 66); ctx.fillText(msg, W / 2, 66);
+    ctx.strokeText(msg, W / 2, hudT + 66); ctx.fillText(msg, W / 2, hudT + 66);
   }
   if (G.hintT > 0) {
     ctx.globalAlpha = clamp(G.hintT, 0, 1);
@@ -2662,11 +2701,11 @@ function drawBanner(b) {
   const drop = clamp(b.age * 4, 0, 1);
   // centred and wide enough to hide the siege/glory label completely once it has dropped
   const w = 340, x = W / 2 - w / 2, lines = b.lines, h = 50 + lines.length * 30;
-  const y = -h + drop * (h + 6);
+  const top = viewT, y = top - h + drop * (h + 6 + hudT - top);
   ctx.save();
   ctx.globalAlpha = clamp(b.t * 2, 0, 1);
   ctx.strokeStyle = '#555'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.moveTo(x + 50, 0); ctx.lineTo(x + 50, y); ctx.moveTo(x + w - 50, 0); ctx.lineTo(x + w - 50, y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x + 50, top); ctx.lineTo(x + 50, y); ctx.moveTo(x + w - 50, top); ctx.lineTo(x + w - 50, y); ctx.stroke();
   ctx.fillStyle = '#a87a22'; ctx.fillRect(x - 12, y - 8, w + 24, 14);
   ctx.fillStyle = '#c62a22';
   ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + h - 14);
@@ -2716,7 +2755,7 @@ function drawSky(dt) {
   ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, 90, 0, Math.PI * 2); ctx.fill();
   ctx.globalAlpha = 0.92;
   for (const c of clouds) {
-    c.x += c.v * dt; if (c.x > W + 20) c.x = -c.w - 20;
+    c.x += c.v * dt; if (c.x > viewR + 20) c.x = viewL - c.w - 20;
     ctx.drawImage(c.img, c.x, c.y - c.h);
   }
   ctx.globalAlpha = 1;
@@ -2728,13 +2767,13 @@ function render(dt) {
   let sx = 0, sy = 0;
   if (G && G.shake > 0) { sx = rand(-1, 1) * G.shake * 18; sy = rand(-1, 1) * G.shake * 18; }
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, (offX + sx * scale) * dpr, (offY + sy * scale) * dpr);
-  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
-  ctx.drawImage(bg, 0, 0);
+  ctx.save(); ctx.beginPath(); ctx.rect(viewL, viewT, viewR - viewL, viewB - viewT); ctx.clip();
+  ctx.drawImage(bg, -PADX, -PADY);
   const prog = drawSky(dt);
-  if (!G) { ctx.drawImage(castleImg, 0, 0); ctx.restore(); return; }
+  if (!G) { ctx.drawImage(castleImg, -PADX, -PADY); ctx.restore(); return; }
   if (G.owned.has('hellgate')) drawPit();
   if (G.use.altar >= 0) drawAltar();
-  ctx.drawImage(castleImg, 0, 0);
+  ctx.drawImage(castleImg, -PADX, -PADY);
   drawDoor();
   drawCastleWeapons();
   drawPeek();
@@ -2756,7 +2795,7 @@ function render(dt) {
   ctx.globalAlpha = 1;
   drawBigDragon();
   if (G.state === 'story') { drawStoryExtras(); ctx.restore(); return; }
-  if (prog > 0.5) { ctx.fillStyle = `rgba(255,140,60,${(prog - 0.5) * 0.3})`; ctx.fillRect(0, 0, W, H); } // evening light
+  if (prog > 0.5) { ctx.fillStyle = `rgba(255,140,60,${(prog - 0.5) * 0.3})`; ctx.fillRect(viewL, viewT, viewR - viewL, viewB - viewT); } // evening light
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const t of G.texts) {
     ctx.globalAlpha = clamp(t.life / t.max * 1.5, 0, 1);
