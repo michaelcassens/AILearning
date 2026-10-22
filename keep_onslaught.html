@@ -1065,7 +1065,7 @@ function impact(e, speed, where) {
   const dmg = speed > 330 ? (speed - 300) * 0.11 * fm : 0;
   if (dmg > 0) {
     burst(e.x, e.y - 4, 10, e.def.machine ? WOOD : DUST, 180, 5);
-    if (!playSample('crash', clamp(0.1 + dmg / 200, 0.1, 0.35), rand(0.9, 1.12))) sfx.thud();
+    if (!playSample('crash', clamp(0.025 + dmg / 800, 0.025, 0.09), rand(0.9, 1.12))) sfx.thud();
     if (dmg > 25) { G.shake = Math.max(G.shake, 0.15); buzz(15); }
     hurt(e, dmg, where);
   }
