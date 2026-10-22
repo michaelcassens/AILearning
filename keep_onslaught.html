@@ -2400,8 +2400,9 @@ function drawHUD() {
 }
 function drawBanner(b) {
   const drop = clamp(b.age * 4, 0, 1);
-  const x = 250, w = 230, lines = b.lines, h = 50 + lines.length * 30;
-  const y = -h + drop * (h + 40);
+  // centred and wide enough to hide the siege/glory label completely once it has dropped
+  const w = 340, x = W / 2 - w / 2, lines = b.lines, h = 50 + lines.length * 30;
+  const y = -h + drop * (h + 6);
   ctx.save();
   ctx.globalAlpha = clamp(b.t * 2, 0, 1);
   ctx.strokeStyle = '#555'; ctx.lineWidth = 4;
