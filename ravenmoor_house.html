@@ -21,7 +21,9 @@
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;background:var(--ink);color:var(--bone);overflow:hidden;
   font-family:var(--f-type);-webkit-tap-highlight-color:transparent}
-#stage{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink)}
+#stage{position:fixed;inset:0;display:grid;place-items:center;background:var(--ink);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  padding:env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px)}
+button{touch-action:manipulation}
 #game{display:block;cursor:none;touch-action:none;background:#000}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -34,8 +36,8 @@ button{cursor:pointer}
 
 /* title */
 #title{background:linear-gradient(75deg, rgba(4,5,7,.92) 0%, rgba(4,5,7,.7) 42%, rgba(4,5,7,.15) 75%, rgba(4,5,7,0) 100%);
-  display:flex;align-items:flex-end}
-.t-wrap{display:flex;gap:40px;align-items:flex-end;width:100%;max-width:1180px;margin:0 auto;flex-wrap:wrap}
+  display:flex;flex-direction:column}
+.t-wrap{display:flex;gap:40px;align-items:flex-end;width:100%;max-width:1180px;margin:auto auto 0;flex-wrap:wrap}
 .t-left{flex:1 1 420px;min-width:0;display:flex;flex-direction:column;gap:16px}
 .eyebrow{margin:0;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--moss)}
 .logo{margin:0;font-family:var(--f-display);font-weight:400;line-height:.82;font-size:clamp(64px, 12vw, 148px);
@@ -90,11 +92,34 @@ button{cursor:pointer}
 .scores td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
 .scores td.n{text-align:right}
 
-#reloadBtn{position:fixed;z-index:4;right:max(14px, env(safe-area-inset-right, 0px));bottom:max(14px, env(safe-area-inset-bottom, 0px));
+#reloadBtn{position:fixed;z-index:4;right:14px;bottom:14px;
   width:84px;height:84px;border-radius:50%;border:2px solid var(--brass);background:rgba(10,8,6,.6);
   font-family:var(--f-hud);font-size:22px;color:var(--brass);touch-action:none}
-#pauseBtn{position:fixed;z-index:4;top:max(10px, env(safe-area-inset-top, 0px));left:50%;transform:translateX(-50%);
+#pauseBtn{position:fixed;z-index:4;top:10px;right:14px;
   background:rgba(10,8,6,.55);border:1px solid var(--line);border-radius:3px;padding:2px 12px;font-family:var(--f-hud);font-size:18px;color:var(--dim)}
+/* phones and tablets: one agent per screen, touch wording */
+.only-touch{display:none!important}
+.is-touch .only-touch{display:revert!important}
+.is-touch .no-touch{display:none!important}
+.is-touch .t-right dl.only-touch{display:grid!important}
+.is-touch .names{grid-template-columns:minmax(0,1fr);max-width:280px}
+#rotate{position:fixed;inset:0;z-index:7;background:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  text-align:center;padding-block:24px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+#rotate .phone{width:64px;height:104px;border:4px solid var(--bone);border-radius:12px;position:relative;animation:tip 2.4s ease-in-out infinite}
+#rotate .phone::after{content:"";position:absolute;left:50%;bottom:6px;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--bone)}
+#rotate h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:44px;line-height:1}
+#rotate p{margin:0;color:var(--dim);max-width:30ch;line-height:1.5}
+@keyframes tip{0%,30%{transform:rotate(0)}55%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion: reduce){#rotate .phone{animation:none;transform:rotate(-90deg)}}
+@media (max-height:520px){
+  .logo{font-size:clamp(48px, 9vw, 80px)}
+  .t-wrap{gap:20px}
+  .t-left{gap:10px}
+  .tag{font-size:14px}
+  .big{padding:9px 18px;font-size:24px}
+  .file{min-height:0}
+  .card{padding:18px 20px;gap:12px}
+}
 @media (max-width:620px){
   .names{grid-template-columns:1fr}
   .t-right{flex-basis:100%}
@@ -110,10 +135,10 @@ button{cursor:pointer}
     <div class="t-left">
       <p class="eyebrow">Agency case file 31-A &middot; Oct 30, 1998 &middot; 11:41 PM</p>
       <h1 class="logo">Ravenmoor<span>House</span></h1>
-      <p class="tag">A two-agent light-gun night. Shoot the dead, save the living, and reload by firing off the screen.</p>
+      <p class="tag">A two-agent light-gun night. Shoot the dead, save the living, and reload by firing off the screen.<span class="only-touch"> On a phone or tablet one agent plays; turn it sideways for the full screen.</span></p>
       <div class="names">
-        <div class="field"><label class="p1" for="n1">Agent 1 &middot; mouse</label><input id="n1" maxlength="12" autocomplete="off" spellcheck="false" value="KANE"></div>
-        <div class="field"><label class="p2" for="n2">Agent 2 &middot; keys / pad</label><input id="n2" maxlength="12" autocomplete="off" spellcheck="false" value="REYES"></div>
+        <div class="field"><label class="p1" for="n1"><span class="no-touch">Agent 1 &middot; mouse</span><span class="only-touch">Your agent</span></label><input id="n1" maxlength="12" autocomplete="off" spellcheck="false" value="KANE"></div>
+        <div class="field no-touch"><label class="p2" for="n2">Agent 2 &middot; keys / pad</label><input id="n2" maxlength="12" autocomplete="off" spellcheck="false" value="REYES"></div>
       </div>
       <div class="seg" role="radiogroup" aria-label="Difficulty" id="diff">
         <button type="button" role="radio" aria-checked="false" data-d="easy">Easy &middot; 7 lives</button>
@@ -121,8 +146,9 @@ button{cursor:pointer}
         <button type="button" role="radio" aria-checked="false" data-d="arcade">Arcade &middot; 3</button>
       </div>
       <div class="btns">
-        <button class="big" id="start2" type="button">Start &middot; 2 agents</button>
-        <button class="big alt" id="start1" type="button">Start &middot; 1 agent</button>
+        <button class="big no-touch" id="start2" type="button">Start &middot; 2 agents</button>
+        <button class="big alt no-touch" id="start1" type="button">Start &middot; 1 agent</button>
+        <button class="big only-touch" id="startTouch" type="button">Start</button>
       </div>
       <div class="small-row">
         <button class="ghost" id="bBlood" type="button">Blood: red</button>
@@ -133,7 +159,13 @@ button{cursor:pointer}
     </div>
     <aside class="t-right" aria-label="How to play">
       <h2>Controls</h2>
-      <dl>
+      <dl class="only-touch">
+        <dt>Fire</dt><dd>Tap where you want to shoot.</dd>
+        <dt>Reload</dt><dd>Tap the RELOAD button, tap the black area beside the screen, or tap with a second finger.</dd>
+        <dt>Pause</dt><dd>Pause button in the top corner.</dd>
+        <dt>Screen</dt><dd>Hold your phone sideways.</dd>
+      </dl>
+      <dl class="no-touch">
         <dt class="p1">Agent 1</dt><dd>Mouse to aim, left click to fire. Right click, or click outside the screen, to reload.</dd>
         <dt class="p2">Agent 2</dt><dd>WASD or arrows to aim (hold Shift for fine aim), Space to fire, R to reload.</dd>
         <dt>Gamepad</dt><dd>Stick to aim, A or RT fire, X or LT reload. Plays as Agent 2.</dd>
@@ -202,6 +234,7 @@ button{cursor:pointer}
   </div></div>
 </div>
 
+<div id="rotate" hidden><div class="phone" aria-hidden="true"></div><h2>Turn your phone sideways</h2><p>Ravenmoor House is a widescreen game. The action is paused until you rotate.</p><button class="ghost" id="rotateAnyway" type="button">Play upright anyway</button></div>
 <button id="reloadBtn" type="button" hidden>RELOAD</button>
 <button id="pauseBtn" type="button" hidden>Pause</button>
 
@@ -219,6 +252,10 @@ const pick = a => a[Math.random() * a.length | 0];
 const ease = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const TAU = Math.PI * 2;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const coarseMQ = matchMedia('(pointer: coarse)'), portraitMQ = matchMedia('(orientation: portrait)');
+let touchMode = coarseMQ.matches;
+function setTouchMode(v) { touchMode = v; document.documentElement.classList.toggle('is-touch', v); }
+setTouchMode(touchMode);
 const FONT = { disp: '"Pirata One", Georgia, serif', type: '"Special Elite", "Courier New", monospace', hud: '"VT323", ui-monospace, monospace' };
 
 function store(k, v) { try { if (v === undefined) return JSON.parse(localStorage.getItem(k)); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
@@ -231,13 +268,25 @@ function rgba(h, a) { const A = rgbOf(h); return 'rgba(' + A[0] + ',' + A[1] + '
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 function resize() {
-  const vw = innerWidth, vh = innerHeight, s = Math.min(vw / W, vh / H);
+  const st = document.getElementById('stage'), cs = getComputedStyle(st);
+  const vw = st.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), vh = st.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+  const s = Math.min(vw / W, vh / H);
   const cw = Math.max(1, Math.floor(W * s)), ch = Math.max(1, Math.floor(H * s));
   cvs.style.width = cw + 'px'; cvs.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cvs.width = Math.round(cw * dpr); cvs.height = Math.round(ch * dpr);
+  placeTouchButtons();
 }
-addEventListener('resize', resize); resize();
+// keep RELOAD and Pause inside the game picture (bottom-right and top-right), not out in the letterbox
+function placeTouchButtons() {
+  const r = cvs.getBoundingClientRect(), rb = document.getElementById('reloadBtn'), pb = document.getElementById('pauseBtn');
+  if (!rb || !pb) return;
+  const m = Math.max(8, r.height * 0.03);
+  rb.style.right = (innerWidth - r.right + m) + 'px'; rb.style.bottom = (innerHeight - r.bottom + m) + 'px';
+  const sz = Math.round(clamp(r.height * 0.2, 60, 96)); rb.style.width = rb.style.height = sz + 'px';
+  pb.style.right = (innerWidth - r.right + m) + 'px'; pb.style.top = (r.top + m) + 'px';
+}
+addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 150));
 
 // camera + projection. y is height above the floor, z is depth into the screen.
 const cam = { x: 0, y: 0, z: 0, shake: 0, bob: 0 };
@@ -574,7 +623,7 @@ function lensSplat(n) {
 
 // ============================================================ players: shoot, reload, hurt
 function anyPlaying() { return players.some(p => p.active); }
-function canShoot() { return G.state === 'play' && !G.paused && ['travel', 'action', 'boss', 'exit', 'bossDown'].includes(G.phase); }
+function canShoot() { return G.state === 'play' && !G.paused && !needRotate() && ['travel', 'action', 'boss', 'exit', 'bossDown'].includes(G.phase); }
 function fire(p) {
   if (!canShoot()) return;
   if (!p.active) { if (G.state === 'play') joinPlayer(p); return; }
@@ -1051,7 +1100,7 @@ function update(dt) {
   updateAim(dt);
   players.forEach(p => { if (p.fireCD > 0) p.fireCD -= dt; if (p.flash > 0) p.flash -= dt; if (p.hurtT > 0) p.hurtT -= dt; if (p.emptyT > 0) p.emptyT -= dt; });
   if (G.state === 'title') { cam.z = -1.5 + Math.sin(G.T * 0.12) * 1.2; cam.x = Math.sin(G.T * 0.2) * 8; G.ents.forEach(e => updateEnemy(e, dt)); lightningTick(dt); return; }
-  if (G.state !== 'play' || G.paused) return;
+  if (G.state !== 'play' || G.paused || needRotate()) return;
   // continues
   const downs = players.filter(p => p.active && p.down);
   downs.forEach(p => { const before = Math.ceil(p.contT); p.contT -= dt; if (Math.ceil(p.contT) !== before) sfx('tick'); if (p.contT <= 0) { p.active = false; p.down = false; } });
@@ -1126,7 +1175,7 @@ addEventListener('pointermove', e => {
 });
 addEventListener('pointerdown', e => {
   if (G.state !== 'play' || G.paused) return;
-  if (e.target.closest && e.target.closest('button, input, .card')) return;
+  if (e.target.closest && e.target.closest('button, input, .card, #rotate')) return;
   auInit();
   const g = toGame(e.clientX, e.clientY), p = players[0];
   if (e.pointerType === 'mouse') {
@@ -1137,7 +1186,7 @@ addEventListener('pointerdown', e => {
   activePointers.add(e.pointerId);
   if (!g.inside || activePointers.size > 1) { if (p.down || !p.active) fire(p); else reload(p); return; }
   p.x = clamp(g.x, 0, W); p.y = clamp(g.y, 0, H); fire(p);
-  if (!G.touchUsed) { G.touchUsed = true; updateTouchUI(); }
+  if (!touchMode) { setTouchMode(true); updateTouchUI(); }
 });
 const endPtr = e => activePointers.delete(e.pointerId);
 addEventListener('pointerup', endPtr); addEventListener('pointercancel', endPtr);
@@ -1173,6 +1222,7 @@ function updateAim(dt) {
   // gamepads: first pad is agent 2, second pad is agent 1
   let pads = [];
   try { pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : []; } catch (e) { pads = []; }
+  if (pads.length) G.padSeen = true;
   pads.slice(0, 2).forEach((pad, idx) => {
     const pl = players[idx === 0 ? 1 : 0], prev = padPrev[idx], btn = i => !!(pad.buttons[i] && (pad.buttons[i].pressed || pad.buttons[i].value > 0.5));
     let sx = pad.axes[0] || 0, sy = pad.axes[1] || 0; const mag = Math.hypot(sx, sy);
@@ -2009,14 +2059,15 @@ function drawHUD() {
     const right = p.i === 1, x0 = right ? W - 20 : 20, al = right ? 'right' : 'left', dir = right ? -1 : 1;
     ctx.textAlign = al;
     if (!p.active) {
-      if (Math.sin(G.T * 5) > -0.2) { ctx.font = '24px ' + FONT.hud; ctx.fillStyle = '#000'; ctx.fillText(p.i ? 'PRESS SPACE OR PAD A TO JOIN' : 'CLICK TO JOIN', x0 + 2, 34); ctx.fillStyle = p.color; ctx.fillText(p.i ? 'PRESS SPACE OR PAD A TO JOIN' : 'CLICK TO JOIN', x0, 32); }
+      const jt = p.i ? (touchMode ? (G.padSeen ? 'PRESS PAD A TO JOIN' : '') : 'PRESS SPACE OR PAD A TO JOIN') : (touchMode ? 'TAP TO JOIN' : 'CLICK TO JOIN');
+      if (jt && Math.sin(G.T * 5) > -0.2) { ctx.font = '24px ' + FONT.hud; ctx.fillStyle = '#000'; ctx.fillText(jt, x0 + 2, 34); ctx.fillStyle = p.color; ctx.fillText(jt, x0, 32); }
       return;
     }
     ctx.font = '22px ' + FONT.hud; ctx.fillStyle = '#000'; ctx.fillText(p.name, x0 + 2, 30); ctx.fillStyle = p.color; ctx.fillText(p.name, x0, 28);
     ctx.font = '32px ' + FONT.hud; ctx.fillStyle = '#000'; ctx.fillText(String(p.score).padStart(8, '0'), x0 + 2, 58); ctx.fillStyle = '#ebe3cf'; ctx.fillText(String(p.score).padStart(8, '0'), x0, 56);
     if (p.down) {
       ctx.font = '30px ' + FONT.hud; ctx.fillStyle = '#ff6a6a'; ctx.fillText('CONTINUE? ' + Math.max(0, Math.ceil(p.contT)), x0, 92);
-      ctx.font = '18px ' + FONT.hud; ctx.fillStyle = '#ebe3cf'; ctx.fillText(p.i ? 'PRESS SPACE / PAD A' : 'CLICK TO CONTINUE', x0, 114);
+      ctx.font = '18px ' + FONT.hud; ctx.fillStyle = '#ebe3cf'; ctx.fillText(p.i ? (touchMode ? 'PRESS PAD A' : 'PRESS SPACE / PAD A') : (touchMode ? 'TAP TO CONTINUE' : 'CLICK TO CONTINUE'), x0, 114);
       return;
     }
     for (let k = 0; k < p.torches; k++) drawTorch(x0 + dir * (10 + k * 18), 86, 1);
@@ -2139,21 +2190,34 @@ function render(dt) {
 }
 
 let last = performance.now();
+// on a phone held upright, the widescreen game pauses behind a "turn sideways" screen
+function needRotate() { return G.state === 'play' && touchMode && portraitMQ.matches && !G.allowPortrait; }
+let rotateShown = false;
+function syncRotate() {
+  const v = needRotate(); if (v === rotateShown) return;
+  rotateShown = v; $('rotate').hidden = !v; updateTouchUI(); if (!v) setTimeout(resize, 60);
+}
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  try { for (let i = 0; i < G.steps; i++) update(dt); render(dt); } catch (err) { console.error(err); }
+  try { syncRotate(); for (let i = 0; i < G.steps; i++) update(dt); render(dt); } catch (err) { console.error(err); }
   requestAnimationFrame(frame);
 }
 
 // ============================================================ UI wiring
 function updateTouchUI() {
   const playing = G.state === 'play' && !G.paused;
-  $('reloadBtn').hidden = !(playing && (G.touchUsed || matchMedia('(pointer: coarse)').matches));
-  $('pauseBtn').hidden = !(playing && (G.touchUsed || matchMedia('(pointer: coarse)').matches));
+  $('reloadBtn').hidden = $('pauseBtn').hidden = !(playing && touchMode);
+  if (playing && touchMode) placeTouchButtons();
 }
 $('reloadBtn').addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); const p = players[0]; if (p.down || !p.active) fire(p); else reload(p); });
 $('pauseBtn').addEventListener('click', () => setPaused(true));
 $('start1').addEventListener('click', () => startGame(1));
+$('startTouch').addEventListener('click', () => {
+  // full screen and a landscape lock help on phones; both are optional and often refused
+  try { const fs = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (fs && fs.then) fs.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
+  startGame(1);
+});
+$('rotateAnyway').addEventListener('click', () => { G.allowPortrait = true; syncRotate(); });
 $('start2').addEventListener('click', () => startGame(2));
 $('storyGo').addEventListener('click', () => { clearInterval(storyTimer); beginChapter(0); });
 $('resume').addEventListener('click', () => setPaused(false));
@@ -2176,6 +2240,7 @@ function syncDiff() { document.querySelectorAll('#diff button').forEach(b => b.s
 document.addEventListener('pointerdown', () => { if (G.state === 'title') { auInit(); setMusic('title'); } }, { once: false });
 
 window.RM = { G, players, SCENES, fire, reload, hitScan, beginChapter, startGame, goScene };
+resize();
 titleScene();
 const ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
 ready.then(() => { VIG = null; });
