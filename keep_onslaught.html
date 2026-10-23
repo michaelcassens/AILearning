@@ -2102,11 +2102,11 @@ function drawDragonHead(open) {
     const pt = (px, py, ox, oy, a) => [ox + px * Math.cos(a) - py * Math.sin(a), oy + px * Math.sin(a) + py * Math.cos(a)];
     const up = (px, py) => pt(px, py, -44, 2, -open * 0.25), lo = (px, py) => pt(px, py, -44, 4, open * 0.7);
     const u0 = up(-6, 4), u1 = up(36, 3), u2 = up(72, 1), l0 = lo(-6, -2), l1 = lo(34, 0), l2 = lo(68, 3);
-    const tg = ctx.createLinearGradient(...up(0, 0), ...lo(60, 0)); tg.addColorStop(0, '#2a0404'); tg.addColorStop(1, '#6e1010');
+    const tg = ctx.createLinearGradient(...up(0, 0), ...lo(60, 0)); tg.addColorStop(0, '#8e2a2a'); tg.addColorStop(1, '#d9636a');
     ctx.fillStyle = tg;
     ctx.beginPath(); ctx.moveTo(...u0); ctx.quadraticCurveTo(...u1, ...u2); ctx.lineTo(...l2); ctx.quadraticCurveTo(...l1, ...l0); ctx.closePath(); ctx.fill();
     const t0 = lo(-2, -3), t1 = lo(30, -10), t2 = lo(52, -4), t3 = lo(30, -1);   // tongue resting on the lower jaw
-    ctx.fillStyle = '#c0394a';
+    ctx.fillStyle = '#e88a94';
     ctx.beginPath(); ctx.moveTo(...t0); ctx.quadraticCurveTo(...t1, ...t2); ctx.quadraticCurveTo(...t3, ...t0); ctx.fill();
   }
   // lower jaw
