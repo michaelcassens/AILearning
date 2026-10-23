@@ -602,7 +602,7 @@ function pickEnemy(p) {
     } else {
       const c = bodyCenter(e);
       d = Math.hypot(p.x - c.x, p.y - c.y);
-      if (d > 26 * e.def.scale + 14) d = Infinity;
+      if (d > 26 * e.def.scale * BULK + 14) d = Infinity;
     }
     if (d < bestD) { bestD = d; best = e; }
   }
@@ -2184,6 +2184,7 @@ function drawBigDragon() {
 }
 
 // ================= Drawing: units =================
+const BULK = 1.3;   // knights are drawn this much wider than tall-proportioned, for a sturdier look
 function deathFade(e) { if (e.dead) ctx.globalAlpha = clamp(1.2 - e.deathT, 0, 1); }
 const onGround = e => e.y >= GROUND - 0.5;
 
@@ -2337,7 +2338,7 @@ function drawHuman(e) {
   const lying = e.dead && e.y >= floorAt(e.x) - 0.5;
   ctx.translate(0, cy); ctx.rotate(lying ? Math.PI / 2 : e.rot); ctx.translate(0, -cy);
   if (lying) ctx.translate(d.h / 2 - 6, d.h / 2 - 6);
-  ctx.scale(e.state === 'roof' ? s : -s, s); // drawn facing right, mirrored to face the castle
+  ctx.scale((e.state === 'roof' ? s : -s) * BULK, s); // drawn facing right, mirrored to face the castle; widened, same height
   const o = Object.assign({
     metal: d.armor, tunic: d.tunic, plume: d.plume, T: frozen ? 0 : G.time * 18 + e.id, flail: flail && !frozen,
     walk: (e.state === 'walk' || e.state === 'roof') && !frozen ? e.anim * 9 : null, attack: e.state === 'attack' || e.state === 'cast' ? e.atkAnim : null, flash: e.flash > 0,
@@ -2348,7 +2349,7 @@ function drawHuman(e) {
   const c = bodyCenter(e);
   if (frozen && !e.dead) {
     ctx.save(); ctx.globalAlpha = 0.55;
-    const bw = 36 * d.scale, bh = d.h + 10, x0 = c.x - bw / 2, y0 = e.y + lane - bh;
+    const bw = 36 * d.scale * BULK, bh = d.h + 10, x0 = c.x - bw / 2, y0 = e.y + lane - bh;
     const ig = ctx.createLinearGradient(x0, y0, x0 + bw, y0 + bh); ig.addColorStop(0, '#f2fbff'); ig.addColorStop(1, '#8fd0f0');
     ctx.fillStyle = ig; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x0 + 4, y0); ctx.lineTo(x0 + bw - 2, y0 + 3); ctx.lineTo(x0 + bw, y0 + bh); ctx.lineTo(x0, y0 + bh); ctx.lineTo(x0 - 2, y0 + 8); ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -2356,7 +2357,7 @@ function drawHuman(e) {
     ctx.restore();
   }
   if (e.bubble > 0 && !e.dead) {
-    const r = 22 * d.scale + 6;
+    const r = 22 * d.scale * BULK + 6;
     ctx.save(); ctx.globalAlpha = 0.35 + Math.sin(G.time * 6) * 0.08;
     ctx.fillStyle = '#9fdcff'; ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = 0.8; ctx.strokeStyle = '#e6f7ff'; ctx.lineWidth = 2; ctx.stroke();
@@ -2365,7 +2366,7 @@ function drawHuman(e) {
 }
 // a small foot soldier pushing or carrying siege gear
 function drawCrew(x, y, phase, carry, dark) {
-  ctx.save(); ctx.translate(x, y); ctx.scale(-0.72, 0.72);
+  ctx.save(); ctx.translate(x, y); ctx.scale(-0.72 * BULK, 0.72);
   drawFigure({ metal: dark ? '#9aa1a8' : '#c3c9cf', tunic: dark ? '#7a2018' : '#9b2a22', plume: '#d8261f', walk: phase, carry, noShadow: dark });
   ctx.restore();
 }
