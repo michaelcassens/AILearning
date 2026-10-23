@@ -1570,20 +1570,24 @@ function drawEnemy(e) {
   }
   ctx.fillStyle = C('#1e1a16'); feet.forEach(f => { ctx.beginPath(); ctx.ellipse(f[0], f[1] + 0.01, 0.1 * wide, 0.05, 0, 0, TAU); ctx.fill(); });
   ctx.translate(0, -bob);
-  // torso: rounded shoulders, soft belly, ragged hem drawn with curves
-  const tw = 0.24 * wide;
+  // torso: soft and rounded at a distance, squarer (flat shoulders, straight sides, tight corners) as it closes in
+  const tw = 0.24 * wide, sq = clamp((6.5 - e.z) / 3.5, 0, 1), cr = 0.025, hw = tw * 0.94;
+  const ROUND = [[-tw + 0.07, -1.5], [0, -1.55], [tw - 0.07, -1.5], [tw + 0.03, -1.48], [tw + 0.01, -1.34], [tw + 0.04, -1.05], [0.2 * wide, -0.88],
+    [0.14, -0.78], [0.05, -0.85], [-0.02, -0.78], [-0.09, -0.83], [-0.16, -0.79], [-0.2 * wide, -0.88], [-tw - 0.04, -1.05], [-tw - 0.01, -1.34], [-tw - 0.03, -1.48], [-tw + 0.07, -1.5]];
+  const SQUARE = [[-tw + cr, -1.5], [0, -1.5], [tw - cr, -1.5], [tw, -1.5], [tw, -1.5 + cr], [tw * 0.97, -1.15], [hw, -0.86],
+    [(hw + 0.05) / 2, -0.825], [0.05, -0.79], [-0.02, -0.825], [-0.09, -0.86], [(-0.09 - hw) / 2, -0.83], [-hw, -0.8], [-tw * 0.97, -1.15], [-tw, -1.5 + cr], [-tw, -1.5], [-tw + cr, -1.5]];
+  const TP = ROUND.map((pt, k) => [lerp(pt[0], SQUARE[k][0], sq), lerp(pt[1], SQUARE[k][1], sq)]);
   ctx.fillStyle = C(e.shirt);
-  ctx.beginPath(); ctx.moveTo(-tw + 0.07, -1.5);
-  ctx.quadraticCurveTo(0, -1.55, tw - 0.07, -1.5); ctx.quadraticCurveTo(tw + 0.03, -1.48, tw + 0.01, -1.34);
-  ctx.quadraticCurveTo(tw + 0.04, -1.05, 0.2 * wide, -0.88); ctx.quadraticCurveTo(0.14, -0.78, 0.05, -0.85);
-  ctx.quadraticCurveTo(-0.02, -0.78, -0.09, -0.83); ctx.quadraticCurveTo(-0.16, -0.79, -0.2 * wide, -0.88);
-  ctx.quadraticCurveTo(-tw - 0.04, -1.05, -tw - 0.01, -1.34); ctx.quadraticCurveTo(-tw - 0.03, -1.48, -tw + 0.07, -1.5);
+  ctx.beginPath(); ctx.moveTo(TP[0][0], TP[0][1]);
+  for (let k = 1; k < TP.length; k += 2) ctx.quadraticCurveTo(TP[k][0], TP[k][1], TP[k + 1][0], TP[k + 1][1]);
   ctx.closePath(); ctx.fill();
   ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 0.02; ctx.stroke();
   ctx.save(); ctx.clip();
   if (e.type === 'brute') { ctx.fillStyle = C('#3a2a1a'); ctx.beginPath(); ctx.ellipse(0, -1.0, 0.2, 0.32, 0, 0, TAU); ctx.fill(); ctx.strokeStyle = C('#888'); ctx.lineWidth = 0.03; ctx.beginPath(); ctx.moveTo(-0.28, -1.45); ctx.quadraticCurveTo(0, -1.12, 0.28, -0.95); ctx.stroke(); }
   if (!fl) { ctx.fillStyle = G.green ? 'rgba(50,110,30,.7)' : 'rgba(90,10,12,.7)'; e.stains.forEach(st => { ctx.beginPath(); ctx.arc(st[0], st[1], st[2], 0, TAU); ctx.fill(); }); }
-  ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(tw * 0.85, -1.15, tw * 0.55, 0.42, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.2 * (1 - sq)) + ')'; ctx.beginPath(); ctx.ellipse(tw * 0.85, -1.15, tw * 0.55, 0.42, 0, 0, TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,' + (0.2 * sq) + ')'; ctx.fillRect(tw * 0.4, -1.55, tw, 0.8);
+  if (sq > 0) { ctx.strokeStyle = 'rgba(0,0,0,' + (0.3 * sq) + ')'; ctx.lineWidth = 0.015; ctx.beginPath(); ctx.moveTo(0, -1.48); ctx.lineTo(0, -0.84); ctx.moveTo(-tw, -1.36); ctx.lineTo(tw, -1.36); ctx.stroke(); }
   ctx.fillStyle = 'rgba(255,255,255,.06)'; ctx.beginPath(); ctx.ellipse(-tw * 0.45, -1.32, tw * 0.35, 0.14, -0.2, 0, TAU); ctx.fill();
   ctx.restore();
   // arms
