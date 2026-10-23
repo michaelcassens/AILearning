@@ -113,7 +113,7 @@
 
 <div class="overlay" id="results" role="dialog" aria-label="Day results">
   <div class="panel">
-    <div class="scroll">Siege Report</div>
+    <div class="scroll" id="resScroll">Siege Report</div>
     <p class="stat" id="resTitle">Siege 1 report:</p>
     <p class="stat" id="resKills"></p>
     <p class="stat" id="resScore"></p>
@@ -168,6 +168,7 @@
     <p class="sub">Your progress is saved at the end of every siege, and the gear you buy carries on to the next level.</p>
     <div class="row">
       <button class="btn gold" id="resumeBtn">Resume</button>
+      <button class="btn" id="pauseShopBtn">Keeper's Goods</button>
       <button class="btn" id="quitBtn">Quit to Map</button>
     </div>
   </div>
@@ -468,7 +469,19 @@ function newGame(levelIdx) {
     G.gold = carry.gold + G.L.bonus; G.souls = carry.souls;
     G.gateMax = DOORS[G.use.door].hp; G.gateHP = G.gateMax;
   }
-  startDay();
+}
+// Before the first siege of a level: a chance to visit the Keeper's Goods with the gold you start with
+function showPrep() {
+  G.state = 'menu'; G.endKind = 'day'; G.dayBonus = 0;
+  const owned = [...G.owned].filter(id => id !== 'door0').length;
+  document.getElementById('resScroll').textContent = 'Prepare for Battle';
+  document.getElementById('resTitle').textContent = `${G.L.days ? 'Level ' + (G.level + 1) + ': ' : ''}${G.L.name}`;
+  document.getElementById('resKills').textContent = `${G.gold} gold · ${G.souls} spirits` + (owned ? ` · ${owned} goods carried over` : '');
+  document.getElementById('resScore').textContent = G.L.days ? `Survive ${G.L.days} sieges` : 'Hold out as long as you can';
+  document.getElementById('nextBtn').textContent = 'Begin Siege 1';
+  document.getElementById('shopBtn').hidden = false;
+  saveRun();
+  show('results');
 }
 
 function buildDay(L, day) {
@@ -1089,7 +1102,7 @@ function defeat() {
   G.state = 'ending'; G.endT = 2.6; G.endKind = 'lose';
 }
 function saveRun() {
-  if (!G || !G.L) return;
+  if (!G || !G.L || G.state === 'paused' || G.state === 'play') return;   // only between sieges
   const save = loadSave();
   save.run = { level: G.level, day: G.day, gold: G.gold, souls: G.souls, score: G.score, kills: G.kills,
     gateHP: Math.round(G.gateHP), gateMax: G.gateMax, owned: [...G.owned], use: G.use };
@@ -1100,6 +1113,8 @@ function resumeRun(r) {
   G = makeState(r.level);
   Object.assign(G, { day: r.day, gold: r.gold, souls: r.souls, score: r.score, kills: r.kills, gateHP: r.gateHP, gateMax: r.gateMax,
     owned: new Set(r.owned), use: Object.assign(G.use, r.use), state: 'menu', endKind: 'day', dayKills: 0, dayBonus: 0 });
+  if (!r.day) { showPrep(); return; }   // saved before the first siege
+  document.getElementById('resScroll').textContent = 'Siege Report';
   document.getElementById('resTitle').textContent = 'Welcome back, Keeper!';
   document.getElementById('resKills').textContent = `${G.L.name}: Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''} survived`;
   document.getElementById('resScore').textContent = `Glory: ${G.score}`;
@@ -1109,6 +1124,7 @@ function resumeRun(r) {
 }
 function showEnd() {
   G.state = 'menu';
+  document.getElementById('resScroll').textContent = 'Siege Report';
   if (G.endKind === 'day') saveRun(); else clearRun();
   if (G.endKind !== 'day') {
     const save = loadSave(), key = String(G.level);
@@ -1236,7 +1252,8 @@ function show(id) { for (const o of OVERLAYS) document.getElementById(o).classLi
 function pauseGame() { if (G && G.state === 'play') { G.state = 'paused'; pointers.clear(); show('pause'); } }
 function startLevel(i, forceTutorial) {
   audioUnlock(); show(null); newGame(i);
-  if (forceTutorial || (i === 0 && !loadSave().tutorialDone)) startTutorial();
+  if (forceTutorial || (i === 0 && !loadSave().tutorialDone)) { startDay(); startTutorial(); }
+  else showPrep();
 }
 function renderMenu() {
   const save = loadSave();
@@ -1269,8 +1286,10 @@ document.getElementById('nextBtn').addEventListener('click', () => {
   if (G && G.endKind === 'day') { show(null); startDay(); }
   else { G = null; renderMenu(); show('menu'); }
 });
-document.getElementById('shopBtn').addEventListener('click', () => { renderShop(); show('shop'); });
-document.getElementById('exitBtn').addEventListener('click', () => show('results'));
+let shopFrom = 'results';
+document.getElementById('shopBtn').addEventListener('click', () => { shopFrom = 'results'; renderShop(); show('shop'); });
+document.getElementById('pauseShopBtn').addEventListener('click', () => { shopFrom = 'pause'; renderShop(); show('shop'); });
+document.getElementById('exitBtn').addEventListener('click', () => show(shopFrom));
 document.getElementById('repairBtn').addEventListener('click', () => {
   const c = repairCost(); if (c > 0 && G.gold >= c) { G.gold -= c; G.gateHP = G.gateMax; sfx.coin(); saveRun(); renderShop(); }
 });
@@ -2695,7 +2714,7 @@ function drawHUD() {
     ctx.fillStyle = '#f5e6c8'; ctx.font = 'bold 15px system-ui, "Apple Color Emoji", "Segoe UI Emoji"'; ctx.textAlign = 'center'; ctx.fillText(icon, b.x, b.y + 1);
   }
   ctx.textAlign = 'center'; ctx.font = 'bold 16px system-ui';
-  const label = `Siege ${G.day}${G.L.days ? ' of ' + G.L.days : ''}   ·   Glory ${G.score}`;
+  const label = `Siege ${Math.max(1, G.day)}${G.L.days ? ' of ' + G.L.days : ''}   ·   Glory ${G.score}`;
   const tw = ctx.measureText(label).width + 30;
   ctx.fillStyle = 'rgba(15,22,26,0.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(W / 2 - tw / 2, hudT + 10, tw, 30, 10) : ctx.rect(W / 2 - tw / 2, hudT + 10, tw, 30); ctx.fill();
   ctx.fillStyle = '#f2e3b3'; ctx.fillText(label, W / 2, hudT + 26);
