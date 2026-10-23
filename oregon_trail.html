@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Oregon Trail</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#2a1f17">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Layout: one-screen app. Painted trail scene on top, a parchment ledger of choices below. */
+:root{
+  --leather:#2a1f17;
+  --bar:#3a2a1e;
+  --paper:#ecdfc2;
+  --paper-2:#e3d3ae;
+  --paper-3:#d5c197;
+  --ink:#2d2118;
+  --ink-2:#5c4734;
+  --rust:#9a4e29;
+  --rust-2:#7a3a1c;
+  --ochre:#b8862f;
+  --sage:#6f7250;
+  --rule:#b49b70;
+  --display:"Rye", "Rockwell", Georgia, serif;
+  --body:"Alegreya", Georgia, "Times New Roman", serif;
+  --mono:"Courier Prime", "Courier New", monospace;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--leather);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;max-width:1080px;margin:0 auto;display:flex;flex-direction:column;background:var(--paper);box-shadow:0 0 0 1px #000,0 0 40px rgba(0,0,0,.5)}
+.bar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:7px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bar);color:var(--paper);border-bottom:2px solid #1c140e}
+.bar .brand{font-family:var(--display);font-size:1.05rem;letter-spacing:.04em;white-space:nowrap}
+.bar .tools{display:flex;gap:8px}
+.bar button{white-space:nowrap;font:700 .78rem/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--paper);background:transparent;border:1px solid #7a604a;border-radius:3px;padding:7px 10px;cursor:pointer;min-height:32px}
+.bar button:hover{border-color:var(--paper)}
+#stage{flex:none;position:relative;width:100%;aspect-ratio:2.35/1;max-height:54vh;background:#cdb88f;overflow:hidden;border-bottom:3px solid var(--ink)}
+@media (max-width:600px){#stage{aspect-ratio:1.7/1}.bar .brand{font-size:.92rem}.bar button{padding:7px 8px;font-size:.7rem}}
+#stage.tall{flex:1 1 auto;aspect-ratio:auto;max-height:none;min-height:0}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#panel{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-block:14px 22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--paper)}
+#panel.compact{flex:none;max-height:40%;padding-block:10px 12px}
+.inner{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.scr-title{font-family:var(--display);font-weight:400;font-size:1.45rem;color:var(--rust-2);letter-spacing:.02em;line-height:1.15}
+.title-big{font-family:var(--display);font-weight:400;font-size:clamp(2rem,7vw,3.3rem);color:var(--rust-2);line-height:1;text-align:left}
+.kicker{font:700 .74rem/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+p{margin:0}
+.lead{font-size:1.06rem}
+.muted{color:var(--ink-2)}
+.small{font-size:.92rem}
+.msg{font-size:1.12rem}
+.quote{font-style:italic;font-size:1.08rem}
+.quote-by{font:700 .8rem/1.3 var(--mono);color:var(--ink-2);letter-spacing:.04em}
+.choices{display:grid;gap:7px}
+@media (min-width:640px){.choices.two{grid-template-columns:1fr 1fr}}
+.choice{display:flex;align-items:center;gap:12px;width:100%;min-height:46px;padding:8px 12px;text-align:left;font:500 1.02rem/1.25 var(--body);color:var(--ink);background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;cursor:pointer;transition:background .12s,border-color .12s}
+.choice:hover{background:var(--paper-3);border-color:var(--ink-2)}
+.choice:focus-visible,.bar button:focus-visible,.step button:focus-visible,.step input:focus-visible,.field input:focus-visible,.raftbtn:focus-visible{outline:2px solid var(--rust);outline-offset:2px}
+.choice .num{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;font:700 .85rem/1 var(--mono);color:var(--paper);background:var(--ink-2);border-radius:2px}
+.choice .lbl{flex:1;min-width:0}
+.choice .hint{flex:none;font:400 .78rem/1 var(--mono);color:var(--ink-2)}
+.choice.primary{background:var(--rust);border-color:var(--rust-2);color:#f6ead2}
+.choice.primary .num{background:#f0dfbd;color:var(--rust-2)}
+.choice.primary .hint{color:#ecd8b6}
+.choice.primary:hover{background:var(--rust-2)}
+.choice:disabled{opacity:.45;cursor:not-allowed}
+.status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px;padding:10px 12px;border:3px double var(--rule);background:#e7d8b6}
+@media (max-width:520px){.status{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.status div{min-width:0}
+.status dt{font:700 .68rem/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.status dd{margin:0;font:700 .98rem/1.25 var(--mono);color:var(--ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.status dd.bad{color:var(--rust-2)}
+.ledger{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.95rem;font-variant-numeric:tabular-nums}
+.ledger th{text-align:left;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--rule);padding:4px 6px}
+.ledger td{padding:6px;border-bottom:1px dotted var(--rule)}
+.ledger td.r,.ledger th.r{text-align:right}
+.ledger tr.total td{border-bottom:none;border-top:2px solid var(--ink);font-weight:700}
+.party{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:700 .8rem/1 var(--mono);padding:6px 8px;border-radius:2px;border:1px solid var(--rule);background:var(--paper-2)}
+.chip.sick{border-color:var(--ochre);background:#ead39d}
+.chip.dead{text-decoration:line-through;color:var(--ink-2);opacity:.7}
+.store{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--rule)}
+.srow{display:grid;grid-template-columns:minmax(0,1fr) auto 84px;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule)}
+.srow b{display:block;font-weight:700}
+.srow small{display:block;font:400 .78rem/1.3 var(--mono);color:var(--ink-2)}
+.srow .sub{font:700 .95rem/1 var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.step{display:flex;align-items:center;gap:4px}
+.step button{width:38px;height:38px;font:700 1.2rem/1 var(--mono);color:var(--ink);background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;cursor:pointer}
+.step button:hover{background:var(--paper-3)}
+.step input{width:62px;height:38px;text-align:center;font:700 1rem/1 var(--mono);color:var(--ink);background:#f4ead4;border:1px solid var(--rule);border-radius:3px}
+@media (max-width:420px){.srow{grid-template-columns:minmax(0,1fr) auto}.srow .sub{display:none}.step input{width:50px}}
+.bill{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 18px;font:700 1rem/1.3 var(--mono);padding:8px 0}
+.bill .over{color:var(--rust-2)}
+.note{padding:10px 12px;border:1px dashed var(--rule);background:#e9dcbd;font-size:.98rem}
+.fields{display:grid;gap:8px}
+@media (min-width:600px){.fields{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:3px}
+.field label{font:700 .7rem/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.field input{height:42px;padding:0 10px;font:500 1.05rem var(--body);color:var(--ink);background:#f4ead4;border:1px solid var(--rule);border-radius:3px}
+.raftpad{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.raftbtn{min-height:64px;font:700 1.6rem/1 var(--mono);color:var(--paper);background:var(--ink-2);border:none;border-radius:4px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.raftbtn.on{background:var(--rust)}
+.hide-touch{display:inline}
+@media (pointer:coarse){.hide-touch{display:none}}
+.topten td:first-child{width:2.2em;color:var(--ink-2)}
+@media (prefers-reduced-motion:reduce){.choice{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="bar">
+    <span class="brand">The Oregon Trail</span>
+    <span class="tools">
+      <button type="button" id="btnSound" aria-pressed="true">Sound on</button>
+      <button type="button" id="btnTitle">Main menu</button>
+    </span>
+  </header>
+  <div id="stage"><canvas id="scene" role="img" aria-label="Painted view of your wagon on the Oregon Trail"></canvas></div>
+  <main id="panel" aria-live="polite"><div class="inner" id="inner"></div></main>
+</div>
+<script>
+(() => {
+'use strict';
+
+/* ---------------- utilities ---------------- */
+const $ = s => document.querySelector(s);
+const rnd = Math.random;
+const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
+const pick = a => a[Math.floor(rnd() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = n => '$' + n.toFixed(2);
+const hash = (i, seed = 0) => { const x = Math.sin(i * 127.1 + seed * 311.7) * 43758.5453; return x - Math.floor(x); };
+const tri = x => 1 - Math.abs((x - Math.floor(x)) * 2 - 1);
+const plural = (n, w, p) => `${n} ${n === 1 ? w : (p || w + 's')}`;
+function mix(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16);
+  const r = Math.round(lerp(pa >> 16, pb >> 16, t)), g = Math.round(lerp((pa >> 8) & 255, (pb >> 8) & 255, t)), bl = Math.round(lerp(pa & 255, pb & 255, t));
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | bl).toString(16).slice(1);
+}
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fmtDate = ts => { const d = new Date(ts); return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`; };
+const isTouch = matchMedia('(pointer: coarse)').matches;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- game data ---------------- */
+const PROFESSIONS = {
+  banker:    { label: 'Be a banker from Boston',     short: 'Banker',    money: 1600, mult: 1 },
+  carpenter: { label: 'Be a carpenter from Ohio',    short: 'Carpenter', money: 800,  mult: 2 },
+  farmer:    { label: 'Be a farmer from Illinois',   short: 'Farmer',    money: 400,  mult: 3 }
+};
+const PACE = {
+  1: { name: 'steady',    mult: 1,    pen: 2, desc: 'About 8 hours a day, stopping often to rest. Easiest on your party.' },
+  2: { name: 'strenuous', mult: 1.4,  pen: 4, desc: 'About 12 hours a day, starting at sunrise. Your party will tire.' },
+  3: { name: 'grueling',  mult: 1.75, pen: 6, desc: 'About 16 hours a day, dawn to dusk. Your party will wear down fast.' }
+};
+const RATIONS = {
+  1: { name: 'filling',    lbs: 3, pen: 0, desc: 'Meals are large and generous. 3 lbs of food per person per day.' },
+  2: { name: 'meager',     lbs: 2, pen: 2, desc: 'Meals are small, but adequate. 2 lbs per person per day.' },
+  3: { name: 'bare bones', lbs: 1, pen: 4, desc: 'Meals are very small; everyone stays hungry. 1 lb per person per day.' }
+};
+const NAMES = ['Ezra','Hannah','Josiah','Clara','Silas','Martha','Amos','Eliza','Caleb','Sarah','Jacob','Mary','Abigail','Henry','Lucy','Samuel','Ruth','Thomas','Nancy','Levi','Emma','Jedediah','Cora','Isaac','Phoebe','Elias','Harriet','Moses','Lydia','Asa'];
+
+const REGIONS = {
+  plains:    { sky: ['#c6c2a7', '#ecd7a9'], far: 'flat',    farCol: '#b39b77', hill: '#a98d61', ground: '#b9955f', ground2: '#9c784a', trail: '#c9a974', flora: 'grass', temp: 0,   wet: 1,   game: { bison: 3, deer: 2, rabbit: 3, squirrel: 2 } },
+  bluffs:    { sky: ['#cbbf9e', '#efd3a0'], far: 'mesa',    farCol: '#b78f68', hill: '#a8835a', ground: '#bc9761', ground2: '#a07a49', trail: '#cdaa72', flora: 'grass', temp: -2,  wet: .8,  game: { bison: 3, pronghorn: 2, rabbit: 3, deer: 1 } },
+  foothills: { sky: ['#bdbaa5', '#e8cea1'], far: 'peaks',   farCol: '#8d7f70', hill: '#9b8058', ground: '#b08e5d', ground2: '#937346', trail: '#c3a16c', flora: 'sage',  temp: -8,  wet: .8,  game: { pronghorn: 3, deer: 2, rabbit: 3, bison: 1 } },
+  mountains: { sky: ['#b3b5a8', '#e2cfab'], far: 'peaks',   farCol: '#7b7165', hill: '#857150', ground: '#a48656', ground2: '#866b42', trail: '#b9996a', flora: 'pine',  temp: -18, wet: 1,   game: { deer: 3, bear: 1, squirrel: 3, rabbit: 2, elk: 1 } },
+  snake:     { sky: ['#c9bc9c', '#f0d6a3'], far: 'distant', farCol: '#a88f78', hill: '#b39765', ground: '#c3a06a', ground2: '#a5834f', trail: '#d2b17b', flora: 'sage',  temp: 2,   wet: .5,  game: { rabbit: 4, pronghorn: 2, deer: 1, squirrel: 1 } },
+  bluemts:   { sky: ['#b0b4a6', '#dccaa6'], far: 'peaks',   farCol: '#6e695d', hill: '#6f6a48', ground: '#9a8355', ground2: '#7c6741', trail: '#ae9566', flora: 'pine',  temp: -12, wet: 1.2, game: { deer: 3, bear: 2, squirrel: 3, elk: 1 } },
+  cascades:  { sky: ['#adb4ab', '#dccdb0'], far: 'volcano', farCol: '#7b796f', hill: '#6c6b4a', ground: '#948456', ground2: '#776a43', trail: '#a99566', flora: 'pine',  temp: -6,  wet: 1.4, game: { deer: 3, bear: 2, squirrel: 3 } },
+  valley:    { sky: ['#b6baa8', '#e4d3ae'], far: 'volcano', farCol: '#868373', hill: '#7f7d52', ground: '#9c9160', ground2: '#807649', trail: '#b4a271', flora: 'grass', temp: -2,  wet: 1.3, game: { deer: 3, rabbit: 3, squirrel: 2 } }
+};
+
+const LM = {
+  independence: { name: 'Independence, Missouri', short: 'Independence', art: 'town', region: 'plains', lon: -94.42, lat: 39.09, next: [['kansas', 102]], store: 1,
+    desc: 'Independence is the busy jumping-off town for the trail west. Each spring, outfitters, blacksmiths and wagon makers crowd the square as emigrants gather supplies for the 2,000-mile trip to the Willamette Valley.',
+    quotes: [['Get your wagon rolling before the grass on the prairie is gone. Late wagons find the mountains full of snow.', 'Matt, storekeeper'], ['Oxen are slow, but they are steady, cheap, and they will eat prairie grass. Mules will not stand up to it the same way.', 'A blacksmith on the square']] },
+  kansas: { name: 'Kansas River Crossing', short: 'Kansas River', art: 'river', region: 'plains', lon: -95.68, lat: 39.06, next: [['bigblue', 83]], river: { w: [620, 680], d: [2.4, 4.4], ferry: 5 },
+    desc: 'The Kansas River is the first major crossing. A ferry run by a Kaw and French-Canadian family carries wagons across for a fee.',
+    quotes: [['The river looks gentle, but the bottom is soft. A wagon that stops in the middle can sink to the hubs.', 'Ferryman'], ['We crossed this morning. Lost a sack of flour and most of my patience.', 'An emigrant from Kentucky']] },
+  bigblue: { name: 'Big Blue River Crossing', short: 'Big Blue River', art: 'river', region: 'plains', lon: -96.65, lat: 39.75, next: [['kearney', 119]], river: { w: [200, 260], d: [2.0, 3.8] },
+    desc: 'The Big Blue River is a tributary of the Kansas. There is no ferry here, so travelers ford or float across. Spring rains can make it run high and fast.',
+    quotes: [['Wait a day if you must. The river drops quick when the rain quits.', 'A wagon master'], ['Keep the oxen moving once they are in the water. If they stop, they panic.', 'A teamster']] },
+  kearney: { name: 'Fort Kearney', short: 'Fort Kearney', art: 'fort', region: 'bluffs', lon: -99.0, lat: 40.65, next: [['chimney', 250]], store: 1.25,
+    desc: 'Fort Kearney was built in 1848 to protect travelers on the Great Platte River Road. From here the trail follows the wide, shallow Platte River west.',
+    quotes: [['The Platte is a mile wide and an inch deep. Too thick to drink and too thin to plow.', 'A soldier at the fort'], ['Buffalo chips burn well enough when there is no wood, and there is no wood.', 'A woman from Indiana']] },
+  chimney: { name: 'Chimney Rock', short: 'Chimney Rock', art: 'spire', region: 'bluffs', lon: -103.35, lat: 41.70, next: [['laramie', 86]],
+    desc: 'Chimney Rock rises nearly 300 feet above the North Platte valley. Travelers can see its slender spire for days before they reach it, and many write about it in their diaries.',
+    quotes: [['We saw it two days back and thought it close enough to walk to before supper.', 'A boy from Ohio'], ['The wind and rain are wearing it down. My grandchildren may never see it.', 'A schoolteacher']] },
+  laramie: { name: 'Fort Laramie', short: 'Fort Laramie', art: 'fort', region: 'foothills', lon: -104.55, lat: 42.20, next: [['indrock', 190]], store: 1.5,
+    desc: 'Fort Laramie began as a fur-trading post and is now an important stop for repairs and supplies. Beyond it the land climbs toward the Rocky Mountains.',
+    quotes: [['Lighten your load here. The hills ahead are steep, and the road behind us is lined with heavy furniture.', 'A trader'], ['Grass is thinner west of here. Watch your oxen.', 'A Lakota trader']] },
+  indrock: { name: 'Independence Rock', short: 'Independence Rock', art: 'dome', region: 'foothills', lon: -107.13, lat: 42.49, next: [['southpass', 102]],
+    desc: 'Independence Rock is a huge granite dome beside the Sweetwater River. Travelers hope to reach it by the Fourth of July to stay ahead of mountain snows. Thousands have carved their names into its sides.',
+    quotes: [['I painted my name with axle grease. It will last longer than I will.', 'A young emigrant'], ['If you are here after July, push hard. Snow comes early in the Blue Mountains.', 'A guide']] },
+  southpass: { name: 'South Pass', short: 'South Pass', art: 'pass', region: 'mountains', lon: -108.88, lat: 42.35, split: true, next: [['green', 57], ['bridger', 125]],
+    desc: 'South Pass is a broad, gentle valley across the Continental Divide. From here, the rivers flow toward the Pacific. The trail divides ahead.',
+    quotes: [['The Sublette Cutoff saves you days, but there is no water for fifty miles.', 'A mountain man'], ['Fort Bridger is the long way round, but you can rest and trade there.', 'A wagon master']] },
+  green: { name: 'Green River Crossing', short: 'Green River', art: 'river', region: 'mountains', lon: -110.0, lat: 41.95, next: [['soda', 144]], river: { w: [380, 430], d: [10, 18], ferry: 10 },
+    desc: 'The Green River is deep and swift, far too deep to ford. Travelers on the Sublette Cutoff cross some fifty dry miles to reach it.',
+    quotes: [['The ferrymen charge plenty, but the river has drowned better swimmers than you.', 'A trapper'], ['My oxen went two days without water. They smelled the river a mile off.', 'A farmer from Iowa']] },
+  bridger: { name: 'Fort Bridger', short: 'Fort Bridger', art: 'fort', region: 'mountains', lon: -110.38, lat: 41.32, next: [['soda', 162]], store: 1.75,
+    desc: 'Fort Bridger is a small trading post run by the mountain man Jim Bridger. It is out of the way, but it is a place to rest, trade and buy supplies.',
+    quotes: [['Jim Bridger knows these mountains better than any map.', 'A blacksmith'], ['Prices are steep this far out. Everything had to come by wagon, same as you.', 'The post clerk']] },
+  soda: { name: 'Soda Springs', short: 'Soda Springs', art: 'springs', region: 'snake', lon: -111.6, lat: 42.65, next: [['fthall', 57]],
+    desc: 'Soda Springs bubbles with naturally carbonated water. Travelers stop to taste it and rest beside the Bear River before pushing on to Fort Hall.',
+    quotes: [['Add a little sugar and it tastes like lemonade. Well, almost.', 'A girl from Missouri'], ['Do not let the oxen drink from Steamboat Spring. It hisses for a reason.', 'An old hand']] },
+  fthall: { name: 'Fort Hall', short: 'Fort Hall', art: 'fort', region: 'snake', lon: -112.45, lat: 43.02, next: [['snake', 182]], store: 2,
+    desc: 'Fort Hall is a Hudson’s Bay Company trading post on the Snake River. Some travelers turn south here for California; the Oregon Trail continues west along the Snake.',
+    quotes: [['The Snake country is dry and rough. Fill every water keg you have.', 'A company clerk'], ['Shoshone guides at Three Island Crossing know the river. Trade fair with them.', 'A trapper']] },
+  snake: { name: 'Snake River Crossing', short: 'Snake River', art: 'river', region: 'snake', lon: -115.43, lat: 42.95, next: [['boise', 113]], river: { w: [980, 1060], d: [5, 9], guide: true },
+    desc: 'At Three Island Crossing the Snake River is wide and swift. Shoshone guides know the safest way across the islands and will help travelers for a fair trade.',
+    quotes: [['Some take the south bank to avoid the crossing. It is longer and drier.', 'An emigrant'], ['Use the islands. Cross in short stretches.', 'A Shoshone guide']] },
+  boise: { name: 'Fort Boise', short: 'Fort Boise', art: 'fort', region: 'snake', lon: -116.95, lat: 43.8, next: [['bluemts', 160]], store: 2.25,
+    desc: 'Fort Boise is another Hudson’s Bay Company post, near where the Boise River meets the Snake. Supplies are scarce and costly this far west.',
+    quotes: [['The Blue Mountains are next. Mend your wagon before you start up.', 'The post keeper'], ['There is salmon in the river when the season is right.', 'A trader']] },
+  bluemts: { name: 'Blue Mountains', short: 'Blue Mountains', art: 'pines', region: 'bluemts', lon: -118.25, lat: 45.5, split: true, next: [['wallawalla', 55], ['dalles', 125]],
+    desc: 'The Blue Mountains are steep and thick with timber. Wagons are eased down the slopes with ropes and chains. The trail forks here.',
+    quotes: [['We cut our own road through the pines for two days.', 'A carpenter'], ['Snow up here by September. Do not linger.', 'A missionary']] },
+  wallawalla: { name: 'Fort Walla Walla', short: 'Fort Walla Walla', art: 'fort', region: 'snake', lon: -118.9, lat: 46.06, next: [['dalles', 120]], store: 2.5,
+    desc: 'Fort Walla Walla trades with the Walla Walla, Cayuse and Nez Perce peoples. The Columbia River is close by.',
+    quotes: [['The Columbia will carry you to The Dalles faster than oxen will.', 'A boatman'], ['Prices here would shame a Boston merchant.', 'A tired emigrant']] },
+  dalles: { name: 'The Dalles', short: 'The Dalles', art: 'cliffs', region: 'cascades', lon: -121.18, lat: 45.6, final: true, next: [['willamette', 100]],
+    desc: 'At The Dalles the land trail meets the Columbia River. The Cascade Mountains stand in the way. You can float your wagon down the Columbia on a raft, or pay to take the Barlow Toll Road around Mount Hood.',
+    quotes: [['The river is quick, but the rapids have swallowed whole families.', 'A raftsman'], ['Mr. Barlow’s road is rough, but at least it holds still.', 'An emigrant']] },
+  willamette: { name: 'Willamette Valley, Oregon', short: 'Willamette Valley', art: 'farm', region: 'valley', lon: -122.6, lat: 45.3, end: true,
+    desc: 'The Willamette Valley: rich soil, mild winters and the end of the trail.' }
+};
+
+const DISEASES = [
+  { name: 'dysentery',      w: 3,   base: .010, days: [8, 14] },
+  { name: 'cholera',        w: 2,   base: .024, days: [5, 9] },
+  { name: 'typhoid fever',  w: 1.5, base: .012, days: [10, 16] },
+  { name: 'measles',        w: 1.5, base: .006, days: [8, 12] },
+  { name: 'mountain fever', w: 1.2, base: .006, days: [7, 12] },
+  { name: 'exhaustion',     w: 1,   base: .003, days: [4, 8] }
+];
+const INJURIES = [
+  { name: 'a broken arm',  base: .001, days: [18, 28] },
+  { name: 'a broken leg',  base: .003, days: [24, 34] },
+  { name: 'a snakebite',   base: .015, days: [5, 9] }
+];
+const TRIBES = { plains: 'Kaw', bluffs: 'Pawnee', foothills: 'Lakota', mountains: 'Shoshone', snake: 'Shoshone', bluemts: 'Cayuse', cascades: 'Wasco', valley: 'Kalapuya' };
+
+const ITEMS = [
+  { k: 'oxen',     name: 'Oxen',               unit: 'yoke', price: 40,  step: 1,  per: 2,  note: '2 oxen per yoke' },
+  { k: 'food',     name: 'Food',               unit: 'lb',   price: .2,  step: 50, per: 1,  note: 'flour, bacon, coffee, beans' },
+  { k: 'clothing', name: 'Clothing',           unit: 'set',  price: 10,  step: 1,  per: 1,  note: 'one set per person, per season' },
+  { k: 'bullets',  name: 'Ammunition',         unit: 'box',  price: 2,   step: 1,  per: 20, note: '20 bullets per box' },
+  { k: 'wheels',   name: 'Spare wagon wheels', unit: 'each', price: 10,  step: 1,  per: 1,  note: 'up to 3' },
+  { k: 'axles',    name: 'Spare wagon axles',  unit: 'each', price: 10,  step: 1,  per: 1,  note: 'up to 3' },
+  { k: 'tongues',  name: 'Spare wagon tongues',unit: 'each', price: 10,  step: 1,  per: 1,  note: 'up to 3' }
+];
+const PART_NAME = { wheels: 'wagon wheel', axles: 'wagon axle', tongues: 'wagon tongue' };
+
+const DEFAULT_TOP = [['Stephen Meek', 7650], ['Celinda Hines', 5694], ['Andrew Sublette', 4138], ['David Hastings', 2945], ['Ezra Meeker', 2380], ['Willian Vaughn', 1980], ['Mary Bartlett', 1745], ['William Wiggins', 1015], ['Charles Hopper', 990], ['Elijah White', 840]];
+const rating = s => s >= 3000 ? 'Trail guide' : s >= 1000 ? 'Adventurer' : 'Greenhorn';
+
+/* ---------------- state ---------------- */
+let G = null;
+const PPM = 6;            // scene units per mile
+const OFF = 250;          // landmark stands this far ahead of the wagon on arrival
+const DAY_MS = 780;
+const T = { traveling: false, d: 0, prog: 0, stopReq: false };
+const view = { mode: 'title', extra: 0, demoU: 0, cur: null, cross: null, tomb: null, time: 0, shake: 0 };
+let choices = [];
+
+function living() { return G.party.filter(m => m.alive); }
+function healthLabel() { const h = G.health; return h < 35 ? 'good' : h < 70 ? 'fair' : h < 105 ? 'poor' : 'very poor'; }
+function month() { return new Date(G.date).getUTCMonth(); }
+function regionKey() {
+  if (view.mode === 'title') return 'bluffs';
+  if (!G) return 'plains';
+  return LM[G.at || G.last].region;
+}
+function isOver() { return !G.party[0].alive || living().length === 0; }
+function save() { if (G) store.set('ot_save', G); }
+
+/* ---------------- audio ---------------- */
+const AU = { ctx: null, on: store.get('ot_sound', true) };
+function ac() { if (!AU.ctx) { const C = window.AudioContext || window.webkitAudioContext; if (C) AU.ctx = new C(); } if (AU.ctx && AU.ctx.state === 'suspended') AU.ctx.resume(); return AU.ctx; }
+function tone(f, dur, type = 'square', vol = .05, when = 0, slide = 0) {
+  const a = ac(); if (!a) return;
+  const t = a.currentTime + when, o = a.createOscillator(), g = a.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t + dur + .02);
+}
+function noise(dur, vol, freq, q = .7, when = 0) {
+  const a = ac(); if (!a) return;
+  const t = a.currentTime + when, len = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+  const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+  src.buffer = buf; f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q; g.gain.value = vol;
+  src.connect(f).connect(g).connect(a.destination); src.start(t);
+}
+function sfx(k) {
+  if (!AU.on) return;
+  try {
+    if (k === 'click') tone(520, .04, 'square', .025);
+    else if (k === 'shot') { noise(.28, .5, 900, .5); tone(120, .12, 'triangle', .08, 0, -60); }
+    else if (k === 'hit') tone(180, .14, 'triangle', .08, 0, -90);
+    else if (k === 'splash') noise(.7, .35, 600, .4);
+    else if (k === 'thud') { tone(90, .25, 'sine', .2, 0, -40); noise(.2, .3, 300); }
+    else if (k === 'bad') { tone(330, .18, 'square', .03); tone(262, .3, 'square', .03, .18); }
+    else if (k === 'arrive') { [392, 494, 587].forEach((f, i) => tone(f, .22, 'triangle', .06, i * .13)); }
+    else if (k === 'death') { [330, 294, 247, 196].forEach((f, i) => tone(f, .4, 'triangle', .06, i * .32)); }
+    else if (k === 'win') { [392, 494, 587, 784, 587, 784].forEach((f, i) => tone(f, .25, 'triangle', .06, i * .15)); }
+  } catch (e) {}
+}
+
+/* ---------------- UI ---------------- */
+const panel = $('#panel'), inner = $('#inner'), stage = $('#stage');
+function statusInner() {
+  const w = G.weather ? weatherLabel(G.weather) : '—';
+  const hl = healthLabel();
+  const atLm = G.at ? LM[G.at] : null;
+  let nextName = '—', next = '—';
+  if (G.next) { nextName = LM[G.next].short; next = `${Math.max(0, Math.round(G.nextMile - G.miles))} mi`; }
+  else if (atLm && atLm.next && !atLm.split && !atLm.final) { nextName = LM[atLm.next[0][0]].short; next = `${atLm.next[0][1]} mi`; }
+  else if (atLm && (atLm.split || atLm.final)) { nextName = 'landmark'; next = 'trail divides'; }
+  return `<div><dt>Date</dt><dd>${fmtDate(G.date)}</dd></div>
+    <div><dt>Weather</dt><dd>${w}</dd></div>
+    <div><dt>Health</dt><dd class="${hl === 'poor' || hl === 'very poor' ? 'bad' : ''}">${hl}</dd></div>
+    <div><dt>Food</dt><dd class="${G.food < living().length * 30 ? 'bad' : ''}">${Math.floor(G.food)} lbs</dd></div>
+    <div><dt>Next: ${esc(nextName)}</dt><dd>${next}</dd></div>
+    <div><dt>Miles traveled</dt><dd>${Math.round(G.miles)}</dd></div>`;
+}
+function updateStatus() { const el = $('#status'); if (el) el.innerHTML = statusInner(); }
+function partyChips() {
+  return `<div class="party">${G.party.map((m, i) => `<span class="chip ${!m.alive ? 'dead' : m.sick ? 'sick' : ''}">${esc(m.name)}${i === 0 ? ' (leader)' : ''}${m.alive && m.sick ? ' · ' + esc(m.sick.name.replace(/^a /, '')) : ''}</span>`).join('')}</div>`;
+}
+function show({ title = '', html = '', list = [], status = false, two = false, focus = true }) {
+  choices = list;
+  inner.innerHTML = `${status && G ? `<dl class="status" id="status">${statusInner()}</dl>` : ''}${title ? `<h2 class="scr-title">${title}</h2>` : ''}${html}${list.length ? `<div class="choices${two ? ' two' : ''}">${list.map((c, i) => `<button type="button" class="choice${c.primary ? ' primary' : ''}" data-i="${i}"${c.disabled ? ' disabled' : ''}><span class="num">${i === 9 ? 0 : i + 1}</span><span class="lbl">${c.label}</span>${c.hint ? `<span class="hint hide-touch">${c.hint}</span>` : ''}</button>`).join('')}</div>` : ''}`;
+  panel.scrollTop = 0;
+  if (focus && !isTouch) { const p = inner.querySelector('.choice.primary') || inner.querySelector('.choice'); if (p) p.focus({ preventScroll: true }); }
+}
+inner.addEventListener('click', e => {
+  const b = e.target.closest('.choice'); if (!b || b.disabled) return;
+  const c = choices[+b.dataset.i]; if (c) { sfx('click'); c.fn(); }
+});
+function message(lines, done, title = '') {
+  const queue = (Array.isArray(lines) ? lines : [lines]).filter(Boolean);
+  const step = () => {
+    if (!queue.length) { done && done(); return; }
+    const m = queue.shift();
+    if (/died|drowned|thief|broke|lost:|tipped|swept/i.test(m)) sfx('bad');
+    show({ status: !!G && view.mode !== 'tomb', title, html: `<p class="msg">${esc(m)}</p>`, list: [{ label: 'Continue', primary: true, hint: 'Enter', fn: step }] });
+  };
+  step();
+}
+function setStage(mode) {
+  view.mode = mode;
+  const tall = mode === 'hunt' || mode === 'raft';
+  stage.classList.toggle('tall', tall);
+  panel.classList.toggle('compact', tall);
+  resize();
+}
+
+/* ---------------- weather ---------------- */
+const TEMPS = [28, 34, 47, 59, 69, 79, 87, 85, 76, 63, 47, 35];
+const PRECIP = [.2, .22, .28, .3, .3, .22, .14, .12, .14, .16, .2, .2];
+function rollWeather() {
+  const m = month(), reg = REGIONS[regionKey()];
+  const t = TEMPS[m] + reg.temp + ri(-10, 10);
+  const temp = t >= 90 ? 'very hot' : t >= 80 ? 'hot' : t >= 60 ? 'warm' : t >= 45 ? 'cool' : t >= 32 ? 'cold' : 'very cold';
+  let precip = null;
+  if (rnd() < PRECIP[m] * reg.wet) { const heavy = rnd() < .3; precip = t <= 36 ? (heavy ? 'heavy snow' : 'snow') : (heavy ? 'heavy rains' : 'rain'); }
+  return { temp, precip, t };
+}
+function weatherLabel(w) { return w.precip ? ({ rain: 'rainy', 'heavy rains': 'very rainy', snow: 'snowy', 'heavy snow': 'very snowy' })[w.precip] : w.temp; }
+
+/* ---------------- daily simulation ---------------- */
+function pickDisease() {
+  const opts = DISEASES.map(d => {
+    let w = d.w;
+    if (d.name === 'exhaustion') w *= G.pace === 3 ? 4 : G.pace === 2 ? 2 : .6;
+    if (d.name === 'mountain fever' && /mountains|foothills|bluemts/.test(regionKey())) w *= 2.5;
+    if (d.name === 'cholera' && /plains|bluffs/.test(regionKey())) w *= 1.6;
+    return [w, d];
+  });
+  let r = rnd() * opts.reduce((s, o) => s + o[0], 0);
+  for (const [w, d] of opts) { r -= w; if (r <= 0) return d; }
+  return opts[0][1];
+}
+function addDay() { const d = new Date(G.date); d.setUTCDate(d.getUTCDate() + 1); G.date = d.getTime(); }
+function dailyUpdate(mode) {
+  const out = [];
+  addDay();
+  let alive = living();
+  const need = alive.length * RATIONS[G.rations].lbs;
+  let starving = false;
+  if (G.food >= need) G.food = Math.round((G.food - need) * 10) / 10; else { G.food = 0; starving = true; }
+  if (starving && !G.noFood) { G.noFood = true; out.push('You have run out of food.'); }
+  if (!starving) G.noFood = false;
+  let p = 0;
+  if (mode === 'travel' || mode === 'wait') p += PACE[G.pace].pen;
+  p += starving ? 7 : RATIONS[G.rations].pen;
+  const w = G.weather || { temp: 'warm' }, full = alive.length * 2;
+  if (w.temp === 'very hot') p += 2; else if (w.temp === 'hot') p += 1;
+  else if (w.temp === 'cold') p += G.clothing >= full ? 0 : G.clothing >= alive.length ? 1 : 3;
+  else if (w.temp === 'very cold') p += G.clothing >= full ? 1 : G.clothing >= alive.length ? 3 : 5;
+  if (w.precip && mode !== 'rest') p += .5;
+  alive.forEach(m => { if (m.sick) p += 1; });
+  G.health = clamp(G.health * (mode === 'rest' ? .8 : .9) + p, 0, 180);
+  for (const m of alive) {
+    if (!m.sick) continue;
+    let pd = m.sick.base + Math.max(0, G.health - 30) / 2200 + (starving ? .01 : 0);
+    if (mode === 'rest') pd *= .5;
+    if (rnd() < pd) { m.alive = false; m.cause = m.sick.name; out.push(`${m.name} has died of ${m.sick.name}.`); continue; }
+    m.sick.days -= mode === 'rest' ? 2 : 1;
+    if (m.sick.days <= 0) { m.sick = null; out.push(`${m.name} is well again.`); }
+  }
+  alive = living();
+  if (alive.length && ((G.health >= 140 && rnd() < .2) || (starving && rnd() < .05))) {
+    const m = pick(alive), c = starving ? 'starvation' : 'exhaustion';
+    m.alive = false; m.cause = c; out.push(`${m.name} has died of ${c}.`);
+  }
+  const well = living().filter(m => !m.sick);
+  if (well.length && rnd() < .006 + G.health / 1300) {
+    const m = pick(well), d = pickDisease();
+    m.sick = { name: d.name, base: d.base, days: ri(d.days[0], d.days[1]) };
+    out.push(`${m.name} has ${d.name}.`);
+  }
+  G.weather = rollWeather();
+  return out;
+}
+function loseDays(text, n) {
+  const out = [`${text} Lose ${plural(n, 'day')}.`];
+  for (let i = 0; i < n && !isOver(); i++) out.push(...dailyUpdate('wait'));
+  return out;
+}
+function milesToday() {
+  let m = 18 * PACE[G.pace].mult;
+  const ox = G.oxen; m *= ox >= 6 ? 1 : .46 + ox * .09;
+  const w = G.weather || {};
+  m *= ({ 'heavy snow': .35, snow: .65, 'heavy rains': .7, rain: .9 })[w.precip] || 1;
+  if (/mountains|bluemts|cascades/.test(regionKey())) m *= .82;
+  if (healthLabel() === 'very poor') m *= .8;
+  m *= .9 + rnd() * .2;
+  return Math.max(1, Math.round(m));
+}
+
+/* ---------------- random events ---------------- */
+function stealSomething() {
+  const opts = [];
+  if (G.food > 20) opts.push(() => { const n = Math.max(10, Math.round(G.food * (.1 + rnd() * .2))); G.food -= n; return `${n} pounds of food`; });
+  if (G.bullets > 10) opts.push(() => { const n = Math.min(G.bullets, ri(10, 40)); G.bullets -= n; return `${n} bullets`; });
+  if (G.clothing > 0) opts.push(() => { const n = Math.min(G.clothing, ri(1, 2)); G.clothing -= n; return plural(n, 'set') + ' of clothing'; });
+  if (G.oxen > 2 && rnd() < .4) opts.push(() => { G.oxen -= 1; return '1 ox'; });
+  for (const k of ['wheels', 'axles', 'tongues']) if (G[k] > 0) opts.push(() => { G[k] -= 1; return 'a spare ' + PART_NAME[k]; });
+  return opts.length ? `A thief comes during the night and steals ${pick(opts)()}.` : 'A thief comes during the night, but finds nothing worth taking.';
+}
+function wagonBreak() {
+  const k = pick(['wheels', 'axles', 'tongues']), name = PART_NAME[k];
+  if (G[k] > 0) { G[k] -= 1; return [`Broken ${name}. You replace it with your spare.`]; }
+  const chance = G.profession === 'carpenter' ? .75 : .4;
+  if (rnd() < chance) return loseDays(`Broken ${name}. You are able to repair it.`, 1);
+  G.broken = k;
+  return [`Broken ${name}. You are unable to repair it. You will need to trade for a spare, or keep trying to fix it.`];
+}
+function injury() {
+  const well = living().filter(m => !m.sick); if (!well.length) return null;
+  const m = pick(well), d = pick(INJURIES);
+  m.sick = { name: d.name, base: d.base, days: ri(d.days[0], d.days[1]) };
+  return [`${m.name} has ${d.name}.`];
+}
+function abandoned() {
+  const r = rnd();
+  if (r < .25) return ['You find an abandoned wagon, but it is empty.'];
+  if (r < .5) { const n = Math.min(ri(20, 60), 2000 - G.food); G.food += n; return [`You find an abandoned wagon with ${n} pounds of food.`]; }
+  if (r < .7) { const n = ri(20, 50); G.bullets += n; return [`You find an abandoned wagon with ${n} bullets.`]; }
+  if (r < .85) { const n = ri(1, 2); G.clothing += n; return [`You find an abandoned wagon with ${plural(n, 'set')} of clothing.`]; }
+  const k = pick(['wheels', 'axles', 'tongues']); G[k] += 1;
+  if (G.broken === k) { G.broken = null; G[k] -= 1; return [`You find an abandoned wagon and salvage a ${PART_NAME[k]} to fix your own.`]; }
+  return [`You find an abandoned wagon with a spare ${PART_NAME[k]}.`];
+}
+function wagonFire() {
+  const lost = [];
+  if (G.food > 0) { const n = Math.round(G.food * (.08 + rnd() * .15)); G.food -= n; lost.push(`${n} pounds of food`); }
+  if (G.clothing > 0 && rnd() < .6) { G.clothing -= 1; lost.push('1 set of clothing'); }
+  if (G.bullets > 0 && rnd() < .5) { const n = Math.min(G.bullets, ri(10, 30)); G.bullets -= n; lost.push(`${n} bullets`); }
+  return [lost.length ? `A fire in the wagon destroys ${lost.join(', ')}.` : 'A small fire in the wagon is put out before any harm is done.'];
+}
+function randomEvent() {
+  const reg = regionKey(), w = G.weather || {}, m = month(), alive = living();
+  const list = [
+    [3, () => [stealSomething()]],
+    [G.oxen > 0 ? (G.profession === 'farmer' ? 1 : 2.5) : 0, () => { G.oxen -= 1; return [pick(['One of your oxen has died.', 'An ox has wandered off.', 'One of your oxen is injured and cannot go on.'])]; }],
+    [G.profession === 'carpenter' ? 2 : 3, wagonBreak],
+    [1.5, () => loseDays('Lose trail.', ri(1, 4))],
+    [1, () => loseDays('Wrong trail.', ri(1, 3))],
+    [/cool|cold/.test(w.temp) ? 1.5 : .3, () => loseDays('Heavy fog.', 1)],
+    [/plains|bluffs/.test(reg) && /hot|warm/.test(w.temp) ? 1.2 : 0, () => loseDays('Severe hail storm.', 1)],
+    [/rain/.test(w.precip || '') ? 2 : 0, () => loseDays('Severe thunderstorm.', 1)],
+    [/snow/.test(w.precip || '') ? 3 : 0, () => loseDays('Severe blizzard.', ri(1, 3))],
+    [2, () => { G.health += 15; return ['Bad water.']; }],
+    [G.dry ? 6 : (/snake|bluffs/.test(reg) && m >= 6 ? 2 : .8), () => { G.health += 10; return ['Very little water.']; }],
+    [(m <= 3 || m >= 9) ? 1.5 : .3, () => { if (G.oxen > 0 && rnd() < .35) { G.oxen -= 1; return ['Inadequate grass. One of your oxen has died.']; } return ['Inadequate grass for the oxen.']; }],
+    [m >= 4 && m <= 8 ? 1.5 : 0, () => { const n = Math.min(ri(15, 40), 2000 - G.food); G.food += n; return [`Find wild fruit. You gather ${n} pounds.`]; }],
+    [1, abandoned],
+    [2.2, injury],
+    [G.food < 30 * alive.length ? 3 : 0, () => { const n = Math.min(ri(30, 60), 2000 - G.food); G.food += n; return [`Members of a ${TRIBES[reg]} band show you where to find wild roots and game. You gain ${n} pounds of food.`]; }],
+    [.7, wagonFire],
+    [alive.length > 1 ? .6 : 0, () => { const p = pick(alive.slice(1)); return loseDays(`${p.name} is lost.`, ri(1, 3)); }]
+  ].filter(e => e[0] > 0);
+  let r = rnd() * list.reduce((s, e) => s + e[0], 0);
+  for (const [w2, fn] of list) { r -= w2; if (r <= 0) return fn(); }
+  return null;
+}
+function gravesBetween(a, b) {
+  return store.get('ot_graves', []).filter(g => g.mile > a && g.mile <= b && g.game !== G.id)
+    .map(g => `You pass a grave beside the trail. Here lies ${g.name}.${g.epitaph ? ' The marker reads: “' + g.epitaph + '”' : ''}`);
+}
+
+/* ---------------- travel loop ---------------- */
+function currentU() {
+  if (view.mode === 'title') return view.demoU;
+  if (!G) return 0;
+  return (G.miles + T.d * T.prog) * PPM + view.extra;
+}
+function startTravel() {
+  if (G.broken) return message(`Your wagon has a broken ${PART_NAME[G.broken]}. You can't travel until it's fixed.`, stoppedMenu);
+  if (G.oxen <= 0) return message('You have no oxen to pull your wagon. Trade for oxen, or buy them at a fort.', stoppedMenu);
+  setStage('trail');
+  T.traveling = true; T.stopReq = false;
+  show({ status: true, html: partyChips(), list: [{ label: 'Size up the situation', primary: true, hint: 'Space', fn: sizeUp }] });
+  beginDay();
+}
+function beginDay() {
+  if (G.oxen <= 0 || G.broken) { T.traveling = false; return startTravel(); }
+  T.d = Math.min(milesToday(), G.nextMile - G.miles); T.prog = 0;
+}
+function sizeUp() { if (T.traveling) { T.stopReq = true; const b = inner.querySelector('.choice'); if (b) { b.disabled = true; b.querySelector('.lbl').textContent = 'Stopping…'; } } }
+function endDay() {
+  const before = G.miles;
+  G.miles += T.d; T.d = 0; T.prog = 0;
+  const msgs = dailyUpdate('travel');
+  if (isOver()) { T.traveling = false; return message(msgs, gameOver); }
+  msgs.push(...gravesBetween(before, G.miles));
+  if (G.miles >= G.nextMile - .01) {
+    G.miles = G.nextMile; T.traveling = false; save();
+    return message(msgs, () => arrive(G.next));
+  }
+  if (rnd() < .12) { const e = randomEvent(); if (e) msgs.push(...e); }
+  save();
+  if (isOver()) { T.traveling = false; return message(msgs, gameOver); }
+  if (msgs.length) {
+    T.traveling = false;
+    const wantStop = T.stopReq;
+    return message(msgs, () => wantStop ? stoppedMenu() : startTravel());
+  }
+  if (T.stopReq) { T.traveling = false; return stoppedMenu(); }
+  updateStatus(); beginDay();
+}
+
+/* ---------------- landmarks ---------------- */
+function arrive(id) {
+  G.at = id; G.next = null; G.route.push(id);
+  const lm = LM[id];
+  G.lmDone = !(lm.river || lm.split || lm.final || lm.end);
+  G.weather = rollWeather();
+  view.cur = { id, u: G.miles * PPM + view.extra };
+  save();
+  sfx('arrive');
+  if (lm.end) return finishGame();
+  show({ status: true, title: esc(lm.name), html: `<p class="lead">${esc(lm.desc)}</p>`, list: [{ label: 'Continue', primary: true, hint: 'Enter', fn: () => handleLandmark(id) }] });
+}
+function handleLandmark(id) {
+  const lm = LM[id];
+  if (!G.lmDone) {
+    if (lm.river) return riverScreen();
+    if (lm.split) return splitScreen();
+    if (lm.final) return dallesScreen();
+  }
+  stoppedMenu();
+}
+function setLeg(id, miles) { G.next = id; G.legMiles = miles; G.nextMile = G.miles + miles; G.dry = G.at === 'southpass' && id === 'green'; }
+function depart() {
+  if (!G.next) { const [id, mi] = LM[G.at].next[0]; setLeg(id, mi); }
+  G.last = G.at; G.at = null; G.lmDone = true;
+  startTravel();
+}
+function continueTrail() {
+  if (G.at && !G.lmDone) return handleLandmark(G.at);
+  if (G.broken) return message(`Your wagon has a broken ${PART_NAME[G.broken]}. You can't travel until it's fixed.`, stoppedMenu);
+  if (G.oxen <= 0) return message('You have no oxen to pull your wagon. Trade for oxen, or buy them at a fort.', stoppedMenu);
+  if (G.at) depart(); else startTravel();
+}
+function stoppedMenu() {
+  setStage('trail'); T.traveling = false; save();
+  const at = G.at ? LM[G.at] : null;
+  const list = [
+    { label: 'Continue on trail', primary: true, hint: 'Enter', fn: continueTrail },
+    { label: 'Check supplies', fn: suppliesScreen },
+    { label: 'Look at map', fn: mapScreen },
+    { label: 'Change pace', hint: PACE[G.pace].name, fn: paceScreen },
+    { label: 'Change food rations', hint: RATIONS[G.rations].name, fn: rationsScreen },
+    { label: 'Stop to rest', fn: restScreen },
+    { label: 'Attempt to trade', fn: tradeScreen }
+  ];
+  if (at && at.quotes) list.push({ label: 'Talk to people', fn: talkScreen });
+  if (at && at.store) list.push({ label: 'Buy supplies', fn: () => storeScreen(G.at, stoppedMenu) });
+  if (!(at && at.store)) list.push({ label: 'Hunt for food', hint: `${G.bullets} bullets`, fn: huntIntro });
+  if (G.broken) list.push({ label: `Try to repair the ${PART_NAME[G.broken]}`, fn: repairTry });
+  show({ status: true, title: at ? esc(at.name) : 'On the trail', html: partyChips(), list, two: true });
+}
+function suppliesScreen() {
+  const rows = [['Oxen', G.oxen], ['Sets of clothing', G.clothing], ['Bullets', G.bullets], ['Wagon wheels', G.wheels], ['Wagon axles', G.axles], ['Wagon tongues', G.tongues], ['Pounds of food', Math.floor(G.food)], ['Money left', money(G.money)]];
+  show({ status: true, title: 'Your supplies', html: `<table class="ledger"><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td class="r">${r[1]}</td></tr>`).join('')}</tbody></table>${G.broken ? `<p class="note">Your wagon has a broken ${PART_NAME[G.broken]}.</p>` : ''}${partyChips()}`, list: [{ label: 'Return', primary: true, fn: stoppedMenu }] });
+}
+function paceScreen() {
+  show({ status: true, title: 'Change pace', html: `<p>Your pace is currently <b>${PACE[G.pace].name}</b>. A faster pace covers more ground but wears your party down.</p>`,
+    list: [1, 2, 3].map(k => ({ label: `${PACE[k].name[0].toUpperCase() + PACE[k].name.slice(1)} — <span class="small muted">${PACE[k].desc}</span>`, primary: G.pace === k, fn: () => { G.pace = k; stoppedMenu(); } })) });
+}
+function rationsScreen() {
+  show({ status: true, title: 'Change food rations', html: `<p>You are eating <b>${RATIONS[G.rations].name}</b> rations. Smaller meals stretch your food but weaken your party.</p>`,
+    list: [1, 2, 3].map(k => ({ label: `${RATIONS[k].name[0].toUpperCase() + RATIONS[k].name.slice(1)} — <span class="small muted">${RATIONS[k].desc}</span>`, primary: G.rations === k, fn: () => { G.rations = k; stoppedMenu(); } })) });
+}
+function restScreen() {
+  show({ status: true, title: 'Stop to rest', html: '<p>How many days would you like to rest? Resting helps the sick recover and lets your party regain strength, but it uses food and time.</p>',
+    list: [1, 2, 3, 5, 7].map(n => ({ label: plural(n, 'day'), fn: () => {
+      const msgs = [];
+      for (let i = 0; i < n && !isOver(); i++) msgs.push(...dailyUpdate('rest'));
+      if (isOver()) return message(msgs, gameOver);
+      msgs.push(`You rest for ${plural(n, 'day')}. Your party's health is ${healthLabel()}.`);
+      message(msgs, stoppedMenu);
+    } })).concat([{ label: 'Never mind', fn: stoppedMenu }]) });
+}
+function talkScreen() {
+  const lm = LM[G.at]; G.talk = G.talk || {};
+  const i = G.talk[G.at] || 0; G.talk[G.at] = (i + 1) % lm.quotes.length;
+  const [q, by] = lm.quotes[i];
+  show({ status: true, title: 'Talk to people', html: `<p class="quote">“${esc(q)}”</p><p class="quote-by">— ${esc(by)}</p>`, list: [{ label: 'Talk to someone else', fn: talkScreen }, { label: 'Return', primary: true, fn: stoppedMenu }] });
+}
+function repairTry() {
+  const k = G.broken, chance = G.profession === 'carpenter' ? .5 : .28;
+  const msgs = dailyUpdate('wait');
+  if (isOver()) return message(msgs, gameOver);
+  if (rnd() < chance) { G.broken = null; msgs.unshift(`You spend the day working on it and manage to repair the ${PART_NAME[k]}.`); }
+  else msgs.unshift(`You spend the day trying to repair the ${PART_NAME[k]}, but it still won't hold.`);
+  message(msgs, stoppedMenu);
+}
+function tradeScreen() {
+  const msgs = dailyUpdate('wait');
+  if (isOver()) return message(msgs, gameOver);
+  const have = [];
+  if (G.food >= 60) have.push(['food', ri(40, Math.min(150, Math.floor(G.food * .4))), 'pounds of food']);
+  if (G.clothing >= 1) have.push(['clothing', ri(1, Math.min(3, G.clothing)), 'sets of clothing']);
+  if (G.bullets >= 40) have.push(['bullets', ri(20, Math.min(100, G.bullets)), 'bullets']);
+  if (G.oxen >= 3) have.push(['oxen', 1, 'ox']);
+  for (const k of ['wheels', 'axles', 'tongues']) if (G[k] > 0) have.push([k, 1, PART_NAME[k]]);
+  const finish = (text) => message(msgs.concat(text), stoppedMenu);
+  if (!have.length || rnd() < .2) return finish('No one wants to trade with you today.');
+  const want = pick(have);
+  const giveOpts = [['food', ri(50, 150), 'pounds of food'], ['clothing', ri(1, 3), 'sets of clothing'], ['bullets', ri(30, 90), 'bullets'], ['oxen', ri(1, 2), 'oxen'], ['wheels', 1, 'wagon wheel'], ['axles', 1, 'wagon axle'], ['tongues', 1, 'wagon tongue']].filter(g => g[0] !== want[0]);
+  let give = pick(giveOpts);
+  if (G.broken && rnd() < .55 && want[0] !== G.broken) give = [G.broken, 1, PART_NAME[G.broken]];
+  if (G.oxen <= 1 && rnd() < .55 && want[0] !== 'oxen') give = ['oxen', ri(1, 2), 'oxen'];
+  const fmt = t => `${t[1]} ${t[1] === 1 && t[2] === 'oxen' ? 'ox' : t[1] === 1 ? t[2].replace(/^sets/, 'set') : t[2]}`;
+  const who = pick(['A settler', 'A trader', 'A family from Tennessee', 'A trapper', 'A Hudson’s Bay man', 'A wagon master']);
+  const run = () => show({ status: true, title: 'Attempt to trade', html: `${msgs.length ? `<p class="small muted">${msgs.map(esc).join(' ')}</p>` : ''}<p class="msg">${who} would like ${fmt(want)}. In exchange, they offer ${fmt(give)}.</p><p class="small muted">You have ${Math.floor(G[want[0]])} ${({ food: 'pounds of food', clothing: 'sets of clothing', bullets: 'bullets', oxen: 'oxen', wheels: 'spare wheels', axles: 'spare axles', tongues: 'spare tongues' })[want[0]]}.</p>`,
+    list: [{ label: 'Accept the trade', primary: true, fn: () => {
+      G[want[0]] -= want[1]; G[give[0]] += give[1];
+      if (give[0] === 'food') G.food = Math.min(2000, G.food);
+      if (G.broken && G[G.broken] > 0) { G[G.broken] -= 1; const p = PART_NAME[G.broken]; G.broken = null; return message(`You trade, then fit the new ${p} to your wagon.`, stoppedMenu); }
+      message('You make the trade.', stoppedMenu);
+    } }, { label: 'Decline', fn: stoppedMenu }] });
+  run();
+}
+
+/* ---------------- trail splits & river ---------------- */
+function splitScreen() {
+  const lm = LM[G.at];
+  const label = id => id === 'green' ? 'Head for the Green River crossing (Sublette Cutoff)' : id === 'bridger' ? 'Head for Fort Bridger' : id === 'wallawalla' ? 'Head for Fort Walla Walla' : 'Head for The Dalles';
+  show({ status: true, title: 'The trail divides here', html: `<p>${esc(lm.short)}: you may choose a route.</p><table class="ledger"><tbody>${lm.next.map(([id, mi]) => `<tr><td>${esc(LM[id].name)}</td><td class="r">${mi} miles</td></tr>`).join('')}</tbody></table>`,
+    list: lm.next.map(([id, mi]) => ({ label: label(id), fn: () => { setLeg(id, mi); G.lmDone = true; stoppedMenu(); } })).concat([{ label: 'See the map', fn: () => mapScreen(splitScreen) }]) });
+}
+function genRiver(id) {
+  const r = LM[id].river, m = month();
+  let depth = lerp(r.d[0], r.d[1], rnd());
+  if (m >= 2 && m <= 5) depth += 1.1; else if (m >= 8) depth -= .6;
+  if (G.weather && /rain/.test(G.weather.precip || '')) depth += .5;
+  return { width: ri(r.w[0], r.w[1]), depth: Math.max(1.2, Math.round(depth * 10) / 10), swift: id === 'green' || id === 'snake' || rnd() < .3 };
+}
+function riverScreen() {
+  const lm = LM[G.at], R = lm.river;
+  const rv = G.river || (G.river = genRiver(G.at));
+  const list = [
+    { label: 'Attempt to ford the river', fn: () => cross('ford') },
+    { label: 'Caulk the wagon and float it across', fn: () => cross('float') }
+  ];
+  if (R.ferry) list.push({ label: `Take a ferry across`, hint: money(R.ferry), disabled: G.money < R.ferry, fn: () => cross('ferry') });
+  if (R.guide) list.push({ label: 'Hire a Shoshone guide', hint: '3 sets of clothing', disabled: G.clothing < 3, fn: () => cross('guide') });
+  list.push({ label: 'Wait to see if conditions improve', fn: () => {
+    const msgs = dailyUpdate('rest');
+    if (isOver()) return message(msgs, gameOver);
+    rv.depth = Math.max(1.2, Math.round((rv.depth + (rnd() - .62) * .8) * 10) / 10);
+    message(msgs.concat(`You camp by the river for a day. It is now ${rv.depth.toFixed(1)} feet deep.`), riverScreen);
+  } });
+  list.push({ label: 'Get more information', fn: riverInfo });
+  show({ status: true, title: esc(lm.name), html: `<p class="lead">You must cross the river to continue. Here it is <b>${rv.width} feet</b> across and <b>${rv.depth.toFixed(1)} feet</b> deep in the middle${rv.swift ? ', and the current is swift' : ''}.</p><p class="small muted">Weather: ${weatherLabel(G.weather)}.</p>`, list, two: true });
+}
+function riverInfo() {
+  show({ status: true, title: 'Crossing a river', html: `<p><b>Fording</b> means driving the wagon across a shallow stretch with the oxen still hitched. It is safest when the water is under 2½ feet; much deeper and the wagon may tip or swamp.</p>
+    <p><b>Caulking</b> means sealing the wagon box with tar so it floats like a boat. It works in deep water but a strong current can roll it.</p>
+    <p><b>A ferry</b> is a flatboat run by someone else. It is the safest choice, but it costs money and you may wait your turn.</p>
+    <p><b>A guide</b> who knows the river can lead you across by the shallowest route.</p>`, list: [{ label: 'Return', primary: true, fn: riverScreen }] });
+}
+function losses(sev) {
+  const lost = [];
+  const take = (k, frac, label) => { if (G[k] <= 0) return; const n = Math.max(1, Math.round(G[k] * frac)); G[k] -= n; lost.push(`${n} ${label(n)}`); };
+  if (rnd() < .9) take('food', sev * (.3 + rnd() * .4), () => 'pounds of food');
+  if (rnd() < .6) take('clothing', sev * (.3 + rnd() * .4), n => n === 1 ? 'set of clothing' : 'sets of clothing');
+  if (rnd() < .6) take('bullets', sev * (.3 + rnd() * .4), n => n === 1 ? 'bullet' : 'bullets');
+  if (rnd() < .35) take('oxen', sev * .25, n => n === 1 ? 'ox' : 'oxen');
+  for (const k of ['wheels', 'axles', 'tongues']) if (rnd() < .3) take(k, 1, n => PART_NAME[k] + (n > 1 ? 's' : ''));
+  return lost;
+}
+function cross(how) {
+  const rv = G.river, R = LM[G.at].river, out = [];
+  let tipped = false, wet = false;
+  if (how === 'ford') {
+    if (rv.depth < 2.5) { /* safe */ }
+    else if (rv.depth < 3) wet = rnd() < .7;
+    else { const p = clamp((rv.depth - 3) * .35 + .15 + (rv.swift ? .1 : 0), 0, .95); if (rnd() < p) tipped = true; else wet = true; }
+  } else if (how === 'float') {
+    if (rv.depth < 1.6) { out.push('The river is too shallow to float the wagon, and it runs aground.'); wet = true; }
+    else tipped = rnd() < .07 + rv.width / 6000 + (rv.swift ? .12 : 0);
+  } else if (how === 'ferry') {
+    G.money -= R.ferry;
+    const wait = ri(0, 3);
+    if (wait) { out.push(`The ferry operator says you must wait ${plural(wait, 'day')} for your turn.`); for (let i = 0; i < wait && !isOver(); i++) out.push(...dailyUpdate('rest')); }
+    tipped = rnd() < .02;
+  } else if (how === 'guide') {
+    G.clothing -= 3;
+    out.push('The guide leads your wagon across by way of the islands.');
+    tipped = rnd() < .02;
+  }
+  if (isOver()) return message(out, gameOver);
+  crossAnim(how, tipped, () => {
+    sfx(tipped ? 'bad' : 'splash');
+    if (tipped) {
+      const l = losses(how === 'ford' ? 1 : .7);
+      out.push(how === 'float' ? 'The current rolls your wagon over.' : 'Your wagon tipped over while fording the river.');
+      if (l.length) out.push('You lost: ' + l.join(', ') + '.');
+      const others = living().slice(1);
+      if (others.length && rnd() < .3) { const m = pick(others); m.alive = false; m.cause = 'drowning'; out.push(`${m.name} drowned.`); }
+      else if (rnd() < .04) { G.party[0].alive = false; G.party[0].cause = 'drowning'; out.push(`${G.party[0].name} drowned.`); }
+    } else if (wet) {
+      out.push('Your supplies got wet crossing the river.');
+      out.push(...loseDays('You stop to dry them out.', 1));
+    } else out.push(how === 'ford' ? 'You forded the river safely.' : 'You made it across safely.');
+    G.river = null; G.lmDone = true; save();
+    message(out, () => isOver() ? gameOver() : depart());
+  });
+}
+function crossAnim(mode, tipped, done) {
+  show({ status: true, title: 'Crossing the river…', html: `<p class="muted">${mode === 'ford' ? 'The oxen wade into the current.' : mode === 'float' ? 'The caulked wagon drifts out from the bank.' : mode === 'ferry' ? 'The ferry is poled across.' : 'Your guide leads the way.'}</p>` });
+  view.cross = { t: 0, dur: 3.4, mode, tipped, start: view.extra, dist: OFF + 230, done };
+  sfx('splash');
+}
+
+/* ---------------- The Dalles / Barlow ---------------- */
+function dallesScreen() {
+  const toll = 5 + .1 * G.oxen;
+  show({ status: true, title: 'The Dalles', html: `<p class="lead">The land trail ends here. How will you reach the Willamette Valley?</p><p class="small muted">The Barlow Road toll is $5.00 per wagon plus 10¢ a head for livestock: ${money(toll)} for you. The river is free, but dangerous.</p>`,
+    list: [
+      { label: 'Float down the Columbia River', primary: true, fn: raftIntro },
+      { label: 'Take the Barlow Toll Road', hint: money(toll), disabled: G.money < toll, fn: () => { G.money -= toll; G.lmDone = true; setLeg('willamette', 100); message(`You pay the ${money(toll)} toll and turn south toward Mount Hood.`, depart); } },
+      { label: 'See the map', fn: () => mapScreen(dallesScreen) }
+    ] });
+}
+
+/* ---------------- store ---------------- */
+function storeScreen(where, back, intro) {
+  const mult = LM[where].store || 1;
+  const cart = { oxen: 0, food: 0, clothing: 0, bullets: 0, wheels: 0, axles: 0, tongues: 0 };
+  const maxQ = k => k === 'oxen' ? Math.floor((20 - G.oxen) / 2) : k === 'food' ? Math.floor(2000 - G.food) : k === 'clothing' ? 99 - G.clothing : k === 'bullets' ? Math.floor((2000 - G.bullets) / 20) : 3 - G[k];
+  const priceOf = it => Math.round(it.price * mult * 100) / 100;
+  const total = () => ITEMS.reduce((s, it) => s + cart[it.k] * priceOf(it), 0);
+  const isStart = where === 'independence' && intro;
+  const name = where === 'independence' ? 'Matt’s General Store' : `${LM[where].short} store`;
+  const greet = isStart ? `<p class="note">Howdy, I’m Matt. Headed for Oregon? I can outfit you with a team of oxen, warm clothing, food for the trip, ammunition for hunting and spare parts for the wagon. Take at least three yoke of oxen and 200 pounds of food for each person.</p>` : mult > 1 ? `<p class="small muted">Goods cost more out here: prices are ${Math.round(mult * 100)}% of what they were in Independence.</p>` : '';
+  const rows = ITEMS.map(it => `<div class="srow"><div><b>${it.name}</b><small>${money(priceOf(it))} per ${it.unit} · ${it.note}</small><small>You have ${G[it.k]}${it.k === 'food' ? ' lbs' : ''}</small></div>
+    <div class="step"><button type="button" data-k="${it.k}" data-d="-1" aria-label="Fewer ${it.name}">−</button><input id="q-${it.k}" data-k="${it.k}" inputmode="numeric" pattern="[0-9]*" value="0" aria-label="${it.name} quantity in ${it.unit}"><button type="button" data-k="${it.k}" data-d="1" aria-label="More ${it.name}">+</button></div>
+    <div class="sub" id="s-${it.k}">$0.00</div></div>`).join('');
+  const list = [
+    { label: 'Buy these supplies', primary: true, fn: () => {
+      const t = total(); if (t > G.money + 1e-6) return;
+      ITEMS.forEach(it => { G[it.k] += cart[it.k] * it.per; });
+      G.money = Math.round((G.money - t) * 100) / 100;
+      if (isStart && G.oxen <= 0) return message('Don’t forget, you’ll need oxen to pull your wagon.', () => storeScreen(where, back, intro));
+      sfx('arrive'); back();
+    } },
+    { label: isStart ? 'Leave the store' : 'Leave without buying', fn: () => {
+      if (isStart && G.oxen <= 0) return message('Don’t forget, you’ll need oxen to pull your wagon.', () => storeScreen(where, back, intro));
+      back();
+    } }
+  ];
+  if (isStart) list.splice(1, 0, { label: 'Fill my order with Matt’s recommendations', fn: () => recommend() });
+  show({ status: !isStart, title: name, html: `${greet}<p class="small"><b>${fmtDate(G.date)}</b> · You have <b>${money(G.money)}</b></p><div class="store">${rows}</div><div class="bill"><span>Total bill: <span id="bill">$0.00</span></span><span id="left">Left after: ${money(G.money)}</span></div>`, list, focus: false });
+  const buyBtn = inner.querySelector('.choice.primary');
+  const refresh = () => {
+    ITEMS.forEach(it => { const inp = $('#q-' + it.k); if (document.activeElement !== inp) inp.value = cart[it.k]; $('#s-' + it.k).textContent = money(cart[it.k] * priceOf(it)); });
+    const t = total(), left = G.money - t;
+    $('#bill').textContent = money(t);
+    const l = $('#left'); l.textContent = left < -1e-6 ? `Short by ${money(-left)}` : `Left after: ${money(left)}`; l.classList.toggle('over', left < -1e-6);
+    buyBtn.disabled = left < -1e-6 || t === 0;
+  };
+  const recommend = () => {
+    const n = G.party.length;
+    const plan = [['oxen', 3], ['food', 120 * n], ['clothing', n], ['bullets', 5], ['food', 200 * n], ['clothing', 2 * n], ['bullets', 10], ['wheels', 1], ['axles', 1], ['tongues', 1]];
+    ITEMS.forEach(it => cart[it.k] = 0);
+    for (const [k, target] of plan) {
+      const it = ITEMS.find(i => i.k === k), p = priceOf(it);
+      const want = Math.min(target, maxQ(k)) - cart[k]; if (want <= 0) continue;
+      const afford = Math.floor((G.money - total() + 1e-6) / p);
+      let q = Math.min(want, afford); if (k === 'food') q = Math.floor(q / 10) * 10;
+      cart[k] += Math.max(0, q);
+    }
+    refresh();
+  };
+  inner.querySelectorAll('.step button').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.k, it = ITEMS.find(i => i.k === k);
+    cart[k] = clamp(cart[k] + it.step * +b.dataset.d, 0, maxQ(k)); sfx('click'); refresh();
+  }));
+  inner.querySelectorAll('.step input').forEach(inp => {
+    inp.addEventListener('input', () => { const k = inp.dataset.k; cart[k] = clamp(parseInt(inp.value.replace(/\D/g, ''), 10) || 0, 0, maxQ(k)); refresh(); });
+    inp.addEventListener('blur', refresh);
+    inp.addEventListener('focus', () => inp.select());
+  });
+  refresh();
+}
+
+/* ---------------- setup screens ---------------- */
+function titleScreen() {
+  T.traveling = false; setStage('title'); G = null; view.cur = null;
+  const saved = store.get('ot_save', null);
+  const list = [];
+  if (saved && saved.party && saved.party[0] && saved.party[0].alive) list.push({ label: `Continue your journey`, hint: `${esc(saved.party[0].name)}, ${Math.round(saved.miles)} mi`, primary: true, fn: () => resume(saved) });
+  list.push({ label: 'Travel the trail', primary: !list.length, fn: professionScreen });
+  list.push({ label: 'Learn about the trail', fn: () => learnScreen(0) });
+  list.push({ label: 'See the Oregon Top Ten', fn: topTenScreen });
+  list.push({ label: AU.on ? 'Turn sound off' : 'Turn sound on', fn: () => { toggleSound(); titleScreen(); } });
+  show({ html: `<p class="kicker">Independence, Missouri · Spring 1848</p><h1 class="title-big">The Oregon Trail</h1><p class="lead">Two thousand miles of prairie, mountains and rivers lie between you and the Willamette Valley. Outfit your wagon, choose your pace, and bring your party through alive.</p>`, list });
+}
+function resume(s) {
+  G = s; view.extra = 0; T.d = 0; T.prog = 0;
+  view.cur = G.at ? { id: G.at, u: G.miles * PPM } : null;
+  if (G.at && !G.lmDone) { setStage('trail'); return handleLandmark(G.at); }
+  stoppedMenu();
+}
+const LEARN = [
+  ['The trail', 'Between 1840 and 1860, more than 300,000 people traveled overland to Oregon, California and Utah. The Oregon Trail ran about 2,000 miles from Independence, Missouri, along the Platte and Snake rivers, over the Rocky and Blue Mountains, to the Willamette Valley. Most wagons took four to six months.'],
+  ['Your outfit', 'Your wagon is a farm wagon with a canvas cover, about 4 feet wide and 10 feet long. Oxen pull it: slow, but strong and able to live on prairie grass. Each person needs about 200 pounds of food, two sets of clothing for summer and winter, and you will want ammunition for hunting and spare wheels, axles and tongues. Prices climb at every fort.'],
+  ['When to leave', 'Leave too early and there is no grass for the oxen and the trail is mud. Leave too late and you will meet snow in the Blue Mountains and the Cascades. Most parties left in April or May.'],
+  ['Pace, rations and health', 'A steady pace is easiest on your party; strenuous and grueling paces cover more ground but wear everyone down. Cutting rations to meager or bare bones stretches your food at the cost of health. Cold weather without enough clothing, bad water, and illness all hurt. Dysentery, cholera, typhoid, measles and mountain fever were common. Rest helps the sick recover.'],
+  ['Rivers', 'Shallow rivers, under about 2½ feet, can be forded. Deeper ones can be crossed by caulking the wagon and floating it, by paying for a ferry, or with a guide who knows the crossing. A deep, swift river can tip a wagon and drown people and supplies.'],
+  ['Scoring', 'In Oregon you earn points for each survivor (more for better health), your wagon, oxen, spare parts, clothing, bullets, food and cash. Farmers earn triple points and carpenters double, because they started with less money. Bankers start rich but earn the plainest score.']
+];
+function learnScreen(i) {
+  const [h, p] = LEARN[i];
+  show({ html: `<p class="kicker">Learn about the trail · ${i + 1} of ${LEARN.length}</p><h2 class="scr-title">${h}</h2><p class="lead">${p}</p>`,
+    list: [i < LEARN.length - 1 ? { label: 'Next', primary: true, fn: () => learnScreen(i + 1) } : { label: 'Done', primary: true, fn: titleScreen }].concat(i > 0 ? [{ label: 'Back', fn: () => learnScreen(i - 1) }] : [], [{ label: 'Main menu', fn: titleScreen }]) });
+}
+function topTen() {
+  const saved = store.get('ot_top', null);
+  return (saved || DEFAULT_TOP.map(([n, s]) => ({ name: n, score: s }))).sort((a, b) => b.score - a.score).slice(0, 10);
+}
+function topTenTable(highlight) {
+  return `<table class="ledger topten"><thead><tr><th>#</th><th>Name</th><th class="r">Points</th><th>Rating</th></tr></thead><tbody>${topTen().map((r, i) => `<tr${highlight && r.name === highlight.name && r.score === highlight.score ? ' style="background:#e3cf9f"' : ''}><td>${i + 1}</td><td>${esc(r.name)}</td><td class="r">${r.score}</td><td>${rating(r.score)}</td></tr>`).join('')}</tbody></table>`;
+}
+function topTenScreen() {
+  show({ title: 'The Oregon Top Ten', html: topTenTable(), list: [{ label: 'Main menu', primary: true, fn: titleScreen }] });
+}
+function professionScreen() {
+  G = { id: Math.random().toString(36).slice(2), profession: null, money: 0, party: [], oxen: 0, food: 0, clothing: 0, bullets: 0, wheels: 0, axles: 0, tongues: 0,
+    date: Date.UTC(1848, 3, 1), miles: 0, pace: 1, rations: 1, health: 0, weather: null, at: 'independence', lmDone: true, last: 'independence', next: null, nextMile: 0, legMiles: 0, broken: null, dry: false, talk: {}, route: ['independence'], noFood: false, river: null };
+  view.extra = 0; view.cur = { id: 'independence', u: 0 }; setStage('trail');
+  show({ html: `<p class="kicker">Many kinds of people made the trip to Oregon</p><h2 class="scr-title">What is your occupation?</h2>`,
+    list: Object.entries(PROFESSIONS).map(([k, p]) => ({ label: `${p.label} <span class="small muted">· ${money(p.money)}</span>`, fn: () => { G.profession = k; G.money = p.money; nameScreen(); } })).concat([{ label: 'Find out the differences between these choices', fn: diffScreen }]) });
+}
+function diffScreen() {
+  show({ title: 'Choosing an occupation', html: `<p>Traveling to Oregon isn’t easy, but if you’re a banker you’ll have more money for supplies and services than a carpenter or a farmer.</p><p>A carpenter is better at keeping the wagon in repair. A farmer is better at keeping oxen healthy.</p><p>The poorer you start, the more points you earn on arrival: carpenters score double and farmers triple.</p>`, list: [{ label: 'Return', primary: true, fn: professionScreen }] });
+}
+function nameScreen() {
+  const used = new Set(), rn = () => { let n; do n = pick(NAMES); while (used.has(n)); used.add(n); return n; };
+  const vals = G.party.length ? G.party.map(m => m.name) : [rn(), rn(), rn(), rn(), rn()];
+  show({ title: 'Name your party', html: `<p>What is the first name of the wagon leader, and the names of the four other members of your party?</p><form id="nameForm" class="fields">${vals.map((v, i) => `<div class="field"><label for="n${i}">${i === 0 ? 'Wagon leader' : 'Party member ' + (i + 1)}</label><input id="n${i}" maxlength="16" autocomplete="off" value="${esc(v)}"></div>`).join('')}<button type="submit" hidden></button></form>`,
+    list: [{ label: 'Continue', primary: true, fn: submit }, { label: 'Shuffle the names', fn: () => { G.party = []; nameScreen(); } }], focus: false });
+  function submit() {
+    G.party = [0, 1, 2, 3, 4].map(i => ({ name: ($('#n' + i).value.trim() || rn()).slice(0, 16), alive: true, sick: null }));
+    monthScreen();
+  }
+  $('#nameForm').addEventListener('submit', e => { e.preventDefault(); submit(); });
+}
+function monthScreen() {
+  show({ title: 'When will you leave?', html: '<p>It is 1848. Your jumping-off place for Oregon is Independence, Missouri. You must decide which month to leave.</p>',
+    list: ['March', 'April', 'May', 'June', 'July'].map((m, i) => ({ label: m, fn: () => { G.date = Date.UTC(1848, 2 + i, 1); outfitIntro(); } })).concat([{ label: 'Ask for advice', fn: adviceScreen }]), two: true });
+}
+function adviceScreen() {
+  show({ title: 'Advice on leaving', html: '<p>You attend a public meeting held for folks with the California and Oregon fever.</p><p class="quote">“If you leave too early, there won’t be any grass for your oxen to eat. If you leave too late, you may not get to Oregon before winter comes. If you leave at just the right time, there will be green grass and the weather will still be cool.”</p>', list: [{ label: 'Return', primary: true, fn: monthScreen }] });
+}
+function outfitIntro() {
+  G.weather = rollWeather();
+  show({ title: 'Before you leave', html: `<p class="lead">Before leaving Independence you should buy equipment and supplies. You have <b>${money(G.money)}</b> in cash, but you don’t have to spend it all now.</p><p>You can buy whatever you need at Matt’s General Store.</p>`,
+    list: [{ label: 'Go to Matt’s General Store', primary: true, fn: () => storeScreen('independence', beginJourney, true) }] });
+}
+function beginJourney() {
+  G.at = 'independence'; G.lmDone = true; view.cur = { id: 'independence', u: 0 }; save();
+  show({ status: true, title: 'Independence, Missouri', html: `<p class="lead">${esc(LM.independence.desc)}</p><p>Your party: ${G.party.map(m => esc(m.name)).join(', ')}. When you are ready, start west on the trail.</p>`, list: [{ label: 'Continue', primary: true, fn: stoppedMenu }] });
+}
+
+/* ---------------- map ---------------- */
+let mapBack = null;
+function mapScreen(back) {
+  mapBack = typeof back === 'function' ? back : stoppedMenu;
+  setStage('map');
+  show({ status: true, title: 'Map of the trail', html: '<p class="small muted">Solid line: the route you have traveled. Dashed: the trail ahead and its branches.</p>', list: [{ label: 'Return', primary: true, fn: () => { setStage('trail'); mapBack(); } }] });
+}
+
+/* ---------------- hunting ---------------- */
+const ANIMALS = {
+  squirrel:  { lbs: 2,   speed: 150, size: 8,  col: '#7a5a3c', zig: true },
+  rabbit:    { lbs: 3,   speed: 190, size: 9,  col: '#9b8467', zig: true },
+  pronghorn: { lbs: 40,  speed: 175, size: 19, col: '#b98a52' },
+  deer:      { lbs: 50,  speed: 135, size: 21, col: '#8a6440' },
+  elk:       { lbs: 220, speed: 95,  size: 28, col: '#7d5c3c' },
+  bear:      { lbs: 100, speed: 70,  size: 25, col: '#3f2e22' },
+  bison:     { lbs: 350, speed: 55,  size: 33, col: '#4f3726' }
+};
+let hunt = null;
+function huntIntro() {
+  if (G.bullets <= 0) return message('You have no bullets. You can’t hunt without ammunition.', stoppedMenu);
+  show({ status: true, title: 'Hunt for food', html: `<p class="lead">You have ${G.bullets} bullets and 30 seconds of daylight. ${isTouch ? 'Tap where you want to shoot.' : 'Click to shoot where you aim, or turn with the arrow keys and fire with Space.'}</p><p class="small muted">Trees and rocks stop bullets. You can carry back no more than 100 pounds of meat.</p>`,
+    list: [{ label: 'Start hunting', primary: true, fn: startHunt }, { label: 'Never mind', fn: stoppedMenu }] });
+}
+function startHunt() {
+  setStage('hunt');
+  const lw = W >= H ? 820 : 520;
+  hunt = { t: 30, lw, lh: lw * H / Math.max(1, W), animals: [], bullets: [], obs: [], puffs: [], texts: [], meat: 0, aim: null, ang: -Math.PI / 2, cool: 0, spawn: .6, over: false, endT: 0, region: regionKey() };
+  const flora = REGIONS[hunt.region].flora;
+  const n = ri(8, 11);
+  for (let i = 0; i < n * 4 && hunt.obs.length < n; i++) {
+    const x = 40 + rnd() * (hunt.lw - 80), y = 30 + rnd() * (hunt.lh - 60);
+    if (Math.hypot(x - hunt.lw / 2, y - hunt.lh / 2) < 95) continue;
+    if (hunt.obs.some(o => Math.hypot(o.x - x, o.y - y) < 70)) continue;
+    const type = flora === 'pine' ? pick(['pine', 'pine', 'rock', 'bush']) : flora === 'sage' ? pick(['sage', 'sage', 'rock', 'rock']) : pick(['tree', 'bush', 'bush', 'rock']);
+    const r = type === 'pine' ? 20 + rnd() * 8 : type === 'tree' ? 22 + rnd() * 8 : type === 'rock' ? 11 + rnd() * 7 : 13 + rnd() * 6;
+    hunt.obs.push({ x, y, r, type, seed: rnd() });
+  }
+  show({ status: false, html: `<p class="small"><b>Hunting.</b> ${isTouch ? 'Tap to shoot.' : 'Click to shoot · arrows aim · Space fires · Esc stops.'}</p>`, list: [{ label: 'Stop hunting', fn: () => endHunt() }], focus: false });
+}
+function huntPoint(e) {
+  const r = cv.getBoundingClientRect();
+  return { x: (e.clientX - r.left) / r.width * hunt.lw, y: (e.clientY - r.top) / r.height * hunt.lh };
+}
+function fire() {
+  if (!hunt || hunt.over || hunt.cool > 0 || G.bullets <= 0) return;
+  G.bullets--; hunt.cool = .38;
+  const hx = hunt.lw / 2, hy = hunt.lh / 2, c = Math.cos(hunt.ang), s = Math.sin(hunt.ang);
+  hunt.bullets.push({ x: hx + c * 16, y: hy + s * 16, vx: c * 950, vy: s * 950, life: 1.4 });
+  hunt.flash = .06; sfx('shot');
+}
+function spawnAnimal() {
+  const tbl = REGIONS[hunt.region].game; let r = rnd() * Object.values(tbl).reduce((a, b) => a + b, 0), type = 'rabbit';
+  for (const [k, w] of Object.entries(tbl)) { r -= w; if (r <= 0) { type = k; break; } }
+  const A = ANIMALS[type], left = rnd() < .5, y = 30 + rnd() * (hunt.lh - 60);
+  hunt.animals.push({ type, x: left ? -40 : hunt.lw + 40, y, vx: (left ? 1 : -1) * A.speed * (.8 + rnd() * .4), vy: (rnd() - .5) * A.speed * .3, ph: rnd() * 6, dead: false, turn: .5 + rnd(), face: left ? 1 : -1 });
+}
+function updateHunt(dt) {
+  const h = hunt; if (!h) return;
+  const nlh = h.lw * (H / Math.max(1, W));
+  if (Math.abs(nlh - h.lh) > 1) { const f = nlh / h.lh; h.obs.forEach(o => o.y *= f); h.animals.forEach(a => a.y *= f); h.lh = nlh; }
+  if (!h.over) {
+    h.t -= dt; h.cool -= dt; h.spawn -= dt; if (h.flash) h.flash = Math.max(0, h.flash - dt);
+    if (h.spawn <= 0 && h.animals.filter(a => !a.dead).length < 5) { spawnAnimal(); h.spawn = 1 + rnd() * 1.4; }
+    if (keys.left) h.ang -= 2.6 * dt; if (keys.right) h.ang += 2.6 * dt;
+    if (keys.up) h.ang = lerp(h.ang, -Math.PI / 2, .1); if (keys.down) h.ang = lerp(h.ang, Math.PI / 2, .1);
+    if (h.aim) h.ang = Math.atan2(h.aim.y - h.lh / 2, h.aim.x - h.lw / 2);
+    if (h.t <= 0 || (G.bullets <= 0 && !h.bullets.length)) { h.over = true; h.endT = .9; }
+  } else { h.endT -= dt; if (h.endT <= 0) return endHunt(); }
+  for (const a of h.animals) {
+    if (a.dead) continue;
+    const A = ANIMALS[a.type];
+    a.ph += dt * A.speed / 9;
+    if (A.zig) { a.turn -= dt; if (a.turn <= 0) { a.turn = .4 + rnd() * .9; a.vy = (rnd() - .5) * A.speed * 1.2; if (rnd() < .2) a.vx = -a.vx; } }
+    a.x += a.vx * dt; a.y += a.vy * dt;
+    if (a.y < 20 || a.y > h.lh - 20) a.vy = -a.vy;
+    if (Math.abs(a.vx) > 1) a.face = Math.sign(a.vx);
+  }
+  h.animals = h.animals.filter(a => a.dead || (a.x > -80 && a.x < h.lw + 80));
+  for (const b of h.bullets) {
+    for (let k = 0; k < 3 && b.life > 0; k++) {
+      b.x += b.vx * dt / 3; b.y += b.vy * dt / 3;
+      for (const o of h.obs) if (Math.hypot(o.x - b.x, o.y - b.y) < o.r * .8) { b.life = 0; h.puffs.push({ x: b.x, y: b.y, t: .4 }); break; }
+      if (b.life <= 0) break;
+      for (const a of h.animals) {
+        if (a.dead) continue;
+        const A = ANIMALS[a.type];
+        if (Math.abs(a.x - b.x) < A.size * 1.05 && Math.abs(a.y - b.y) < A.size * .7) {
+          a.dead = true; b.life = 0; h.meat += A.lbs; sfx('hit');
+          h.texts.push({ x: a.x, y: a.y - A.size, t: 1.2, s: `+${A.lbs} lbs` }); break;
+        }
+      }
+    }
+    b.life -= dt;
+    if (b.x < -20 || b.y < -20 || b.x > h.lw + 20 || b.y > h.lh + 20) b.life = 0;
+  }
+  h.bullets = h.bullets.filter(b => b.life > 0);
+  h.puffs.forEach(p => p.t -= dt); h.puffs = h.puffs.filter(p => p.t > 0);
+  h.texts.forEach(p => { p.t -= dt; p.y -= 20 * dt; }); h.texts = h.texts.filter(p => p.t > 0);
+}
+function endHunt() {
+  if (!hunt) return;
+  const meat = hunt.meat; hunt = null;
+  setStage('trail');
+  const msgs = [];
+  if (meat <= 0) msgs.push('You were unable to shoot any food.');
+  else {
+    const carry = Math.min(meat, 100), got = Math.max(0, Math.min(carry, 2000 - Math.floor(G.food)));
+    G.food += got;
+    msgs.push(`From the animals you shot, you got ${meat} pounds of meat.${meat > 100 ? ' However, you were only able to carry 100 pounds back to the wagon.' : ''}${got < carry ? ' Your wagon could only hold ' + got + ' more pounds.' : ''}`);
+  }
+  msgs.push(...dailyUpdate('wait'));
+  message(msgs, () => isOver() ? gameOver() : stoppedMenu());
+}
+
+/* ---------------- Columbia River raft ---------------- */
+let raft = null;
+function raftIntro() {
+  show({ status: true, title: 'Float down the Columbia', html: `<p class="lead">You build a raft, lash your wagon onto it, and push off into the Columbia River.</p><p>Steer around the rocks. ${isTouch ? 'Hold the arrow buttons, or drag on the river.' : 'Use the ← → keys (or A and D), the buttons, or drag with the mouse.'}</p>`,
+    list: [{ label: 'Push off', primary: true, fn: startRaft }, { label: 'Go back', fn: dallesScreen }] });
+}
+const rcx = (wy, lw) => lw / 2 + Math.sin(wy / 260) * lw * .13 + Math.sin(wy / 90 + 1) * lw * .04;
+const rhw = (wy, lw) => lw * (.28 + .06 * Math.sin(wy / 170));
+function startRaft() {
+  setStage('raft');
+  G.lmDone = true; setLeg('willamette', 100);
+  const lw = 600;
+  raft = { s: 0, len: 4800, lw, x: rcx(0, lw), vx: 0, dir: 0, target: null, rocks: [], hits: 0, inv: 0, toast: '', toastT: 0, log: [], done: false, bump: 0, foam: [] };
+  for (let wy = 380; wy < raft.len - 150; wy += ri(100, 170)) {
+    const cx = rcx(wy, lw), hw = rhw(wy, lw), n = rnd() < .28 ? 2 : 1, xs = [];
+    for (let i = 0; i < n; i++) {
+      let x, tries = 0; do { x = cx + (rnd() * 2 - 1) * hw * .78; tries++; } while (xs.some(v => Math.abs(v - x) < 110) && tries < 10);
+      xs.push(x); raft.rocks.push({ wy: wy + ri(-20, 20), x, r: 12 + rnd() * 10, seed: rnd() });
+    }
+  }
+  show({ status: false, html: `<div class="raftpad"><button type="button" class="raftbtn" id="rl" aria-label="Steer left">◀</button><button type="button" class="raftbtn" id="rr" aria-label="Steer right">▶</button></div>` });
+  const hold = (el, d) => {
+    const on = e => { e.preventDefault(); raft && (raft.dir = d); el.classList.add('on'); };
+    const off = () => { raft && raft.dir === d && (raft.dir = 0); el.classList.remove('on'); };
+    el.addEventListener('pointerdown', on); ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => el.addEventListener(ev, off));
+  };
+  hold($('#rl'), -1); hold($('#rr'), 1);
+}
+function raftHit() {
+  const r = rnd(), others = living().slice(1);
+  let t;
+  if (r < .12 && others.length) { const m = pick(others); m.alive = false; m.cause = 'drowning'; t = `${m.name} fell overboard and drowned.`; }
+  else if (r < .45 && G.food > 0) { const n = Math.max(1, Math.round(G.food * (.1 + rnd() * .15))); G.food -= n; t = `You hit a rock and lost ${n} pounds of food.`; }
+  else if (r < .65 && G.clothing > 0) { const n = Math.min(G.clothing, ri(1, 3)); G.clothing -= n; t = `You hit a rock and lost ${plural(n, 'set')} of clothing.`; }
+  else if (r < .8 && G.bullets > 0) { const n = Math.min(G.bullets, ri(20, 60)); G.bullets -= n; t = `You hit a rock and lost ${n} bullets.`; }
+  else if (r < .9 && G.oxen > 0) { G.oxen -= 1; t = 'You hit a rock. An ox was swept away.'; }
+  else t = 'The raft strikes a rock but holds together.';
+  raft.log.push(t); raft.toast = t; raft.toastT = 2.4; raft.hits++;
+}
+function updateRaft(dt) {
+  const R = raft; if (!R || R.done) return;
+  const lh = R.lw * (H / Math.max(1, W)), ry = lh * .72;
+  let dir = R.dir || (keys.left ? -1 : keys.right ? 1 : 0);
+  if (R.target != null && !dir) { const d = R.target - R.x; dir = Math.abs(d) > 6 ? Math.sign(d) * Math.min(1, Math.abs(d) / 40) : 0; }
+  R.vx += (dir * 240 - R.vx) * Math.min(1, dt * 6);
+  R.x += R.vx * dt;
+  const sp = 150 + (Math.sin(R.s / 400) > .7 ? 70 : 0);
+  R.s += sp * dt; R.inv -= dt; R.toastT -= dt; R.bump -= dt;
+  const cx = rcx(R.s, R.lw), hw = rhw(R.s, R.lw);
+  if (R.x - 17 < cx - hw) { R.x = cx - hw + 17; R.vx = Math.abs(R.vx) * .4; if (R.bump <= 0) { R.bump = .6; sfx('thud'); } }
+  if (R.x + 17 > cx + hw) { R.x = cx + hw - 17; R.vx = -Math.abs(R.vx) * .4; if (R.bump <= 0) { R.bump = .6; sfx('thud'); } }
+  if (R.inv <= 0) for (const k of R.rocks) {
+    if (Math.abs(k.wy - R.s) < k.r + 20 && Math.abs(k.x - R.x) < k.r + 15) { R.inv = 1.5; view.shake = .3; sfx('thud'); raftHit(); break; }
+  }
+  if (R.s >= R.len) {
+    R.done = true;
+    const log = R.log.slice(); raft = null;
+    const msgs = [R.hits === 0 ? 'You guide the raft through the rapids without a scratch.' : `You made it through the rapids. Your raft struck rocks ${plural(log.length, 'time')}.`];
+    msgs.push(...dailyUpdate('travel'));
+    setStage('trail');
+    if (isOver()) return message(msgs, gameOver);
+    G.miles = G.nextMile; G.last = 'dalles'; G.at = null;
+    message(msgs, () => arrive('willamette'));
+  }
+}
+
+/* ---------------- endings ---------------- */
+function gameOver() {
+  T.traveling = false; hunt = null; raft = null;
+  const leader = G.party[0];
+  setStage('tomb'); view.tomb = { name: leader.name, epitaph: '' }; sfx('death');
+  store.del('ot_save');
+  show({ title: 'Here lies ' + esc(leader.name), html: `<p class="lead">${leader.alive ? 'Everyone in your party has died.' : `${esc(leader.name)}${leader.cause ? ' died of ' + esc(leader.cause) : ' died'} on ${fmtDate(G.date)}, ${Math.round(G.miles)} miles from Independence.`}</p><p>Leave words for the travelers who come after you. Your marker will stand beside the trail in their games on this device.</p><form id="epForm" class="field"><label for="epitaph">Epitaph</label><input id="epitaph" maxlength="40" autocomplete="off" placeholder="Gone to the promised land"><button type="submit" hidden></button></form>`,
+    list: [{ label: 'Set the marker', primary: true, fn: done }, { label: 'Leave no epitaph', fn: () => { view.tomb.epitaph = ''; done(true); } }], focus: false });
+  const ep = $('#epitaph');
+  ep.addEventListener('input', () => { view.tomb.epitaph = ep.value; });
+  $('#epForm').addEventListener('submit', e => { e.preventDefault(); done(); });
+  function done(skip) {
+    const g = store.get('ot_graves', []);
+    g.push({ mile: Math.max(1, Math.round(G.miles)), name: leader.name, epitaph: skip ? '' : ep.value.trim().slice(0, 40), game: G.id });
+    store.set('ot_graves', g.slice(-25));
+    show({ title: 'Your journey has ended', html: `<p>The wagon will go no farther. Perhaps the next party will reach Oregon.</p>`, list: [{ label: 'Main menu', primary: true, fn: titleScreen }, { label: 'Try again', fn: professionScreen }] });
+  }
+}
+function finishGame() {
+  T.traveling = false; setStage('trail'); sfx('win');
+  store.del('ot_save');
+  const alive = living(), hl = healthLabel(), per = { good: 500, fair: 400, poor: 300, 'very poor': 200 }[hl];
+  const parts = G.wheels + G.axles + G.tongues;
+  const rows = [
+    [`${plural(alive.length, 'person', 'people')} in ${hl} health`, alive.length * per],
+    ['1 wagon', 50],
+    [plural(G.oxen, 'ox', 'oxen'), G.oxen * 4],
+    [plural(parts, 'spare wagon part'), parts * 2],
+    [plural(G.clothing, 'set') + ' of clothing', G.clothing * 2],
+    [`${G.bullets} bullets`, Math.floor(G.bullets / 50)],
+    [`${Math.floor(G.food)} pounds of food`, Math.floor(G.food / 25)],
+    [`${money(G.money)} cash`, Math.floor(G.money / 5)]
+  ];
+  const sub = rows.reduce((s, r) => s + r[1], 0), mult = PROFESSIONS[G.profession].mult, total = sub * mult;
+  const entry = { name: G.party[0].name, score: total };
+  const list = topTen().concat(entry).sort((a, b) => b.score - a.score).slice(0, 10);
+  store.set('ot_top', list);
+  const made = list.includes(entry);
+  show({ title: 'You made it to Oregon!', html: `<p class="lead">On ${fmtDate(G.date)}, after ${Math.round(G.miles)} miles, your wagon rolls into the Willamette Valley. Let’s see how many points you earned.</p>
+    <table class="ledger"><thead><tr><th>Bonus</th><th class="r">Points</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r[0])}</td><td class="r">${r[1]}</td></tr>`).join('')}<tr><td>Subtotal</td><td class="r">${sub}</td></tr><tr><td>${PROFESSIONS[G.profession].short} bonus</td><td class="r">×${mult}</td></tr><tr class="total"><td>Total</td><td class="r">${total}</td></tr></tbody></table>
+    <p>Your rating: <b>${rating(total)}</b>.${made ? ' You’ve made the Oregon Top Ten!' : ''}</p>${topTenTable(made ? entry : null)}`,
+    list: [{ label: 'Main menu', primary: true, fn: titleScreen }, { label: 'Travel the trail again', fn: professionScreen }] });
+}
+
+/* ---------------- canvas ---------------- */
+const cv = $('#scene'), ctx = cv.getContext('2d');
+let W = 1, H = 1, DPR = 1;
+function resize() {
+  const r = cv.getBoundingClientRect();
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = Math.max(1, r.width); H = Math.max(1, r.height);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+}
+if (window.ResizeObserver) new ResizeObserver(resize).observe(cv); else addEventListener('resize', resize);
+resize();
+
+const particles = [];
+function ridge(off, base, amp, s, col, prof) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(0, H);
+  for (let x = 0; x <= W + 6; x += 5) { const wx = (x - off) / s; ctx.lineTo(x, base - prof(wx) * amp * s); }
+  ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+}
+function farProfile(type) {
+  if (type === 'flat') return wx => .18 + .1 * Math.sin(wx * .009) + .05 * Math.sin(wx * .031 + 2);
+  if (type === 'mesa') return wx => { const v = Math.sin(wx * .006) + .5 * Math.sin(wx * .017 + 1); return v > .35 ? .9 + .04 * Math.sin(wx * .08) : v > -.15 ? (v + .15) / .5 * .9 : .1; };
+  if (type === 'peaks') return wx => .55 * tri(wx / 230) + .3 * tri(wx / 97 + .3) + .15 * tri(wx / 41 + .7);
+  if (type === 'volcano') return wx => { const d = ((wx % 2600) + 2600) % 2600 - 1300; const cone = Math.max(0, 1 - Math.abs(d) / 430); return Math.max(cone * 1.5 - (cone > .93 ? (cone - .93) * 3 : 0), .25 + .15 * tri(wx / 120)); };
+  return wx => .25 + .15 * tri(wx / 260) + .08 * tri(wx / 80);
+}
+function drawSky(reg, w) {
+  const hor = H * .6;
+  let top = reg.sky[0], bot = reg.sky[1];
+  const grey = w && w.precip ? (/heavy/.test(w.precip) ? .6 : .4) : 0;
+  if (grey) { top = mix(top, '#8f8c83', grey); bot = mix(bot, '#a9a596', grey); }
+  const g = ctx.createLinearGradient(0, 0, 0, hor);
+  g.addColorStop(0, top); g.addColorStop(1, bot);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, hor + 2);
+  if (!grey) {
+    const sx = W * .17, sy = H * .2, r = Math.max(14, H * .06);
+    const sg = ctx.createRadialGradient(sx, sy, r * .2, sx, sy, r * 3);
+    sg.addColorStop(0, 'rgba(250,236,200,.8)'); sg.addColorStop(1, 'rgba(250,236,200,0)');
+    ctx.fillStyle = sg; ctx.fillRect(sx - r * 3, sy - r * 3, r * 6, r * 6);
+    ctx.fillStyle = '#f5e7c6'; ctx.beginPath(); ctx.arc(sx, sy, r, 0, 7); ctx.fill();
+  }
+  ctx.fillStyle = grey ? 'rgba(120,116,106,.5)' : 'rgba(245,232,205,.55)';
+  for (let i = 0; i < 5; i++) {
+    const cx = ((i * 337 + view.time * 6) % (W + 300)) - 150, cy = H * (.1 + hash(i, 3) * .22), cw = 60 + hash(i, 5) * 90;
+    ctx.beginPath(); ctx.ellipse(cx, cy, cw, cw * .16, 0, 0, 7); ctx.ellipse(cx + cw * .3, cy - cw * .08, cw * .45, cw * .14, 0, 0, 7); ctx.fill();
+  }
+}
+function pine(x, y, h, col) {
+  ctx.fillStyle = '#4b3a28'; ctx.fillRect(x - h * .04, y - h * .18, h * .08, h * .2);
+  ctx.fillStyle = col; ctx.beginPath();
+  for (let i = 0; i < 3; i++) { const yy = y - h * (.15 + i * .27), ww = h * (.32 - i * .07); ctx.moveTo(x - ww, yy); ctx.lineTo(x, yy - h * .42); ctx.lineTo(x + ww, yy); }
+  ctx.fill();
+}
+function tuft(x, y, s, col) {
+  ctx.strokeStyle = col; ctx.lineWidth = Math.max(1, s * 1.2); ctx.beginPath();
+  for (let i = -2; i <= 2; i++) { ctx.moveTo(x + i * 2 * s, y); ctx.quadraticCurveTo(x + i * 2.6 * s, y - 6 * s, x + i * 4 * s, y - (8 + Math.abs(i)) * s); }
+  ctx.stroke();
+}
+function sage(x, y, s) {
+  ctx.fillStyle = '#7f8064'; ctx.beginPath(); ctx.ellipse(x, y - 4 * s, 9 * s, 5 * s, 0, 0, 7); ctx.ellipse(x + 6 * s, y - 6 * s, 6 * s, 4.5 * s, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#93947a'; ctx.beginPath(); ctx.ellipse(x - 2 * s, y - 7 * s, 5 * s, 3 * s, 0, 0, 7); ctx.fill();
+}
+function rock(x, y, s, col = '#8c7b66') {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(x, y - 3 * s, 8 * s, 5 * s, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = 'rgba(255,240,210,.25)'; ctx.beginPath(); ctx.ellipse(x - 2 * s, y - 5 * s, 4 * s, 2 * s, 0, Math.PI, 0); ctx.fill();
+}
+function wheel(x, y, r, rot) {
+  ctx.strokeStyle = '#3a2a1c'; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.stroke();
+  ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = rot + i * Math.PI / 5; ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); }
+  ctx.stroke(); ctx.fillStyle = '#3a2a1c'; ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 7); ctx.fill();
+}
+function ox(x, step, col) {
+  ctx.strokeStyle = mix(col, '#1e140c', .45); ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+  const ph = [0, Math.PI, Math.PI, 0], lx = [-10, -6, 6, 10];
+  ctx.beginPath(); for (let i = 0; i < 4; i++) { ctx.moveTo(x + lx[i], -13); ctx.lineTo(x + lx[i] + Math.sin(step + ph[i]) * 3.2, 0); } ctx.stroke();
+  ctx.fillStyle = col;
+  ctx.beginPath(); ctx.ellipse(x, -19, 15.5, 8.5, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x - 9, -25, 6, 4, -.3, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x - 17, -20, 5.6, 4.4, .35, 0, 7); ctx.fill();
+  ctx.fillStyle = mix(col, '#e8d6b4', .3); ctx.beginPath(); ctx.ellipse(x - 21, -18, 2.6, 2.4, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle = '#e6d8bc'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x - 16, -24); ctx.quadraticCurveTo(x - 14, -30, x - 10, -30); ctx.stroke();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 15, -21); ctx.quadraticCurveTo(x + 19, -16, x + 17, -9); ctx.stroke();
+}
+function drawWagon(x, y, s, U, tilt = 0, sink = 0, oxen = true) {
+  ctx.save(); ctx.translate(x, y + sink * s); ctx.rotate(tilt); ctx.scale(s, s);
+  ctx.fillStyle = 'rgba(40,25,15,.22)'; ctx.beginPath(); ctx.ellipse(-40, 1, 90, 4, 0, 0, 7); ctx.fill();
+  const step = U * .13;
+  if (oxen) {
+    ctx.strokeStyle = '#4b3322'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-33, -19); ctx.lineTo(-118, -24); ctx.stroke();
+    ctx.save(); ctx.translate(-3, -3); ox(-112, step + 1, '#5f412b'); ox(-76, step + 2, '#5f412b'); ctx.restore();
+    ox(-110, step, '#7b5234'); ox(-74, step + Math.PI, '#86603e');
+    ctx.strokeStyle = '#3b2a1c'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-122, -27); ctx.lineTo(-119, -21); ctx.moveTo(-86, -27); ctx.lineTo(-83, -21); ctx.stroke();
+  }
+  ctx.fillStyle = '#6e4b2f'; ctx.fillRect(-35, -31, 71, 13);
+  ctx.fillStyle = '#86603d'; ctx.fillRect(-35, -31, 71, 3);
+  ctx.strokeStyle = 'rgba(40,25,15,.4)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-35, -24); ctx.lineTo(36, -24); ctx.stroke();
+  ctx.fillStyle = '#e8dcc0'; ctx.strokeStyle = '#a8977a'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(-33, -31); ctx.bezierCurveTo(-42, -50, -32, -63, -17, -63); ctx.lineTo(22, -63); ctx.bezierCurveTo(37, -63, 44, -50, 35, -31); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(120,100,70,.35)'; ctx.beginPath();
+  for (const hx of [-17, -3, 11, 24]) { ctx.moveTo(hx, -62); ctx.quadraticCurveTo(hx - 3, -46, hx - 1, -31); }
+  ctx.stroke();
+  ctx.fillStyle = '#4a3626'; ctx.beginPath(); ctx.ellipse(-33, -45, 3.5, 10, .15, 0, 7); ctx.fill();
+  wheel(-22, -11, 11, -U / 11);
+  wheel(24, -13, 13, -U / 13);
+  ctx.restore();
+}
+function drawArt(art, x, y, s, hor) {
+  ctx.save();
+  if (art === 'town') {
+    const b = [[-80, 46, 30, '#8a6a48'], [-40, 58, 36, '#7a5a3a'], [6, 50, 32, '#9b7b55'], [48, 40, 28, '#86664a']];
+    for (const [bx, bh, bw, c] of b) {
+      ctx.fillStyle = c; ctx.fillRect(x + bx * s, y - bh * s, bw * s, bh * s);
+      ctx.fillStyle = mix(c, '#2a1d12', .3); ctx.fillRect(x + (bx + bw * .3) * s, y - 16 * s, bw * .35 * s, 16 * s);
+      ctx.fillStyle = '#d8c7a2'; ctx.fillRect(x + (bx + 4) * s, y - (bh - 10) * s, 6 * s, 7 * s); ctx.fillRect(x + (bx + bw - 10) * s, y - (bh - 10) * s, 6 * s, 7 * s);
+    }
+    ctx.fillStyle = '#e3d3ae'; ctx.fillRect(x - 38 * s, y - 52 * s, 32 * s, 8 * s);
+    ctx.fillStyle = '#5c4734'; ctx.font = `700 ${Math.max(6, 5.5 * s)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.fillText('GEN. STORE', x - 22 * s, y - 46 * s);
+  } else if (art === 'fort') {
+    ctx.fillStyle = '#7d5f40';
+    for (let i = -80; i < 80; i += 7) { const h = 34 + (i % 14 === 0 ? 2 : 0); ctx.beginPath(); ctx.moveTo(x + i * s, y); ctx.lineTo(x + i * s, y - h * s); ctx.lineTo(x + (i + 3.5) * s, y - (h + 5) * s); ctx.lineTo(x + (i + 7) * s, y - h * s); ctx.lineTo(x + (i + 7) * s, y); ctx.fill(); }
+    ctx.strokeStyle = 'rgba(40,25,15,.35)'; ctx.lineWidth = 1; ctx.beginPath(); for (let i = -80; i < 80; i += 7) { ctx.moveTo(x + i * s, y); ctx.lineTo(x + i * s, y - 34 * s); } ctx.stroke();
+    ctx.fillStyle = '#6a4e33'; ctx.fillRect(x + 50 * s, y - 56 * s, 30 * s, 56 * s);
+    ctx.fillStyle = '#4e3826'; ctx.beginPath(); ctx.moveTo(x + 46 * s, y - 56 * s); ctx.lineTo(x + 65 * s, y - 70 * s); ctx.lineTo(x + 84 * s, y - 56 * s); ctx.fill();
+    ctx.fillStyle = '#2f2219'; ctx.fillRect(x + 60 * s, y - 46 * s, 8 * s, 6 * s); ctx.fillRect(x - 12 * s, y - 24 * s, 24 * s, 24 * s);
+    ctx.strokeStyle = '#4b3a28'; ctx.lineWidth = 1.6 * s; ctx.beginPath(); ctx.moveTo(x - 30 * s, y - 34 * s); ctx.lineTo(x - 30 * s, y - 92 * s); ctx.stroke();
+    const wv = Math.sin(view.time * 3) * 2 * s;
+    ctx.fillStyle = '#a4572f'; ctx.beginPath(); ctx.moveTo(x - 30 * s, y - 92 * s); ctx.quadraticCurveTo(x - 18 * s, y - 92 * s + wv, x - 6 * s, y - 88 * s); ctx.lineTo(x - 6 * s, y - 76 * s); ctx.quadraticCurveTo(x - 18 * s, y - 80 * s + wv, x - 30 * s, y - 78 * s); ctx.fill();
+  } else if (art === 'spire') {
+    const b = hor + 6 * s;
+    ctx.fillStyle = '#c49a6c'; ctx.beginPath(); ctx.moveTo(x - 85 * s, b); ctx.quadraticCurveTo(x - 30 * s, b - 30 * s, x - 14 * s, b - 58 * s); ctx.lineTo(x + 14 * s, b - 58 * s); ctx.quadraticCurveTo(x + 30 * s, b - 30 * s, x + 85 * s, b); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 9 * s, b - 56 * s); ctx.lineTo(x - 6 * s, b - 140 * s); ctx.quadraticCurveTo(x, b - 146 * s, x + 6 * s, b - 140 * s); ctx.lineTo(x + 9 * s, b - 56 * s); ctx.fill();
+    ctx.fillStyle = 'rgba(120,80,45,.35)'; ctx.beginPath(); ctx.moveTo(x + 2 * s, b - 56 * s); ctx.lineTo(x + 4 * s, b - 140 * s); ctx.lineTo(x + 6 * s, b - 140 * s); ctx.lineTo(x + 9 * s, b - 56 * s); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x + 14 * s, b - 58 * s); ctx.quadraticCurveTo(x + 30 * s, b - 30 * s, x + 85 * s, b); ctx.lineTo(x + 40 * s, b); ctx.fill();
+  } else if (art === 'dome') {
+    const b = hor + 8 * s;
+    ctx.fillStyle = '#a99c88'; ctx.beginPath(); ctx.ellipse(x, b, 150 * s, 46 * s, 0, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = 'rgba(70,55,40,.25)'; ctx.beginPath(); ctx.ellipse(x + 40 * s, b, 100 * s, 36 * s, 0, Math.PI, 0); ctx.fill();
+    ctx.strokeStyle = 'rgba(60,45,30,.35)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let i = 0; i < 9; i++) { const xx = x + (-90 + i * 22) * s; ctx.moveTo(xx, b - 10 * s); ctx.lineTo(xx + 6 * s, b - 4 * s); }
+    ctx.moveTo(x - 60 * s, b - 30 * s); ctx.quadraticCurveTo(x - 30 * s, b - 25 * s, x - 10 * s, b - 40 * s); ctx.stroke();
+  } else if (art === 'pass') {
+    ctx.fillStyle = '#7d6a4c'; ctx.beginPath(); ctx.moveTo(x - 6 * s, y); ctx.lineTo(x - 4 * s, y - 40 * s); ctx.lineTo(x + 4 * s, y - 40 * s); ctx.lineTo(x + 6 * s, y); ctx.fill();
+    ctx.fillStyle = '#d8c7a2'; ctx.fillRect(x - 26 * s, y - 50 * s, 52 * s, 14 * s); ctx.strokeStyle = '#5c4734'; ctx.lineWidth = 1; ctx.strokeRect(x - 26 * s, y - 50 * s, 52 * s, 14 * s);
+    ctx.fillStyle = '#5c4734'; ctx.font = `700 ${Math.max(6, 5.5 * s)}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.fillText('SOUTH PASS', x, y - 41 * s);
+    for (let i = 0; i < 6; i++) rock(x + (30 + (i % 3) * 8) * s, y - (i > 2 ? 6 : 0) * s, s * .9, '#857560');
+  } else if (art === 'springs') {
+    for (let i = 0; i < 4; i++) {
+      const xx = x + (-60 + i * 40) * s;
+      ctx.fillStyle = '#d9cdb2'; ctx.beginPath(); ctx.ellipse(xx, y, 18 * s, 8 * s, 0, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#8e9d96'; ctx.beginPath(); ctx.ellipse(xx, y - 5 * s, 7 * s, 2 * s, 0, 0, 7); ctx.fill();
+      for (let k = 0; k < 3; k++) { const t = (view.time * .5 + k / 3 + i * .17) % 1; ctx.fillStyle = `rgba(240,232,215,${.5 * (1 - t)})`; ctx.beginPath(); ctx.arc(xx + Math.sin(t * 6 + i) * 4 * s, y - (8 + t * 40) * s, (3 + t * 8) * s, 0, 7); ctx.fill(); }
+    }
+  } else if (art === 'pines') {
+    for (let i = 0; i < 9; i++) pine(x + (-110 + i * 26 + hash(i, 8) * 10) * s, y + (i % 2) * 6 * s, (60 + hash(i, 9) * 40) * s, i % 2 ? '#4f5638' : '#5d6342');
+  } else if (art === 'cliffs') {
+    const b = hor + 4 * s;
+    ctx.fillStyle = '#7d8f8a'; ctx.fillRect(x - 220 * s, b - 2 * s, 440 * s, 10 * s);
+    ctx.fillStyle = '#5e5248';
+    for (let i = -8; i < 8; i++) { const h = (30 + hash(i, 4) * 26) * s; ctx.fillRect(x + i * 14 * s, b - h, 13 * s, h); }
+    ctx.fillStyle = 'rgba(30,22,16,.25)'; for (let i = -8; i < 8; i++) ctx.fillRect(x + (i * 14 + 9) * s, b - 40 * s, 3 * s, 40 * s);
+  } else if (art === 'farm') {
+    ctx.fillStyle = '#8f6a45'; ctx.fillRect(x - 20 * s, y - 40 * s, 52 * s, 40 * s);
+    ctx.fillStyle = '#6b4b30'; ctx.beginPath(); ctx.moveTo(x - 26 * s, y - 40 * s); ctx.lineTo(x + 6 * s, y - 62 * s); ctx.lineTo(x + 38 * s, y - 40 * s); ctx.fill();
+    ctx.fillStyle = '#d8c7a2'; ctx.fillRect(x - 10 * s, y - 30 * s, 9 * s, 9 * s); ctx.fillRect(x + 14 * s, y - 30 * s, 9 * s, 9 * s);
+    ctx.fillStyle = '#3d2c1f'; ctx.fillRect(x + 2 * s, y - 18 * s, 10 * s, 18 * s);
+    ctx.strokeStyle = '#6e5538'; ctx.lineWidth = 1.4 * s; ctx.beginPath();
+    for (let i = 0; i < 9; i++) { const fx = x + (50 + i * 16) * s; ctx.moveTo(fx, y); ctx.lineTo(fx, y - 14 * s); }
+    ctx.moveTo(x + 50 * s, y - 10 * s); ctx.lineTo(x + 178 * s, y - 10 * s); ctx.moveTo(x + 50 * s, y - 5 * s); ctx.lineTo(x + 178 * s, y - 5 * s); ctx.stroke();
+    pine(x - 60 * s, y, 70 * s, '#5d6342'); pine(x - 85 * s, y + 4 * s, 55 * s, '#4f5638');
+  }
+  ctx.restore();
+}
+const MAP_LABEL = {
+  independence: [.3, 1.2, 'center'], kansas: [.2, -1, 'center'], bigblue: [-.6, -.3, 'right'], kearney: [0, -1, 'center'], chimney: [0, 1.2, 'center'],
+  laramie: [0, -1, 'center'], indrock: [.4, 1.2, 'center'], southpass: [-.2, -1, 'center'], green: [.6, 0, 'left'], bridger: [0, 1.2, 'center'],
+  soda: [.2, -1, 'center'], fthall: [.2, 1.2, 'center'], snake: [0, 1.2, 'center'], boise: [-.6, 0, 'right'], bluemts: [.6, .3, 'left'],
+  wallawalla: [.5, -.8, 'left'], dalles: [0, -1, 'center'], willamette: [0, 1.2, 'center']
+};
+const ART_DEPTH = { spire: .5, dome: .5, cliffs: .5 };
+function drawRiver(x, s, hor) {
+  const tw = 34 * s, bw = 110 * s;
+  ctx.fillStyle = '#6f5a3e'; ctx.beginPath(); ctx.moveTo(x - tw - 6 * s, hor); ctx.lineTo(x + tw + 6 * s, hor); ctx.lineTo(x + bw + 14 * s, H); ctx.lineTo(x - bw - 14 * s, H); ctx.fill();
+  ctx.fillStyle = '#7d8f8a'; ctx.beginPath(); ctx.moveTo(x - tw, hor); ctx.lineTo(x + tw, hor); ctx.lineTo(x + bw, H); ctx.lineTo(x - bw, H); ctx.fill();
+  ctx.strokeStyle = 'rgba(230,226,210,.45)'; ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const t = (i / 10 + view.time * .08) % 1, yy = lerp(hor, H, t), ww = lerp(tw, bw, t); const xx = x - ww * .6 + hash(i, 2) * ww; ctx.moveTo(xx, yy); ctx.lineTo(xx + 10 * s * (.4 + t), yy); }
+  ctx.stroke();
+}
+function drawGrave(x, y, s, big) {
+  ctx.fillStyle = '#8b8578'; ctx.beginPath(); ctx.moveTo(x - 6 * s, y); ctx.lineTo(x - 6 * s, y - 12 * s); ctx.arc(x, y - 12 * s, 6 * s, Math.PI, 0); ctx.lineTo(x + 6 * s, y); ctx.fill();
+  ctx.fillStyle = 'rgba(90,70,50,.35)'; ctx.beginPath(); ctx.ellipse(x, y + 1, 10 * s, 2.5 * s, 0, 0, 7); ctx.fill();
+}
+function drawTrailScene(dt) {
+  const s = H / 260, regKey = regionKey(), reg = REGIONS[regKey], w = view.mode === 'title' ? null : G && G.weather;
+  const hor = H * .6, trailY = H * .86, wagonX = W * .7;
+  let U = currentU();
+  if (view.cross && G) {
+    const c = view.cross; c.t += dt;
+    const p = clamp(c.t / c.dur, 0, 1), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+    view.extra = c.start + c.dist * e; U = currentU();
+    if (p >= 1) { const d = c.done; view.cross = null; d(); }
+  }
+  drawSky(reg, w);
+  const prof = farProfile(reg.far);
+  const farOff = U * .06 * s;
+  if (reg.far === 'peaks' || reg.far === 'volcano') {
+    ridge(farOff, hor, 110, s, '#e9e1cf', prof);
+    ctx.fillStyle = reg.farCol; ctx.beginPath(); ctx.moveTo(0, H);
+    for (let x = 0; x <= W + 6; x += 5) { const wx = (x - farOff) / s, h = prof(wx), cap = (reg.far === 'volcano' ? 1.2 : .78) + .05 * Math.sin(wx * .07); ctx.lineTo(x, hor - Math.min(h, cap) * 110 * s); }
+    ctx.lineTo(W, H); ctx.fill();
+  } else ridge(farOff, hor, reg.far === 'mesa' ? 60 : 70, s, reg.farCol, prof);
+  ctx.fillStyle = 'rgba(236,215,169,.25)'; ctx.fillRect(0, hor - 40 * s, W, 40 * s);
+  const hillOff = U * .3 * s;
+  ridge(hillOff, hor + 4 * s, 26, s, reg.hill, wx => .35 + .3 * Math.sin(wx * .011) + .2 * Math.sin(wx * .027 + 1.3));
+  if (reg.flora === 'pine') for (let i = Math.floor(-hillOff / s / 60) - 1; i < (W - hillOff) / s / 60 + 1; i++) {
+    if (hash(i, 11) < .45) continue; const wx = i * 60 + hash(i, 12) * 40, x = wx * s + hillOff;
+    const hh = .35 + .3 * Math.sin(wx * .011) + .2 * Math.sin(wx * .027 + 1.3);
+    pine(x, hor + 4 * s - hh * 26 * s + 3 * s, (18 + hash(i, 13) * 12) * s, mix(reg.hill, '#3d4229', .45));
+  }
+  // objects (landmarks, graves)
+  const objs = [];
+  if (view.mode === 'title') { const per = 2400, k = Math.floor((U + 600) / per); for (const j of [k, k + 1]) objs.push({ art: 'spire', u: j * per }); }
+  else if (G) {
+    if (view.cur) objs.push({ art: LM[view.cur.id].art, u: view.cur.u });
+    if (G.next && !G.at) objs.push({ art: LM[G.next].art, u: G.nextMile * PPM + view.extra });
+  }
+  const sx = o => wagonX - OFF * s - (o.u - U) * (ART_DEPTH[o.art] || 1) * s;
+  for (const o of objs) if (ART_DEPTH[o.art]) { const x = sx(o); if (x > -260 * s && x < W + 260 * s) drawArt(o.art, x, trailY - 26 * s, s, hor); }
+  const g = ctx.createLinearGradient(0, hor, 0, H); g.addColorStop(0, reg.ground); g.addColorStop(1, reg.ground2);
+  ctx.fillStyle = g; ctx.fillRect(0, hor, W, H - hor);
+  ctx.fillStyle = reg.trail; ctx.fillRect(0, trailY - 9 * s, W, 15 * s);
+  ctx.strokeStyle = 'rgba(80,58,36,.35)'; ctx.lineWidth = 1.5 * s; ctx.beginPath(); ctx.moveTo(0, trailY - 4 * s); ctx.lineTo(W, trailY - 4 * s); ctx.moveTo(0, trailY + 2 * s); ctx.lineTo(W, trailY + 2 * s); ctx.stroke();
+  const rivers = [];
+  for (const o of objs) {
+    if (ART_DEPTH[o.art]) continue;
+    const x = sx(o); if (x < -260 * s || x > W + 260 * s) continue;
+    if (o.art === 'river') { drawRiver(x, s, hor); rivers.push(x); }
+    else drawArt(o.art, x, trailY - 22 * s, s, hor);
+  }
+  if (G && view.mode !== 'title') {
+    for (const gr of store.get('ot_graves', [])) {
+      if (gr.game === G.id) continue;
+      const x = wagonX - OFF * .4 * s - (gr.mile * PPM + view.extra - U) * s;
+      if (x > -20 && x < W + 20) drawGrave(x, trailY - 14 * s, s);
+    }
+  }
+  const nearRiver = x => rivers.some(rx => Math.abs(rx - x) < 130 * s);
+  const groundOff = U * s;
+  for (let i = Math.floor(-groundOff / s / 46) - 1; i < (W - groundOff) / s / 46 + 1; i++) {
+    const wx = i * 46 + hash(i, 1) * 30, x = wx * s + groundOff;
+    if (nearRiver(x)) continue;
+    const r = hash(i, 2), y = hor + (8 + hash(i, 3) * (trailY - hor - 22 * s) / s) * s;
+    if (Math.abs(y - trailY) < 12 * s) continue;
+    const sc = s * (.6 + (y - hor) / (H - hor) * .7);
+    if (reg.flora === 'pine' && r > .82) pine(x, y, 46 * sc, '#55603f');
+    else if (reg.flora === 'sage' && r > .4) sage(x, y, sc);
+    else if (r > .9) rock(x, y, sc);
+    else if (r > .25) tuft(x, y, sc, reg.flora === 'sage' ? '#8a8463' : mix(reg.ground2, '#5e5a2e', .45));
+  }
+  // wagon
+  let tilt = 0, sink = 0, bob = 0;
+  if (view.cross) {
+    const inWater = rivers.some(rx => Math.abs(rx - (wagonX - 40 * s)) < 120 * s);
+    if (inWater) { sink = view.cross.mode === 'ford' ? 7 : 4; bob = Math.sin(view.time * 5) * 1.5; const p = view.cross.t / view.cross.dur; if (view.cross.tipped && p > .35 && p < .75) tilt = Math.sin((p - .35) / .4 * Math.PI) * .38; if (rnd() < .5) particles.push({ type: 'splash', x: wagonX - 120 * s + rnd() * 160 * s, y: trailY, vx: (rnd() - .5) * 40, vy: -40 - rnd() * 60, t: .7 }); }
+  }
+  drawWagon(wagonX, trailY + bob, s, U, tilt, sink, true);
+  if (view.cross && sink) {
+    ctx.fillStyle = 'rgba(125,143,138,.75)';
+    for (const rx of rivers) { const l = Math.max(rx - 100 * s, wagonX - 150 * s), r2 = Math.min(rx + 100 * s, wagonX + 50 * s); if (r2 > l) ctx.fillRect(l, trailY - 6 * s, r2 - l, 12 * s); }
+  }
+  for (let i = Math.floor(-U * 1.35 * s / s / 120) - 1; i < (W - U * 1.35 * s) / s / 120 + 1; i++) {
+    const x = i * 120 * s + U * 1.35 * s + hash(i, 6) * 60 * s; if (hash(i, 7) < .4 || nearRiver(x)) continue;
+    tuft(x, H - 2, s * 1.6, mix(reg.ground2, '#4a4426', .5));
+  }
+  drawWeather(dt, w, s);
+  if (view.mode === 'tomb' && view.tomb) drawTomb(s);
+}
+function drawWeather(dt, w, s) {
+  const want = w && w.precip ? (/heavy/.test(w.precip) ? 140 : 60) : 0;
+  const snow = w && /snow/.test(w.precip || '');
+  let n = particles.filter(p => p.type === 'rain' || p.type === 'snow').length;
+  while (n < want && !reduceMotion) { particles.push({ type: snow ? 'snow' : 'rain', x: rnd() * W * 1.2, y: rnd() * H, t: 99, sd: rnd() }); n++; }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    if (p.type === 'rain') {
+      if (!want || snow) { particles.splice(i, 1); continue; }
+      p.x -= 120 * dt; p.y += 520 * dt; if (p.y > H) { p.y = -10; p.x = rnd() * W * 1.2; }
+      ctx.strokeStyle = 'rgba(210,214,206,.55)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + 3 * s, p.y - 10 * s); ctx.stroke();
+    } else if (p.type === 'snow') {
+      if (!want || !snow) { particles.splice(i, 1); continue; }
+      p.x += Math.sin(view.time * 2 + p.sd * 9) * 20 * dt - 20 * dt; p.y += (40 + p.sd * 40) * dt; if (p.y > H) { p.y = -6; p.x = rnd() * W; }
+      ctx.fillStyle = 'rgba(248,244,234,.85)'; ctx.beginPath(); ctx.arc(p.x, p.y, (1 + p.sd * 1.6) * s, 0, 7); ctx.fill();
+    } else if (p.type === 'splash') {
+      p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 220 * dt; if (p.t <= 0) { particles.splice(i, 1); continue; }
+      ctx.fillStyle = `rgba(225,228,220,${p.t})`; ctx.beginPath(); ctx.arc(p.x, p.y, 2 * s, 0, 7); ctx.fill();
+    }
+  }
+}
+function drawTomb(s) {
+  const x = W * .42, y = H * .9, w = Math.min(W * .34, 190 * s), h = w * 1.05;
+  ctx.fillStyle = 'rgba(40,28,18,.3)'; ctx.beginPath(); ctx.ellipse(x, y, w * .7, h * .07, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#9c968a'; ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x - w / 2, y - h * .62); ctx.arc(x, y - h * .62, w / 2, Math.PI, 0); ctx.lineTo(x + w / 2, y); ctx.fill();
+  ctx.fillStyle = 'rgba(60,50,40,.2)'; ctx.fillRect(x + w * .36, y - h * .6, w * .14, h * .6);
+  ctx.fillStyle = '#3d342b'; ctx.textAlign = 'center';
+  ctx.font = `${Math.round(w * .11)}px Rye, Georgia, serif`; ctx.fillText('Here lies', x, y - h * .78);
+  ctx.font = `700 ${Math.round(w * .12)}px "Courier Prime", monospace`; ctx.fillText(view.tomb.name, x, y - h * .6);
+  ctx.font = `italic ${Math.round(w * .075)}px Alegreya, Georgia, serif`;
+  const ep = view.tomb.epitaph || '', words = ep.split(' '), lines = []; let line = '';
+  for (const wd of words) { if ((line + ' ' + wd).trim().length > 18) { lines.push(line); line = wd; } else line = (line + ' ' + wd).trim(); }
+  if (line) lines.push(line);
+  lines.slice(0, 3).forEach((l, i) => ctx.fillText(l, x, y - h * .42 + i * w * .095));
+}
+function drawMap() {
+  ctx.fillStyle = '#e6d6b2'; ctx.fillRect(0, 0, W, H);
+  const pad = Math.max(10, Math.min(W, H) * .05), lon0 = -124.5, lon1 = -93.5, lat0 = 37.8, lat1 = 48.6;
+  const aspect = (lon1 - lon0) * .76 / (lat1 - lat0);
+  let mw = W - pad * 2, mh = mw / aspect; if (mh > H - pad * 2) { mh = H - pad * 2; mw = mh * aspect; }
+  const ox0 = (W - mw) / 2, oy0 = (H - mh) / 2;
+  const P = (lon, lat) => [ox0 + (lon - lon0) / (lon1 - lon0) * mw, oy0 + (lat1 - lat) / (lat1 - lat0) * mh];
+  ctx.fillStyle = '#ecdfc2'; ctx.fillRect(ox0, oy0, mw, mh);
+  ctx.strokeStyle = 'rgba(92,71,52,.12)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let lo = -120; lo <= -95; lo += 5) { const [x] = P(lo, 0); ctx.moveTo(x, oy0); ctx.lineTo(x, oy0 + mh); }
+  for (let la = 40; la <= 48; la += 2) { const [, y] = P(0, la); ctx.moveTo(ox0, y); ctx.lineTo(ox0 + mw, y); }
+  ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.rect(ox0, oy0, mw, mh); ctx.clip();
+  ctx.fillStyle = '#c9b48a'; ctx.fillRect(ox0, oy0, Math.max(0, P(-123.9, 0)[0] - ox0), mh);
+  const rivers = [
+    [[-90.2, 38.8], [-92.2, 38.6], [-94.4, 39.1], [-95.9, 41.3], [-96.6, 42.5], [-98.5, 43.0], [-100.4, 44.4], [-101.5, 46.5], [-104.0, 48.0]],
+    [[-95.9, 41.0], [-98.0, 40.85], [-99.0, 40.65], [-100.8, 41.1], [-102.0, 41.3], [-103.35, 41.75], [-104.55, 42.2], [-106.3, 42.85], [-106.8, 42.0], [-106.5, 41.0]],
+    [[-106.9, 42.45], [-107.5, 42.45], [-108.9, 42.4]],
+    [[-109.6, 43.1], [-110.1, 41.9], [-109.5, 40.8]],
+    [[-110.7, 43.5], [-111.9, 43.5], [-112.45, 43.0], [-113.5, 42.6], [-114.7, 42.6], [-115.4, 42.95], [-116.95, 43.8], [-117.1, 44.6], [-116.9, 46.4], [-118.9, 46.2]],
+    [[-117.6, 48.6], [-119.0, 47.2], [-118.9, 46.05], [-120.0, 45.7], [-121.2, 45.6], [-122.7, 45.6], [-123.9, 46.2]],
+    [[-122.7, 45.6], [-122.9, 45.0], [-123.05, 44.0]],
+    [[-94.6, 39.1], [-95.7, 39.05], [-96.8, 39.05]], [[-96.6, 39.2], [-96.8, 40.3]]
+  ];
+  ctx.strokeStyle = '#7d8f8a'; ctx.lineWidth = Math.max(1.2, mw / 500); ctx.lineJoin = 'round';
+  for (const r of rivers) { ctx.beginPath(); r.forEach(([lo, la], i) => { const [x, y] = P(lo, la); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); }
+  const mts = [[-105.6, 40.3], [-106.2, 41.4], [-106.9, 43.5], [-109.6, 43.0], [-110.6, 43.8], [-110.9, 40.7], [-111.6, 41.6], [-113.9, 44.1], [-115.2, 44.4], [-118.1, 45.3], [-118.6, 45.0], [-121.7, 45.37], [-121.5, 46.2], [-121.8, 44.1], [-121.76, 46.85]];
+  ctx.fillStyle = '#9e8a6a'; const ms = Math.max(4, mw / 120);
+  for (const [lo, la] of mts) { const [x, y] = P(lo, la); ctx.beginPath(); ctx.moveTo(x - ms, y + ms * .6); ctx.lineTo(x, y - ms); ctx.lineTo(x + ms, y + ms * .6); ctx.fill(); }
+  ctx.restore();
+  const route = G.route.slice();
+  if (G.next) route.push(G.next);
+  const seg = (a, b, dashed, col, wdt) => { const [x1, y1] = P(LM[a].lon, LM[a].lat), [x2, y2] = P(LM[b].lon, LM[b].lat); ctx.setLineDash(dashed ? [5, 5] : []); ctx.strokeStyle = col; ctx.lineWidth = wdt; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); };
+  for (const [id, lm] of Object.entries(LM)) for (const [n] of lm.next || []) seg(id, n, true, 'rgba(92,71,52,.5)', Math.max(1, mw / 600));
+  for (let i = 0; i < G.route.length - 1; i++) seg(G.route[i], G.route[i + 1], false, '#9a4e29', Math.max(2.4, mw / 260));
+  ctx.setLineDash([]);
+  let wx, wy;
+  if (G.at) [wx, wy] = P(LM[G.at].lon, LM[G.at].lat);
+  else if (G.next) { const a = P(LM[G.last].lon, LM[G.last].lat), b = P(LM[G.next].lon, LM[G.next].lat), f = clamp(1 - (G.nextMile - G.miles) / Math.max(1, G.legMiles), 0, 1); wx = lerp(a[0], b[0], f); wy = lerp(a[1], b[1], f); ctx.strokeStyle = '#9a4e29'; ctx.lineWidth = Math.max(2.4, mw / 260); ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(wx, wy); ctx.stroke(); }
+  const fs = clamp(mw / 70, 9, 13), narrow = mw < 520;
+  ctx.font = `700 ${fs}px "Courier Prime", monospace`; ctx.textBaseline = 'middle';
+  for (const [id, lm] of Object.entries(LM)) {
+    const [x, y] = P(lm.lon, lm.lat), visited = G.route.includes(id);
+    ctx.fillStyle = visited ? '#9a4e29' : '#5c4734'; ctx.beginPath(); ctx.arc(x, y, visited ? 3.6 : 2.6, 0, 7); ctx.fill();
+    const labeled = !narrow || visited || id === G.next || id === 'willamette' || id === 'independence';
+    if (!labeled) continue;
+    const [dx, dy, al] = MAP_LABEL[id] || [0, 1.1, 'center'];
+    ctx.textAlign = al; ctx.fillStyle = '#2d2118';
+    ctx.fillText(lm.short, x + dx * fs, y + dy * fs);
+  }
+  if (wx != null) { ctx.save(); ctx.translate(wx, wy - 2); ctx.scale(fs / 36, fs / 36); ctx.fillStyle = '#e8dcc0'; ctx.strokeStyle = '#2d2118'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-14, 0); ctx.bezierCurveTo(-16, -14, -8, -18, 0, -18); ctx.bezierCurveTo(8, -18, 16, -14, 14, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#2d2118'; ctx.beginPath(); ctx.arc(-8, 3, 4, 0, 7); ctx.arc(8, 3, 4, 0, 7); ctx.fill(); ctx.restore(); }
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; ctx.fillStyle = '#5c4734'; ctx.font = `${clamp(mw / 40, 12, 20)}px Rye, Georgia, serif`;
+  ctx.fillText('Oregon Territory', ox0 + mw * .04, oy0 + mh * .1);
+  const [sbx, sby] = P(-104, 38.6), sbw = P(-104 + 200 / 51, 0)[0] - sbx;
+  ctx.strokeStyle = '#5c4734'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(sbx, sby); ctx.lineTo(sbx + sbw, sby); ctx.moveTo(sbx, sby - 4); ctx.lineTo(sbx, sby + 4); ctx.moveTo(sbx + sbw, sby - 4); ctx.lineTo(sbx + sbw, sby + 4); ctx.stroke();
+  ctx.font = `700 ${fs}px "Courier Prime", monospace`; ctx.textAlign = 'center'; ctx.fillText('200 miles', sbx + sbw / 2, sby - fs * .6);
+  ctx.strokeStyle = '#5c4734'; ctx.lineWidth = 2; ctx.strokeRect(ox0, oy0, mw, mh);
+}
+function drawAnimal(a, u) {
+  const A = ANIMALS[a.type], z = A.size / 20, f = a.face;
+  ctx.save(); ctx.translate(a.x * u, a.y * u); ctx.scale(f * z * u, z * u);
+  if (a.dead) { ctx.rotate(.15); ctx.globalAlpha = .85; }
+  ctx.fillStyle = 'rgba(40,28,18,.25)'; ctx.beginPath(); ctx.ellipse(0, 12, 20, 4, 0, 0, 7); ctx.fill();
+  const leg = a.dead ? 0 : Math.sin(a.ph) * 4;
+  ctx.strokeStyle = mix(A.col, '#1a120b', .4); ctx.lineWidth = a.type === 'bison' || a.type === 'bear' ? 3.4 : 2.4; ctx.lineCap = 'round';
+  if (!a.dead && a.type !== 'squirrel' && a.type !== 'rabbit') { ctx.beginPath(); ctx.moveTo(-9, 2); ctx.lineTo(-9 + leg, 12); ctx.moveTo(-5, 2); ctx.lineTo(-5 - leg, 12); ctx.moveTo(8, 2); ctx.lineTo(8 - leg, 12); ctx.moveTo(11, 2); ctx.lineTo(11 + leg, 12); ctx.stroke(); }
+  ctx.fillStyle = A.col;
+  if (a.type === 'rabbit') {
+    ctx.beginPath(); ctx.ellipse(0, 4, 13, 9, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(11, -3, 6, 5, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(10, -12, 2.2, 7, -.2, 0, 7); ctx.ellipse(14, -12, 2.2, 7, .2, 0, 7); ctx.fill(); ctx.fillStyle = '#e8dcc6'; ctx.beginPath(); ctx.arc(-12, 2, 3.4, 0, 7); ctx.fill();
+  } else if (a.type === 'squirrel') {
+    ctx.beginPath(); ctx.ellipse(0, 4, 11, 7, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(10, -1, 5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-12, -6, 6, 11, -.5, 0, 7); ctx.fill();
+  } else if (a.type === 'bison') {
+    ctx.beginPath(); ctx.ellipse(-2, -2, 20, 12, 0, 0, 7); ctx.fill(); ctx.fillStyle = mix(A.col, '#1a120b', .35); ctx.beginPath(); ctx.ellipse(8, -6, 12, 13, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(19, 0, 6, 7, 0, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#d9ccb1'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(18, -6); ctx.quadraticCurveTo(20, -11, 23, -10); ctx.stroke();
+  } else if (a.type === 'bear') {
+    ctx.beginPath(); ctx.ellipse(0, -1, 18, 11, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(-6, -9, 8, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(17, -4, 7, 6, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(15, -10, 2.5, 0, 7); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.ellipse(0, -2, 16, 8, 0, 0, 7); ctx.fill(); ctx.beginPath(); ctx.moveTo(10, -6); ctx.lineTo(16, -18); ctx.lineTo(21, -16); ctx.lineTo(15, -4); ctx.fill(); ctx.beginPath(); ctx.ellipse(20, -17, 5, 3.4, .3, 0, 7); ctx.fill();
+    if (a.type === 'pronghorn') { ctx.fillStyle = '#eadfca'; ctx.beginPath(); ctx.ellipse(0, 2, 12, 3.5, 0, 0, 7); ctx.fill(); }
+    if (a.type === 'deer' || a.type === 'elk') { ctx.strokeStyle = '#5a4630'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(18, -20); ctx.lineTo(16, a.type === 'elk' ? -34 : -28); ctx.moveTo(17, -26); ctx.lineTo(12, -30); if (a.type === 'elk') { ctx.moveTo(16.5, -30); ctx.lineTo(22, -35); } ctx.stroke(); }
+    if (a.type === 'pronghorn') { ctx.strokeStyle = '#2d2118'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(19, -20); ctx.lineTo(18, -26); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+function drawHunt() {
+  const h = hunt, u = W / h.lw, reg = REGIONS[h.region];
+  const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, mix(reg.ground, '#ecd7a9', .2)); g.addColorStop(1, reg.ground2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 90; i++) { const x = hash(i, 21) * W, y = hash(i, 22) * H; tuft(x, y, u * .8, mix(reg.ground2, '#5e5a2e', .35)); }
+  for (const o of h.obs) { ctx.fillStyle = 'rgba(40,28,18,.2)'; ctx.beginPath(); ctx.ellipse((o.x + 4) * u, (o.y + o.r * .5) * u, o.r * u, o.r * .4 * u, 0, 0, 7); ctx.fill(); }
+  for (const a of h.animals.filter(a => a.dead)) drawAnimal(a, u);
+  for (const a of h.animals.filter(a => !a.dead)) drawAnimal(a, u);
+  for (const o of h.obs) {
+    const x = o.x * u, y = o.y * u, r = o.r * u;
+    if (o.type === 'pine') pine(x, y + r * .6, r * 2.6, '#55603f');
+    else if (o.type === 'tree') { ctx.fillStyle = '#5a4430'; ctx.fillRect(x - r * .12, y, r * .24, r * .7); ctx.fillStyle = '#727650'; ctx.beginPath(); ctx.arc(x, y - r * .2, r, 0, 7); ctx.fill(); ctx.fillStyle = '#82865c'; ctx.beginPath(); ctx.arc(x - r * .3, y - r * .45, r * .55, 0, 7); ctx.fill(); }
+    else if (o.type === 'rock') { ctx.fillStyle = '#8c7b66'; ctx.beginPath(); ctx.ellipse(x, y, r, r * .75, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,240,210,.25)'; ctx.beginPath(); ctx.ellipse(x - r * .3, y - r * .3, r * .45, r * .25, 0, 0, 7); ctx.fill(); }
+    else if (o.type === 'sage') sage(x, y + r * .4, r / 7);
+    else { ctx.fillStyle = '#7a7a52'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.arc(x + r * .6, y + r * .2, r * .7, 0, 7); ctx.fill(); }
+  }
+  ctx.strokeStyle = '#2d2118'; ctx.lineWidth = 2 * u;
+  for (const b of h.bullets) { ctx.beginPath(); ctx.moveTo(b.x * u, b.y * u); ctx.lineTo((b.x - b.vx * .015) * u, (b.y - b.vy * .015) * u); ctx.stroke(); }
+  for (const p of h.puffs) { ctx.fillStyle = `rgba(220,210,190,${p.t * 2})`; ctx.beginPath(); ctx.arc(p.x * u, p.y * u, (10 - p.t * 15) * u, 0, 7); ctx.fill(); }
+  const hx = h.lw / 2 * u, hy = h.lh / 2 * u;
+  ctx.save(); ctx.translate(hx, hy);
+  ctx.fillStyle = 'rgba(40,28,18,.25)'; ctx.beginPath(); ctx.ellipse(0, 10 * u, 12 * u, 4 * u, 0, 0, 7); ctx.fill();
+  ctx.rotate(h.ang); ctx.strokeStyle = '#3a2a1c'; ctx.lineWidth = 3 * u; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(22 * u, 0); ctx.stroke();
+  if (h.flash) { ctx.fillStyle = '#f0d08a'; ctx.beginPath(); ctx.arc(25 * u, 0, 5 * u, 0, 7); ctx.fill(); }
+  ctx.rotate(-h.ang);
+  ctx.fillStyle = '#6b4b30'; ctx.beginPath(); ctx.arc(0, 0, 8 * u, 0, 7); ctx.fill();
+  ctx.fillStyle = '#4a3626'; ctx.beginPath(); ctx.ellipse(0, -2 * u, 11 * u, 6 * u, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#5c4430'; ctx.beginPath(); ctx.arc(0, -3 * u, 5 * u, 0, 7); ctx.fill();
+  ctx.restore();
+  const ax = hx + Math.cos(h.ang) * 90 * u, ay = hy + Math.sin(h.ang) * 90 * u;
+  const cx = h.aim && !isTouch ? h.aim.x * u : ax, cy = h.aim && !isTouch ? h.aim.y * u : ay;
+  ctx.strokeStyle = 'rgba(45,33,24,.75)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, 9, 0, 7); ctx.moveTo(cx - 14, cy); ctx.lineTo(cx - 4, cy); ctx.moveTo(cx + 4, cy); ctx.lineTo(cx + 14, cy); ctx.moveTo(cx, cy - 14); ctx.lineTo(cx, cy - 4); ctx.moveTo(cx, cy + 4); ctx.lineTo(cx, cy + 14); ctx.stroke();
+  ctx.font = `700 ${Math.round(clamp(13 * u, 12, 18))}px "Courier Prime", monospace`; ctx.textAlign = 'center';
+  for (const t of h.texts) { ctx.fillStyle = `rgba(45,33,24,${Math.min(1, t.t)})`; ctx.fillText(t.s, t.x * u, t.y * u); }
+  hud([`Time ${Math.max(0, Math.ceil(h.t))}`, `Bullets ${G.bullets}`, `Meat ${h.meat} lbs`]);
+  if (h.over) banner(h.meat ? `${h.meat} pounds of meat` : 'Nothing shot');
+}
+function hud(items) {
+  const fs = Math.round(clamp(W / 50, 12, 16)), pad = 8;
+  ctx.font = `700 ${fs}px "Courier Prime", monospace`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  const text = items.join('   '), tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(42,31,23,.78)'; ctx.fillRect(pad, pad, tw + 20, fs + 14);
+  ctx.fillStyle = '#ecdfc2'; ctx.fillText(text, pad + 10, pad + (fs + 14) / 2); ctx.textBaseline = 'alphabetic';
+}
+function banner(text) {
+  const fs = Math.round(clamp(W / 26, 16, 28));
+  ctx.font = `${fs}px Rye, Georgia, serif`; ctx.textAlign = 'center';
+  const tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(236,223,194,.92)'; ctx.fillRect(W / 2 - tw / 2 - 18, H / 2 - fs, tw + 36, fs * 1.7);
+  ctx.strokeStyle = '#5c4734'; ctx.lineWidth = 2; ctx.strokeRect(W / 2 - tw / 2 - 18, H / 2 - fs, tw + 36, fs * 1.7);
+  ctx.fillStyle = '#7a3a1c'; ctx.fillText(text, W / 2, H / 2 + fs * .3);
+}
+function drawRaft() {
+  const R = raft, u = W / R.lw, lh = R.lw * (H / Math.max(1, W)), ry = lh * .72;
+  ctx.fillStyle = '#6f8683'; ctx.fillRect(0, 0, W, H);
+  const step = 8;
+  const bank = side => {
+    ctx.beginPath(); ctx.moveTo(side < 0 ? 0 : W, 0);
+    for (let y = 0; y <= lh + step; y += step) { const wy = R.s + (ry - y); ctx.lineTo((rcx(wy, R.lw) + side * rhw(wy, R.lw)) * u, y * u); }
+    ctx.lineTo(side < 0 ? 0 : W, H); ctx.closePath();
+  };
+  ctx.fillStyle = '#8a7a52'; bank(-1); ctx.fill(); bank(1); ctx.fill();
+  ctx.strokeStyle = 'rgba(232,228,214,.55)'; ctx.lineWidth = 3 * u; bank(-1); ctx.stroke(); bank(1); ctx.stroke();
+  ctx.strokeStyle = 'rgba(225,230,222,.35)'; ctx.lineWidth = 1.4;
+  for (let i = 0; i < 26; i++) {
+    const wy = Math.floor(R.s / 60) * 60 + i * 60 - 600 + hash(i + Math.floor(R.s / 60), 4) * 20, y = ry - (wy - R.s);
+    if (y < -10 || y > lh + 10) continue;
+    const x = rcx(wy, R.lw) + (hash(Math.floor(wy), 5) - .5) * rhw(wy, R.lw) * 1.4;
+    ctx.beginPath(); ctx.moveTo(x * u, y * u); ctx.lineTo(x * u, (y + 14) * u); ctx.stroke();
+  }
+  for (let i = Math.floor((R.s - lh) / 50) - 2; i < (R.s + lh) / 50 + 2; i++) {
+    const wy = i * 50, y = ry - (wy - R.s); if (y < -40 || y > lh + 40) continue;
+    for (const side of [-1, 1]) {
+      if (hash(i, side + 30) < .35) continue;
+      const edge = rcx(wy, R.lw) + side * rhw(wy, R.lw), x = edge + side * (22 + hash(i, side + 40) * 60);
+      if (x < -20 || x > R.lw + 20) continue;
+      pine(x * u, y * u, (30 + hash(i, side + 50) * 20) * u, side < 0 ? '#55603f' : '#4f5638');
+    }
+  }
+  for (const k of R.rocks) {
+    const y = ry - (k.wy - R.s); if (y < -40 || y > lh + 40) continue;
+    ctx.fillStyle = 'rgba(232,230,218,.5)'; ctx.beginPath(); ctx.ellipse(k.x * u, (y + 3) * u, (k.r + 6) * u, (k.r + 3) * u, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#5a4d42'; ctx.beginPath(); ctx.ellipse(k.x * u, y * u, k.r * u, k.r * .8 * u, k.seed, 0, 7); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,215,.22)'; ctx.beginPath(); ctx.ellipse((k.x - k.r * .3) * u, (y - k.r * .25) * u, k.r * .4 * u, k.r * .25 * u, 0, 0, 7); ctx.fill();
+  }
+  const blink = R.inv > 0 && Math.floor(R.inv * 10) % 2 === 0;
+  if (!blink) {
+    ctx.save(); ctx.translate(R.x * u, ry * u); ctx.rotate(R.vx / 1400); ctx.scale(u, u);
+    ctx.fillStyle = 'rgba(225,230,222,.45)'; ctx.beginPath(); ctx.ellipse(0, 26, 20, 6, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#7b5636'; for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-18 + i * 7.2, -24, 7, 48, 3) : ctx.rect(-18 + i * 7.2, -24, 7, 48); ctx.fill(); }
+    ctx.strokeStyle = '#4b3322'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-18, -16); ctx.lineTo(18, -16); ctx.moveTo(-18, 16); ctx.lineTo(18, 16); ctx.stroke();
+    ctx.fillStyle = '#e8dcc0'; ctx.strokeStyle = '#a8977a'; ctx.beginPath(); ctx.ellipse(0, 0, 11, 17, 0, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = 'rgba(120,100,70,.4)'; ctx.beginPath(); for (const y of [-9, -3, 3, 9]) { ctx.moveTo(-10, y); ctx.lineTo(10, y); } ctx.stroke();
+    ctx.restore();
+  }
+  hud([`Columbia River`, `${Math.max(0, Math.round((R.len - R.s) / R.len * 100))}% to go`, `Food ${Math.floor(G.food)}`]);
+  if (R.toastT > 0) {
+    const fs = Math.round(clamp(W / 48, 12, 16));
+    ctx.font = `700 ${fs}px "Courier Prime", monospace`; ctx.textAlign = 'center';
+    const tw = ctx.measureText(R.toast).width, y = H - fs * 2.2;
+    ctx.fillStyle = `rgba(42,31,23,${Math.min(.85, R.toastT)})`; ctx.fillRect(W / 2 - tw / 2 - 12, y - fs, tw + 24, fs * 1.8);
+    ctx.fillStyle = `rgba(236,223,194,${Math.min(1, R.toastT)})`; ctx.fillText(R.toast, W / 2, y + fs * .3);
+  }
+}
+
+/* ---------------- main loop ---------------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  view.time += dt;
+  if (view.mode === 'title') view.demoU += dt * 55;
+  if (T.traveling && T.d > 0) { T.prog += dt * 1000 / DAY_MS * (T.stopReq ? 4 : 1); if (T.prog >= 1) { T.prog = 1; endDay(); } }
+  if (hunt) updateHunt(dt);
+  if (raft) updateRaft(dt);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (view.shake > 0 && !reduceMotion) { view.shake -= dt; ctx.translate((rnd() - .5) * 8, (rnd() - .5) * 6); }
+  try {
+    if (view.mode === 'hunt' && hunt) drawHunt();
+    else if (view.mode === 'raft' && raft) drawRaft();
+    else if (view.mode === 'map' && G) drawMap();
+    else drawTrailScene(dt);
+  } catch (e) { console.error(e); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+/* ---------------- input ---------------- */
+const keys = { left: false, right: false, up: false, down: false };
+const KEYMAP = { ArrowLeft: 'left', a: 'left', A: 'left', ArrowRight: 'right', d: 'right', D: 'right', ArrowUp: 'up', w: 'up', W: 'up', ArrowDown: 'down', s: 'down', S: 'down' };
+document.addEventListener('keydown', e => {
+  const typing = e.target.matches && e.target.matches('input, textarea');
+  if ((hunt || raft) && KEYMAP[e.key] && !typing) { keys[KEYMAP[e.key]] = true; e.preventDefault(); if (hunt) hunt.aim = null; return; }
+  if (hunt && !typing) { if (e.key === ' ') { e.preventDefault(); fire(); } if (e.key === 'Escape') endHunt(); return; }
+  if (typing) return;
+  if (T.traveling && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); sizeUp(); return; }
+  if (e.target.closest && e.target.closest('button') && (e.key === 'Enter' || e.key === ' ')) return;
+  if (/^[0-9]$/.test(e.key)) { const i = e.key === '0' ? 9 : +e.key - 1, c = choices[i]; const b = inner.querySelector(`.choice[data-i="${i}"]`); if (c && b && !b.disabled) { e.preventDefault(); sfx('click'); c.fn(); } }
+  else if (e.key === 'Enter' || e.key === ' ') { const i = choices.findIndex(c => c.primary); const b = inner.querySelector(`.choice[data-i="${i}"]`); if (i >= 0 && b && !b.disabled) { e.preventDefault(); sfx('click'); choices[i].fn(); } }
+});
+document.addEventListener('keyup', e => { if (KEYMAP[e.key]) keys[KEYMAP[e.key]] = false; });
+addEventListener('blur', () => { keys.left = keys.right = keys.up = keys.down = false; });
+cv.addEventListener('pointerdown', e => {
+  if (hunt) { e.preventDefault(); hunt.aim = huntPoint(e); hunt.ang = Math.atan2(hunt.aim.y - hunt.lh / 2, hunt.aim.x - hunt.lw / 2); fire(); }
+  else if (raft) { e.preventDefault(); cv.setPointerCapture && cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(); raft.target = (e.clientX - r.left) / r.width * raft.lw; }
+  else if (T.traveling) sizeUp();
+});
+cv.addEventListener('pointermove', e => {
+  if (hunt && e.pointerType === 'mouse') hunt.aim = huntPoint(e);
+  else if (raft && raft.target != null) { const r = cv.getBoundingClientRect(); raft.target = (e.clientX - r.left) / r.width * raft.lw; }
+});
+const endDrag = () => { if (raft) raft.target = null; };
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+function toggleSound() {
+  AU.on = !AU.on; store.set('ot_sound', AU.on);
+  const b = $('#btnSound'); b.textContent = AU.on ? 'Sound on' : 'Sound off'; b.setAttribute('aria-pressed', String(AU.on));
+  if (AU.on) sfx('click');
+}
+$('#btnSound').addEventListener('click', toggleSound);
+$('#btnSound').textContent = AU.on ? 'Sound on' : 'Sound off';
+$('#btnSound').setAttribute('aria-pressed', String(AU.on));
+$('#btnTitle').addEventListener('click', () => { if (hunt || raft) return; if (G && !isOver() && G.party.length) save(); view.cross = null; titleScreen(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && T.traveling) T.stopReq = true; });
+
+titleScreen();
+})();
+</script>
+</body>
+</html>
