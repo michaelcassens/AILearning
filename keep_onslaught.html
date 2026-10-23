@@ -1642,7 +1642,19 @@ function buildScenery() {
   for (let x = X0; x <= X1; x += 24) b.lineTo(x, 330 + Math.sin(x * 0.03) * 14 + Math.sin(x * 0.11) * 8);
   b.lineTo(X1, GROUND); b.lineTo(X0, GROUND); b.fill();
   for (let x = X0 + 30, i = 0; x < X1; x += 110, i++) tree(b, x + (i % 2) * 30, 436, 0.7, true);   // rooted just below the meadow's edge
-  b.fillStyle = 'rgba(200,225,210,0.35)'; b.fillRect(X0, 300, X1 - X0, 140);
+  // soft mist over the far trees: fades in from above, thickest at the treeline, gone by the meadow
+  const mist = b.createLinearGradient(0, 270, 0, 450);
+  mist.addColorStop(0, 'rgba(200,225,210,0)'); mist.addColorStop(0.45, 'rgba(200,225,210,0.32)');
+  mist.addColorStop(0.75, 'rgba(200,225,210,0.22)'); mist.addColorStop(1, 'rgba(200,225,210,0)');
+  b.fillStyle = mist; b.fillRect(X0, 270, X1 - X0, 180);
+  const mrnd = seeded(31);
+  for (let i = 0; i < 26; i++) {   // drifting wisps so the band doesn't read as a straight stripe
+    const mx = X0 + mrnd() * (X1 - X0), my = 330 + mrnd() * 70, rx = 60 + mrnd() * 110, ry = 10 + mrnd() * 16;
+    const wg = b.createRadialGradient(mx, my, 0, mx, my, rx);
+    wg.addColorStop(0, `rgba(214,234,222,${0.12 + mrnd() * 0.12})`); wg.addColorStop(1, 'rgba(214,234,222,0)');
+    b.save(); b.translate(mx, my); b.scale(1, ry / rx); b.translate(-mx, -my);
+    b.fillStyle = wg; b.beginPath(); b.arc(mx, my, rx, 0, Math.PI * 2); b.fill(); b.restore();
+  }
   for (let x = X0 + 40, i = 0; x < X1; x += 160, i++) tree(b, x + (i % 2) * 40, 452, 1.05, false);
   // grass field
   g = b.createLinearGradient(0, 420, 0, Y1);
