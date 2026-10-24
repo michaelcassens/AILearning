@@ -444,7 +444,7 @@ const SCENES = {
       [11, 'z', 'shambler', -2, 7, 'side'], [11.2, 'z', 'shambler', 2.1, 6.5, 'side'], [11.4, 'z', 'shambler', 0, 10],
       [14, 'z', 'axeman', 1.5, 9], [14.2, 'z', 'axeman', -1.3, 9.5], [17, 'z', 'brute', 0, 11], [17.3, 'say', '$2', 'That one is huge. Go for the head!']],
     next: f => f.okafor ? 'c1c_garden' : 'c1c_cellar' },
-  c1c_garden: { ch: 1, name: 'Hedge Garden', bg: 'out', fog: '#0c1412', o: { hedges: true, trees: [[-6, 9], [6, 12]], mansion: 1.0, path: true, statues: [[-2.9, 8], [2.9, 12]] },
+  c1c_garden: { ch: 1, name: 'Hedge Garden', bg: 'out', fog: '#0c1412', o: { hedges: true, trees: [[-6, 9], [6, 12]], mansion: 1.0, path: true, statues: [[-3.05, 8], [3.05, 12]] },
     lines: [['$1', "Garden path, like the doctor said. Watch the sky."]],
     ev: [[0.5, 'brk', { style: 'crate', x: 2.3, z: 6, contains: 'aid' }], [1, 'z', 'bat', -1, 12], [1.4, 'z', 'bat', 1, 12], [1.8, 'z', 'bat', 0, 13],
       [4, 'z', 'leaper', -1, 11], [5.5, 'z', 'leaper', 1.3, 11], [7, 'z', 'shambler', 0, 7, 'rise'], [7.3, 'z', 'shambler', -1.5, 8, 'rise'],
@@ -1311,17 +1311,16 @@ function drawOut(sc) {
       for (let z = Math.ceil(zn / 0.6) * 0.6; z < 30; z += 0.6) { const a = P(x, 0, z), b = P(x, 1.55, z); line(a, b, mix('#141416', fogc, fogT(z, 24)), Math.max(1, a.s * 0.035)); }
     }
   }
-  if (o.hedges) {
-    for (const s of [-1, 1]) {
-      const x0 = s * 2.6, x1 = s * 3.8;
-      poly([P(x0, 1.4, zn), P(x0, 1.4, 30), P(x0, 0, 30), P(x0, 0, zn)], hgrad(s < 0 ? 0 : W, W / 2, '#1e3a1c', '#0b150c'));
-      poly([P(x0, 1.4, zn), P(x0, 1.4, 30), P(x1, 1.4, 30), P(x1, 1.4, zn)], hgrad(s < 0 ? 0 : W, W / 2, '#2c4a26', '#0e1a0e'));
-    }
-  }
   if (o.gate) drawGate(o.gate, fogc);
   if (o.fountain) drawFountain(o.fountain, fogc);
   if (o.facade) drawFacade(o.facade, fogc);
-  (o.statues || []).forEach(s => drawStatue(s[0], s[1], fogc));
+  if (o.hedges) {
+    // hedge segments and the statues standing in their gaps, drawn far to near so nearer pieces overlap correctly
+    const items = [];
+    for (const sd of [-1, 1]) for (const seg of HEDGE_SEGS) items.push({ z: seg[0], draw: () => drawHedge(sd, seg[0], seg[1], fogc, zn) });
+    (o.statues || []).forEach(st => items.push({ z: st[1], draw: () => drawStatue(st[0], st[1], fogc) }));
+    items.sort((a, b) => b.z - a.z).forEach(it => it.draw());
+  } else (o.statues || []).forEach(s => drawStatue(s[0], s[1], fogc));
   const trees = d.trees.slice().sort((a, b) => b.z - a.z);
   trees.forEach(t => drawTree(t, fogc));
   (o.lamps || []).forEach(l => drawLamp(l[0], l[1], fogc));
@@ -1329,6 +1328,37 @@ function drawOut(sc) {
   for (let i = 0; i < 4; i++) {
     const x = ((i * 300 + G.T * (10 + i * 4)) % (W + 600)) - 300, y = HZ + 10 + i * 22;
     ctx.fillStyle = 'rgba(150,170,170,' + (0.05 + i * 0.012) + ')'; ctx.beginPath(); ctx.ellipse(x, y, 320, 22 + i * 6, 0, 0, TAU); ctx.fill();
+  }
+}
+// clipped garden hedge: the inner face along the path, a lumpy leafy top, the cut end facing the viewer, and a few pale roses
+const HEDGE_SEGS = [[1.2, 7.35], [8.65, 11.35], [12.65, 32]];
+function hedgeNoise(a, b) { const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return v - Math.floor(v); }
+function drawHedge(sd, z0, z1, fogc, zn) {
+  const xi = sd * 2.45, xo = sd * 3.7, H2 = 1.25, za = Math.max(z0, zn), C = (c, z) => mix(c, fogc, fogT(z, 24));
+  if (z1 <= za) return;
+  // top surface first (seen from just above), then the inner wall
+  poly([P(xi, H2, za), P(xi, H2, z1), P(xo, H2, z1), P(xo, H2, za)], C('#34502e', za));
+  const a = P(xi, H2, za), b = P(xi, 0, za);
+  poly([P(xi, H2, za), P(xi, H2, z1), P(xi, 0, z1), P(xi, 0, za)], vgrad(a.y, b.y, C('#2c4628', za), C('#0f1c0d', za)));
+  // leaf texture: dark hollows and lighter clumps, fading with distance
+  for (let z = Math.ceil(za / 0.32) * 0.32; z < Math.min(z1, za + 14); z += 0.32) {
+    const ps = P(xi, 0, z).s; if (ps < 18) break;
+    for (let y = 0.15; y < H2 - 0.05; y += 0.27) {
+      const n1 = hedgeNoise(z * sd, y), n2 = hedgeNoise(y, z + sd), q = P(xi, y + (n1 - 0.5) * 0.12, z + (n2 - 0.5) * 0.2), r = ps * (0.03 + n2 * 0.035);
+      ctx.fillStyle = n1 > 0.5 ? 'rgba(6,14,6,' + (0.3 * (1 - fogT(z, 24))) + ')' : 'rgba(120,160,110,' + (0.1 * (1 - fogT(z, 24))) + ')';
+      ctx.beginPath(); ctx.ellipse(q.x, q.y, r * 0.6, r, 0, 0, TAU); ctx.fill();
+      if (n1 > 0.93 && n2 > 0.4) { ctx.fillStyle = C('#d8c8c4', z); ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, ps * 0.022), 0, TAU); ctx.fill(); }
+    }
+  }
+  // lumpy silhouette along the top edge
+  ctx.fillStyle = C('#34502e', za);
+  for (let z = Math.ceil(za / 0.35) * 0.35; z < z1; z += 0.35) { const q = P(xi + sd * 0.05, H2, z), r = q.s * (0.13 + hedgeNoise(z, sd) * 0.08); if (r < 1) break; ctx.beginPath(); ctx.ellipse(q.x, q.y, r * 0.9, r * 0.55, 0, Math.PI, TAU); ctx.fill(); }
+  // the cut end of the segment, facing the viewer
+  if (z0 >= zn) {
+    const e0 = P(xi, H2, z0), e1 = P(xo, 0, z0);
+    poly([P(xi, 0, z0), P(xo, 0, z0), P(xo, H2, z0), P(xi, H2, z0)], vgrad(e0.y, e1.y, C('#26402a', z0), C('#0d180c', z0)));
+    ctx.fillStyle = 'rgba(10,22,8,.3)';
+    for (let k = 0; k < 6; k++) { const q = P(lerp(xi, xo, hedgeNoise(k, z0)), 0.15 + hedgeNoise(z0, k) * 1.0, z0); ctx.beginPath(); ctx.arc(q.x, q.y, q.s * 0.06, 0, TAU); ctx.fill(); }
   }
 }
 function drawGate(z, fogc) {
