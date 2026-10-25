@@ -78,6 +78,7 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try { window.localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+      progressChanged();
     }, 250);
   }
   function lvState(id) {
@@ -504,7 +505,10 @@
   function Workbench(opts) {
     var self = this;
     this.opts = opts;
-    this.editor = new Editor({ id: opts.id, code: opts.code, label: opts.label || 'Your code', readOnly: opts.readOnly, onChange: opts.onChange, onRun: function () { self.run(); }, minRows: opts.minRows });
+    this.errorKind = null;
+    this.editor = new Editor({ id: opts.id, code: opts.code, label: opts.label || 'Your code', readOnly: opts.readOnly, minRows: opts.minRows,
+      onChange: function (code) { if (opts.onChange) { opts.onChange(code); } self.codeChanged(); },
+      onRun: function () { self.run(); } });
     this.status = h('div', { class: 'feedback', role: 'status' });
     this.consoleEl = h('div', { class: 'console', role: 'log', 'aria-label': 'Console output' });
     this.runner = new Runner({
@@ -540,7 +544,32 @@
     this.consoleEl.appendChild(h('div', { class: cls || null }, text));
     this.consoleEl.scrollTop = this.consoleEl.scrollHeight;
   };
+  // After an edit, replace any error message with one that matches the new code.
+  Workbench.prototype.codeChanged = function () {
+    var self = this;
+    clearTimeout(this.editTimer);
+    this.editTimer = setTimeout(function () {
+      if (self.errorKind) {
+        var r = A.analyze(self.editor.get());
+        if (!r.ok) {
+          self.editor.markError(r.syntaxError.line);
+          self.errorKind = 'syntax';
+          feedback(self.status, 'warn', 'There is a syntax error' + (r.syntaxError.line ? ' on line ' + r.syntaxError.line : '') + '.', r.syntaxError.friendly);
+        } else {
+          self.editor.markError(null);
+          feedback(self.status, 'info', self.errorKind === 'syntax' ? 'The syntax error is fixed. Press Run to see what happens now.' : 'You changed the code since that error. Press Run to check it again.');
+          self.errorKind = null;
+        }
+      }
+      if (self.analysisEl.firstChild && !self.analysisEl.querySelector('.stale-note')) {
+        clear(self.analysisEl);
+        self.analysisEl.appendChild(h('p', { class: 'muted stale-note' }, 'Your code changed. Press "Explain my code" for an updated description.'));
+      }
+      if (self.opts.onEdit) { self.opts.onEdit(); }
+    }, 600);
+  };
   Workbench.prototype.showSyntaxError = function (se) {
+    this.errorKind = 'syntax';
     this.editor.markError(se.line);
     feedback(this.status, 'err', 'Syntax error' + (se.line ? ' on line ' + se.line : '') + '. Nothing ran.',
       h('div', null, h('p', null, se.friendly), h('p', { class: 'muted' }, 'Computer\'s message: ' + se.message)));
@@ -548,6 +577,7 @@
     announce('Syntax error' + (se.line ? ' on line ' + se.line : '') + '.');
   };
   Workbench.prototype.showRuntimeError = function (err) {
+    this.errorKind = 'runtime';
     var known = [];
     var r = A.analyze(this.editor.get());
     if (r.facts) { known = Object.keys(r.facts.declared).concat(r.facts.fnNames); }
@@ -564,6 +594,7 @@
     var self = this;
     opts = opts || {};
     var code = this.editor.get();
+    clearTimeout(this.editTimer);
     clear(this.consoleEl);
     this.editor.markError(null);
     var r = A.analyze(code);
@@ -573,7 +604,7 @@
       this.pauseBtn.disabled = true; this.stopBtn.disabled = true;
       return Promise.resolve({ syntaxError: r.syntaxError, analysis: r });
     }
-    clear(this.status); this.status.className = 'feedback';
+    clear(this.status); this.status.className = 'feedback'; this.errorKind = null;
     this.pauseBtn.disabled = false; this.pauseBtn.textContent = 'Pause';
     this.stopBtn.disabled = false;
     if (!opts.quiet) { announce('Running.'); }
@@ -734,6 +765,12 @@
     return true;
   }
 
+  // Old "not yet" or error feedback no longer describes edited code.
+  function markStale(el, msg) {
+    if (!el || !/\b(err|warn|info)\b/.test(el.className) || !el.firstChild) { return; }
+    feedback(el, 'info', msg);
+  }
+
   function copyBlock(text, label) {
     var id = uid('copy');
     var ta = h('textarea', { id: id, class: 'prose copy-area', readonly: true }, text);
@@ -766,22 +803,59 @@
   /* ================================================================
    * Progress summaries
    * ================================================================ */
+  function firstMissing(pairs) {
+    for (var i = 0; i < pairs.length; i++) { if (!pairs[i][0]) { return pairs[i][1]; } }
+    return null;
+  }
   function levelActivities(lv) {
     var s = lvState(lv.id);
+    var readRight = lv.read.questions.every(function (q, i) { return s.read.answers && s.read.answers[i] && s.read.answers[i].correct; });
     var acts = [
-      { key: 'learn', label: 'Learn', desc: 'Concept, syntax, and a predict-then-run example.', href: '#/level/' + lv.id + '/learn', done: !!s.learn.done, started: !!s.learn.predicted },
-      { key: 'build', label: 'Build', desc: lv.build.context.kind + ': ' + lv.build.context.title + '. Plan it, then code it.', href: '#/level/' + lv.id + '/build', done: !!s.build.done, started: !!s.build.planSaved },
-      { key: 'read', label: 'Read and explain', desc: 'Explain working code in your own words.', href: '#/level/' + lv.id + '/read', done: !!s.read.done, started: !!s.read.submits }
+      { key: 'learn', short: 'Learn', label: 'Learn', desc: 'Concept, syntax, and a predict-then-run example.', href: '#/level/' + lv.id + '/learn', done: !!s.learn.done, started: !!(s.learn.predicted || s.learn.ran),
+        left: firstMissing([[s.learn.predicted, 'make your prediction'], [s.learn.ran, 'run the example']]) },
+      { key: 'build', short: 'Build', label: 'Build', desc: lv.build.context.kind + ': ' + lv.build.context.title + '. Plan it, then code it.', href: '#/level/' + lv.id + '/build', done: !!s.build.done, started: !!(s.build.planSaved || s.build.checks),
+        left: firstMissing([[s.build.planSaved, 'save your plan'], [s.build.passed, 'meet every requirement'], [s.build.done, 'explain your code']]) },
+      { key: 'read', short: 'Read', label: 'Read and explain', desc: 'Explain working code in your own words.', href: '#/level/' + lv.id + '/read', done: !!s.read.done, started: !!(s.read.submits || Object.keys(s.read.answers || {}).length),
+        left: firstMissing([[s.read.submits, 'submit your explanation'], [readRight, 'answer every tracing question']]) }
     ];
     lv.bugs.forEach(function (b, i) {
       var bs = s.bugs[i] || {};
-      acts.push({ key: 'bug' + i, label: 'Bug hunt ' + (i + 1) + ': ' + b.title, rating: b.rating, desc: RATINGS[b.rating].label, href: '#/level/' + lv.id + '/bug/' + (i + 1), done: !!bs.done, started: !!bs.typeOk });
+      acts.push({ key: 'bug' + i, short: 'Bug ' + (i + 1), label: 'Bug hunt ' + (i + 1) + ': ' + b.title, rating: b.rating, desc: RATINGS[b.rating].label, href: '#/level/' + lv.id + '/bug/' + (i + 1), done: !!bs.done, started: !!(bs.attempts && (bs.attempts.type || bs.typeOk)),
+        left: firstMissing([[bs.typeOk, 'name the error type'], [bs.lineOk, 'find the line'], [bs.causeOk, 'choose the cause'], [bs.fixOk, 'fix the code'], [bs.done, 'explain the bug']]) });
     });
     if (lv.judge) {
-      acts.push({ key: 'judge', label: 'Judge the AI', desc: 'Review AI-written code against a spec: ' + lv.judge.context.title + '.', href: '#/level/' + lv.id + '/judge', done: !!s.judge.done, started: !!s.judge.rowsChecked });
+      acts.push({ key: 'judge', short: 'Judge', label: 'Judge the AI', desc: 'Review AI-written code against a spec: ' + lv.judge.context.title + '.', href: '#/level/' + lv.id + '/judge', done: !!s.judge.done, started: !!s.judge.rowsChecked,
+        left: firstMissing([[s.judge.rowsChecked, 'review each requirement'], [s.judge.issueOk, 'answer the process question'], [s.judge.verdict, 'give your verdict'], [s.judge.done, 'write a better prompt']]) });
     }
     return acts;
   }
+
+  /* Activity navigation shown on every activity page. Refreshed when progress changes. */
+  var current = null;
+  function statusWords(a) { return a.done ? 'complete' : a.started ? 'in progress, next: ' + a.left : 'not started'; }
+  function activityNav(lv, key) {
+    var navEl = h('nav', { class: 'act-nav no-print', 'aria-label': 'Level ' + lv.id + ' activities' });
+    current = { lv: lv, key: key, nav: navEl, slot: null, sig: null };
+    renderNav();
+    return navEl;
+  }
+  function renderNav() {
+    if (!current || !current.nav) { return; }
+    var acts = levelActivities(current.lv);
+    var sig = acts.map(function (a) { return a.done ? 'd' : a.started ? 's' : 'n'; }).join('');
+    if (sig === current.sig) { return; }
+    var hadFocus = current.nav.contains(document.activeElement) ? document.activeElement.getAttribute('href') : null;
+    current.sig = sig;
+    clear(current.nav);
+    current.nav.appendChild(h('ol', null, acts.map(function (a) {
+      return h('li', null, h('a', { href: a.href, class: a.done ? 'done' : a.started ? 'started' : null, 'aria-current': a.key === current.key ? 'page' : null },
+        h('span', { class: 'act-icon', 'aria-hidden': 'true' }, a.done ? '✓' : a.started ? '●' : '○'),
+        a.short, h('span', { class: 'visually-hidden' }, ', ' + statusWords(a))));
+    })));
+    if (hadFocus) { var f = current.nav.querySelector('a[href="' + hadFocus + '"]'); if (f) { f.focus(); } }
+  }
+  function progressChanged() { renderNav(); renderNext(); }
+
   function levelProgress(lv) {
     var acts = levelActivities(lv);
     var done = acts.filter(function (a) { return a.done; }).length;
@@ -870,7 +944,7 @@
       return h('li', null, h('a', { href: a.href },
         a.rating ? h('span', { html: RATINGS[a.rating].svg }) : null,
         h('span', null, h('strong', null, a.label), h('span', { class: 'muted' }, a.desc)),
-        h('span', { class: 'status ' + (a.done ? 'done' : a.started ? 'progress-s' : '') }, a.done ? '✓ Complete' : a.started ? 'In progress' : 'Not started')));
+        h('span', { class: 'status ' + (a.done ? 'done' : a.started ? 'progress-s' : '') }, a.done ? '✓ Complete' : a.started ? 'In progress: next, ' + a.left : 'Not started')));
     })));
     var nav = h('p', { class: 'toolbar' });
     if (lv.id > 1) { nav.appendChild(h('a', { class: 'button secondary', href: '#/level/' + (lv.id - 1) }, '← Level ' + (lv.id - 1))); }
@@ -879,13 +953,37 @@
   }
 
   function nextLink(lv, currentKey) {
+    var slot = h('div', { class: 'next-slot' });
+    if (current && current.lv === lv && current.key === currentKey) { current.slot = slot; current.slotSig = null; }
+    renderNext(slot, lv, currentKey);
+    return slot;
+  }
+  function renderNext(slot, lv, key) {
+    if (!slot) {
+      if (!current || !current.slot) { return; }
+      slot = current.slot; lv = current.lv; key = current.key;
+    }
     var acts = levelActivities(lv);
-    var idx = acts.map(function (a) { return a.key; }).indexOf(currentKey);
-    var next = acts[idx + 1];
-    return h('p', { class: 'toolbar' },
-      h('a', { class: 'button secondary', href: '#/level/' + lv.id }, 'Back to Level ' + lv.id),
-      next ? h('a', { class: 'button', href: next.href }, 'Next: ' + next.label + ' →') :
-        (lv.id < LEVELS.length ? h('a', { class: 'button', href: '#/level/' + (lv.id + 1) }, 'On to Level ' + (lv.id + 1) + ' →') : h('a', { class: 'button', href: '#/capstone' }, 'On to the capstone →')));
+    var idx = acts.map(function (a) { return a.key; }).indexOf(key);
+    var me = acts[idx];
+    var sig = me.done ? 'done' : 'open';
+    if (current && current.slot === slot) { if (current.slotSig === sig) { return; } current.slotSig = sig; }
+    var next = acts.slice(idx + 1).filter(function (a) { return !a.done; })[0] || acts[idx + 1];
+    var nextHref, nextText;
+    if (next) { nextHref = next.href; nextText = 'Next: ' + next.label + ' →'; }
+    else if (lv.id < LEVELS.length) { nextHref = '#/level/' + (lv.id + 1) + '/learn'; nextText = 'On to Level ' + (lv.id + 1) + ': ' + LEVELS[lv.id].title + ' →'; }
+    else { nextHref = '#/capstone'; nextText = 'On to the capstone →'; }
+    var remaining = acts.filter(function (a) { return !a.done; });
+    clear(slot);
+    if (me.done) {
+      slot.appendChild(h('div', { class: 'feedback ok' },
+        h('p', null, h('strong', null, h('span', { class: 'icon', 'aria-hidden': 'true' }, '✓'), 'Activity complete.')),
+        h('p', null, remaining.length ? 'Level ' + lv.id + ' still has ' + remaining.length + ' unfinished activit' + (remaining.length === 1 ? 'y' : 'ies') + ': ' + remaining.map(function (a) { return a.short; }).join(', ') + '.' : 'You finished every activity in Level ' + lv.id + '.')));
+    }
+    var prev = acts[idx - 1];
+    slot.appendChild(h('p', { class: 'toolbar' },
+      prev ? h('a', { class: 'button secondary', href: prev.href }, '← ' + prev.short) : h('a', { class: 'button secondary', href: '#/level/' + lv.id }, '← Level ' + lv.id + ' overview'),
+      h('a', { class: me.done ? 'button' : 'button secondary', href: nextHref }, me.done ? nextText : 'Skip to ' + nextText.replace(/^Next: /, ''))));
   }
 
   /* ---------- Learn ---------- */
@@ -894,6 +992,7 @@
     var L = lv.learn;
     document.title = 'Learn — Level ' + lv.id + ' — ' + APP;
     page('Learn: ' + lv.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Learn', null]]);
+    main.appendChild(activityNav(lv, 'learn'));
     var left = h('div');
     left.appendChild(h('h2', null, 'The big ideas'));
     left.appendChild(h('ul', null, L.brief.map(function (b) { return h('li', { html: b }); })));
@@ -912,7 +1011,11 @@
 
     var runBtnNote = h('p', { class: 'muted' });
     var wb = new Workbench({ id: 'learn-code', title: 'Example', code: L.example, label: 'Example code (you can edit it)', resetCode: L.example,
-      onRun: function () { if (s.predicted && !s.ran) { s.ran = true; s.done = true; save(); announce('Learn activity complete.'); } } });
+      onRun: function () { s.ran = true; save(); finishLearn(); } });
+    function finishLearn() {
+      if (s.predicted && s.ran && !s.done) { s.done = true; save(); announce('Learn activity complete.'); }
+      progressChanged();
+    }
     var mcq = MCQ({ q: L.predict.q, options: L.predict.options, answer: L.predict.answer, why: L.predict.why, button: 'Lock in my prediction',
       okLead: 'Your prediction matches. Now run it to confirm.',
       saved: s.predicted ? { choice: s.choice, correct: s.choice === L.predict.answer } : null,
@@ -920,7 +1023,8 @@
       onCheck: function (choice) {
         s.predicted = true; s.choice = choice; save();
         predictWrap.classList.add('complete');
-        runBtnNote.textContent = 'Now press Run in the Example panel and compare with your prediction.';
+        runBtnNote.textContent = s.ran ? 'Run it again and compare with your prediction.' : 'Now press Run in the Example panel and compare with your prediction.';
+        finishLearn();
       } });
     predictWrap.appendChild(mcq.el);
     predictWrap.appendChild(runBtnNote);
@@ -940,6 +1044,7 @@
     if (!s.plan) { s.plan = ['', '', '']; }
     document.title = 'Build — Level ' + lv.id + ' — ' + APP;
     page('Build: ' + B.context.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Build', null]]);
+    main.appendChild(activityNav(lv, 'build'));
     var left = h('div');
     left.appendChild(contextCard(B.context));
     left.appendChild(h('div', { class: 'card' }, h('h2', { class: 'panel-title' }, 'Your task'), h('p', null, B.task)));
@@ -1003,7 +1108,8 @@
     var checkBtn = h('button', { type: 'button', onclick: function () { checkWork(); } }, 'Check my work');
     var wb = new Workbench({ id: 'build-code', title: 'Workbench', code: s.code !== undefined ? s.code : B.starter, resetCode: B.starter,
       label: 'Your code', extraButtons: [checkBtn],
-      onChange: function (code) { s.code = code; save(); } });
+      onChange: function (code) { s.code = code; save(); },
+      onEdit: function () { markStale(checkFb, 'You changed your code since the last check. Press Check my work to check it again.'); } });
 
     function checkWork() {
       var code = wb.editor.get();
@@ -1177,6 +1283,7 @@
     s.answers = s.answers || {};
     document.title = 'Read and explain — Level ' + lv.id + ' — ' + APP;
     page('Read and explain', [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Read and explain', null]]);
+    main.appendChild(activityNav(lv, 'read'));
     var left = h('div');
     left.appendChild(h('p', { class: 'lede' }, R.context));
     left.appendChild(listing(R.code, 'Code to explain'));
@@ -1254,6 +1361,7 @@
     var s = bugState(lv.id, n);
     document.title = 'Bug hunt ' + (n + 1) + ' — Level ' + lv.id + ' — ' + APP;
     page('Bug hunt: ' + bug.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Bug hunt ' + (n + 1), null]]);
+    main.appendChild(activityNav(lv, 'bug' + n));
     var left = h('div');
     left.appendChild(h('p', null, rating(bug.rating)));
     left.appendChild(h('div', { class: 'card context' }, h('h2', { class: 'panel-title' }, 'What the code is supposed to do'), h('p', null, bug.intent)));
@@ -1264,8 +1372,10 @@
     left.appendChild(stepsWrap);
     left.appendChild(nextLink(lv, 'bug' + n));
 
+    var currentFixFb = null;
     var wb = new Workbench({ id: 'bug-code', title: 'Workbench', code: s.code !== undefined ? s.code : bug.code, resetCode: bug.code, readOnly: !s.causeOk,
       label: 'The buggy code', onChange: function (code) { s.code = code; save(); },
+      onEdit: function () { markStale(currentFixFb, 'You changed the code since the last check. Press Check my fix to check it again.'); },
       extraButtons: [] });
 
     function render() {
@@ -1343,6 +1453,7 @@
       else {
         var st4 = step(4, 'Fix it', { complete: s.fixOk });
         var fixFb = h('div', { class: 'feedback', role: 'status' });
+        currentFixFb = fixFb;
         st4.body.appendChild(h('p', null, 'The editor is now unlocked. Make the smallest change that fixes the problem, then check it.'));
         var showFix = h('div');
         st4.body.appendChild(h('div', { class: 'toolbar' }, h('button', { type: 'button', onclick: function () {
@@ -1433,6 +1544,7 @@
     s.rows = s.rows || {};
     document.title = 'Judge the AI — Level ' + lv.id + ' — ' + APP;
     page('Judge the AI: ' + J.context.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Judge the AI', null]]);
+    main.appendChild(activityNav(lv, 'judge'));
     var left = h('div');
     left.appendChild(h('div', { class: 'card context' },
       h('p', { class: 'muted', style: 'margin:0' }, h('span', { class: 'tag' }, J.context.kind), ' The spec comes first'),
@@ -1939,6 +2051,7 @@
   var firstRoute = true;
   function route() {
     stopAllRunners();
+    current = null;
     var hash = (location.hash || '#/').replace(/^#/, '');
     var parts = hash.split('/').filter(Boolean);
     var nav = 'home';

@@ -148,6 +148,18 @@ main { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; }
 .status.done { color: var(--ok); }
 .status.progress-s { color: var(--warn); }
 
+/* Activity bar on every activity page */
+.act-nav { margin: 0.25rem 0 1rem; }
+.act-nav ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.act-nav a { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; padding: 0.3rem 0.8rem; border: 2px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600; }
+.act-nav a:hover { border-color: var(--link); text-decoration: underline; }
+.act-nav a.done { border-color: var(--ok); color: var(--ok); }
+.act-nav a.started .act-icon { color: var(--warn); }
+.act-nav a[aria-current="page"] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-fg); }
+.act-nav a[aria-current="page"] .act-icon { color: inherit; }
+.act-icon { font-weight: 800; }
+.next-slot { margin-top: 1rem; }
+
 /* Ski-trail difficulty symbols (shape + text, never color alone) */
 .rating { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 0.92rem; }
 .rating svg { flex: none; }
