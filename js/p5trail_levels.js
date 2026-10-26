@@ -2376,16 +2376,22 @@ function setup() {
 
   /* ================================================================ Capstone */
   var CAPSTONE = {
-    id: 11,
-    title: 'Capstone: Design a System',
-    tagline: 'Problem first, then code. You decide where help belongs.',
+    id: 'final',
+    title: 'Final Project: Design a System',
+    tagline: 'Problem first, then code. You decide where help belongs, and you document it.',
     briefs: [
-      { id: 'pantry', kind: 'Business', title: 'Griz Pantry stock tracker', story: 'The campus food pantry tracks a few staple items. Volunteers need to see quantities at a glance, get a clear text warning when something is low, and click an item to record a restock.' },
-      { id: 'runner', kind: 'Game', title: 'Trail Runner', story: 'A runner on a mountain trail dodges falling rocks. The player moves with the keyboard, the score rises over time, and the game ends (with a restart option) when a rock hits.' },
-      { id: 'own', kind: 'Your idea', title: 'Your own system', story: 'Propose your own small business tool or game. Keep it small enough to finish and explain.' }
+      { id: 'game', kind: 'Game', title: 'p5play arcade game', story: 'A small 2D game with sprites, a group of enemies or collectibles, scoring, and a clear win or lose state (Weeks 6–9).' },
+      { id: 'data', kind: 'Business', title: 'Data-driven visualization', story: 'Load a JSON or text file and turn it into an interactive visualization built from classes. For example, a campus food pantry tracker that warns, in text, when an item runs low (Weeks 6–7).' },
+      { id: 'scene', kind: 'Art', title: 'Interactive 3D scene', story: 'A WEBGL piece with primitives or a model, lights, a texture, and camera or keyboard interaction (Weeks 12–13).' },
+      { id: 'sound', kind: 'Art', title: 'Audio-reactive particle piece', story: 'Particles or shapes that respond to sound and collisions, with sound that starts after a click (Weeks 8 and 11).' },
+      { id: 'own', kind: 'Your idea', title: 'Your own system', story: 'Propose your own small tool, game, or artwork. Keep it small enough to finish, test, and explain.' }
     ],
-    starter: `// Project:
-// Requirements (from your plan):
+    starter: `// MART 220 Final Project
+// Name:
+// Worked with: (classmates you collaborated with, or "no one")
+// AI use: see the AI Use Declaration in my field journal
+//
+// Requirements (from my design):
 //  1.
 //  2.
 //  3.
@@ -2401,11 +2407,11 @@ function draw() {
   background(255);
 }
 
-// --- your own functions ---
+// --- my classes and functions ---
 `,
     checks: [
       C.fn('setup'), C.fn('draw'),
-      { label: 'At least one function of your own', test: function (f) { return f.userFunctions.length >= 1; } },
+      { label: 'Organizes the code with at least one class of your own', test: function (f) { return f.classes.length >= 1; } },
       { label: 'Makes a decision with if', test: function (f) { return f.ifs.length >= 1; } },
       { label: 'Uses a loop or an array', test: function (f) { return f.loops.length >= 1 || f.arrays >= 1; } },
       { label: 'Responds to the mouse or keyboard', test: function (f) { return f.usesMouse || f.usesKeys; } },
@@ -2414,7 +2420,8 @@ function draw() {
     ]
   };
 
-  var api = { LEVELS: LEVELS, CAPSTONE: CAPSTONE, PLAN: PLAN };
+  var api = { LEVELS: LEVELS, CAPSTONE: CAPSTONE, PLAN: PLAN,
+    helpers: { C: C, bright: bright, anyCall: anyCall, shapeVar: shapeVar, firstArrayGlobal: firstArrayGlobal, startsBefore: startsBefore } };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
   root.P5TrailLevels = api;
 })(typeof window !== 'undefined' ? window : globalThis);

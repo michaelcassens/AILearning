@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Static checks for p5.js Code Trail content (js/p5trail_levels.js).
+/* Static checks for p5.js Code Trail content (js/p5trail_levels.js and js/p5trail_course.js).
  * Usage: node tools/p5trail_validate.js
  * Confirms that every example parses, every build solution passes its static
  * checks, every bug fails before the fix and passes after, and every judge
@@ -8,7 +8,7 @@
 'use strict';
 var path = require('path');
 var A = require(path.join(__dirname, '..', 'js', 'p5trail_analyzer.js'));
-var L = require(path.join(__dirname, '..', 'js', 'p5trail_levels.js'));
+var L = require(path.join(__dirname, '..', 'js', 'p5trail_course.js'));
 
 var problems = 0;
 function fail(where, msg) { problems++; console.log('  ✗ ' + where + ': ' + msg); }

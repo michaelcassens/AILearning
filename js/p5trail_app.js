@@ -8,10 +8,40 @@
   var A = window.P5TrailAnalyzer;
   var LEVELS = window.P5TrailLevels.LEVELS;
   var CAP = window.P5TrailLevels.CAPSTONE;
+  var COURSE = window.P5TrailLevels.COURSE || { code: '', weeks: [{ week: 1, title: 'All levels', levels: LEVELS.map(function (l) { return l.id; }) }], refresher: [] };
+
+  // Course order: levels in syllabus-week order, then any not assigned to a week.
+  var ORDER = [];
+  COURSE.weeks.forEach(function (w) { (w.levels || []).forEach(function (id) { if (ORDER.indexOf(id) < 0) { ORDER.push(id); } }); });
+  LEVELS.forEach(function (l) { if (ORDER.indexOf(l.id) < 0) { ORDER.push(l.id); } });
+  function levelById(id) { return LEVELS.filter(function (l) { return l.id === id; })[0] || null; }
+  function weekOf(id) { return COURSE.weeks.filter(function (w) { return (w.levels || []).indexOf(id) >= 0; })[0] || null; }
+  function finalWeek() { return COURSE.weeks.filter(function (w) { return w.final; })[0] || null; }
+  function nextLevel(id) { var i = ORDER.indexOf(id); return i >= 0 && i < ORDER.length - 1 ? levelById(ORDER[i + 1]) : null; }
+  function prevLevel(id) { var i = ORDER.indexOf(id); return i > 0 ? levelById(ORDER[i - 1]) : null; }
+  function isRefresher(id) { return (COURSE.refresher || []).indexOf(id) >= 0; }
+  function weekLabel(w) { return w ? 'Week ' + w.week + ': ' + w.title : ''; }
   var PLAN_PROMPTS = window.P5TrailLevels.PLAN;
 
-  var P5_LOCAL = 'libs/p5.min.js';
-  var P5_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.3/p5.min.js';
+  var ASSETS = window.P5TrailLevels.ASSETS || {};
+  // p5 1.11.4 is the newest version p5play v3 supports.
+  var P5_LOCAL = 'libs/p5trail/p5.min.js';
+  var P5_CDN = 'https://cdn.jsdelivr.net/npm/p5@1.11.4/lib/p5.min.js';
+  // Add-on libraries load only when a sketch uses them. p5play and p5.collide2D
+  // are not redistributed here (see libs/p5trail/README.md).
+  var LIBS = [
+    { id: 'sound', name: 'p5.sound', local: 'libs/p5trail/p5.sound.min.js', cdn: 'https://cdn.jsdelivr.net/npm/p5@1.11.4/lib/addons/p5.sound.min.js', ready: '!!(window.p5 && p5.Oscillator)',
+      test: /\bp5\.(Oscillator|Envelope|Noise|Amplitude|FFT|SoundFile|MonoSynth|PolySynth|Gain|Reverb|Delay|Filter|LowPass|HighPass|Pulse|AudioIn)\b|\b(loadSound|userStartAudio|getAudioContext|outputVolume)\s*\(/ },
+    { id: 'collide', name: 'p5.collide2D', cdn: 'https://cdn.jsdelivr.net/npm/p5.collide2d@0.7.3/p5.collide2d.min.js', ready: '!!(window.p5 && p5.prototype.collideRectRect)', test: /\bcollide[A-Z]\w*\s*\(/ },
+    { id: 'play', name: 'p5play', cdn: ['https://cdn.jsdelivr.net/npm/p5play@3.35.5/planck.min.js', 'https://cdn.jsdelivr.net/npm/p5play@3.35.5/p5play.min.js'], ready: 'typeof p5playInit === "function"',
+      test: /\bnew\s+(Sprite|Group|Canvas|[\w$]+\.Sprite)\b|\bkb\.\w+|\bworld\.\w+|\ballSprites\b/ }
+  ];
+  function libsFor(code) { return LIBS.filter(function (l) { return l.test.test(code); }); }
+  function assetMap() {
+    var out = {};
+    Object.keys(ASSETS).forEach(function (k) { out[k] = ASSETS[k].url; });
+    return out;
+  }
   var STORE_KEY = 'p5CodeTrail.v1';
   var APP = 'p5.js Code Trail';
 
@@ -167,10 +197,12 @@
       } catch (e) { return String(v); }
     }
     var logCount = 0;
+    var muted = true; // library banners are not the student's output
     ['log', 'info', 'warn', 'error'].forEach(function (k) {
       var orig = console[k];
       console[k] = function () {
         var args = Array.prototype.slice.call(arguments);
+        if (muted) { try { orig.apply(console, args); } catch (e) { /* ignore */ } return; }
         if (logCount < 200) { post('log', { level: k, text: args.map(fmt).join(' ') }); }
         logCount++;
         if (logCount === 200) { post('log', { level: 'warn', text: '(More than 200 messages. Stopped showing them.)' }); }
@@ -254,6 +286,29 @@
     var trail = window.__trail = {};
     trail.afterP5 = function () {
       if (!window.p5) { report({ message: 'p5.js could not be loaded. Check your internet connection.', name: 'LoadError' }); return false; }
+      var missing = (cfg.libs || []).filter(function (l) { try { return !(0, eval)(l.ready); } catch (e) { return true; } });
+      if (missing.length) {
+        report({ message: missing.map(function (l) { return l.name; }).join(' and ') + ' could not be loaded. It comes from the internet, so check your connection and run again.', name: 'LoadError' });
+        return false;
+      }
+      // Project files: map each path to its built-in copy, and explain a wrong path clearly.
+      ['loadImage', 'loadJSON', 'loadStrings', 'loadModel', 'loadFont', 'loadSound', 'loadTable', 'loadBytes'].forEach(function (fn) {
+        var o = window.p5.prototype[fn];
+        if (typeof o !== 'function') { return; }
+        window.p5.prototype[fn] = function (path) {
+          var args = Array.prototype.slice.call(arguments);
+          if (typeof path === 'string' && !/^(data:|blob:|https?:)/i.test(path)) {
+            var key = path.replace(/^\.\//, '');
+            if (!cfg.assets[key]) {
+              var err = new Error('File not found: "' + path + '". Files in this project: ' + Object.keys(cfg.assets).join(', '));
+              err.name = 'FileError';
+              throw err;
+            }
+            args[0] = cfg.assets[key];
+          }
+          return o.apply(this, args);
+        };
+      });
       ['rect', 'square', 'circle', 'ellipse', 'line', 'point', 'triangle', 'quad', 'arc', 'text', 'image', 'bezier', 'vertex'].forEach(function (fn) {
         var o = window.p5.prototype[fn];
         if (typeof o !== 'function') { return; }
@@ -265,26 +320,40 @@
       return true;
     };
     trail.run = function (code) {
+      muted = false;
       try {
         (0, eval)(code + '\n;window.__probe = function (__e) { return eval(__e); };\n//# sourceURL=sketch.js');
       } catch (e) { report(e); post('probes', { results: [], aborted: true }); return; }
       hasDraw = typeof window.draw === 'function';
+      // Catch errors here, not only in window.onerror: errors that start inside
+      // p5 itself reach onerror as a bare "Script error." in the sandbox.
       if (typeof window.setup === 'function') {
         var userSetup = window.setup;
         window.setup = function () {
           phase = 'setup';
           try { return userSetup.apply(this, arguments); }
+          catch (e) { report(e); }
           finally { phase = null; setTimeout(onReady, 0); }
         };
       }
       if (hasDraw) {
         var userDraw = window.draw;
         window.draw = function () {
+          if (reported) { return; }
           phase = 'draw'; counts.draw = {};
           try { return userDraw.apply(this, arguments); }
+          catch (e) { report(e); }
           finally { phase = null; lastDraw = counts.draw; framesRun++; if (!ready) { setTimeout(onReady, 0); } }
         };
       }
+      ['preload', 'mousePressed', 'mouseReleased', 'mouseClicked', 'mouseMoved', 'mouseDragged', 'mouseWheel', 'doubleClicked',
+        'keyPressed', 'keyReleased', 'keyTyped', 'touchStarted', 'touchMoved', 'touchEnded', 'windowResized'].forEach(function (name) {
+        var fn = window[name];
+        if (typeof fn !== 'function') { return; }
+        window[name] = function () {
+          try { return fn.apply(this, arguments); } catch (e) { report(e); }
+        };
+      });
       if (typeof window.setup !== 'function' && !hasDraw) {
         post('ready', { w: 0, h: 0, hasCanvas: false, noSketch: true });
         post('probes', { results: [], aborted: false });
@@ -324,13 +393,19 @@
     this.runId = runId;
     runners[runId] = this;
     this.paused = false;
-    var cfg = { runId: runId, loopLimit: 200000, probes: (probes || []).map(function (p, i) { return { id: p.id || String(i), frames: p.frames || 1, expr: p.expr }; }), paused: false };
+    var cfg = { runId: runId, loopLimit: 200000, probes: (probes || []).map(function (p, i) { return { id: p.id || String(i), frames: p.frames || 1, expr: p.expr }; }), paused: false, assets: assetMap(),
+      libs: libsFor(code).map(function (l) { return { name: l.name, ready: l.ready }; }) };
     var json = function (o) { return JSON.stringify(o).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029'); };
     var doc = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Sketch</title>' +
       '<style>html,body{margin:0;padding:0;background:#fff;overflow:hidden}canvas{display:block;max-width:100%;height:auto!important}</style>' +
       '<script>(' + harness.toString() + ')(' + json(cfg) + ');<\/script>' +
       '<script src="' + P5_LOCAL + '"><\/script>' +
       '<script>window.p5||document.write(\'<script src="' + P5_CDN + '"><\\/script>\');<\/script>' +
+      libsFor(code).map(function (lib) {
+        // a local copy first when there is one, then the CDN if it did not load
+        if (lib.local) { return '<script src="' + lib.local + '"><\/script><script>(' + lib.ready + ')||document.write(\'<script src="' + lib.cdn + '"><\\/script>\');<\/script>'; }
+        return [].concat(lib.cdn).map(function (url) { return '<script src="' + url + '"><\/script>'; }).join('');
+      }).join('') +
       '<script>if(window.__trail.afterP5()){window.__trail.run(' + json(A.protectLoops(code)) + ');}<\/script>' +
       '</head><body></body></html>';
     var frame = h('iframe', { class: 'preview', sandbox: 'allow-scripts', title: this.opts.title || 'Sketch preview', loading: 'eager' });
@@ -538,8 +613,21 @@
       this.runner.el,
       h('p', { class: 'kbd-help' }, 'To use the keyboard in a sketch, click the preview (or Tab into it) first.'),
       h('details', { class: 'console-details', open: true }, h('summary', null, 'Console'), this.consoleEl),
+      opts.showFiles ? projectFiles() : null,
       this.analysisEl);
   }
+  // The built-in files sketches can load, with their exact paths.
+  function projectFiles() {
+    var keys = Object.keys(ASSETS);
+    if (!keys.length) { return null; }
+    return h('details', { class: 'files-details' }, h('summary', null, 'Project files you can load'),
+      h('p', { class: 'kbd-help' }, 'Use these paths exactly, for example loadImage(\'assets/bear.png\'). Paths are case-sensitive.'),
+      h('ul', { class: 'file-list' }, keys.map(function (k) {
+        return h('li', null, h('code', null, k), ': ' + ASSETS[k].desc,
+          ASSETS[k].text ? h('details', null, h('summary', null, 'Show what is inside ' + k), h('pre', { class: 'file-pre', tabindex: '0', 'aria-label': 'Contents of ' + k }, ASSETS[k].text)) : null);
+      })));
+  }
+
   Workbench.prototype.log = function (text, cls) {
     this.consoleEl.appendChild(h('div', { class: cls || null }, text));
     this.consoleEl.scrollTop = this.consoleEl.scrollHeight;
@@ -888,9 +976,31 @@
     return h1;
   }
 
-  /* ---------- Home: the trail map ---------- */
+  /* ---------- Home: the course map ---------- */
+  function levelCard(lv, nextId) {
+    var p = levelProgress(lv);
+    var w = weekOf(lv.id);
+    return h('li', null, h('a', { class: 'trail-card' + (lv.id === nextId ? ' next' : ''), href: '#/level/' + lv.id },
+      h('span', { class: 'num' }, 'Level ' + lv.id + (isRefresher(lv.id) ? ' · Refresher' : '') + (lv.id === nextId ? ' · Recommended next' : '') + (p.done === p.total ? ' · Complete' : '')),
+      h('span', { class: 'trail-title' }, lv.title),
+      h('p', null, lv.tagline),
+      progressBar(p.done, p.total, 'Level ' + lv.id),
+      h('ul', { class: 'skills', 'aria-label': 'Skills' }, p.skills.map(function (s) { return h('li', { class: s.done ? 'done' : null }, s.done ? '✓ ' : '', s.label, h('span', { class: 'visually-hidden' }, s.done ? ' (earned)' : ' (not yet)')); }))));
+  }
+  function finalCard(nextId) {
+    var cs = state.capstone || {};
+    return h('li', null, h('a', { class: 'trail-card' + (nextId === null ? ' next' : ''), href: '#/capstone' },
+      h('span', { class: 'num' }, 'Final project' + (nextId === null && !cs.done ? ' · Recommended next' : '') + (cs.done ? ' · Complete' : '')),
+      h('span', { class: 'trail-title' }, CAP.title),
+      h('p', null, CAP.tagline)));
+  }
+  function recommendedId() {
+    var id = null;
+    ORDER.some(function (lid) { var p = levelProgress(levelById(lid)); if (p.done < p.total) { id = lid; return true; } return false; });
+    return id;
+  }
   function viewHome() {
-    document.title = APP + ' — University of Montana';
+    document.title = APP + (COURSE.code ? ' — ' + COURSE.code : '') + ' — University of Montana';
     page('p5.js Code Trail');
     main.appendChild(h('p', { class: 'lede' }, 'Learn to code in p5.js by writing, reading, debugging, and judging code, including code an AI wrote. Nothing here is timed. You move forward by understanding and explaining, not by being fast.'));
 
@@ -907,49 +1017,96 @@
     main.appendChild(h('div', { class: 'card', style: 'border-left: 6px solid var(--copper-climb)' },
       h('h2', { class: 'panel-title' }, 'Try first, then ask'),
       h('p', null, 'Help is always available, but it unlocks after you make an honest attempt: save a plan and check your work once. Hints come in steps, and a full worked solution comes last. If you use one, you answer questions about it before you can copy it. That mirrors how to use an AI assistant well: think first, ask well, verify everything, and only use code you can explain.'),
-      h('p', null, h('a', { href: '#/guide' }, 'Read the guide to using AI well while learning to code'))));
+      h('p', null, h('a', { href: '#/guide' }, 'Read the guide to using AI well' + (COURSE.code ? ', including the ' + COURSE.code + ' AI policy' : '')))));
 
-    main.appendChild(h('h2', { id: 'trail-h' }, 'The trail'));
-    var nextId = null;
-    LEVELS.some(function (lv) { var p = levelProgress(lv); if (p.done < p.total) { nextId = lv.id; return true; } return false; });
-    var ol = h('ol', { class: 'trail', 'aria-labelledby': 'trail-h' });
-    LEVELS.forEach(function (lv) {
-      var p = levelProgress(lv);
-      ol.appendChild(h('li', null, h('a', { class: 'trail-card' + (lv.id === nextId ? ' next' : ''), href: '#/level/' + lv.id },
-        h('span', { class: 'num' }, 'Level ' + lv.id + (lv.id === nextId ? ' · Recommended next' : '') + (p.done === p.total ? ' · Complete' : '')),
-        h('span', { class: 'trail-title' }, lv.title),
-        h('p', null, lv.tagline),
-        progressBar(p.done, p.total, 'Level ' + lv.id),
-        h('ul', { class: 'skills', 'aria-label': 'Skills' }, p.skills.map(function (s) { return h('li', { class: s.done ? 'done' : null }, s.done ? '✓ ' : '', s.label, h('span', { class: 'visually-hidden' }, s.done ? ' (earned)' : ' (not yet)')); })))));
+    var nextId = recommendedId();
+    main.appendChild(h('h2', { id: 'map-h' }, (COURSE.code ? COURSE.code + ' ' : '') + 'course map'));
+    main.appendChild(h('p', null, 'Levels are grouped by the syllabus week where they fit. Levels 1–10 review Creative Coding 1; skip ahead if you are comfortable, or use them as a refresher. Every level is open.'));
+    COURSE.weeks.forEach(function (w) {
+      var headId = 'week-' + w.week + '-h';
+      var sec = h('section', { 'aria-labelledby': headId, class: 'week-section' },
+        h('h3', { id: headId }, h('a', { href: '#/week/' + w.week }, 'Week ' + w.week + ': ' + w.title)),
+        h('p', { class: 'muted' }, w.focus));
+      var ol = h('ol', { class: 'trail', 'aria-labelledby': headId });
+      if (w.final) { ol.appendChild(finalCard(nextId)); }
+      (w.levels || []).forEach(function (id) { var lv = levelById(id); if (lv) { ol.appendChild(levelCard(lv, nextId)); } });
+      sec.appendChild(ol);
+      main.appendChild(sec);
     });
-    var cs = state.capstone || {};
-    ol.appendChild(h('li', null, h('a', { class: 'trail-card' + (nextId === null ? ' next' : ''), href: '#/capstone' },
-      h('span', { class: 'num' }, 'Level 11' + (cs.done ? ' · Complete' : '')),
-      h('span', { class: 'trail-title' }, CAP.title),
-      h('p', null, CAP.tagline))));
-    main.appendChild(ol);
-    main.appendChild(h('p', { class: 'muted' }, 'Levels build on each other, but every level is open. Start at Level 1 if you are new to programming.'));
+    if (!finalWeek()) {
+      var ol2 = h('ol', { class: 'trail' }); ol2.appendChild(finalCard(nextId)); main.appendChild(ol2);
+    }
+    main.appendChild(h('p', { class: 'muted' }, 'Weeks 14–15 (Unity) are not part of this trail.'));
+  }
+
+  // A button that copies a link to part of the trail, for posting in Canvas.
+  function copyLinkButton(hash, label) {
+    var url = location.href.split('#')[0] + hash;
+    var status = h('span', { role: 'status', class: 'muted' });
+    var btn = h('button', { type: 'button', class: 'secondary', onclick: function () {
+      var done = function () { status.textContent = 'Link copied: ' + url; };
+      if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done, function () { status.textContent = url; }); }
+      else { status.textContent = url; }
+    } }, label);
+    return h('p', { class: 'toolbar no-print' }, btn, status);
+  }
+
+  /* ---------- Week page (for assigning a week in Canvas) ---------- */
+  function viewWeek(w) {
+    document.title = 'Week ' + w.week + ': ' + w.title + ' — ' + APP;
+    page('Week ' + w.week + ': ' + w.title, [['Course map', '#/'], ['Week ' + w.week, null]]);
+    main.appendChild(h('p', { class: 'lede' }, w.focus));
+    main.appendChild(copyLinkButton('#/week/' + w.week, 'Copy a link to this week'));
+    if (w.final) {
+      main.appendChild(h('ol', { class: 'trail' }, finalCard(recommendedId())));
+    }
+    (w.levels || []).forEach(function (id) {
+      var lv = levelById(id);
+      if (!lv) { return; }
+      var p = levelProgress(lv);
+      var headId = 'lv-' + id + '-h';
+      main.appendChild(h('section', { class: 'card', 'aria-labelledby': headId },
+        h('h2', { id: headId, class: 'panel-title' }, h('a', { href: '#/level/' + id }, 'Level ' + id + ': ' + lv.title)),
+        isRefresher(id) ? h('p', { class: 'muted' }, 'Refresher from Creative Coding 1.') : null,
+        h('p', null, lv.tagline),
+        progressBar(p.done, p.total, 'Level ' + id),
+        h('ol', { class: 'activity-list', style: 'margin-top:0.75rem' }, levelActivities(lv).map(activityItem))));
+    });
+    var idx = COURSE.weeks.indexOf(w);
+    var nav = h('p', { class: 'toolbar' });
+    if (COURSE.weeks[idx - 1]) { nav.appendChild(h('a', { class: 'button secondary', href: '#/week/' + COURSE.weeks[idx - 1].week }, '← Week ' + COURSE.weeks[idx - 1].week)); }
+    if (COURSE.weeks[idx + 1]) { nav.appendChild(h('a', { class: 'button secondary', href: '#/week/' + COURSE.weeks[idx + 1].week }, 'Week ' + COURSE.weeks[idx + 1].week + ' →')); }
+    main.appendChild(nav);
+  }
+
+  function activityItem(a) {
+    return h('li', null, h('a', { href: a.href },
+      a.rating ? h('span', { html: RATINGS[a.rating].svg }) : null,
+      h('span', null, h('strong', null, a.label), h('span', { class: 'muted' }, a.desc)),
+      h('span', { class: 'status ' + (a.done ? 'done' : a.started ? 'progress-s' : '') }, a.done ? '✓ Complete' : a.started ? 'In progress: next, ' + a.left : 'Not started')));
   }
 
   /* ---------- Level overview ---------- */
   function viewLevel(lv) {
+    var w = weekOf(lv.id);
     document.title = 'Level ' + lv.id + ': ' + lv.title + ' — ' + APP;
-    page('Level ' + lv.id + ': ' + lv.title, [['Trail map', '#/'], ['Level ' + lv.id, null]]);
+    page('Level ' + lv.id + ': ' + lv.title, [['Course map', '#/']].concat(w ? [['Week ' + w.week, '#/week/' + w.week]] : []).concat([['Level ' + lv.id, null]]));
     main.appendChild(h('p', { class: 'lede' }, lv.tagline));
+    if (w) {
+      main.appendChild(h('p', null, (COURSE.code ? COURSE.code + ', ' : ''), h('a', { href: '#/week/' + w.week }, weekLabel(w)),
+        isRefresher(lv.id) ? ' (refresher from Creative Coding 1)' : ''));
+    }
     main.appendChild(h('p', null, h('span', { class: 'visually-hidden' }, 'Concepts: '), lv.concepts.map(function (c) { return h('span', { class: 'chip' }, c); })));
     var p = levelProgress(lv);
     main.appendChild(progressBar(p.done, p.total, 'Level ' + lv.id));
     main.appendChild(h('h2', null, 'Activities'));
-    main.appendChild(h('ol', { class: 'activity-list' }, levelActivities(lv).map(function (a) {
-      return h('li', null, h('a', { href: a.href },
-        a.rating ? h('span', { html: RATINGS[a.rating].svg }) : null,
-        h('span', null, h('strong', null, a.label), h('span', { class: 'muted' }, a.desc)),
-        h('span', { class: 'status ' + (a.done ? 'done' : a.started ? 'progress-s' : '') }, a.done ? '✓ Complete' : a.started ? 'In progress: next, ' + a.left : 'Not started')));
-    })));
+    main.appendChild(h('ol', { class: 'activity-list' }, levelActivities(lv).map(activityItem)));
     var nav = h('p', { class: 'toolbar' });
-    if (lv.id > 1) { nav.appendChild(h('a', { class: 'button secondary', href: '#/level/' + (lv.id - 1) }, '← Level ' + (lv.id - 1))); }
-    nav.appendChild(lv.id < LEVELS.length ? h('a', { class: 'button secondary', href: '#/level/' + (lv.id + 1) }, 'Level ' + (lv.id + 1) + ' →') : h('a', { class: 'button secondary', href: '#/capstone' }, 'Capstone →'));
+    var prev = prevLevel(lv.id), next = nextLevel(lv.id);
+    if (prev) { nav.appendChild(h('a', { class: 'button secondary', href: '#/level/' + prev.id }, '← Level ' + prev.id + ': ' + prev.title)); }
+    nav.appendChild(next ? h('a', { class: 'button secondary', href: '#/level/' + next.id }, 'Level ' + next.id + ': ' + next.title + ' →') : h('a', { class: 'button secondary', href: '#/capstone' }, 'Final project →'));
     main.appendChild(nav);
+    main.appendChild(copyLinkButton('#/level/' + lv.id, 'Copy a link to this level'));
   }
 
   function nextLink(lv, currentKey) {
@@ -971,8 +1128,8 @@
     var next = acts.slice(idx + 1).filter(function (a) { return !a.done; })[0] || acts[idx + 1];
     var nextHref, nextText;
     if (next) { nextHref = next.href; nextText = 'Next: ' + next.label + ' →'; }
-    else if (lv.id < LEVELS.length) { nextHref = '#/level/' + (lv.id + 1) + '/learn'; nextText = 'On to Level ' + (lv.id + 1) + ': ' + LEVELS[lv.id].title + ' →'; }
-    else { nextHref = '#/capstone'; nextText = 'On to the capstone →'; }
+    else if (nextLevel(lv.id)) { var nl = nextLevel(lv.id); nextHref = '#/level/' + nl.id + '/learn'; nextText = 'On to Level ' + nl.id + ': ' + nl.title + ' →'; }
+    else { nextHref = '#/capstone'; nextText = 'On to the final project →'; }
     var remaining = acts.filter(function (a) { return !a.done; });
     clear(slot);
     if (me.done) {
@@ -991,7 +1148,7 @@
     var s = lvState(lv.id).learn;
     var L = lv.learn;
     document.title = 'Learn — Level ' + lv.id + ' — ' + APP;
-    page('Learn: ' + lv.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Learn', null]]);
+    page('Learn: ' + lv.title, [['Course map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Learn', null]]);
     main.appendChild(activityNav(lv, 'learn'));
     var left = h('div');
     left.appendChild(h('h2', null, 'The big ideas'));
@@ -1010,7 +1167,7 @@
     left.appendChild(predictWrap);
 
     var runBtnNote = h('p', { class: 'muted' });
-    var wb = new Workbench({ id: 'learn-code', title: 'Example', code: L.example, label: 'Example code (you can edit it)', resetCode: L.example,
+    var wb = new Workbench({ id: 'learn-code', showFiles: lv.id >= 11, title: 'Example', code: L.example, label: 'Example code (you can edit it)', resetCode: L.example,
       onRun: function () { s.ran = true; save(); finishLearn(); } });
     function finishLearn() {
       if (s.predicted && s.ran && !s.done) { s.done = true; save(); announce('Learn activity complete.'); }
@@ -1043,7 +1200,7 @@
     var s = lvState(lv.id).build;
     if (!s.plan) { s.plan = ['', '', '']; }
     document.title = 'Build — Level ' + lv.id + ' — ' + APP;
-    page('Build: ' + B.context.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Build', null]]);
+    page('Build: ' + B.context.title, [['Course map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Build', null]]);
     main.appendChild(activityNav(lv, 'build'));
     var left = h('div');
     left.appendChild(contextCard(B.context));
@@ -1106,7 +1263,7 @@
     left.appendChild(nextLink(lv, 'build'));
 
     var checkBtn = h('button', { type: 'button', onclick: function () { checkWork(); } }, 'Check my work');
-    var wb = new Workbench({ id: 'build-code', title: 'Workbench', code: s.code !== undefined ? s.code : B.starter, resetCode: B.starter,
+    var wb = new Workbench({ id: 'build-code', showFiles: lv.id >= 11, title: 'Workbench', code: s.code !== undefined ? s.code : B.starter, resetCode: B.starter,
       label: 'Your code', extraButtons: [checkBtn],
       onChange: function (code) { s.code = code; save(); },
       onEdit: function () { markStale(checkFb, 'You changed your code since the last check. Press Check my work to check it again.'); } });
@@ -1282,7 +1439,7 @@
     var s = lvState(lv.id).read;
     s.answers = s.answers || {};
     document.title = 'Read and explain — Level ' + lv.id + ' — ' + APP;
-    page('Read and explain', [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Read and explain', null]]);
+    page('Read and explain', [['Course map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Read and explain', null]]);
     main.appendChild(activityNav(lv, 'read'));
     var left = h('div');
     left.appendChild(h('p', { class: 'lede' }, R.context));
@@ -1343,7 +1500,7 @@
     }
     updateDone();
 
-    var wb = new Workbench({ id: 'read-code', title: 'Workbench', code: R.code, resetCode: R.code, label: 'The code (edit it to experiment)' });
+    var wb = new Workbench({ id: 'read-code', showFiles: lv.id >= 11, title: 'Workbench', code: R.code, resetCode: R.code, label: 'The code (edit it to experiment)' });
     main.appendChild(h('div', { class: 'activity two-col' }, left, wb.el));
   }
 
@@ -1360,7 +1517,7 @@
     var bug = lv.bugs[n];
     var s = bugState(lv.id, n);
     document.title = 'Bug hunt ' + (n + 1) + ' — Level ' + lv.id + ' — ' + APP;
-    page('Bug hunt: ' + bug.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Bug hunt ' + (n + 1), null]]);
+    page('Bug hunt: ' + bug.title, [['Course map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Bug hunt ' + (n + 1), null]]);
     main.appendChild(activityNav(lv, 'bug' + n));
     var left = h('div');
     left.appendChild(h('p', null, rating(bug.rating)));
@@ -1373,7 +1530,7 @@
     left.appendChild(nextLink(lv, 'bug' + n));
 
     var currentFixFb = null;
-    var wb = new Workbench({ id: 'bug-code', title: 'Workbench', code: s.code !== undefined ? s.code : bug.code, resetCode: bug.code, readOnly: !s.causeOk,
+    var wb = new Workbench({ id: 'bug-code', showFiles: lv.id >= 11, title: 'Workbench', code: s.code !== undefined ? s.code : bug.code, resetCode: bug.code, readOnly: !s.causeOk,
       label: 'The buggy code', onChange: function (code) { s.code = code; save(); },
       onEdit: function () { markStale(currentFixFb, 'You changed the code since the last check. Press Check my fix to check it again.'); },
       extraButtons: [] });
@@ -1543,7 +1700,7 @@
     var s = lvState(lv.id).judge;
     s.rows = s.rows || {};
     document.title = 'Judge the AI — Level ' + lv.id + ' — ' + APP;
-    page('Judge the AI: ' + J.context.title, [['Trail map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Judge the AI', null]]);
+    page('Judge the AI: ' + J.context.title, [['Course map', '#/'], ['Level ' + lv.id, '#/level/' + lv.id], ['Judge the AI', null]]);
     main.appendChild(activityNav(lv, 'judge'));
     var left = h('div');
     left.appendChild(h('div', { class: 'card context' },
@@ -1699,7 +1856,7 @@
       if (t) { t.setAttribute('tabindex', '-1'); t.focus(); }
     }
     render();
-    var wb = new Workbench({ id: 'judge-code', title: 'The AI\'s code', code: J.aiCode, resetCode: J.aiCode, label: 'AI-generated code (edit it to test)' });
+    var wb = new Workbench({ id: 'judge-code', showFiles: lv.id >= 11, title: 'The AI\'s code', code: J.aiCode, resetCode: J.aiCode, label: 'AI-generated code (edit it to test)' });
     main.appendChild(h('div', { class: 'activity two-col' }, left, wb.el));
   }
 
@@ -1708,14 +1865,16 @@
     var s = state.capstone = state.capstone || {};
     s.plan = s.plan || {};
     s.helpPlan = s.helpPlan || {};
-    document.title = 'Capstone — ' + APP;
-    page(CAP.title, [['Trail map', '#/'], ['Capstone', null]]);
-    main.appendChild(h('p', { class: 'lede' }, 'This time you define the problem, design the system, and decide where help belongs, then build it and explain it. This is how professionals work with AI: the thinking and the responsibility stay with you.'));
+    document.title = 'Final project — ' + APP;
+    page(CAP.title, [['Course map', '#/'], ['Final project', null]]);
+    main.appendChild(h('p', { class: 'lede' }, 'This time you define the problem, design the system, and decide where help belongs, then build it, explain it, and document how you used AI. This is how professionals work with AI: the thinking and the responsibility stay with you.'));
+    var fw = finalWeek();
+    if (fw) { main.appendChild(h('p', null, (COURSE.code ? COURSE.code + ', ' : ''), h('a', { href: '#/week/' + fw.week }, weekLabel(fw)), '. Your project will be due by the date on the syllabus.')); }
     var left = h('div');
     var stepsWrap = h('div');
     left.appendChild(stepsWrap);
     var checkBtn = h('button', { type: 'button', onclick: function () { checkWork(); } }, 'Check my work');
-    var wb = new Workbench({ id: 'cap-code', title: 'Workbench', code: s.code !== undefined ? s.code : CAP.starter, resetCode: CAP.starter, label: 'Your project code', extraButtons: [checkBtn], minRows: 14,
+    var wb = new Workbench({ id: 'cap-code', showFiles: true, title: 'Workbench', code: s.code !== undefined ? s.code : CAP.starter, resetCode: CAP.starter, label: 'Your project code', extraButtons: [checkBtn], minRows: 14,
       onChange: function (c) { s.code = c; save(); } });
     var checksResults = s.lastResults || null;
 
@@ -1835,36 +1994,81 @@
         stepsWrap.appendChild(st4.el);
       }
 
-      // 5. explain & disclose
+      // 5. explain and disclose (follows the course AI policy)
       if (!s.passed) { stepsWrap.appendChild(step(5, 'Explain and disclose', { locked: true, lockText: 'Unlocks when the build checks pass.' }).el); }
       else {
+        var ai = COURSE.ai || {};
         var st5 = step(5, 'Explain and disclose', { complete: !!s.done });
-        st5.body.appendChild(textField('Walk through how your system works (at least 60 words)', 'walkthrough', s, 7, 'Cover the state, each function, the decisions, and the interaction. Refer to names in your code.'));
+        st5.body.appendChild(textField('Walk through how your system works (at least 60 words)', 'walkthrough', s, 7, 'Cover the state, each class and function, the decisions, and the interaction. Refer to names in your code.'));
         st5.body.appendChild(textField('Which of your requirements did you test, and how?', 'testing', s, 3));
         st5.body.appendChild(textField('What would you improve next?', 'improve', s, 2));
-        var dname = uid('disc');
-        var dradios = [];
-        st5.body.appendChild(h('fieldset', { class: 'choices' }, h('legend', null, 'AI and help disclosure'), [['none', 'I did not use AI or hints'], ['hints', 'I used hints or an AI tutor, but wrote the code myself'], ['drafts', 'Some code started as AI-generated drafts that I reviewed and changed']].map(function (o) {
-          var input = h('input', { type: 'radio', name: dname, value: o[0], checked: s.disclosure === o[0] });
-          dradios.push(input);
-          return h('label', null, input, h('span', null, o[1]));
-        })));
-        st5.body.appendChild(textField('If you used help: which parts, and what did you change or verify?', 'disclosureDetail', s, 3));
+        st5.body.appendChild(textField('Worked with', 'workedWith', s, 1, (ai.collaboration || 'Credit anyone you worked with.') + ' Write "no one" if you worked alone.'));
+
+        st5.body.appendChild(h('h3', null, 'AI use declaration'));
+        if (ai.expectation) { st5.body.appendChild(h('p', null, ai.expectation)); }
+        s.aiPurposes = s.aiPurposes || [];
+        var noneId = uid('noai');
+        var noneBox = h('input', { type: 'checkbox', id: noneId, checked: !!s.noAI });
+        var purposeBoxes = (ai.purposes || []).map(function (pz) {
+          var id = uid('purpose');
+          var box = h('input', { type: 'checkbox', id: id, value: pz, checked: s.aiPurposes.indexOf(pz) >= 0 });
+          return { box: box, label: h('label', { for: id }, box, h('span', null, pz)) };
+        });
+        st5.body.appendChild(h('fieldset', { class: 'choices' }, h('legend', null, 'What did you use generative AI for? Check all that apply.'),
+          purposeBoxes.map(function (pb) { return pb.label; }),
+          h('label', { for: noneId }, noneBox, h('span', null, 'I did not use generative AI for this project'))));
+        var declEl = h('blockquote', { class: 'card', style: 'margin:0.5rem 0' });
+        var aiDetails = h('div');
+        function updateDeclaration() {
+          s.aiPurposes = purposeBoxes.filter(function (pb) { return pb.box.checked; }).map(function (pb) { return pb.box.value; });
+          s.noAI = noneBox.checked;
+          if (s.noAI) { purposeBoxes.forEach(function (pb) { pb.box.checked = false; }); s.aiPurposes = []; }
+          save();
+          clear(declEl);
+          if (s.aiPurposes.length) {
+            declEl.appendChild(document.createTextNode(declarationText(s)));
+            aiDetails.hidden = false;
+          } else {
+            declEl.appendChild(document.createTextNode(s.noAI ? 'No generative AI tools were used in this project.' : 'Check what you used AI for, or that you did not use it.'));
+            aiDetails.hidden = true;
+          }
+        }
+        purposeBoxes.forEach(function (pb) { pb.box.addEventListener('change', function () { if (pb.box.checked) { noneBox.checked = false; } updateDeclaration(); }); });
+        noneBox.addEventListener('change', updateDeclaration);
+        st5.body.appendChild(h('p', null, 'Your declaration (included in your field journal):'));
+        st5.body.appendChild(declEl);
+
+        aiDetails.appendChild(textField('Which parts of your project were AI-assisted, and what did you change or verify?', 'disclosureDetail', s, 3, 'Name the features, functions, or lines. Say what you kept, changed, or rejected, and how you tested it.'));
+        aiDetails.appendChild(textField('Reflection: how useful was the AI, where did it fall short, and did you notice any inaccuracies, bias, or ethical concerns?', 'aiReflection', s, 4, 'At least 25 words.'));
+        s.aiChecklist = s.aiChecklist || {};
+        var checkBoxes = (ai.checklist || []).map(function (item, i) {
+          var id = uid('aichk');
+          var box = h('input', { type: 'checkbox', id: id, checked: !!s.aiChecklist[i] });
+          box.addEventListener('change', function () { s.aiChecklist[i] = box.checked; save(); });
+          return { box: box, label: h('label', { for: id }, box, h('span', null, item)) };
+        });
+        aiDetails.appendChild(h('fieldset', { class: 'choices' }, h('legend', null, 'Responsible AI use checklist'), checkBoxes.map(function (c) { return c.label; })));
+        st5.body.appendChild(aiDetails);
+        updateDeclaration();
+
         var efb = h('div', { class: 'feedback', role: 'status' });
         st5.body.appendChild(h('button', { type: 'button', onclick: function () {
-          var d = null; dradios.forEach(function (r) { if (r.checked) { d = r.value; } });
-          s.disclosure = d;
           var r = A.analyze(s.passedCode || wb.editor.get());
           var res = A.checkExplanation(s.walkthrough, A.ideasFor(r.facts));
           if (res.words < 60) { feedback(efb, 'warn', 'The walkthrough needs at least 60 words (you have ' + res.words + ').'); return; }
-          if (!d) { feedback(efb, 'warn', 'Choose a disclosure option.'); return; }
-          if (d !== 'none' && words(s.disclosureDetail) < 8) { feedback(efb, 'warn', 'Describe which parts used help, and what you changed or verified (at least 8 words).'); return; }
+          if (words(s.workedWith) < 1) { feedback(efb, 'warn', 'Fill in "Worked with" (write "no one" if you worked alone).'); return; }
+          if (!s.noAI && !s.aiPurposes.length) { feedback(efb, 'warn', 'Complete the AI use declaration: check what you used AI for, or that you did not use it.'); return; }
+          if (s.aiPurposes.length) {
+            if (words(s.disclosureDetail) < 8) { feedback(efb, 'warn', 'Describe which parts were AI-assisted and what you changed or verified (at least 8 words).'); return; }
+            if (words(s.aiReflection) < 25) { feedback(efb, 'warn', 'The reflection needs at least 25 words (you have ' + words(s.aiReflection) + ').'); return; }
+            if (!checkBoxes.every(function (c) { return c.box.checked; })) { feedback(efb, 'warn', 'Work through every item on the responsible AI use checklist before submitting.'); return; }
+          }
           s.done = true; s.explainedCode = s.passedCode || wb.editor.get(); save();
           explanationFeedback(efb, res, 60, true);
           st5.el.classList.add('complete');
-          announce('Capstone complete. Download your field journal to submit it.');
+          announce('Final project complete. Download your field journal to submit it.');
           efb.appendChild(h('p', null, h('a', { href: '#/journal' }, 'Open your field journal to download or print your work')));
-        } }, 'Submit capstone'));
+        } }, 'Submit final project'));
         st5.body.appendChild(efb);
         stepsWrap.appendChild(st5.el);
       }
@@ -1881,7 +2085,7 @@
   /* ---------- Studio ---------- */
   function viewStudio() {
     document.title = 'Studio — ' + APP;
-    page('Studio', [['Trail map', '#/'], ['Studio', null]]);
+    page('Studio', [['Course map', '#/'], ['Studio', null]]);
     var starter = '// Your own sketch. Run it, then press "Explain my code".\nfunction setup() {\n  createCanvas(400, 400);\n}\n\nfunction draw() {\n  background(239, 232, 212);\n  circle(mouseX, mouseY, 40);\n}\n';
     var s = state.studio = state.studio || {};
     var left = h('div');
@@ -1899,16 +2103,30 @@
         clear(promptHolder);
         promptHolder.appendChild(copyBlock(tutorPrompt({ code: wb.editor.get(), task: 'Get feedback on my sketch.', asks: ['Describe in plain language what my sketch does.', 'List up to three improvements (readability, naming, structure, accessibility), and explain why each matters.', 'Do not rewrite my code. Point to line numbers instead.'] }), 'A review prompt'));
       } }, 'Write the prompt'), promptHolder));
-    var wb = new Workbench({ id: 'studio-code', title: 'Workbench', code: s.code || starter, resetCode: starter, label: 'Your code', minRows: 14, onChange: function (c) { s.code = c; save(); } });
+    var wb = new Workbench({ id: 'studio-code', showFiles: true, title: 'Workbench', code: s.code || starter, resetCode: starter, label: 'Your code', minRows: 14, onChange: function (c) { s.code = c; save(); } });
     main.appendChild(h('div', { class: 'activity two-col' }, left, wb.el));
   }
 
   /* ---------- Guide ---------- */
   function viewGuide() {
     document.title = 'Using AI well — ' + APP;
-    page('Using AI well while learning to code', [['Trail map', '#/'], ['Using AI well', null]]);
+    page('Using AI well while learning to code', [['Course map', '#/'], ['Using AI well', null]]);
     main.appendChild(h('p', { class: 'lede' }, 'AI assistants can write code. Your job is to know what the code should do, judge whether it does it, and explain why. That is what this trail practices.'));
-    main.appendChild(h('p', null, h('strong', null, 'Always follow your instructor\'s policy. '), 'Some assignments allow AI help, and some do not. When in doubt, ask.'));
+    var ai = COURSE.ai;
+    if (ai) {
+      main.appendChild(h('section', { class: 'card', 'aria-labelledby': 'policy-h', style: 'border-left: 6px solid var(--copper-climb)' },
+        h('h2', { id: 'policy-h', class: 'panel-title' }, (COURSE.code ? COURSE.code + ' ' : '') + 'AI policy in brief'),
+        h('p', null, ai.expectation),
+        h('dl', { class: 'terms' }, ai.policy.map(function (pp) { return [h('dt', null, pp[0]), h('dd', null, pp[1])]; })),
+        h('p', null, h('strong', null, 'Student AI Use Declaration. '), 'Include this with every assignment where you used generative AI:'),
+        h('blockquote', { class: 'prompt' }, ai.declaration.replace('{purposes}', '[for example: brainstorming, drafting, editing, coding]')),
+        h('p', null, h('strong', null, 'Before you submit, make sure that:')),
+        h('ul', null, ai.checklist.map(function (c) { return h('li', null, c); })),
+        h('p', null, ai.collaboration),
+        h('p', { class: 'muted' }, 'This is a summary. The syllabus is the official version.')));
+    } else {
+      main.appendChild(h('p', null, h('strong', null, 'Always follow your instructor\'s policy. '), 'Some assignments allow AI help, and some do not. When in doubt, ask.'));
+    }
     var steps = [
       ['Understand the problem first', 'Who is it for? What should happen? What counts as done? Write the requirements down before you touch code. You cannot judge code against a goal you never defined.'],
       ['Try it yourself', 'Even a broken attempt shows you exactly what you are stuck on. That makes any help, from a person or an AI, much more useful.'],
@@ -1935,6 +2153,14 @@
       h('li', null, 'A full worked solution comes last. Before you can copy it, you answer questions about it, and you still explain your final code.'),
       h('li', null, 'Help is never a penalty. It is recorded in your field journal so you, and your instructor, can see how you learned.'),
       h('li', null, 'Code feedback in this app comes from rules, not an AI, and never leaves your browser.')));
+  }
+
+  function declarationText(c) {
+    var ai = COURSE.ai || {};
+    if (c.noAI) { return 'No generative AI tools were used in this project.'; }
+    var list = (c.aiPurposes || []).slice();
+    var joined = list.length > 1 ? list.slice(0, -1).join(', ') + ', and ' + list[list.length - 1] : list.join('');
+    return (ai.declaration || 'This assignment involves using generative AI tools for the following purposes: {purposes}.').replace('{purposes}', joined);
   }
 
   /* ---------- Field journal ---------- */
@@ -1987,14 +2213,24 @@
       ce.push(['Walkthrough', c.walkthrough || '']);
       ce.push(['Testing', c.testing || '']);
       ce.push(['Next improvement', c.improve || '']);
-      ce.push(['AI and help disclosure', ({ none: 'No AI or hints used.', hints: 'Used hints or an AI tutor; wrote the code myself.', drafts: 'Some code started as AI drafts that I reviewed and changed.' })[c.disclosure] + (c.disclosureDetail ? '\n' + c.disclosureDetail : '')]);
+      ce.push(['Worked with', c.workedWith || '']);
+      if (c.noAI || (c.aiPurposes && c.aiPurposes.length)) {
+        ce.push(['Student AI Use Declaration', declarationText(c)]);
+        if (c.aiPurposes && c.aiPurposes.length) {
+          ce.push(['AI-assisted parts and what I changed', c.disclosureDetail || '']);
+          ce.push(['Reflection on AI use', c.aiReflection || '']);
+          ce.push(['Responsible AI use checklist', ((COURSE.ai || {}).checklist || []).map(function (item, i) { return (c.aiChecklist && c.aiChecklist[i] ? '[x] ' : '[ ] ') + item; }).join('\n')]);
+        }
+      } else if (c.disclosure) {
+        ce.push(['AI and help disclosure', ({ none: 'No AI or hints used.', hints: 'Used hints or an AI tutor; wrote the code myself.', drafts: 'Some code started as AI drafts that I reviewed and changed.' })[c.disclosure] + (c.disclosureDetail ? '\n' + c.disclosureDetail : '')]);
+      }
       ce.push(['Final code', c.explainedCode || '']);
     }
     out.push({ title: CAP.title, progress: c.done ? 'Complete' : 'Not complete', entries: ce });
     return out;
   }
   function journalText() {
-    var lines = ['p5.js Code Trail: Field Journal', 'Name: ' + (state.name || ''), 'Course: ' + (state.course || ''), 'Exported: ' + new Date().toLocaleString(), ''];
+    var lines = ['p5.js Code Trail: Field Journal', 'Name: ' + (state.name || ''), 'Course: ' + (state.course || COURSE.code || ''), 'Exported: ' + new Date().toLocaleString(), ''];
     journalData().forEach(function (sec) {
       lines.push('== ' + sec.title + ' (' + sec.progress + ') ==');
       if (!sec.entries.length) { lines.push('(nothing yet)'); }
@@ -2005,11 +2241,11 @@
   }
   function viewJournal() {
     document.title = 'Field journal — ' + APP;
-    page('Field journal', [['Trail map', '#/'], ['Field journal', null]]);
+    page('Field journal', [['Course map', '#/'], ['Field journal', null]]);
     main.appendChild(h('p', { class: 'lede' }, 'Everything you planned, explained, and decided, in one place. Download it or print it to share with your instructor.'));
     var nameId = uid('name'), courseId = uid('course');
     var nameIn = h('input', { type: 'text', id: nameId, autocomplete: 'name' }); nameIn.value = state.name || '';
-    var courseIn = h('input', { type: 'text', id: courseId }); courseIn.value = state.course || '';
+    var courseIn = h('input', { type: 'text', id: courseId }); courseIn.value = state.course || COURSE.code || '';
     nameIn.addEventListener('input', function () { state.name = nameIn.value; save(); });
     courseIn.addEventListener('input', function () { state.course = courseIn.value; save(); });
     main.appendChild(h('div', { class: 'card no-print grid', style: 'grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))' },
@@ -2019,9 +2255,12 @@
     main.appendChild(h('div', { class: 'toolbar no-print' },
       h('button', { type: 'button', onclick: function () {
         var blob = new Blob([journalText()], { type: 'text/plain' });
-        var a = h('a', { href: URL.createObjectURL(blob), download: 'p5-code-trail-journal' + (state.name ? '-' + state.name.replace(/[^\w-]+/g, '_') : '') + '.txt' });
+        // Course naming style: MART220LastNameCodeTrail.txt
+        var last = (state.name || '').trim().split(/\s+/).pop().replace(/[^\w-]+/g, '');
+        var file = (COURSE.code ? COURSE.code.replace(/\s+/g, '') : 'p5') + (last || '') + 'CodeTrail.txt';
+        var a = h('a', { href: URL.createObjectURL(blob), download: file });
         document.body.appendChild(a); a.click(); a.remove();
-        dlStatus.textContent = 'Journal downloaded as a text file.';
+        dlStatus.textContent = 'Journal downloaded as ' + file + '.';
       } }, 'Download journal (.txt)'),
       h('button', { type: 'button', class: 'secondary', onclick: function () { window.print(); } }, 'Print or save as PDF'),
       h('button', { type: 'button', class: 'quiet', onclick: function () {
@@ -2057,8 +2296,12 @@
     var nav = 'home';
     try {
       if (!parts.length) { viewHome(); }
+      else if (parts[0] === 'week') {
+        var wk = COURSE.weeks.filter(function (x) { return x.week === +parts[1]; })[0];
+        if (wk) { viewWeek(wk); } else { viewHome(); }
+      }
       else if (parts[0] === 'level') {
-        var lv = LEVELS[(+parts[1] || 0) - 1];
+        var lv = levelById(+parts[1]);
         if (!lv) { viewHome(); }
         else if (!parts[2]) { viewLevel(lv); }
         else if (parts[2] === 'learn') { viewLearn(lv); }

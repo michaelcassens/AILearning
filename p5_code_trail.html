@@ -159,6 +159,13 @@ main { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; }
 .act-nav a[aria-current="page"] .act-icon { color: inherit; }
 .act-icon { font-weight: 800; }
 .next-slot { margin-top: 1rem; }
+.files-details { margin-top: 0.6rem; }
+.file-list { margin: 0.3rem 0; padding-left: 1.2rem; font-size: 0.93rem; }
+.file-list li { margin-bottom: 0.3rem; }
+.file-pre { max-height: 12rem; overflow: auto; background: var(--code-bg); border: 1px solid var(--border-soft); border-radius: 6px; padding: 0.5rem; font-size: 0.85rem; margin: 0.3rem 0; }
+.week-section { margin-bottom: 1.5rem; }
+.week-section > h3 { margin-bottom: 0.2rem; }
+.week-section > p { margin-top: 0; }
 
 /* Ski-trail difficulty symbols (shape + text, never color alone) */
 .rating { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 0.92rem; }
@@ -332,11 +339,11 @@ blockquote.prompt { margin: 0.5rem 0 1rem; padding: 0.6rem 1rem; border-left: 6p
         <path d="M13 11 L16 16.5 L14 16 L12 18 L10.5 15.5 Z" fill="#FFFFFF"/>
         <circle cx="26" cy="7" r="3.2" fill="#ED8B00"/>
       </svg>
-      <span>p5.js Code Trail<small>University of Montana</small></span>
+      <span>p5.js Code Trail<small>MART 220 · University of Montana</small></span>
     </a>
     <nav class="site-nav" aria-label="Main">
       <ul>
-        <li><a href="#/" data-nav="home">Trail map</a></li>
+        <li><a href="#/" data-nav="home">Course map</a></li>
         <li><a href="#/studio" data-nav="studio">Studio</a></li>
         <li><a href="#/guide" data-nav="guide">Using AI well</a></li>
         <li><a href="#/journal" data-nav="journal">Field journal</a></li>
@@ -372,6 +379,7 @@ blockquote.prompt { margin: 0.5rem 0 1rem; padding: 0.6rem 1rem; border-left: 6p
 <script>window.acorn || document.write('<script src="https://cdn.jsdelivr.net/npm/acorn@8.11.3/dist/acorn.js"><\/script>');</script>
 <script src="js/p5trail_analyzer.js"></script>
 <script src="js/p5trail_levels.js"></script>
+<script src="js/p5trail_course.js"></script>
 <script src="js/p5trail_app.js"></script>
 </body>
 </html>

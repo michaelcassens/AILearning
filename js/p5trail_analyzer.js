@@ -23,14 +23,30 @@
     'describeElement', 'millis', 'second', 'minute', 'hour', 'day', 'month', 'year', 'int',
     'float', 'str', 'nf', 'split', 'join', 'append', 'shuffle', 'sort', 'keyIsDown', 'cursor',
     'noCursor', 'randomSeed', 'get', 'set', 'erase', 'noErase', 'strokeCap', 'strokeJoin',
-    'smooth', 'noSmooth', 'createButton', 'createSlider', 'createP', 'select', 'saveCanvas'];
+    'smooth', 'noSmooth', 'createButton', 'createSlider', 'createP', 'select', 'saveCanvas',
+    // media, files, and time
+    'imageMode', 'tint', 'noTint', 'loadFont', 'loadJSON', 'loadStrings', 'loadTable', 'loadBytes',
+    'createImage', 'createGraphics', 'filter', 'textLeading', 'textAscent', 'textDescent', 'nfc', 'nfs',
+    'createVector', 'noCanvas', 'curveVertex', 'bezierVertex', 'beginContour', 'endContour',
+    // 3D (WEBGL)
+    'box', 'sphere', 'torus', 'cone', 'cylinder', 'plane', 'ellipsoid', 'model', 'loadModel',
+    'rotateX', 'rotateY', 'rotateZ', 'normalMaterial', 'ambientMaterial', 'specularMaterial',
+    'emissiveMaterial', 'shininess', 'metalness', 'texture', 'textureMode', 'textureWrap',
+    'ambientLight', 'directionalLight', 'pointLight', 'spotLight', 'lights', 'noLights',
+    'camera', 'perspective', 'ortho', 'frustum', 'orbitControl', 'createCamera', 'setCamera',
+    'debugMode', 'noDebugMode', 'shader', 'resetShader',
+    // p5.sound
+    'loadSound', 'userStartAudio', 'getAudioContext', 'outputVolume', 'soundFormats', 'midiToFreq'];
 
   var P5_VARS = ['width', 'height', 'mouseX', 'mouseY', 'pmouseX', 'pmouseY', 'mouseIsPressed',
     'mouseButton', 'key', 'keyCode', 'keyIsPressed', 'frameCount', 'deltaTime', 'windowWidth',
     'windowHeight', 'PI', 'TWO_PI', 'HALF_PI', 'QUARTER_PI', 'LEFT_ARROW', 'RIGHT_ARROW',
     'UP_ARROW', 'DOWN_ARROW', 'ENTER', 'RETURN', 'BACKSPACE', 'ESCAPE', 'SHIFT', 'CENTER',
     'LEFT', 'RIGHT', 'TOP', 'BOTTOM', 'CORNER', 'CORNERS', 'RADIUS', 'CLOSE', 'BOLD', 'ITALIC',
-    'NORMAL', 'DEGREES', 'RADIANS', 'RGB', 'HSB', 'ROUND', 'SQUARE', 'PROJECT'];
+    'NORMAL', 'DEGREES', 'RADIANS', 'RGB', 'HSB', 'ROUND', 'SQUARE', 'PROJECT', 'WEBGL', 'P2D',
+    'BLEND', 'ADD', 'IMAGE', 'CLAMP', 'REPEAT', 'TRIANGLES', 'LINES', 'POINTS',
+    // p5play globals
+    'world', 'kb', 'mouse', 'allSprites', 'camera'];
 
   var JS_GLOBALS = ['console', 'Math', 'Array', 'Object', 'String', 'Number', 'Boolean', 'JSON',
     'Date', 'parseInt', 'parseFloat', 'isNaN', 'undefined', 'NaN', 'Infinity', 'window',
@@ -39,7 +55,8 @@
 
   var SHAPES = { ellipse: 'ellipse', circle: 'circle', rect: 'rectangle', square: 'square',
     line: 'line', point: 'point', triangle: 'triangle', quad: 'quad', arc: 'arc', text: 'text label',
-    beginShape: 'custom shape', image: 'image' };
+    beginShape: 'custom shape', image: 'image', box: 'box', sphere: 'sphere', torus: 'torus',
+    cone: 'cone', cylinder: 'cylinder', plane: 'plane', ellipsoid: 'ellipsoid', model: '3D model' };
 
   var DRAW_CALLS = Object.keys(SHAPES).concat(['background']);
 
@@ -125,6 +142,18 @@
       return 'The program tried to use "' + m[1] + '", but nothing with that name exists.' +
         (guess ? ' Did you mean "' + guess + '"? JavaScript is case-sensitive.' : ' Check the spelling, or declare it with let first.');
     }
+    if ((m = /^File not found: "([^"]+)"/.exec(message))) {
+      return 'There is no file at "' + m[1] + '". File paths must match exactly, including folders and capital letters. The project files are listed under the editor.';
+    }
+    if (/only supported in WEBGL mode/i.test(message)) {
+      return '3D functions (box, rotateY, model, lights, materials) need a 3D canvas: createCanvas(width, height, WEBGL).';
+    }
+    if ((m = /Class constructor (\w+) cannot be invoked without 'new'/.exec(message))) {
+      return 'To build an object from the ' + m[1] + ' class, write new ' + m[1] + '(...), not ' + m[1] + '(...).';
+    }
+    if ((m = /([\w$.]+) is not a constructor/.exec(message))) {
+      return '"' + m[1] + '" was used with new, but it is not a class. Check the spelling of the class name.';
+    }
     if ((m = /([\w$.]+) is not a function/.exec(message))) {
       return '"' + m[1] + '" was called like a function with ( ), but it is not one. Check the spelling, or whether a variable has the same name.';
     }
@@ -145,6 +174,12 @@
     }
     if (/infinite loop/i.test(message)) {
       return 'A loop never reached its stopping condition, so the program would freeze. Check that the loop variable moves toward the condition becoming false.';
+    }
+    if (/could not be loaded/i.test(message)) {
+      return 'A library this sketch needs did not load. It comes from the internet, so check your connection and press Run again.';
+    }
+    if (/^Script error\.?$/.test(message)) {
+      return 'Something failed inside a library, and the browser hid the details. Look at the most recent line you changed, and check the order of your function calls.';
     }
     return 'The code is readable, but something went wrong while it was running.';
   }
@@ -254,13 +289,14 @@
 
   function collect(ast, code, comments) {
     var f = {
+      code: code,
       lines: code.split('\n').length,
       nonBlankLines: code.split('\n').filter(function (l) { return l.trim(); }).length,
       comments: comments.length,
       calls: [], callsByName: {}, functions: [], globals: [], locals: [], assignments: [],
       ifs: [], loops: [], identifiers: {}, declared: {}, arrays: 0, objects: 0, members: [],
       returns: [], canvas: null, canvasNode: null, varKinds: { var: 0, let: 0, const: 0 },
-      strings: []
+      strings: [], classes: [], news: []
     };
 
     // Top-level functions and globals
@@ -269,6 +305,11 @@
         f.functions.push({ name: stmt.id.name, params: stmt.params.map(function (p) { return p.name || src(code, p); }),
           line: stmt.loc.start.line, endLine: stmt.loc.end.line, node: stmt,
           isP5Handler: P5_HANDLERS.indexOf(stmt.id.name) >= 0 });
+      } else if (stmt.type === 'ClassDeclaration' && stmt.id) {
+        f.classes.push({ name: stmt.id.name, line: stmt.loc.start.line, node: stmt,
+          methods: stmt.body.body.filter(function (m) { return m.type === 'MethodDefinition'; }).map(function (m) {
+            return { name: m.key.name || src(code, m.key), params: m.value.params.map(function (p) { return p.name || src(code, p); }), line: m.loc.start.line, node: m };
+          }) });
       } else if (stmt.type === 'VariableDeclaration') {
         stmt.declarations.forEach(function (d) {
           if (d.id.type === 'Identifier') {
@@ -283,6 +324,16 @@
       ctx = ctx || { fn: null, inLoop: 0, inIf: 0, loopVars: [] };
       var next = null;
       switch (node.type) {
+        case 'ClassDeclaration':
+          if (node.id) { f.declared[node.id.name] = true; }
+          next = { fn: ctx.fn, cls: node.id ? node.id.name : '(class)', inLoop: ctx.inLoop, inIf: ctx.inIf, loopVars: ctx.loopVars };
+          break;
+        case 'MethodDefinition':
+          next = { fn: (ctx.cls || '(class)') + '.' + (node.key.name || 'method'), method: true, inLoop: 0, inIf: 0, loopVars: [] };
+          break;
+        case 'NewExpression':
+          f.news.push({ name: memberName(node.callee) || src(code, node.callee), line: node.loc.start.line, fn: ctx.fn, inLoop: ctx.inLoop > 0, start: node.start });
+          break;
         case 'FunctionDeclaration':
         case 'FunctionExpression':
         case 'ArrowFunctionExpression':
@@ -352,7 +403,7 @@
           break;
         case 'Identifier':
           var isProp = parent && parent.type === 'MemberExpression' && parent.property === node && !parent.computed;
-          var isKey = parent && parent.type === 'Property' && parent.key === node && !parent.computed;
+          var isKey = parent && (parent.type === 'Property' || parent.type === 'MethodDefinition' || parent.type === 'PropertyDefinition') && parent.key === node && !parent.computed;
           if (!isProp && !isKey) {
             (f.identifiers[node.name] = f.identifiers[node.name] || []).push({ line: node.loc.start.line, fn: ctx.fn, node: node, parent: parent });
           }
@@ -362,6 +413,12 @@
     });
 
     f.fnNames = fnNames;
+    f.classNames = f.classes.map(function (c) { return c.name; });
+    f.webgl = !!f.canvasNode && f.canvasNode.arguments.length > 2 && /WEBGL/.test(src(code, f.canvasNode.arguments[2]));
+    f.usesSound = /\bp5\.(Oscillator|Envelope|Noise|Amplitude|FFT|SoundFile|MonoSynth|PolySynth|AudioIn|Pulse)\b|\bloadSound\s*\(/.test(code);
+    f.usesSprites = /\bnew\s+(Sprite|Group|[\w$]+\.Sprite)\b/.test(code);
+    f.loads = f.calls.filter(function (c) { return /^load(Image|JSON|Strings|Model|Font|Sound|Table)$/.test(c.name) && c.args[0] && c.args[0].type === 'Literal'; })
+      .map(function (c) { return { kind: c.name, path: String(c.args[0].value), line: c.line, fn: c.fn }; });
     f.userFunctions = f.functions.filter(function (x) { return !x.isP5Handler; });
     f.handlers = f.functions.filter(function (x) { return x.isP5Handler; }).map(function (x) { return x.name; });
     f.has = function (name) { return !!f.callsByName[name]; };
@@ -395,7 +452,9 @@
 
   function describe(f) {
     var out = [];
-    if (f.canvas) {
+    if (f.canvas && f.webgl) {
+      out.push('Makes a 3D (WEBGL) canvas ' + f.canvas.w + ' pixels wide and ' + f.canvas.h + ' pixels tall. In 3D, (0, 0, 0) is the center.');
+    } else if (f.canvas) {
       out.push('Makes a canvas ' + f.canvas.w + ' pixels wide and ' + f.canvas.h + ' pixels tall.');
     } else if (f.canvasNode) {
       out.push('Makes a canvas (its size comes from a calculation or variable).');
@@ -435,7 +494,12 @@
       out.push(desc + '.');
     }
     if (otherShapes.length) {
-      out.push('Your own functions draw ' + shapeSummary(otherShapes) + ' each time they are called.');
+      out.push('Your own ' + (f.classes.length ? 'functions and class methods' : 'functions') + ' draw ' + shapeSummary(otherShapes) + ' each time they are called.');
+    }
+    if (f.loads.length) {
+      var kindsOf = { loadImage: 'image', loadJSON: 'JSON data', loadStrings: 'text lines', loadModel: '3D model', loadFont: 'font', loadSound: 'sound', loadTable: 'table' };
+      out.push('Loads ' + joinList(f.loads.map(function (l) { return l.path + ' (' + kindsOf[l.kind] + ')'; })) +
+        (f.loads.every(function (l) { return l.fn === 'preload'; }) ? ' in preload(), so the files are ready before setup().' : '.'));
     }
     var fills = (f.callsByName.fill || []).length;
     if (fills) { out.push(fills === 1 ? 'Sets a fill color once.' : 'Sets the fill color ' + fills + ' times.'); }
@@ -452,6 +516,12 @@
       out.push('Defines your own ' + (f.userFunctions.length === 1 ? 'function ' : 'functions ') +
         f.userFunctions.map(function (x) { return x.name + '(' + x.params.join(', ') + ')'; }).join(', ') + '.');
     }
+    f.classes.forEach(function (c) {
+      var methods = c.methods.filter(function (m) { return m.name !== 'constructor'; });
+      var made = f.news.filter(function (n) { return n.name === c.name; });
+      out.push('Defines a class ' + c.name + (methods.length ? ' with ' + (methods.length === 1 ? 'method ' : 'methods ') + methods.map(function (m) { return m.name + '()'; }).join(', ') : '') + '.' +
+        (made.length ? ' Builds ' + (made.some(function (n) { return n.inLoop; }) ? 'several ' + c.name + ' objects in a loop' : plural(made.length, c.name + ' object')) + ' with new.' : ' No objects are built from it yet (use new ' + c.name + '(...)).'));
+    });
     if (f.arrays || f.objects) {
       var parts = [];
       if (f.arrays) { parts.push(plural(f.arrays, 'array')); }
@@ -462,6 +532,9 @@
     if (f.usesMouse) { inter.push('the mouse'); }
     if (f.usesKeys) { inter.push('the keyboard'); }
     if (inter.length) { out.push('Responds to ' + inter.join(' and ') + '.'); }
+    if (f.usesSound) { out.push('Makes sound with p5.sound.'); }
+    if (f.calls.some(function (c) { return /^collide[A-Z]/.test(c.name); })) { out.push('Checks collisions with p5.collide2D.'); }
+    if (f.usesSprites) { out.push('Uses p5play sprites' + (/\bnew\s+Group\b/.test(f.code || '') ? ' and groups' : '') + ', which p5play draws and moves for you after each draw().'); }
     if (f.has('describe')) { out.push('Includes a describe() text alternative for screen reader users.'); }
     return out;
   }
@@ -479,6 +552,7 @@
     function add(kind, line, msg, why) { sug.push({ kind: kind, line: line, message: msg, why: why }); }
 
     var setupFn = f.fn('setup'), drawFn = f.fn('draw');
+    var reportedThis = {};
     if (!setupFn) {
       add('warn', null, 'There is no function setup() { }.', 'p5 looks for setup() to run once at the start. That is where createCanvas() usually goes.');
     }
@@ -488,10 +562,88 @@
       add('warn', f.canvasNode.loc.start.line, 'createCanvas() is inside draw(), so it runs 60 times a second.', 'Create the canvas once, in setup().');
     }
 
+    // Classes: names, "new", unused methods, missing this.
+    f.classes.forEach(function (c) {
+      if (/^[a-z]/.test(c.name)) {
+        add('tip', c.line, 'Class names usually start with a capital letter (' + c.name[0].toUpperCase() + c.name.slice(1) + ').', 'The capital letter tells readers "this is a blueprint for objects," not a variable or function.');
+      }
+      var props = {};
+      walk(c.node, function (n) {
+        if (n.type === 'MemberExpression' && n.object.type === 'ThisExpression' && !n.computed) { props[n.property.name] = true; }
+      });
+      c.methods.forEach(function (m) {
+        if (m.name === 'constructor') { return; }
+        var called = f.calls.some(function (k) { return k.name === m.name || k.name.slice(-(m.name.length + 1)) === '.' + m.name; }) ||
+          new RegExp('\\.' + m.name + '\\b').test(code.replace(new RegExp('\\b' + m.name + '\\s*\\([^)]*\\)\\s*\\{'), ''));
+        if (!called) {
+          add('warn', m.line, c.name + '.' + m.name + '() is defined but never called.', 'A method only runs when you call it on an object, like ball.' + m.name + '(). Otherwise its code never happens.');
+        }
+        walk(m.node.value.body, function (n, parent) {
+          if (n.type !== 'Identifier' || !props[n.name]) { return; }
+          var fnName = c.name + '.' + m.name;
+          var inScope = m.params.indexOf(n.name) >= 0 || f.globals.some(function (g) { return g.name === n.name; }) ||
+            f.locals.some(function (l) { return l.name === n.name && l.fn === fnName; });
+          if (inScope) { return; }
+          if (parent && parent.type === 'MemberExpression' && parent.property === n && !parent.computed) { return; }
+          if (parent && parent.type === 'Property' && parent.key === n) { return; }
+          if (P5_VARS.indexOf(n.name) >= 0 || P5_FUNCS.indexOf(n.name) >= 0) { return; }
+          if (!reportedThis[c.name + n.name]) {
+            reportedThis[c.name + n.name] = true;
+            add('warn', n.loc.start.line, 'Inside ' + c.name + '.' + m.name + '(), "' + n.name + '" should probably be this.' + n.name + '.', 'Each object stores its own ' + n.name + ' as this.' + n.name + '. A plain ' + n.name + ' looks for a variable that does not exist.');
+          }
+        });
+      });
+    });
+    f.calls.forEach(function (c) {
+      if (f.classNames.indexOf(c.name) >= 0) {
+        add('warn', c.line, c.name + '(...) is a class, so it needs new: new ' + c.name + '(...).', 'Calling a class like a function is a runtime error. new builds a fresh object from the blueprint.');
+      }
+    });
+    f.locals.forEach(function (l) {
+      if (l.fn === 'draw' && !l.inLoop && l.init && l.init.type === 'NewExpression' && f.classNames.indexOf(src(code, l.init.callee)) >= 0) {
+        add('warn', l.line, 'A new ' + src(code, l.init.callee) + ' is built inside draw() every frame.', 'It starts over from its constructor each frame, so it can never move or change. Build it once (in setup) and store it in a global variable.');
+      }
+    });
+
+    // Files should load in preload()
+    f.loads.forEach(function (l) {
+      var call = f.calls.filter(function (c) { return c.line === l.line && c.name === l.kind; })[0];
+      var hasCallback = call && call.args.some(function (a) { return a.type === 'Identifier' && f.fnNames.indexOf(a.name) >= 0 || /Function/.test(a.type); });
+      if (l.fn !== 'preload' && !hasCallback) {
+        add('warn', l.line, l.kind + '() is in ' + (l.fn ? l.fn + '()' : 'the top level') + ', not preload().', 'Loading takes time. In preload(), p5 waits for the file before setup() runs; elsewhere the next line may run before the file arrives.');
+      }
+    });
+
+    // 3D functions need a WEBGL canvas; fast spins are uncomfortable
+    var threeD = ['box', 'sphere', 'torus', 'cone', 'cylinder', 'plane', 'ellipsoid', 'model', 'rotateX', 'rotateY', 'rotateZ', 'normalMaterial', 'ambientMaterial', 'specularMaterial', 'texture', 'ambientLight', 'directionalLight', 'pointLight', 'orbitControl', 'camera', 'perspective', 'ortho'];
+    var first3D = f.calls.filter(function (c) { return threeD.indexOf(c.name) >= 0; })[0];
+    if (first3D && f.canvasNode && !f.webgl && !f.usesSprites) {
+      add('warn', f.canvasNode.loc.start.line, first3D.name + '() needs a 3D canvas, but this canvas is 2D.', 'Use createCanvas(' + (f.canvas ? f.canvas.w + ', ' + f.canvas.h : 'w, h') + ', WEBGL) to switch to 3D.');
+    }
+    f.calls.forEach(function (c) {
+      if (!/^rotate[XYZ]?$/.test(c.name) || !c.argSrc[0]) { return; }
+      var m = /frameCount\s*\*\s*([\d.]+)/.exec(c.argSrc[0]);
+      if (c.argSrc[0].trim() === 'frameCount' || (m && parseFloat(m[1]) >= 0.1)) {
+        add('warn', c.line, c.name + '(' + c.argSrc[0] + ') spins very fast.', 'Angles are radians: ' + (m ? m[1] : '1') + ' per frame is ' + Math.round((m ? parseFloat(m[1]) : 1) * 60 / (2 * Math.PI) * 10) / 10 + ' turns a second. Fast spinning or flashing can cause discomfort or seizures (WCAG 2.3.1). Try frameCount * 0.01.');
+      }
+    });
+
+    // p5.sound needs a click before audio can play
+    if (f.usesSound && !f.has('userStartAudio') && !['mousePressed', 'keyPressed', 'mouseClicked', 'touchStarted'].some(function (h) { return f.handlers.indexOf(h) >= 0; })) {
+      add('tip', null, 'Browsers block sound until the user clicks or presses a key.', 'Call userStartAudio() (and start oscillators) inside mousePressed() or keyPressed().');
+    }
+
+    // Arrays that only grow
+    var pushedInDraw = f.calls.some(function (c) { return /\.push$/.test(c.name) && c.fn === 'draw' && !c.inIf; });
+    if (pushedInDraw && !f.calls.some(function (c) { return /\.(splice|shift|filter|pop)$/.test(c.name); }) && !/\.length\s*=/.test(code)) {
+      add('warn', null, 'draw() adds to an array every frame, but nothing ever removes items.', 'The array grows forever and the sketch slows down. Remove items that are finished (splice while looping backwards, or filter).');
+    }
+
     // Unknown function calls (likely typos)
     var known = P5_FUNCS.concat(f.fnNames, JS_GLOBALS);
     f.calls.forEach(function (c) {
       if (c.name.indexOf('.') >= 0) { return; }
+      if (/^collide[A-Z]/.test(c.name) || f.classNames.indexOf(c.name) >= 0) { return; }
       if (known.indexOf(c.name) >= 0 || f.declared[c.name]) { return; }
       var guess = closest(c.name, P5_FUNCS.concat(f.fnNames));
       add('warn', c.line, '"' + c.name + '" is not a p5 function or one you defined.' + (guess ? ' Did you mean "' + guess + '"?' : ''),
@@ -579,7 +731,7 @@
 
     // Short or unclear names
     var okShort = ['i', 'j', 'k', 'x', 'y', 'w', 'h', 'r', 'g', 'b', 'n', 'dx', 'dy', 'vx', 'vy'];
-    var vague = ['thing', 'stuff', 'temp', 'data', 'foo', 'bar', 'abc', 'asdf', 'var1', 'myVar', 'test'];
+    var vague = ['thing', 'stuff', 'temp', 'foo', 'bar', 'abc', 'asdf', 'var1', 'myVar', 'test'];
     f.globals.concat(f.locals).forEach(function (v) {
       if ((v.name.length === 1 && okShort.indexOf(v.name) < 0) || vague.indexOf(v.name) >= 0) {
         add('tip', v.line, 'The name "' + v.name + '" does not say what it holds.', 'Descriptive names (ballSize, score, speedX) make code easier to read aloud and explain.');
@@ -646,6 +798,8 @@
     if (f.has('describe')) { good.push('Provides a describe() text alternative.'); }
     if (f.globals.some(function (g) { return g.name.length > 3 && /[a-z][A-Z]/.test(g.name); })) { good.push('Uses descriptive camelCase variable names.'); }
     if (f.loops.length) { good.push('Uses a loop instead of copying the same line many times.'); }
+    if (f.classes.length) { good.push('Bundles data and behavior into a class.'); }
+    if (f.calls.some(function (c) { return c.name === 'push'; }) && f.calls.some(function (c) { return c.name === 'pop'; })) { good.push('Uses push() and pop() to keep transformations separate.'); }
 
     var order = { warn: 0, tip: 1 };
     sug.sort(function (a, b) { return order[a.kind] - order[b.kind] || (a.line || 0) - (b.line || 0); });
@@ -711,6 +865,11 @@
     if (facts.loops.length) { ideas.push({ label: 'what the loop repeats', keys: ['loop', '\\bfor\\b', 'repeat', 'times', 'each', 'iterat'], prompt: 'What does the loop repeat, and how many times?' }); }
     if (facts.userFunctions.length) { ideas.push({ label: 'your own function(s) and parameters', keys: ['function', 'parameter', 'argument', 'call', 'reus'].concat(facts.userFunctions.map(function (x) { return x.name.toLowerCase(); })), prompt: 'Why did you make a function, and what do its parameters control?' }); }
     if (facts.arrays || facts.objects) { ideas.push({ label: 'how data is stored (arrays/objects)', keys: ['array', 'list', 'object', 'propert', 'index', 'item', 'element'], prompt: 'What data does the array or object hold?' }); }
+    if (facts.classes && facts.classes.length) { ideas.push({ label: 'the class: what each object stores and does', keys: ['class', 'constructor', 'method', 'this\\.', '\\bthis\\b', 'object', 'instance', 'blueprint'].concat(facts.classes.map(function (c) { return c.name.toLowerCase(); })), prompt: 'What does the constructor set up, and what does each method do?' }); }
+    if (facts.loads && facts.loads.length) { ideas.push({ label: 'which files are loaded and why preload() matters', keys: ['load', 'file', 'preload', 'json', 'image', 'model', 'data'], prompt: 'Which files does it load, and when?' }); }
+    if (facts.webgl) { ideas.push({ label: 'the 3D scene: positions and transformations', keys: ['3d', 'webgl', 'translate', 'rotat', 'push', 'pop', 'depth', '\\bz\\b', 'camera', 'light'], prompt: 'How are the 3D objects placed and moved?' }); }
+    if (facts.usesSound) { ideas.push({ label: 'how and when sound plays', keys: ['sound', 'audio', 'oscillator', 'synth', 'note', 'play', 'volume', 'amplitude'], prompt: 'What triggers the sound?' }); }
+    if (facts.usesSprites) { ideas.push({ label: 'the sprites and how they interact', keys: ['sprite', 'group', 'collid', 'overlap', 'p5play', 'physics'], prompt: 'What sprites exist, and what happens when they touch?' }); }
     if (facts.usesMouse || facts.usesKeys) { ideas.push({ label: 'how the user interacts', keys: ['mouse', 'click', 'key', 'press', 'user', 'hover', 'type'], prompt: 'What can the user do, and how does the code respond?' }); }
     return ideas;
   }
