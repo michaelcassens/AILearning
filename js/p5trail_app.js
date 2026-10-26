@@ -1180,9 +1180,12 @@
       onCheck: function (choice) {
         s.predicted = true; s.choice = choice; save();
         predictWrap.classList.add('complete');
-        runBtnNote.textContent = s.ran ? 'Run it again and compare with your prediction.' : 'Now press Run in the Example panel and compare with your prediction.';
+        runBtnNote.textContent = s.ran ? 'Run it again and compare with your prediction.' : 'Now press Run in the Example panel (beside or below this section) and compare with your prediction.';
         finishLearn();
       } });
+    // Show the code right here: a prediction needs the code in view.
+    predictWrap.appendChild(h('p', null, 'Read this code line by line. Say each line out loud if it helps. Then predict what it will do.'));
+    predictWrap.appendChild(listing(L.example, 'Example code to predict'));
     predictWrap.appendChild(mcq.el);
     predictWrap.appendChild(runBtnNote);
     if (!s.predicted) { runBtnNote.textContent = 'Make a prediction first, then run the example to check it.'; }
