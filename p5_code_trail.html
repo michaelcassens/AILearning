@@ -99,6 +99,22 @@ h1:focus-visible { outline: 3px solid var(--focus); }
 .site-header :focus-visible { outline-color: #FFFFFF; }
 .theme-picker { display: flex; align-items: center; gap: 0.4rem; font-size: 0.95rem; }
 .theme-picker select { font: inherit; padding: 0.25rem 0.4rem; border-radius: 6px; border: 2px solid var(--header-fg); background: var(--header-bg); color: var(--header-fg); }
+.site-menu { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; }
+.site-header .menu-toggle { display: none; background: transparent; color: var(--header-fg); border: 2px solid var(--header-fg); padding: 0.35rem 0.8rem; }
+.site-header .menu-toggle:hover { background: rgba(255,255,255,0.14); }
+/* Phones: the logo and a Menu button; the menu opens as a full-width list */
+@media (max-width: 759px) {
+  .site-header .inner { flex-wrap: wrap; row-gap: 0; column-gap: 0.75rem; }
+  .brand { flex: 1 1 0; min-width: 0; font-size: 1.05rem; }
+  .brand small { font-size: 0.8rem; }
+  .site-header .menu-toggle { display: inline-flex; flex: none; }
+  .site-menu { display: none; width: 100%; flex-direction: column; align-items: stretch; gap: 0; padding: 0.4rem 0 0.2rem; }
+  .site-header.menu-open .site-menu { display: flex; }
+  .site-nav ul { flex-direction: column; gap: 0; }
+  .site-nav a { display: block; padding: 0.75rem 0.5rem; border-radius: 0; border-top: 1px solid rgba(255,255,255,0.28); }
+  .site-nav a[aria-current="page"] { background: rgba(255,255,255,0.14); }
+  .theme-picker { justify-content: space-between; padding: 0.7rem 0.5rem 0.3rem; border-top: 1px solid rgba(255,255,255,0.28); }
+}
 
 main { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; }
 .site-footer { border-top: 1px solid var(--border-soft); color: var(--muted); font-size: 0.92rem; }
@@ -150,6 +166,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; }
 
 /* Activity bar on every activity page */
 .act-nav { margin: 0.25rem 0 1rem; }
+.act-nav-label { display: none; margin: 0 0 0.35rem; font-size: 0.95rem; font-weight: 700; color: var(--muted); }
 .act-nav ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .act-nav a { display: inline-flex; align-items: center; gap: 0.35rem; min-height: 44px; padding: 0.3rem 0.8rem; border: 2px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600; }
 .act-nav a:hover { border-color: var(--link); text-decoration: underline; }
@@ -158,6 +175,13 @@ main { max-width: 1240px; margin: 0 auto; padding: 1rem 1rem 3rem; }
 .act-nav a[aria-current="page"] { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-fg); }
 .act-nav a[aria-current="page"] .act-icon { color: inherit; }
 .act-icon { font-weight: 800; }
+/* Phones: one row of activities that scrolls sideways */
+@media (max-width: 759px) {
+  .act-nav-label { display: block; }
+  .act-nav ol { position: relative; /* keeps screen-reader labels inside the scroller */ flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x proximity; margin: 0 -1rem; padding: 4px 1rem 8px; scroll-padding: 0 1rem; }
+  .act-nav li { flex: none; scroll-snap-align: start; }
+  .act-nav a { padding: 0.3rem 0.75rem; }
+}
 .next-slot { margin-top: 1rem; }
 .files-details { margin-top: 0.6rem; }
 .file-list { margin: 0.3rem 0; padding-left: 1.2rem; font-size: 0.93rem; }
@@ -342,6 +366,11 @@ blockquote.prompt { margin: 0.5rem 0 1rem; padding: 0.6rem 1rem; border-left: 6p
       </svg>
       <span>p5.js Code Trail<small>MART 220 · University of Montana</small></span>
     </a>
+    <button type="button" class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M2 5h16M2 10h16M2 15h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span class="menu-label">Menu</span>
+    </button>
+    <div class="site-menu" id="site-menu">
     <nav class="site-nav" aria-label="Main">
       <ul>
         <li><a href="#/" data-nav="home">Course map</a></li>
@@ -357,6 +386,7 @@ blockquote.prompt { margin: 0.5rem 0 1rem; padding: 0.6rem 1rem; border-left: 6p
         <option value="light">Light</option>
         <option value="dark">Dark</option>
       </select>
+    </div>
     </div>
   </div>
 </header>

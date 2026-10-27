@@ -935,11 +935,20 @@
     var hadFocus = current.nav.contains(document.activeElement) ? document.activeElement.getAttribute('href') : null;
     current.sig = sig;
     clear(current.nav);
-    current.nav.appendChild(h('ol', null, acts.map(function (a) {
+    var idx = acts.map(function (a) { return a.key; }).indexOf(current.key);
+    // On phones the pills scroll sideways, so say where you are in words too.
+    current.nav.appendChild(h('p', { class: 'act-nav-label', 'aria-hidden': 'true' }, 'Level ' + current.lv.id + ' · Activity ' + (idx + 1) + ' of ' + acts.length));
+    var list = h('ol', null, acts.map(function (a) {
       return h('li', null, h('a', { href: a.href, class: a.done ? 'done' : a.started ? 'started' : null, 'aria-current': a.key === current.key ? 'page' : null },
         h('span', { class: 'act-icon', 'aria-hidden': 'true' }, a.done ? '✓' : a.started ? '●' : '○'),
         a.short, h('span', { class: 'visually-hidden' }, ', ' + statusWords(a))));
-    })));
+    }));
+    current.nav.appendChild(list);
+    // Bring the current activity into view in the sideways-scrolling row (no page scroll).
+    var cur = list.querySelector('[aria-current]');
+    if (cur && !hadFocus) {
+      requestAnimationFrame(function () { list.scrollLeft = Math.max(0, cur.offsetLeft - list.offsetLeft - (list.clientWidth - cur.offsetWidth) / 2); });
+    }
     if (hadFocus) { var f = current.nav.querySelector('a[href="' + hadFocus + '"]'); if (f) { f.focus(); } }
   }
   function progressChanged() { renderNav(); renderNext(); }
@@ -2336,7 +2345,26 @@
     firstRoute = false;
   }
 
+  // Phone menu: a disclosure button that shows and hides the site links.
+  function initMenu() {
+    var header = document.querySelector('.site-header');
+    var btn = document.getElementById('menu-toggle');
+    if (!btn) { return; }
+    var label = btn.querySelector('.menu-label');
+    function setOpen(open) {
+      header.classList.toggle('menu-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+      label.textContent = open ? 'Close' : 'Menu';
+    }
+    btn.addEventListener('click', function () { setOpen(btn.getAttribute('aria-expanded') !== 'true'); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') { setOpen(false); btn.focus(); }
+    });
+    window.addEventListener('hashchange', function () { setOpen(false); });
+  }
+
   initTheme();
+  initMenu();
   window.addEventListener('hashchange', route);
   route();
 })();
