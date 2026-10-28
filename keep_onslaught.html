@@ -207,8 +207,12 @@ const LEVELS = [
   // gold is the war chest you start with; a level reached by winning the one before it adds `bonus`
   // to everything carried over instead
   { name: 'Hold the Gate',    days: 5,  gold: 150,  bonus: 0,   off: 0, mix: 'basic',    blurb: 'Survive 5 sieges', noRams: true },
-  { name: 'The Baron\'s Vanguard', days: 7, gold: 600, bonus: 300, off: 2, mix: 'knights', blurb: 'Survive 7 sieges' },
-  { name: 'Engines of War',   days: 10, gold: 1500, bonus: 500, off: 4, mix: 'machines', blurb: 'Survive 10 sieges' },
+  // `hard` scales a level's enemies: how many come, their toughness, speed, gate damage, the pause between
+  // packs (lower is shorter) and how many extra battering rams a siege may bring
+  { name: 'The Baron\'s Vanguard', days: 7, gold: 600, bonus: 300, off: 2, mix: 'knights', blurb: 'Survive 7 sieges',
+    hard: { count: 1.25, hp: 1.3, speed: 1.1, dmg: 1.3, gap: 0.8, rams: 0 } },
+  { name: 'Engines of War',   days: 10, gold: 1500, bonus: 500, off: 4, mix: 'machines', blurb: 'Survive 10 sieges',
+    hard: { count: 1.4, hp: 1.6, speed: 1.15, dmg: 1.5, gap: 0.7, rams: 1 } },
   { name: 'Endless Siege',    days: 0,  gold: 150,  off: 0, mix: 'basic',    blurb: 'How long can you last?' },
 ];
 
@@ -484,9 +488,11 @@ function showPrep() {
   show('results');
 }
 
+const NO_HARD = { count: 1, hp: 1, speed: 1, dmg: 1, gap: 1, rams: 0 };
+const hardOf = L => L.hard || NO_HARD;
 function buildDay(L, day) {
-  const d = day + L.off;
-  const count = 10 + Math.floor(d * 3.4) + (L.mix === 'knights' ? 6 : 0);
+  const d = day + L.off, H = hardOf(L);
+  const count = Math.round((10 + Math.floor(d * 3.4) + (L.mix === 'knights' ? 6 : 0)) * H.count);
   const pool = [['knight', L.mix === 'knights' ? 14 : 10]];
   if (d >= 2) pool.push(['shield', 4]);
   if (d >= 2) pool.push(['black', L.mix === 'knights' ? 6 : 3]);
@@ -504,10 +510,10 @@ function buildDay(L, day) {
   // never more than one battering ram a day until day 8, then two
   let rams = 0;
   for (let i = 0; i < q.length; i++) {
-    if (q[i] === 'ram' && ++rams > (d >= 8 ? 2 : 1)) q[i] = 'knight';
+    if (q[i] === 'ram' && ++rams > (d >= 8 ? 2 : 1) + H.rams) q[i] = 'knight';
   }
   // knights charge in packs that grow over the days, with a short breather between packs
-  const out = [], gap = Math.max(1.6, 4 - d * 0.18), maxPack = Math.min(8, 3 + Math.floor(d * 0.7));
+  const out = [], gap = Math.max(1.2, (4 - d * 0.18) * H.gap), maxPack = Math.min(8, 3 + Math.floor(d * 0.7));
   let i = 0;
   while (i < q.length) {
     const size = TYPES[q[i]].machine ? 1 : 2 + Math.floor(Math.random() * (maxPack - 1));
@@ -533,13 +539,13 @@ function startDay() {
 
 let nextId = 1;
 function spawn(type) {
-  const d = TYPES[type], n = G.day + G.L.off;
-  const hpScale = 1 + 0.09 * (n - 1);
+  const d = TYPES[type], n = G.day + G.L.off, H = hardOf(G.L);
+  const hpScale = (1 + 0.09 * (n - 1)) * H.hp;
   G.enemies.push({
     id: nextId++, type, def: d, x: Math.max(W, viewR) + (d.machine ? 70 : 24), y: GROUND, vx: 0, vy: 0,
     hp: d.hp * hpScale, maxHp: d.hp * hpScale, state: 'walk', t: 0, anim: Math.random() * 6,
     lane: rand(-6, 6), rot: 0, vr: 0, bubble: 0, frozen: 0, burn: 0, burnDps: 0, atkT: d.rate * Math.random(), atkAnim: 0, hitSet: null,
-    speed: d.speed * Math.min(1.35, 1 + 0.02 * (n - 1)) * rand(0.85, 1.2),
+    speed: d.speed * Math.min(1.35, 1 + 0.02 * (n - 1)) * H.speed * rand(0.85, 1.2),
     stopX: d.ranged ? rand(560, 680) : d.caster ? rand(600, 700) : 0,
     dead: false, deathT: 0, flash: 0,
   });
@@ -887,7 +893,7 @@ function updateProjectiles(dt) {
       life: 0.4, max: 0.4, color: FIRE[(Math.random() * 3) | 0], size: TOWER.fireball.tiers[p.tier].r * 0.8, grav: 0, glow: true });
     if (p.kind === 'rockE') {
       if (p.x <= WALL_X + 4) {
-        damageGate(TYPES.catapult.dmg); sfx.gate(); p.done = true;
+        damageGate(TYPES.catapult.dmg * hardOf(G.L).dmg); sfx.gate(); p.done = true;
         burst(WALL_X + 4, p.y, 10, ['#777', '#999', '#555'], 200, 5);
         if (G.gateMarks.length < 10) G.gateMarks.push({ x: WALL_X - rand(4, 50), y: clamp(p.y, 250, GROUND - 10) });
       } else if (p.y >= GROUND) { p.done = true; burst(p.x, GROUND, 6, DUST, 120, 4); }
@@ -969,7 +975,7 @@ function updateEnemy(e, dt) {
     case 'attack':
       e.atkT -= dt;
       if (e.atkT <= 0) {
-        e.atkT = d.rate; e.atkAnim = 1; damageGate(d.dmg); sfx.gate();
+        e.atkT = d.rate; e.atkAnim = 1; damageGate(d.dmg * hardOf(G.L).dmg); sfx.gate();
         if (e.type === 'ram') { G.shake = 0.25; buzz(25); burst(WALL_X, GROUND - 30, 8, WOOD, 200, 4); }
       }
       break;
