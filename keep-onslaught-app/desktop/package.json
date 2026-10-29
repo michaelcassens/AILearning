@@ -1,0 +1,56 @@
+{
+  "name": "keep-onslaught-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Keep Onslaught for Windows, macOS and Linux, built with Electron.",
+  "author": "Michael Cassens",
+  "repository": "github:michaelcassens/AILearning",
+  "main": "main.js",
+  "scripts": {
+    "prepare-web": "node prepare-web.js",
+    "start": "npm run prepare-web && electron .",
+    "dist": "npm run prepare-web && electron-builder --publish never"
+  },
+  "devDependencies": {
+    "electron": "42.11.10",
+    "electron-builder": "26.16.1"
+  },
+  "build": {
+    "appId": "edu.umontana.cassens.keeponslaught",
+    "productName": "Keep Onslaught",
+    "files": [
+      "main.js",
+      "www/**",
+      "build/icon.png"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "Keep-Onslaught-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Keep-Onslaught-Portable-${version}.${ext}"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.png",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "category": "Game"
+    }
+  }
+}

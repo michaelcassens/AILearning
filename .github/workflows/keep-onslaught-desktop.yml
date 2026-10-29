@@ -1,0 +1,52 @@
+name: Build Keep Onslaught desktop apps
+
+on:
+  push:
+    paths:
+      - keep_onslaught.html
+      - keep_onslaught_icon.png
+      - 'keep-onslaught-app/desktop/**'
+      - .github/workflows/keep-onslaught-desktop.yml
+  workflow_dispatch:
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: keep-onslaught-windows
+            files: |
+              keep-onslaught-app/desktop/dist/*.exe
+          - os: macos-15
+            name: keep-onslaught-mac
+            files: |
+              keep-onslaught-app/desktop/dist/*.dmg
+          - os: ubuntu-latest
+            name: keep-onslaught-linux
+            files: |
+              keep-onslaught-app/desktop/dist/*.AppImage
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: keep-onslaught-app/desktop
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'   # unsigned builds; don't look for signing certificates
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Electron
+        run: npm ci
+
+      - name: Build the app
+        run: npm run dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.files }}
