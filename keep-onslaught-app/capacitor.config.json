@@ -1,0 +1,6 @@
+{
+  "appId": "edu.umontana.cassens.keeponslaught",
+  "appName": "Keep Onslaught",
+  "webDir": "www",
+  "android": { "backgroundColor": "#14100c" }
+}
