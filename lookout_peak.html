@@ -26,7 +26,7 @@ header a:focus-visible,header button:focus-visible{outline:3px solid var(--accen
 header h1{font-size:12px;margin:0;color:var(--accent);letter-spacing:1px}
 header .btns{display:flex;gap:6px}
 header button{font-family:var(--pixel);font-size:11px;min-width:40px;height:34px;border-radius:8px;border:2px solid #3b4670;background:#26305a;color:var(--ink);cursor:pointer}
-#stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;overflow:hidden;padding:6px}
 #game{display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#000;border-radius:4px;box-shadow:0 0 0 3px #26305a,0 10px 30px rgba(0,0,0,.6);touch-action:none}
 #help{font-family:var(--pixel);font-size:9px;color:var(--muted);text-align:center;padding:4px 8px 8px;line-height:1.7}
 #pad{display:none;justify-content:space-between;align-items:center;padding:6px 18px 14px;gap:12px}
@@ -37,6 +37,16 @@ body.touch #help{display:none}
 .dpad button.on,.jump.on{background:#3d4a86}
 .d-up{grid-column:2;grid-row:1}.d-left{grid-column:1;grid-row:2}.d-right{grid-column:3;grid-row:2}.d-down{grid-column:2;grid-row:3}
 .jump{width:96px;height:96px;border-radius:50%;background:#b8452c;border-color:#ffb38a;font-size:12px}
+/* Landscape phones: D-pad on the left, jump on the right, game in the middle */
+@media (orientation: landscape) and (max-height: 560px){
+  body.touch #app{display:grid;grid-template-columns:minmax(170px,1fr) minmax(0,3fr) minmax(130px,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"hdr hdr hdr" "left stage right"}
+  body.touch header{grid-area:hdr;padding:2px 12px}
+  body.touch header button{height:28px}
+  body.touch #stage{grid-area:stage;padding:4px}
+  body.touch #pad{display:contents}
+  body.touch .dpad{grid-area:left;align-self:center;justify-self:center;grid-template-columns:repeat(3,50px);grid-template-rows:repeat(3,48px)}
+  body.touch .jump{grid-area:right;align-self:center;justify-self:center}
+}
 @media (prefers-reduced-motion: reduce){ *{transition:none!important} }
 </style>
 </head>
@@ -173,11 +183,13 @@ function togglePause() { if (mode === 'play' || mode === 'intro') paused = !paus
 function fit() {
   const st = document.getElementById('stage');
   const aw = st.clientWidth - 12, ah = st.clientHeight - 12;
-  const s = Math.max(0.5, Math.min(aw / W, ah / H));
-  const sc = s >= 1 ? Math.floor(s * 2) / 2 : s;
+  const sc = Math.max(0.5, Math.min(aw / W, ah / H));
   cv.style.width = Math.floor(W * sc) + 'px'; cv.style.height = Math.floor(H * sc) + 'px';
 }
 addEventListener('resize', fit);
+addEventListener('orientationchange', () => setTimeout(fit, 200));
+if (window.ResizeObserver) new ResizeObserver(fit).observe(document.getElementById('stage'));
+document.addEventListener('gesturestart', e => e.preventDefault());   // stop pinch-zoom on iOS
 
 /* ================================================================
    STAGES
