@@ -1,0 +1,15 @@
+{# Renders an item's media attachment. Expects `item` and `media_kind`. #}
+{% if item.has_media %}
+  {% set src = url_for('views.content_media', content_id=item.id) %}
+  {% set kind = media_kind(item.media_type) %}
+  <div class="media">
+    {% if kind == 'image' %}
+      <img src="{{ src }}" alt="{{ item.title }}">
+    {% elif kind == 'video' %}
+      <video src="{{ src }}" controls preload="metadata"></video>
+    {% elif kind == 'audio' %}
+      <audio src="{{ src }}" controls preload="metadata"></audio>
+    {% endif %}
+    <p class="hint"><a href="{{ src }}">{{ 'Open' if kind != 'file' else 'Download' }} {{ item.media_name }}</a></p>
+  </div>
+{% endif %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit role' if role else 'Add role' }}{% endblock %}
+{% block content %}
+{% set f = request.form if request.method == 'POST' else None %}
+<section class="card narrow">
+  <h1>{{ 'Edit role' if role else 'Add role' }}</h1>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="name">Name</label>
+    <input id="name" name="name" required {{ 'readonly' if role and role.is_builtin }}
+           value="{{ f.name if f else (role.name if role else '') }}">
+    <label for="description">Description</label>
+    <input id="description" name="description"
+           value="{{ f.description if f else (role.description if role else '') }}">
+    <div class="actions">
+      <button type="submit">{{ 'Save changes' if role else 'Create role' }}</button>
+      <a href="{{ url_for('admin.roles') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

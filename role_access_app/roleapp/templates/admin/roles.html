@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Roles{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <h1>Roles</h1>
+  <a class="button" href="{{ url_for('admin.role_new') }}">Add role</a>
+</div>
+<p class="hint">Tag content with roles to decide who sees it. Superusers always see everything.</p>
+<div class="table-wrap">
+<table>
+  <thead><tr><th scope="col">Name</th><th scope="col">Description</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>
+  {% for role in roles %}
+    <tr>
+      <td>{{ role.name }}{% if role.is_builtin %} <span class="tag public">built-in</span>{% endif %}</td>
+      <td>{{ role.description }}</td>
+      <td class="actions">
+        <a href="{{ url_for('admin.role_edit', role_id=role.id) }}">Edit</a>
+        {% if not role.is_builtin %}
+        <form method="post" action="{{ url_for('admin.role_delete', role_id=role.id) }}" class="inline"
+              data-confirm="Delete role {{ role.name }}? Users and content lose this role.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link danger">Delete</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

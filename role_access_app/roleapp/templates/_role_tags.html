@@ -1,0 +1,8 @@
+{# Expects `role_ids` and `roles` (id -> Role). #}
+<span class="tags">
+  {% for rid in role_ids | sort %}
+    {% if roles[rid] %}<span class="tag{{ ' public' if roles[rid].is_builtin }}">{{ roles[rid].name }}</span>{% endif %}
+  {% else %}
+    <span class="tag none">Superusers only</span>
+  {% endfor %}
+</span>

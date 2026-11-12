@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit content' if item else 'Add content' }}{% endblock %}
+{% block content %}
+{% set f = request.form if request.method == 'POST' else None %}
+{% set selected = (f.getlist('roles') | map('int') | list) if f else (item.role_ids if item else []) %}
+<section class="card">
+  <h1>{{ 'Edit content' if item else 'Add content' }}</h1>
+  <form method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="title">Title</label>
+    <input id="title" name="title" required value="{{ f.title if f else (item.title if item else '') }}">
+
+    <label for="body">Text</label>
+    <textarea id="body" name="body" rows="8">{{ f.body if f else (item.body or '' if item else '') }}</textarea>
+
+    <label for="media">Media file <span class="hint">(image, audio, video, PDF or any file; optional)</span></label>
+    {% if item and item.has_media %}
+      <p class="hint">Current file: {{ item.media_name }} ({{ item.media_type }}). Choose a new file to replace it.</p>
+    {% endif %}
+    <input id="media" name="media" type="file">
+    {% if item and item.has_media %}
+      <label class="check"><input type="checkbox" name="remove_media" value="1"> Remove the current file</label>
+    {% endif %}
+
+    <fieldset>
+      <legend>Who can see this?</legend>
+      <p class="hint">Users holding <strong>any</strong> checked role can see it. Leave all unchecked to keep it superuser-only.</p>
+      {% for role in roles %}
+        <label class="check">
+          <input type="checkbox" name="roles" value="{{ role.id }}" {{ 'checked' if role.id in selected }}>
+          {{ role.name }}{% if role.description %} <span class="hint">— {{ role.description }}</span>{% endif %}
+        </label>
+      {% endfor %}
+    </fieldset>
+
+    <div class="actions">
+      <button type="submit">{{ 'Save changes' if item else 'Create' }}</button>
+      <a href="{{ url_for('admin.content') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

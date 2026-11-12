@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Manage content{% endblock %}
+{% block content %}
+<div class="heading-row">
+  <h1>Manage content</h1>
+  <a class="button" href="{{ url_for('admin.content_new') }}">Add content</a>
+</div>
+<div class="table-wrap">
+<table>
+  <thead><tr><th scope="col">Title</th><th scope="col">Visible to</th><th scope="col">Media</th><th scope="col">Updated</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>
+  {% for item in items %}
+    <tr>
+      <td><a href="{{ url_for('views.content_detail', content_id=item.id) }}">{{ item.title }}</a></td>
+      <td>{% with role_ids = item.role_ids %}{% include "_role_tags.html" %}{% endwith %}</td>
+      <td>{{ item.media_name or '—' }}</td>
+      <td>{{ item.updated_at }}</td>
+      <td class="actions">
+        <a href="{{ url_for('admin.content_edit', content_id=item.id) }}">Edit</a>
+        <form method="post" action="{{ url_for('admin.content_delete', content_id=item.id) }}" class="inline"
+              data-confirm="Delete {{ item.title }}?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="link danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5">No content yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}
