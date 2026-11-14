@@ -12,18 +12,18 @@
         <entry filename="c:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\bin\\gen\\006-B4631-00\\source\\Rez.mcgen" id="6" lineNum="7" parent="globals/Rez" pc="268435548" symbol="&lt;init&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="7" lineNum="122" parent="globals/TrailheadView" pc="268435568" symbol="&lt;globals/TrailheadView/&lt;&gt;pt&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="7" lineNum="123" parent="globals/TrailheadView" pc="268435570" symbol="&lt;globals/TrailheadView/&lt;&gt;pt&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="301" parent="globals/TrailheadView" pc="268435601" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="302" parent="globals/TrailheadView" pc="268435604" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="303" parent="globals/TrailheadView" pc="268435617" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="306" parent="globals/TrailheadView" pc="268435621" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="307" parent="globals/TrailheadView" pc="268435647" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="308" parent="globals/TrailheadView" pc="268435716" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="311" parent="globals/TrailheadView" pc="268435757" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="312" parent="globals/TrailheadView" pc="268435775" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="313" parent="globals/TrailheadView" pc="268435793" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="314" parent="globals/TrailheadView" pc="268435805" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="315" parent="globals/TrailheadView" pc="268435821" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="316" parent="globals/TrailheadView" pc="268435863" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="304" parent="globals/TrailheadView" pc="268435601" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="305" parent="globals/TrailheadView" pc="268435604" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="306" parent="globals/TrailheadView" pc="268435617" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="309" parent="globals/TrailheadView" pc="268435621" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="310" parent="globals/TrailheadView" pc="268435647" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="311" parent="globals/TrailheadView" pc="268435716" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="314" parent="globals/TrailheadView" pc="268435757" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="315" parent="globals/TrailheadView" pc="268435775" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="316" parent="globals/TrailheadView" pc="268435793" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="317" parent="globals/TrailheadView" pc="268435805" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="318" parent="globals/TrailheadView" pc="268435821" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="8" lineNum="319" parent="globals/TrailheadView" pc="268435863" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="9" lineNum="118" parent="globals/TrailheadView" pc="268435912" symbol="&lt;globals/TrailheadView/&lt;&gt;px&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="9" lineNum="119" parent="globals/TrailheadView" pc="268435914" symbol="&lt;globals/TrailheadView/&lt;&gt;px&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="10" lineNum="211" parent="globals/TrailheadView" pc="268435929" symbol="&lt;globals/TrailheadView/&lt;&gt;dashedLine&gt;"/>
@@ -43,263 +43,265 @@
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="273" parent="globals/TrailheadView" pc="268436121" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="274" parent="globals/TrailheadView" pc="268436137" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="275" parent="globals/TrailheadView" pc="268436153" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="276" parent="globals/TrailheadView" pc="268436169" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="279" parent="globals/TrailheadView" pc="268436286" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="280" parent="globals/TrailheadView" pc="268436290" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="281" parent="globals/TrailheadView" pc="268436306" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="282" parent="globals/TrailheadView" pc="268436315" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="283" parent="globals/TrailheadView" pc="268436325" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="285" parent="globals/TrailheadView" pc="268436401" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="286" parent="globals/TrailheadView" pc="268436415" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="379" parent="globals/TrailheadView" pc="268436428" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="380" parent="globals/TrailheadView" pc="268436431" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="381" parent="globals/TrailheadView" pc="268436453" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="382" parent="globals/TrailheadView" pc="268436460" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="383" parent="globals/TrailheadView" pc="268436463" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="384" parent="globals/TrailheadView" pc="268436482" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="385" parent="globals/TrailheadView" pc="268436503" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="386" parent="globals/TrailheadView" pc="268436510" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="386" parent="globals/TrailheadView" pc="268436527" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="388" parent="globals/TrailheadView" pc="268436550" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="147" parent="globals/TrailheadView" pc="268436571" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436574" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436585" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436596" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436604" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436615" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436626" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="150" parent="globals/TrailheadView" pc="268436634" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="151" parent="globals/TrailheadView" pc="268436653" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="152" parent="globals/TrailheadView" pc="268436672" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="153" parent="globals/TrailheadView" pc="268436691" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="134" parent="globals/TrailheadView" pc="268436706" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="135" parent="globals/TrailheadView" pc="268436709" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="136" parent="globals/TrailheadView" pc="268436713" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="137" parent="globals/TrailheadView" pc="268436725" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="140" parent="globals/TrailheadView" pc="268436840" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="142" parent="globals/TrailheadView" pc="268436878" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="143" parent="globals/TrailheadView" pc="268436902" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="144" parent="globals/TrailheadView" pc="268436924" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="391" parent="globals/TrailheadView" pc="268436927" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="392" parent="globals/TrailheadView" pc="268436930" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="393" parent="globals/TrailheadView" pc="268436933" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="394" parent="globals/TrailheadView" pc="268436945" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="395" parent="globals/TrailheadView" pc="268436962" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="396" parent="globals/TrailheadView" pc="268436974" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="397" parent="globals/TrailheadView" pc="268437004" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="398" parent="globals/TrailheadView" pc="268437038" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="399" parent="globals/TrailheadView" pc="268437044" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="400" parent="globals/TrailheadView" pc="268437054" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="401" parent="globals/TrailheadView" pc="268437071" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="405" parent="globals/TrailheadView" pc="268437089" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="405" parent="globals/TrailheadView" pc="268437095" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="406" parent="globals/TrailheadView" pc="268437100" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="83" parent="globals/TrailheadView" pc="268437127" symbol="onExitSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="84" parent="globals/TrailheadView" pc="268437129" symbol="onExitSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="85" parent="globals/TrailheadView" pc="268437137" symbol="onExitSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="321" parent="globals/TrailheadView" pc="268437149" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="322" parent="globals/TrailheadView" pc="268437152" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="323" parent="globals/TrailheadView" pc="268437156" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="324" parent="globals/TrailheadView" pc="268437161" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="327" parent="globals/TrailheadView" pc="268437166" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="328" parent="globals/TrailheadView" pc="268437189" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="329" parent="globals/TrailheadView" pc="268437206" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="330" parent="globals/TrailheadView" pc="268437218" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="331" parent="globals/TrailheadView" pc="268437284" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="332" parent="globals/TrailheadView" pc="268437346" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="333" parent="globals/TrailheadView" pc="268437358" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="334" parent="globals/TrailheadView" pc="268437426" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="337" parent="globals/TrailheadView" pc="268437481" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="338" parent="globals/TrailheadView" pc="268437498" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="339" parent="globals/TrailheadView" pc="268437515" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="340" parent="globals/TrailheadView" pc="268437572" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="341" parent="globals/TrailheadView" pc="268437635" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="342" parent="globals/TrailheadView" pc="268437692" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="343" parent="globals/TrailheadView" pc="268437755" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="346" parent="globals/TrailheadView" pc="268437820" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="347" parent="globals/TrailheadView" pc="268437828" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="348" parent="globals/TrailheadView" pc="268437845" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="349" parent="globals/TrailheadView" pc="268437857" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="350" parent="globals/TrailheadView" pc="268437861" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="351" parent="globals/TrailheadView" pc="268437868" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="352" parent="globals/TrailheadView" pc="268437924" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="353" parent="globals/TrailheadView" pc="268437986" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="354" parent="globals/TrailheadView" pc="268438048" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="355" parent="globals/TrailheadView" pc="268438107" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="356" parent="globals/TrailheadView" pc="268438160" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="357" parent="globals/TrailheadView" pc="268438172" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="360" parent="globals/TrailheadView" pc="268438237" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="361" parent="globals/TrailheadView" pc="268438245" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="362" parent="globals/TrailheadView" pc="268438262" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="363" parent="globals/TrailheadView" pc="268438274" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="364" parent="globals/TrailheadView" pc="268438341" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="365" parent="globals/TrailheadView" pc="268438353" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="366" parent="globals/TrailheadView" pc="268438402" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="422" parent="globals/TrailheadView" pc="268438473" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="423" parent="globals/TrailheadView" pc="268438475" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="424" parent="globals/TrailheadView" pc="268438487" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="425" parent="globals/TrailheadView" pc="268438495" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="426" parent="globals/TrailheadView" pc="268438516" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="427" parent="globals/TrailheadView" pc="268438533" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="428" parent="globals/TrailheadView" pc="268438574" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="254" parent="globals/TrailheadView" pc="268438617" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="256" parent="globals/TrailheadView" pc="268438620" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="257" parent="globals/TrailheadView" pc="268438650" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="258" parent="globals/TrailheadView" pc="268438671" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="259" parent="globals/TrailheadView" pc="268438677" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="260" parent="globals/TrailheadView" pc="268438693" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="261" parent="globals/TrailheadView" pc="268438709" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="262" parent="globals/TrailheadView" pc="268438725" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="263" parent="globals/TrailheadView" pc="268438738" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="264" parent="globals/TrailheadView" pc="268438745" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="265" parent="globals/TrailheadView" pc="268438755" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="266" parent="globals/TrailheadView" pc="268438769" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="267" parent="globals/TrailheadView" pc="268438781" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="268" parent="globals/TrailheadView" pc="268438855" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="46" parent="globals/TrailheadView" pc="268438871" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="47" parent="globals/TrailheadView" pc="268438874" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="49" parent="globals/TrailheadView" pc="268438894" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="50" parent="globals/TrailheadView" pc="268438909" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="51" parent="globals/TrailheadView" pc="268438916" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="52" parent="globals/TrailheadView" pc="268438959" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="53" parent="globals/TrailheadView" pc="268439002" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="54" parent="globals/TrailheadView" pc="268439045" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="55" parent="globals/TrailheadView" pc="268439088" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="56" parent="globals/TrailheadView" pc="268439131" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="56" parent="globals/TrailheadView" pc="268439137" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="57" parent="globals/TrailheadView" pc="268439149" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="57" parent="globals/TrailheadView" pc="268439155" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="58" parent="globals/TrailheadView" pc="268439167" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="58" parent="globals/TrailheadView" pc="268439173" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="59" parent="globals/TrailheadView" pc="268439185" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="59" parent="globals/TrailheadView" pc="268439191" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="60" parent="globals/TrailheadView" pc="268439203" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="60" parent="globals/TrailheadView" pc="268439209" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="63" parent="globals/TrailheadView" pc="268439224" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="64" parent="globals/TrailheadView" pc="268439254" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="65" parent="globals/TrailheadView" pc="268439284" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="68" parent="globals/TrailheadView" pc="268439314" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="69" parent="globals/TrailheadView" pc="268439323" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="70" parent="globals/TrailheadView" pc="268439330" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="71" parent="globals/TrailheadView" pc="268439346" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="72" parent="globals/TrailheadView" pc="268439392" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="73" parent="globals/TrailheadView" pc="268439402" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="74" parent="globals/TrailheadView" pc="268439409" symbol="onLayout"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="170" parent="globals/TrailheadView" pc="268439513" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="172" parent="globals/TrailheadView" pc="268439516" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="173" parent="globals/TrailheadView" pc="268439527" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="174" parent="globals/TrailheadView" pc="268439537" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="175" parent="globals/TrailheadView" pc="268439568" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="178" parent="globals/TrailheadView" pc="268439627" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="179" parent="globals/TrailheadView" pc="268439644" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="180" parent="globals/TrailheadView" pc="268439659" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="181" parent="globals/TrailheadView" pc="268439676" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="184" parent="globals/TrailheadView" pc="268439691" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="185" parent="globals/TrailheadView" pc="268439708" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="186" parent="globals/TrailheadView" pc="268439731" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="187" parent="globals/TrailheadView" pc="268439748" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="188" parent="globals/TrailheadView" pc="268439771" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="189" parent="globals/TrailheadView" pc="268439788" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="192" parent="globals/TrailheadView" pc="268439811" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="193" parent="globals/TrailheadView" pc="268439818" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="194" parent="globals/TrailheadView" pc="268439835" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="195" parent="globals/TrailheadView" pc="268439876" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="196" parent="globals/TrailheadView" pc="268439895" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="198" parent="globals/TrailheadView" pc="268439945" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="199" parent="globals/TrailheadView" pc="268439957" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="200" parent="globals/TrailheadView" pc="268439974" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="203" parent="globals/TrailheadView" pc="268439997" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="204" parent="globals/TrailheadView" pc="268440014" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="205" parent="globals/TrailheadView" pc="268440029" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="206" parent="globals/TrailheadView" pc="268440049" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="208" parent="globals/TrailheadView" pc="268440077" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="289" parent="globals/TrailheadView" pc="268440126" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="290" parent="globals/TrailheadView" pc="268440129" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="291" parent="globals/TrailheadView" pc="268440142" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="292" parent="globals/TrailheadView" pc="268440159" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="293" parent="globals/TrailheadView" pc="268440183" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="294" parent="globals/TrailheadView" pc="268440199" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="295" parent="globals/TrailheadView" pc="268440226" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="296" parent="globals/TrailheadView" pc="268440243" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="157" parent="globals/TrailheadView" pc="268440271" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="158" parent="globals/TrailheadView" pc="268440274" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="159" parent="globals/TrailheadView" pc="268440286" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="160" parent="globals/TrailheadView" pc="268440300" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="161" parent="globals/TrailheadView" pc="268440326" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="162" parent="globals/TrailheadView" pc="268440352" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="163" parent="globals/TrailheadView" pc="268440378" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="164" parent="globals/TrailheadView" pc="268440404" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="165" parent="globals/TrailheadView" pc="268440418" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="247" parent="globals/TrailheadView" pc="268440439" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="248" parent="globals/TrailheadView" pc="268440442" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="249" parent="globals/TrailheadView" pc="268440456" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="250" parent="globals/TrailheadView" pc="268440486" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="251" parent="globals/TrailheadView" pc="268440510" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="369" parent="globals/TrailheadView" pc="268440543" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="370" parent="globals/TrailheadView" pc="268440546" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="371" parent="globals/TrailheadView" pc="268440563" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="372" parent="globals/TrailheadView" pc="268440586" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="373" parent="globals/TrailheadView" pc="268440598" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="277" parent="globals/TrailheadView" pc="268436169" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="278" parent="globals/TrailheadView" pc="268436179" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="281" parent="globals/TrailheadView" pc="268436279" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="282" parent="globals/TrailheadView" pc="268436283" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="283" parent="globals/TrailheadView" pc="268436299" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="284" parent="globals/TrailheadView" pc="268436308" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="285" parent="globals/TrailheadView" pc="268436318" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="287" parent="globals/TrailheadView" pc="268436394" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="288" parent="globals/TrailheadView" pc="268436408" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="11" lineNum="289" parent="globals/TrailheadView" pc="268436420" symbol="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="382" parent="globals/TrailheadView" pc="268436481" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="383" parent="globals/TrailheadView" pc="268436484" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="384" parent="globals/TrailheadView" pc="268436506" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="385" parent="globals/TrailheadView" pc="268436513" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="386" parent="globals/TrailheadView" pc="268436516" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="387" parent="globals/TrailheadView" pc="268436535" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="388" parent="globals/TrailheadView" pc="268436556" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="389" parent="globals/TrailheadView" pc="268436563" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="389" parent="globals/TrailheadView" pc="268436580" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="12" lineNum="391" parent="globals/TrailheadView" pc="268436603" symbol="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="147" parent="globals/TrailheadView" pc="268436624" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436627" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436638" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="148" parent="globals/TrailheadView" pc="268436649" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436657" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436668" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="149" parent="globals/TrailheadView" pc="268436679" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="150" parent="globals/TrailheadView" pc="268436687" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="151" parent="globals/TrailheadView" pc="268436706" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="152" parent="globals/TrailheadView" pc="268436725" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="13" lineNum="153" parent="globals/TrailheadView" pc="268436744" symbol="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="134" parent="globals/TrailheadView" pc="268436759" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="135" parent="globals/TrailheadView" pc="268436762" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="136" parent="globals/TrailheadView" pc="268436766" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="137" parent="globals/TrailheadView" pc="268436778" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="140" parent="globals/TrailheadView" pc="268436893" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="142" parent="globals/TrailheadView" pc="268436931" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="143" parent="globals/TrailheadView" pc="268436955" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="14" lineNum="144" parent="globals/TrailheadView" pc="268436977" symbol="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="394" parent="globals/TrailheadView" pc="268436980" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="395" parent="globals/TrailheadView" pc="268436983" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="396" parent="globals/TrailheadView" pc="268436986" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="397" parent="globals/TrailheadView" pc="268436998" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="398" parent="globals/TrailheadView" pc="268437015" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="399" parent="globals/TrailheadView" pc="268437027" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="400" parent="globals/TrailheadView" pc="268437057" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="401" parent="globals/TrailheadView" pc="268437091" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="402" parent="globals/TrailheadView" pc="268437097" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="403" parent="globals/TrailheadView" pc="268437107" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="404" parent="globals/TrailheadView" pc="268437124" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="408" parent="globals/TrailheadView" pc="268437142" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="408" parent="globals/TrailheadView" pc="268437148" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="15" lineNum="409" parent="globals/TrailheadView" pc="268437153" symbol="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="83" parent="globals/TrailheadView" pc="268437180" symbol="onExitSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="84" parent="globals/TrailheadView" pc="268437182" symbol="onExitSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="16" lineNum="85" parent="globals/TrailheadView" pc="268437190" symbol="onExitSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="324" parent="globals/TrailheadView" pc="268437202" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="325" parent="globals/TrailheadView" pc="268437205" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="326" parent="globals/TrailheadView" pc="268437209" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="327" parent="globals/TrailheadView" pc="268437214" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="330" parent="globals/TrailheadView" pc="268437219" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="331" parent="globals/TrailheadView" pc="268437242" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="332" parent="globals/TrailheadView" pc="268437259" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="333" parent="globals/TrailheadView" pc="268437271" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="334" parent="globals/TrailheadView" pc="268437337" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="335" parent="globals/TrailheadView" pc="268437399" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="336" parent="globals/TrailheadView" pc="268437411" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="337" parent="globals/TrailheadView" pc="268437479" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="340" parent="globals/TrailheadView" pc="268437534" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="341" parent="globals/TrailheadView" pc="268437551" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="342" parent="globals/TrailheadView" pc="268437568" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="343" parent="globals/TrailheadView" pc="268437625" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="344" parent="globals/TrailheadView" pc="268437688" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="345" parent="globals/TrailheadView" pc="268437745" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="346" parent="globals/TrailheadView" pc="268437808" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="349" parent="globals/TrailheadView" pc="268437873" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="350" parent="globals/TrailheadView" pc="268437881" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="351" parent="globals/TrailheadView" pc="268437898" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="352" parent="globals/TrailheadView" pc="268437910" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="353" parent="globals/TrailheadView" pc="268437914" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="354" parent="globals/TrailheadView" pc="268437921" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="355" parent="globals/TrailheadView" pc="268437977" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="356" parent="globals/TrailheadView" pc="268438039" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="357" parent="globals/TrailheadView" pc="268438101" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="358" parent="globals/TrailheadView" pc="268438160" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="359" parent="globals/TrailheadView" pc="268438213" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="360" parent="globals/TrailheadView" pc="268438225" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="363" parent="globals/TrailheadView" pc="268438290" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="364" parent="globals/TrailheadView" pc="268438298" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="365" parent="globals/TrailheadView" pc="268438315" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="366" parent="globals/TrailheadView" pc="268438327" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="367" parent="globals/TrailheadView" pc="268438394" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="368" parent="globals/TrailheadView" pc="268438406" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="17" lineNum="369" parent="globals/TrailheadView" pc="268438455" symbol="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="425" parent="globals/TrailheadView" pc="268438526" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="426" parent="globals/TrailheadView" pc="268438528" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="427" parent="globals/TrailheadView" pc="268438540" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="428" parent="globals/TrailheadView" pc="268438548" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="429" parent="globals/TrailheadView" pc="268438569" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="430" parent="globals/TrailheadView" pc="268438586" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="18" lineNum="431" parent="globals/TrailheadView" pc="268438627" symbol="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="254" parent="globals/TrailheadView" pc="268438670" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="256" parent="globals/TrailheadView" pc="268438673" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="257" parent="globals/TrailheadView" pc="268438703" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="258" parent="globals/TrailheadView" pc="268438724" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="259" parent="globals/TrailheadView" pc="268438730" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="260" parent="globals/TrailheadView" pc="268438746" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="261" parent="globals/TrailheadView" pc="268438762" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="262" parent="globals/TrailheadView" pc="268438778" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="263" parent="globals/TrailheadView" pc="268438791" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="264" parent="globals/TrailheadView" pc="268438798" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="265" parent="globals/TrailheadView" pc="268438808" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="266" parent="globals/TrailheadView" pc="268438822" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="267" parent="globals/TrailheadView" pc="268438834" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="19" lineNum="268" parent="globals/TrailheadView" pc="268438908" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="46" parent="globals/TrailheadView" pc="268438924" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="47" parent="globals/TrailheadView" pc="268438927" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="49" parent="globals/TrailheadView" pc="268438947" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="50" parent="globals/TrailheadView" pc="268438962" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="51" parent="globals/TrailheadView" pc="268438969" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="52" parent="globals/TrailheadView" pc="268439012" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="53" parent="globals/TrailheadView" pc="268439055" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="54" parent="globals/TrailheadView" pc="268439098" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="55" parent="globals/TrailheadView" pc="268439141" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="56" parent="globals/TrailheadView" pc="268439184" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="56" parent="globals/TrailheadView" pc="268439190" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="57" parent="globals/TrailheadView" pc="268439202" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="57" parent="globals/TrailheadView" pc="268439208" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="58" parent="globals/TrailheadView" pc="268439220" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="58" parent="globals/TrailheadView" pc="268439226" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="59" parent="globals/TrailheadView" pc="268439238" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="59" parent="globals/TrailheadView" pc="268439244" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="60" parent="globals/TrailheadView" pc="268439256" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="60" parent="globals/TrailheadView" pc="268439262" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="63" parent="globals/TrailheadView" pc="268439277" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="64" parent="globals/TrailheadView" pc="268439307" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="65" parent="globals/TrailheadView" pc="268439337" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="68" parent="globals/TrailheadView" pc="268439367" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="69" parent="globals/TrailheadView" pc="268439376" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="70" parent="globals/TrailheadView" pc="268439383" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="71" parent="globals/TrailheadView" pc="268439399" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="72" parent="globals/TrailheadView" pc="268439445" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="73" parent="globals/TrailheadView" pc="268439455" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="20" lineNum="74" parent="globals/TrailheadView" pc="268439462" symbol="onLayout"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="170" parent="globals/TrailheadView" pc="268439566" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="172" parent="globals/TrailheadView" pc="268439569" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="173" parent="globals/TrailheadView" pc="268439580" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="174" parent="globals/TrailheadView" pc="268439590" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="175" parent="globals/TrailheadView" pc="268439621" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="178" parent="globals/TrailheadView" pc="268439680" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="179" parent="globals/TrailheadView" pc="268439697" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="180" parent="globals/TrailheadView" pc="268439712" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="181" parent="globals/TrailheadView" pc="268439729" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="184" parent="globals/TrailheadView" pc="268439744" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="185" parent="globals/TrailheadView" pc="268439761" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="186" parent="globals/TrailheadView" pc="268439784" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="187" parent="globals/TrailheadView" pc="268439801" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="188" parent="globals/TrailheadView" pc="268439824" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="189" parent="globals/TrailheadView" pc="268439841" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="192" parent="globals/TrailheadView" pc="268439864" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="193" parent="globals/TrailheadView" pc="268439871" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="194" parent="globals/TrailheadView" pc="268439888" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="195" parent="globals/TrailheadView" pc="268439929" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="196" parent="globals/TrailheadView" pc="268439948" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="198" parent="globals/TrailheadView" pc="268439998" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="199" parent="globals/TrailheadView" pc="268440010" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="200" parent="globals/TrailheadView" pc="268440027" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="203" parent="globals/TrailheadView" pc="268440050" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="204" parent="globals/TrailheadView" pc="268440067" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="205" parent="globals/TrailheadView" pc="268440082" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="206" parent="globals/TrailheadView" pc="268440102" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="21" lineNum="208" parent="globals/TrailheadView" pc="268440130" symbol="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="292" parent="globals/TrailheadView" pc="268440179" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="293" parent="globals/TrailheadView" pc="268440182" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="294" parent="globals/TrailheadView" pc="268440195" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="295" parent="globals/TrailheadView" pc="268440212" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="296" parent="globals/TrailheadView" pc="268440236" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="297" parent="globals/TrailheadView" pc="268440252" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="298" parent="globals/TrailheadView" pc="268440279" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="22" lineNum="299" parent="globals/TrailheadView" pc="268440296" symbol="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="157" parent="globals/TrailheadView" pc="268440324" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="158" parent="globals/TrailheadView" pc="268440327" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="159" parent="globals/TrailheadView" pc="268440339" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="160" parent="globals/TrailheadView" pc="268440353" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="161" parent="globals/TrailheadView" pc="268440379" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="162" parent="globals/TrailheadView" pc="268440405" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="163" parent="globals/TrailheadView" pc="268440431" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="164" parent="globals/TrailheadView" pc="268440457" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="23" lineNum="165" parent="globals/TrailheadView" pc="268440471" symbol="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="247" parent="globals/TrailheadView" pc="268440492" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="248" parent="globals/TrailheadView" pc="268440495" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="249" parent="globals/TrailheadView" pc="268440509" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="250" parent="globals/TrailheadView" pc="268440539" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="24" lineNum="251" parent="globals/TrailheadView" pc="268440563" symbol="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="372" parent="globals/TrailheadView" pc="268440596" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="373" parent="globals/TrailheadView" pc="268440599" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
         <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="374" parent="globals/TrailheadView" pc="268440616" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="375" parent="globals/TrailheadView" pc="268440633" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="78" parent="globals/TrailheadView" pc="268440685" symbol="onEnterSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="79" parent="globals/TrailheadView" pc="268440687" symbol="onEnterSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="80" parent="globals/TrailheadView" pc="268440695" symbol="onEnterSleep"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="126" parent="globals/TrailheadView" pc="268440707" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="127" parent="globals/TrailheadView" pc="268440710" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="128" parent="globals/TrailheadView" pc="268440714" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="129" parent="globals/TrailheadView" pc="268440730" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="131" parent="globals/TrailheadView" pc="268440771" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="409" parent="globals/TrailheadView" pc="268440774" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="410" parent="globals/TrailheadView" pc="268440777" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="411" parent="globals/TrailheadView" pc="268440792" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="412" parent="globals/TrailheadView" pc="268440804" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="413" parent="globals/TrailheadView" pc="268440821" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="416" parent="globals/TrailheadView" pc="268440871" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="228" parent="globals/TrailheadView" pc="268440873" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="229" parent="globals/TrailheadView" pc="268440876" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="230" parent="globals/TrailheadView" pc="268440889" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="231" parent="globals/TrailheadView" pc="268440900" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="232" parent="globals/TrailheadView" pc="268440919" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="233" parent="globals/TrailheadView" pc="268440928" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="234" parent="globals/TrailheadView" pc="268440944" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="235" parent="globals/TrailheadView" pc="268440949" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="236" parent="globals/TrailheadView" pc="268440984" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="237" parent="globals/TrailheadView" pc="268441000" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="238" parent="globals/TrailheadView" pc="268441016" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="239" parent="globals/TrailheadView" pc="268441030" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="240" parent="globals/TrailheadView" pc="268441052" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="242" parent="globals/TrailheadView" pc="268441136" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="30" lineNum="42" parent="globals/TrailheadView" pc="268441149" symbol="initialize"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="30" lineNum="43" parent="globals/TrailheadView" pc="268441151" symbol="initialize"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="88" parent="globals/TrailheadView" pc="268441164" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="89" parent="globals/TrailheadView" pc="268441167" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="90" parent="globals/TrailheadView" pc="268441186" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="91" parent="globals/TrailheadView" pc="268441232" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="93" parent="globals/TrailheadView" pc="268441238" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="95" parent="globals/TrailheadView" pc="268441248" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="96" parent="globals/TrailheadView" pc="268441260" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="97" parent="globals/TrailheadView" pc="268441271" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="97" parent="globals/TrailheadView" pc="268441278" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="98" parent="globals/TrailheadView" pc="268441285" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="99" parent="globals/TrailheadView" pc="268441347" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="101" parent="globals/TrailheadView" pc="268441374" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="102" parent="globals/TrailheadView" pc="268441382" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="103" parent="globals/TrailheadView" pc="268441399" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="106" parent="globals/TrailheadView" pc="268441403" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="107" parent="globals/TrailheadView" pc="268441421" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="108" parent="globals/TrailheadView" pc="268441429" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="109" parent="globals/TrailheadView" pc="268441442" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="110" parent="globals/TrailheadView" pc="268441455" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="111" parent="globals/TrailheadView" pc="268441479" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="112" parent="globals/TrailheadView" pc="268441496" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="113" parent="globals/TrailheadView" pc="268441509" symbol="onUpdate"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="32" lineNum="16" parent="globals/TrailheadApp" pc="268441523" symbol="onSettingsChanged"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="32" lineNum="17" parent="globals/TrailheadApp" pc="268441525" symbol="onSettingsChanged"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="33" lineNum="11" parent="globals/TrailheadApp" pc="268441537" symbol="getInitialView"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="33" lineNum="12" parent="globals/TrailheadApp" pc="268441539" symbol="getInitialView"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="34" lineNum="7" parent="globals/TrailheadApp" pc="268441565" symbol="initialize"/>
-        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="34" lineNum="8" parent="globals/TrailheadApp" pc="268441567" symbol="initialize"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="375" parent="globals/TrailheadView" pc="268440639" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="376" parent="globals/TrailheadView" pc="268440651" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="377" parent="globals/TrailheadView" pc="268440669" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="25" lineNum="378" parent="globals/TrailheadView" pc="268440686" symbol="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="78" parent="globals/TrailheadView" pc="268440738" symbol="onEnterSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="79" parent="globals/TrailheadView" pc="268440740" symbol="onEnterSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="26" lineNum="80" parent="globals/TrailheadView" pc="268440748" symbol="onEnterSleep"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="126" parent="globals/TrailheadView" pc="268440760" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="127" parent="globals/TrailheadView" pc="268440763" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="128" parent="globals/TrailheadView" pc="268440767" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="129" parent="globals/TrailheadView" pc="268440783" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="27" lineNum="131" parent="globals/TrailheadView" pc="268440824" symbol="&lt;globals/TrailheadView/&lt;&gt;poly&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="412" parent="globals/TrailheadView" pc="268440827" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="413" parent="globals/TrailheadView" pc="268440830" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="414" parent="globals/TrailheadView" pc="268440845" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="415" parent="globals/TrailheadView" pc="268440857" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="416" parent="globals/TrailheadView" pc="268440874" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="28" lineNum="419" parent="globals/TrailheadView" pc="268440924" symbol="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="228" parent="globals/TrailheadView" pc="268440926" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="229" parent="globals/TrailheadView" pc="268440929" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="230" parent="globals/TrailheadView" pc="268440942" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="231" parent="globals/TrailheadView" pc="268440953" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="232" parent="globals/TrailheadView" pc="268440972" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="233" parent="globals/TrailheadView" pc="268440981" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="234" parent="globals/TrailheadView" pc="268440997" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="235" parent="globals/TrailheadView" pc="268441002" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="236" parent="globals/TrailheadView" pc="268441037" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="237" parent="globals/TrailheadView" pc="268441053" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="238" parent="globals/TrailheadView" pc="268441069" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="239" parent="globals/TrailheadView" pc="268441083" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="240" parent="globals/TrailheadView" pc="268441105" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="29" lineNum="242" parent="globals/TrailheadView" pc="268441189" symbol="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="30" lineNum="42" parent="globals/TrailheadView" pc="268441202" symbol="initialize"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="30" lineNum="43" parent="globals/TrailheadView" pc="268441204" symbol="initialize"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="88" parent="globals/TrailheadView" pc="268441217" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="89" parent="globals/TrailheadView" pc="268441220" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="90" parent="globals/TrailheadView" pc="268441239" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="91" parent="globals/TrailheadView" pc="268441285" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="93" parent="globals/TrailheadView" pc="268441291" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="95" parent="globals/TrailheadView" pc="268441301" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="96" parent="globals/TrailheadView" pc="268441313" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="97" parent="globals/TrailheadView" pc="268441324" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="97" parent="globals/TrailheadView" pc="268441331" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="98" parent="globals/TrailheadView" pc="268441338" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="99" parent="globals/TrailheadView" pc="268441400" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="101" parent="globals/TrailheadView" pc="268441427" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="102" parent="globals/TrailheadView" pc="268441435" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="103" parent="globals/TrailheadView" pc="268441452" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="106" parent="globals/TrailheadView" pc="268441456" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="107" parent="globals/TrailheadView" pc="268441474" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="108" parent="globals/TrailheadView" pc="268441482" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="109" parent="globals/TrailheadView" pc="268441495" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="110" parent="globals/TrailheadView" pc="268441508" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="111" parent="globals/TrailheadView" pc="268441532" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="112" parent="globals/TrailheadView" pc="268441549" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadView.mc" id="31" lineNum="113" parent="globals/TrailheadView" pc="268441562" symbol="onUpdate"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="32" lineNum="16" parent="globals/TrailheadApp" pc="268441576" symbol="onSettingsChanged"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="32" lineNum="17" parent="globals/TrailheadApp" pc="268441578" symbol="onSettingsChanged"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="33" lineNum="11" parent="globals/TrailheadApp" pc="268441590" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="33" lineNum="12" parent="globals/TrailheadApp" pc="268441592" symbol="getInitialView"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="34" lineNum="7" parent="globals/TrailheadApp" pc="268441618" symbol="initialize"/>
+        <entry filename="C:\\Users\\micha\\Documents\\GitHub\\AILearning\\TrailheadWatchFace\\source\\TrailheadApp.mc" id="34" lineNum="8" parent="globals/TrailheadApp" pc="268441620" symbol="initialize"/>
     </pcToLineNum>
     <symbolTable>
         <entry id="28" method="true" symbol="&lt;globals/TrailheadView/&lt;&gt;drawTime&gt;"/>
@@ -405,144 +407,145 @@
         <entry endPc="268436116" name="gap" stackId="10" startPc="268435932"/>
         <entry endPc="268436116" name="d" stackId="11" startPc="268435932"/>
         <entry endPc="268436113" name="e" stackId="12" startPc="268435996"/>
-        <entry arg="true" endPc="268436427" name="dc" stackId="1" startPc="268436118"/>
-        <entry arg="true" endPc="268436427" name="deg" stackId="2" startPc="268436118"/>
-        <entry arg="true" endPc="268436427" name="len" stackId="3" startPc="268436118"/>
-        <entry arg="true" endPc="268436427" name="tail" stackId="4" startPc="268436118"/>
-        <entry arg="true" endPc="268436427" name="w" stackId="5" startPc="268436118"/>
-        <entry arg="true" endPc="268436427" name="color" stackId="6" startPc="268436118"/>
-        <entry endPc="268436426" name="a" stackId="7" startPc="268436121"/>
-        <entry endPc="268436426" name="sa" stackId="8" startPc="268436121"/>
-        <entry endPc="268436426" name="ca" stackId="9" startPc="268436121"/>
-        <entry endPc="268436426" name="local" stackId="10" startPc="268436121"/>
-        <entry endPc="268436426" name="pts" stackId="11" startPc="268436121"/>
-        <entry endPc="268436400" name="i" stackId="12" startPc="268436306"/>
-        <entry endPc="268436390" name="x" stackId="13" startPc="268436306"/>
-        <entry endPc="268436390" name="y" stackId="14" startPc="268436306"/>
-        <entry arg="true" endPc="268436570" name="n" stackId="1" startPc="268436428"/>
-        <entry endPc="268436570" name="s" stackId="2" startPc="268436431"/>
-        <entry endPc="268436570" name="out" stackId="3" startPc="268436431"/>
-        <entry endPc="268436570" name="cnt" stackId="4" startPc="268436431"/>
-        <entry endPc="268436549" name="i" stackId="5" startPc="268436482"/>
-        <entry arg="true" endPc="268436705" name="a" stackId="1" startPc="268436571"/>
-        <entry arg="true" endPc="268436705" name="b" stackId="2" startPc="268436571"/>
-        <entry arg="true" endPc="268436705" name="t" stackId="3" startPc="268436571"/>
-        <entry endPc="268436705" name="ar" stackId="4" startPc="268436574"/>
-        <entry endPc="268436705" name="ag" stackId="5" startPc="268436574"/>
-        <entry endPc="268436705" name="ab" stackId="6" startPc="268436574"/>
-        <entry endPc="268436705" name="br" stackId="7" startPc="268436574"/>
-        <entry endPc="268436705" name="bg" stackId="8" startPc="268436574"/>
-        <entry endPc="268436705" name="bb" stackId="9" startPc="268436574"/>
-        <entry endPc="268436705" name="r" stackId="10" startPc="268436574"/>
-        <entry endPc="268436705" name="g" stackId="11" startPc="268436574"/>
-        <entry endPc="268436705" name="bl" stackId="12" startPc="268436574"/>
-        <entry arg="true" endPc="268436926" name="seed" stackId="1" startPc="268436706"/>
-        <entry arg="true" endPc="268436926" name="base" stackId="2" startPc="268436706"/>
-        <entry arg="true" endPc="268436926" name="amp" stackId="3" startPc="268436706"/>
-        <entry endPc="268436926" name="pts" stackId="4" startPc="268436709"/>
-        <entry endPc="268436877" name="x" stackId="5" startPc="268436725"/>
-        <entry endPc="268436867" name="n" stackId="6" startPc="268436725"/>
-        <entry endPc="268437126" name="meters" stackId="1" startPc="268436930"/>
-        <entry endPc="268437126" name="ai" stackId="2" startPc="268436930"/>
-        <entry endPc="268437085" name="it" stackId="3" startPc="268437004"/>
-        <entry endPc="268437082" name="sample" stackId="4" startPc="268437044"/>
-        <entry arg="true" endPc="268438472" name="dc" stackId="1" startPc="268437149"/>
-        <entry arg="true" endPc="268438472" name="p" stackId="2" startPc="268437149"/>
-        <entry endPc="268438471" name="J" stackId="3" startPc="268437152"/>
-        <entry endPc="268438471" name="row1" stackId="4" startPc="268437152"/>
-        <entry endPc="268438471" name="row2" stackId="5" startPc="268437152"/>
-        <entry endPc="268438471" name="bat" stackId="6" startPc="268437152"/>
-        <entry endPc="268438471" name="steps" stackId="7" startPc="268437152"/>
-        <entry endPc="268438471" name="alt" stackId="8" startPc="268437152"/>
-        <entry endPc="268438471" name="ex" stackId="9" startPc="268437152"/>
-        <entry endPc="268438471" name="ey" stackId="10" startPc="268437152"/>
-        <entry endPc="268438471" name="temp" stackId="11" startPc="268437152"/>
-        <entry arg="true" endPc="268438616" name="dc" stackId="1" startPc="268438473"/>
-        <entry arg="true" endPc="268438616" name="p" stackId="2" startPc="268438473"/>
-        <entry arg="true" endPc="268438616" name="clock" stackId="3" startPc="268438473"/>
-        <entry arg="true" endPc="268438616" name="timeStr" stackId="4" startPc="268438473"/>
-        <entry arg="true" endPc="268438870" name="dc" stackId="1" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="deg" stackId="2" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="len" stackId="3" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="tail" stackId="4" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="w" stackId="5" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="edge" stackId="6" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="fill" stackId="7" startPc="268438617"/>
-        <entry arg="true" endPc="268438870" name="inlay" stackId="8" startPc="268438617"/>
-        <entry endPc="268438866" name="a" stackId="9" startPc="268438677"/>
-        <entry endPc="268438866" name="sa" stackId="10" startPc="268438677"/>
-        <entry endPc="268438866" name="ca" stackId="11" startPc="268438677"/>
-        <entry endPc="268438866" name="c" stackId="12" startPc="268438677"/>
-        <entry endPc="268438866" name="r1" stackId="13" startPc="268438677"/>
-        <entry endPc="268438866" name="r2" stackId="14" startPc="268438677"/>
-        <entry arg="true" endPc="268439512" name="dc" stackId="1" startPc="268438871"/>
-        <entry endPc="268439220" name="face" stackId="2" startPc="268438909"/>
-        <entry endPc="268439220" name="fTime" stackId="3" startPc="268438909"/>
-        <entry endPc="268439220" name="fAmpm" stackId="4" startPc="268438909"/>
-        <entry endPc="268439220" name="fData" stackId="5" startPc="268438909"/>
-        <entry endPc="268439220" name="fUnit" stackId="6" startPc="268438909"/>
-        <entry endPc="268439220" name="fDate" stackId="7" startPc="268438909"/>
-        <entry endPc="268439511" name="xs" stackId="8" startPc="268438874"/>
-        <entry endPc="268439511" name="i" stackId="9" startPc="268439346"/>
-        <entry endPc="268439501" name="h" stackId="10" startPc="268439346"/>
-        <entry endPc="268439501" name="w" stackId="11" startPc="268439346"/>
-        <entry endPc="268439501" name="x" stackId="12" startPc="268439346"/>
-        <entry arg="true" endPc="268440125" name="dc" stackId="1" startPc="268439513"/>
-        <entry arg="true" endPc="268440125" name="p" stackId="2" startPc="268439513"/>
-        <entry endPc="268439626" name="i" stackId="3" startPc="268439527"/>
-        <entry endPc="268439616" name="t" stackId="4" startPc="268439527"/>
-        <entry endPc="268440124" name="trail" stackId="5" startPc="268439516"/>
-        <entry endPc="268439944" name="i" stackId="6" startPc="268439895"/>
-        <entry endPc="268440076" name="i" stackId="7" startPc="268440049"/>
-        <entry arg="true" endPc="268440270" name="dc" stackId="1" startPc="268440126"/>
-        <entry arg="true" endPc="268440270" name="p" stackId="2" startPc="268440126"/>
-        <entry endPc="268440269" name="c" stackId="3" startPc="268440129"/>
-        <entry arg="true" endPc="268440438" name="dc" stackId="1" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="x" stackId="2" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="y" stackId="3" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="text" stackId="4" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="font" stackId="5" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="color" stackId="6" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="edge" stackId="7" startPc="268440271"/>
-        <entry arg="true" endPc="268440438" name="just" stackId="8" startPc="268440271"/>
-        <entry endPc="268440437" name="o" stackId="9" startPc="268440274"/>
-        <entry arg="true" endPc="268440542" name="dc" stackId="1" startPc="268440439"/>
-        <entry arg="true" endPc="268440542" name="p" stackId="2" startPc="268440439"/>
-        <entry arg="true" endPc="268440542" name="clock" stackId="3" startPc="268440439"/>
-        <entry arg="true" endPc="268440542" name="edge" stackId="4" startPc="268440439"/>
-        <entry arg="true" endPc="268440542" name="fill" stackId="5" startPc="268440439"/>
-        <entry endPc="268440541" name="mAng" stackId="6" startPc="268440442"/>
-        <entry endPc="268440541" name="hAng" stackId="7" startPc="268440442"/>
-        <entry arg="true" endPc="268440684" name="dc" stackId="1" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="x" stackId="2" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="y" stackId="3" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="value" stackId="4" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="unit" stackId="5" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="p" stackId="6" startPc="268440543"/>
-        <entry arg="true" endPc="268440684" name="just" stackId="7" startPc="268440543"/>
-        <entry endPc="268440680" name="w" stackId="8" startPc="268440598"/>
-        <entry arg="true" endPc="268440773" name="flat" stackId="1" startPc="268440707"/>
-        <entry endPc="268440773" name="out" stackId="2" startPc="268440710"/>
-        <entry endPc="268440770" name="i" stackId="3" startPc="268440730"/>
-        <entry endPc="268440867" name="cc" stackId="1" startPc="268440792"/>
-        <entry arg="true" endPc="268441148" name="dc" stackId="1" startPc="268440873"/>
-        <entry arg="true" endPc="268441148" name="p" stackId="2" startPc="268440873"/>
-        <entry endPc="268441147" name="c" stackId="3" startPc="268440876"/>
-        <entry endPc="268441135" name="k" stackId="4" startPc="268440900"/>
-        <entry endPc="268441125" name="a" stackId="5" startPc="268440900"/>
-        <entry endPc="268441125" name="major" stackId="6" startPc="268440900"/>
-        <entry endPc="268441125" name="r1" stackId="7" startPc="268440900"/>
-        <entry endPc="268441125" name="r2" stackId="8" startPc="268440900"/>
-        <entry endPc="268441125" name="col" stackId="9" startPc="268440900"/>
-        <entry endPc="268441125" name="sa" stackId="10" startPc="268440900"/>
-        <entry endPc="268441125" name="ca" stackId="11" startPc="268440900"/>
-        <entry arg="true" endPc="268441522" name="dc" stackId="1" startPc="268441164"/>
-        <entry endPc="268441521" name="idx" stackId="2" startPc="268441167"/>
-        <entry endPc="268441521" name="p" stackId="3" startPc="268441167"/>
-        <entry endPc="268441521" name="clock" stackId="4" startPc="268441167"/>
-        <entry endPc="268441521" name="h12" stackId="5" startPc="268441167"/>
-        <entry endPc="268441521" name="timeStr" stackId="6" startPc="268441167"/>
-        <entry endPc="268441521" name="ampm" stackId="7" startPc="268441167"/>
+        <entry arg="true" endPc="268436480" name="dc" stackId="1" startPc="268436118"/>
+        <entry arg="true" endPc="268436480" name="deg" stackId="2" startPc="268436118"/>
+        <entry arg="true" endPc="268436480" name="len" stackId="3" startPc="268436118"/>
+        <entry arg="true" endPc="268436480" name="tail" stackId="4" startPc="268436118"/>
+        <entry arg="true" endPc="268436480" name="w" stackId="5" startPc="268436118"/>
+        <entry arg="true" endPc="268436480" name="color" stackId="6" startPc="268436118"/>
+        <entry endPc="268436479" name="a" stackId="7" startPc="268436121"/>
+        <entry endPc="268436479" name="sa" stackId="8" startPc="268436121"/>
+        <entry endPc="268436479" name="ca" stackId="9" startPc="268436121"/>
+        <entry endPc="268436479" name="r" stackId="10" startPc="268436121"/>
+        <entry endPc="268436479" name="local" stackId="11" startPc="268436121"/>
+        <entry endPc="268436479" name="pts" stackId="12" startPc="268436121"/>
+        <entry endPc="268436393" name="i" stackId="13" startPc="268436299"/>
+        <entry endPc="268436383" name="x" stackId="14" startPc="268436299"/>
+        <entry endPc="268436383" name="y" stackId="15" startPc="268436299"/>
+        <entry arg="true" endPc="268436623" name="n" stackId="1" startPc="268436481"/>
+        <entry endPc="268436623" name="s" stackId="2" startPc="268436484"/>
+        <entry endPc="268436623" name="out" stackId="3" startPc="268436484"/>
+        <entry endPc="268436623" name="cnt" stackId="4" startPc="268436484"/>
+        <entry endPc="268436602" name="i" stackId="5" startPc="268436535"/>
+        <entry arg="true" endPc="268436758" name="a" stackId="1" startPc="268436624"/>
+        <entry arg="true" endPc="268436758" name="b" stackId="2" startPc="268436624"/>
+        <entry arg="true" endPc="268436758" name="t" stackId="3" startPc="268436624"/>
+        <entry endPc="268436758" name="ar" stackId="4" startPc="268436627"/>
+        <entry endPc="268436758" name="ag" stackId="5" startPc="268436627"/>
+        <entry endPc="268436758" name="ab" stackId="6" startPc="268436627"/>
+        <entry endPc="268436758" name="br" stackId="7" startPc="268436627"/>
+        <entry endPc="268436758" name="bg" stackId="8" startPc="268436627"/>
+        <entry endPc="268436758" name="bb" stackId="9" startPc="268436627"/>
+        <entry endPc="268436758" name="r" stackId="10" startPc="268436627"/>
+        <entry endPc="268436758" name="g" stackId="11" startPc="268436627"/>
+        <entry endPc="268436758" name="bl" stackId="12" startPc="268436627"/>
+        <entry arg="true" endPc="268436979" name="seed" stackId="1" startPc="268436759"/>
+        <entry arg="true" endPc="268436979" name="base" stackId="2" startPc="268436759"/>
+        <entry arg="true" endPc="268436979" name="amp" stackId="3" startPc="268436759"/>
+        <entry endPc="268436979" name="pts" stackId="4" startPc="268436762"/>
+        <entry endPc="268436930" name="x" stackId="5" startPc="268436778"/>
+        <entry endPc="268436920" name="n" stackId="6" startPc="268436778"/>
+        <entry endPc="268437179" name="meters" stackId="1" startPc="268436983"/>
+        <entry endPc="268437179" name="ai" stackId="2" startPc="268436983"/>
+        <entry endPc="268437138" name="it" stackId="3" startPc="268437057"/>
+        <entry endPc="268437135" name="sample" stackId="4" startPc="268437097"/>
+        <entry arg="true" endPc="268438525" name="dc" stackId="1" startPc="268437202"/>
+        <entry arg="true" endPc="268438525" name="p" stackId="2" startPc="268437202"/>
+        <entry endPc="268438524" name="J" stackId="3" startPc="268437205"/>
+        <entry endPc="268438524" name="row1" stackId="4" startPc="268437205"/>
+        <entry endPc="268438524" name="row2" stackId="5" startPc="268437205"/>
+        <entry endPc="268438524" name="bat" stackId="6" startPc="268437205"/>
+        <entry endPc="268438524" name="steps" stackId="7" startPc="268437205"/>
+        <entry endPc="268438524" name="alt" stackId="8" startPc="268437205"/>
+        <entry endPc="268438524" name="ex" stackId="9" startPc="268437205"/>
+        <entry endPc="268438524" name="ey" stackId="10" startPc="268437205"/>
+        <entry endPc="268438524" name="temp" stackId="11" startPc="268437205"/>
+        <entry arg="true" endPc="268438669" name="dc" stackId="1" startPc="268438526"/>
+        <entry arg="true" endPc="268438669" name="p" stackId="2" startPc="268438526"/>
+        <entry arg="true" endPc="268438669" name="clock" stackId="3" startPc="268438526"/>
+        <entry arg="true" endPc="268438669" name="timeStr" stackId="4" startPc="268438526"/>
+        <entry arg="true" endPc="268438923" name="dc" stackId="1" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="deg" stackId="2" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="len" stackId="3" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="tail" stackId="4" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="w" stackId="5" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="edge" stackId="6" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="fill" stackId="7" startPc="268438670"/>
+        <entry arg="true" endPc="268438923" name="inlay" stackId="8" startPc="268438670"/>
+        <entry endPc="268438919" name="a" stackId="9" startPc="268438730"/>
+        <entry endPc="268438919" name="sa" stackId="10" startPc="268438730"/>
+        <entry endPc="268438919" name="ca" stackId="11" startPc="268438730"/>
+        <entry endPc="268438919" name="c" stackId="12" startPc="268438730"/>
+        <entry endPc="268438919" name="r1" stackId="13" startPc="268438730"/>
+        <entry endPc="268438919" name="r2" stackId="14" startPc="268438730"/>
+        <entry arg="true" endPc="268439565" name="dc" stackId="1" startPc="268438924"/>
+        <entry endPc="268439273" name="face" stackId="2" startPc="268438962"/>
+        <entry endPc="268439273" name="fTime" stackId="3" startPc="268438962"/>
+        <entry endPc="268439273" name="fAmpm" stackId="4" startPc="268438962"/>
+        <entry endPc="268439273" name="fData" stackId="5" startPc="268438962"/>
+        <entry endPc="268439273" name="fUnit" stackId="6" startPc="268438962"/>
+        <entry endPc="268439273" name="fDate" stackId="7" startPc="268438962"/>
+        <entry endPc="268439564" name="xs" stackId="8" startPc="268438927"/>
+        <entry endPc="268439564" name="i" stackId="9" startPc="268439399"/>
+        <entry endPc="268439554" name="h" stackId="10" startPc="268439399"/>
+        <entry endPc="268439554" name="w" stackId="11" startPc="268439399"/>
+        <entry endPc="268439554" name="x" stackId="12" startPc="268439399"/>
+        <entry arg="true" endPc="268440178" name="dc" stackId="1" startPc="268439566"/>
+        <entry arg="true" endPc="268440178" name="p" stackId="2" startPc="268439566"/>
+        <entry endPc="268439679" name="i" stackId="3" startPc="268439580"/>
+        <entry endPc="268439669" name="t" stackId="4" startPc="268439580"/>
+        <entry endPc="268440177" name="trail" stackId="5" startPc="268439569"/>
+        <entry endPc="268439997" name="i" stackId="6" startPc="268439948"/>
+        <entry endPc="268440129" name="i" stackId="7" startPc="268440102"/>
+        <entry arg="true" endPc="268440323" name="dc" stackId="1" startPc="268440179"/>
+        <entry arg="true" endPc="268440323" name="p" stackId="2" startPc="268440179"/>
+        <entry endPc="268440322" name="c" stackId="3" startPc="268440182"/>
+        <entry arg="true" endPc="268440491" name="dc" stackId="1" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="x" stackId="2" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="y" stackId="3" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="text" stackId="4" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="font" stackId="5" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="color" stackId="6" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="edge" stackId="7" startPc="268440324"/>
+        <entry arg="true" endPc="268440491" name="just" stackId="8" startPc="268440324"/>
+        <entry endPc="268440490" name="o" stackId="9" startPc="268440327"/>
+        <entry arg="true" endPc="268440595" name="dc" stackId="1" startPc="268440492"/>
+        <entry arg="true" endPc="268440595" name="p" stackId="2" startPc="268440492"/>
+        <entry arg="true" endPc="268440595" name="clock" stackId="3" startPc="268440492"/>
+        <entry arg="true" endPc="268440595" name="edge" stackId="4" startPc="268440492"/>
+        <entry arg="true" endPc="268440595" name="fill" stackId="5" startPc="268440492"/>
+        <entry endPc="268440594" name="mAng" stackId="6" startPc="268440495"/>
+        <entry endPc="268440594" name="hAng" stackId="7" startPc="268440495"/>
+        <entry arg="true" endPc="268440737" name="dc" stackId="1" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="x" stackId="2" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="y" stackId="3" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="value" stackId="4" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="unit" stackId="5" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="p" stackId="6" startPc="268440596"/>
+        <entry arg="true" endPc="268440737" name="just" stackId="7" startPc="268440596"/>
+        <entry endPc="268440733" name="w" stackId="8" startPc="268440651"/>
+        <entry arg="true" endPc="268440826" name="flat" stackId="1" startPc="268440760"/>
+        <entry endPc="268440826" name="out" stackId="2" startPc="268440763"/>
+        <entry endPc="268440823" name="i" stackId="3" startPc="268440783"/>
+        <entry endPc="268440920" name="cc" stackId="1" startPc="268440845"/>
+        <entry arg="true" endPc="268441201" name="dc" stackId="1" startPc="268440926"/>
+        <entry arg="true" endPc="268441201" name="p" stackId="2" startPc="268440926"/>
+        <entry endPc="268441200" name="c" stackId="3" startPc="268440929"/>
+        <entry endPc="268441188" name="k" stackId="4" startPc="268440953"/>
+        <entry endPc="268441178" name="a" stackId="5" startPc="268440953"/>
+        <entry endPc="268441178" name="major" stackId="6" startPc="268440953"/>
+        <entry endPc="268441178" name="r1" stackId="7" startPc="268440953"/>
+        <entry endPc="268441178" name="r2" stackId="8" startPc="268440953"/>
+        <entry endPc="268441178" name="col" stackId="9" startPc="268440953"/>
+        <entry endPc="268441178" name="sa" stackId="10" startPc="268440953"/>
+        <entry endPc="268441178" name="ca" stackId="11" startPc="268440953"/>
+        <entry arg="true" endPc="268441575" name="dc" stackId="1" startPc="268441217"/>
+        <entry endPc="268441574" name="idx" stackId="2" startPc="268441220"/>
+        <entry endPc="268441574" name="p" stackId="3" startPc="268441220"/>
+        <entry endPc="268441574" name="clock" stackId="4" startPc="268441220"/>
+        <entry endPc="268441574" name="h12" stackId="5" startPc="268441220"/>
+        <entry endPc="268441574" name="timeStr" stackId="6" startPc="268441220"/>
+        <entry endPc="268441574" name="ampm" stackId="7" startPc="268441220"/>
     </localVars>
     <deviceInfo deviceVersion="69f9c27a08d175c50b86464a70c24d15718945cb" partNumber="006-B4631-00"/>
     <annotations>
@@ -594,7 +597,7 @@
             <param id="y2"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268436427" name="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;" parent="TrailheadView" startPc="268436118">
+        <functionEntry accessMode="private" endPc="268436480" name="&lt;globals/TrailheadView/&lt;&gt;handPoly&gt;" parent="TrailheadView" startPc="268436118">
             <param id="dc"/>
             <param id="deg"/>
             <param id="len"/>
@@ -603,41 +606,41 @@
             <param id="color"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268436570" name="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;" parent="TrailheadView" startPc="268436428">
+        <functionEntry accessMode="private" endPc="268436623" name="&lt;globals/TrailheadView/&lt;&gt;withCommas&gt;" parent="TrailheadView" startPc="268436481">
             <param id="n"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268436705" name="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;" parent="TrailheadView" startPc="268436571">
+        <functionEntry accessMode="private" endPc="268436758" name="&lt;globals/TrailheadView/&lt;&gt;lerpColor&gt;" parent="TrailheadView" startPc="268436624">
             <param id="a"/>
             <param id="b"/>
             <param id="t"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268436926" name="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;" parent="TrailheadView" startPc="268436706">
+        <functionEntry accessMode="private" endPc="268436979" name="&lt;globals/TrailheadView/&lt;&gt;ridge&gt;" parent="TrailheadView" startPc="268436759">
             <param id="seed"/>
             <param id="base"/>
             <param id="amp"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268437126" name="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;" parent="TrailheadView" startPc="268436927">
+        <functionEntry accessMode="private" endPc="268437179" name="&lt;globals/TrailheadView/&lt;&gt;elevationFeet&gt;" parent="TrailheadView" startPc="268436980">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268437148" name="onExitSleep" parent="TrailheadView" startPc="268437127">
+        <functionEntry accessMode="public" endPc="268437201" name="onExitSleep" parent="TrailheadView" startPc="268437180">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268438472" name="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;" parent="TrailheadView" startPc="268437149">
+        <functionEntry accessMode="private" endPc="268438525" name="&lt;globals/TrailheadView/&lt;&gt;drawData&gt;" parent="TrailheadView" startPc="268437202">
             <param id="dc"/>
             <param id="p"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268438616" name="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;" parent="TrailheadView" startPc="268438473">
+        <functionEntry accessMode="private" endPc="268438669" name="&lt;globals/TrailheadView/&lt;&gt;drawSleep&gt;" parent="TrailheadView" startPc="268438526">
             <param id="dc"/>
             <param id="p"/>
             <param id="clock"/>
             <param id="timeStr"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268438870" name="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;" parent="TrailheadView" startPc="268438617">
+        <functionEntry accessMode="private" endPc="268438923" name="&lt;globals/TrailheadView/&lt;&gt;drawHand&gt;" parent="TrailheadView" startPc="268438670">
             <param id="dc"/>
             <param id="deg"/>
             <param id="len"/>
@@ -648,21 +651,21 @@
             <param id="inlay"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268439512" name="onLayout" parent="TrailheadView" startPc="268438871">
+        <functionEntry accessMode="public" endPc="268439565" name="onLayout" parent="TrailheadView" startPc="268438924">
             <param id="dc"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440125" name="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;" parent="TrailheadView" startPc="268439513">
-            <param id="dc"/>
-            <param id="p"/>
-            <documentation/>
-        </functionEntry>
-        <functionEntry accessMode="private" endPc="268440270" name="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;" parent="TrailheadView" startPc="268440126">
+        <functionEntry accessMode="private" endPc="268440178" name="&lt;globals/TrailheadView/&lt;&gt;drawScene&gt;" parent="TrailheadView" startPc="268439566">
             <param id="dc"/>
             <param id="p"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440438" name="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;" parent="TrailheadView" startPc="268440271">
+        <functionEntry accessMode="private" endPc="268440323" name="&lt;globals/TrailheadView/&lt;&gt;drawCap&gt;" parent="TrailheadView" startPc="268440179">
+            <param id="dc"/>
+            <param id="p"/>
+            <documentation/>
+        </functionEntry>
+        <functionEntry accessMode="private" endPc="268440491" name="&lt;globals/TrailheadView/&lt;&gt;drawOutlined&gt;" parent="TrailheadView" startPc="268440324">
             <param id="dc"/>
             <param id="x"/>
             <param id="y"/>
@@ -673,7 +676,7 @@
             <param id="just"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440542" name="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;" parent="TrailheadView" startPc="268440439">
+        <functionEntry accessMode="private" endPc="268440595" name="&lt;globals/TrailheadView/&lt;&gt;drawHands&gt;" parent="TrailheadView" startPc="268440492">
             <param id="dc"/>
             <param id="p"/>
             <param id="clock"/>
@@ -681,7 +684,7 @@
             <param id="fill"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440684" name="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;" parent="TrailheadView" startPc="268440543">
+        <functionEntry accessMode="private" endPc="268440737" name="&lt;globals/TrailheadView/&lt;&gt;valueWithUnit&gt;" parent="TrailheadView" startPc="268440596">
             <param id="dc"/>
             <param id="x"/>
             <param id="y"/>
@@ -691,35 +694,35 @@
             <param id="just"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268440706" name="onEnterSleep" parent="TrailheadView" startPc="268440685">
+        <functionEntry accessMode="public" endPc="268440759" name="onEnterSleep" parent="TrailheadView" startPc="268440738">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440773" name="&lt;globals/TrailheadView/&lt;&gt;poly&gt;" parent="TrailheadView" startPc="268440707">
+        <functionEntry accessMode="private" endPc="268440826" name="&lt;globals/TrailheadView/&lt;&gt;poly&gt;" parent="TrailheadView" startPc="268440760">
             <param id="flat"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268440872" name="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;" parent="TrailheadView" startPc="268440774">
+        <functionEntry accessMode="private" endPc="268440925" name="&lt;globals/TrailheadView/&lt;&gt;temperatureF&gt;" parent="TrailheadView" startPc="268440827">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="private" endPc="268441148" name="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;" parent="TrailheadView" startPc="268440873">
+        <functionEntry accessMode="private" endPc="268441201" name="&lt;globals/TrailheadView/&lt;&gt;drawBezel&gt;" parent="TrailheadView" startPc="268440926">
             <param id="dc"/>
             <param id="p"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268441163" name="initialize" parent="TrailheadView" startPc="268441149">
+        <functionEntry accessMode="public" endPc="268441216" name="initialize" parent="TrailheadView" startPc="268441202">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268441522" name="onUpdate" parent="TrailheadView" startPc="268441164">
+        <functionEntry accessMode="public" endPc="268441575" name="onUpdate" parent="TrailheadView" startPc="268441217">
             <param id="dc"/>
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268441536" name="onSettingsChanged" parent="TrailheadApp" startPc="268441523">
+        <functionEntry accessMode="public" endPc="268441589" name="onSettingsChanged" parent="TrailheadApp" startPc="268441576">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268441564" name="getInitialView" parent="TrailheadApp" startPc="268441537">
+        <functionEntry accessMode="public" endPc="268441617" name="getInitialView" parent="TrailheadApp" startPc="268441590">
             <documentation/>
         </functionEntry>
-        <functionEntry accessMode="public" endPc="268441579" name="initialize" parent="TrailheadApp" startPc="268441565">
+        <functionEntry accessMode="public" endPc="268441632" name="initialize" parent="TrailheadApp" startPc="268441618">
             <documentation/>
         </functionEntry>
         <functionEntry accessMode="public" name="&lt;init&gt;" parent="Drawables">
