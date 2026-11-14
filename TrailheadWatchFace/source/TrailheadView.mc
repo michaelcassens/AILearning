@@ -264,8 +264,8 @@ class TrailheadView extends WatchUi.WatchFace {
 
     // Four readouts in a 2 x 2 grid to the left of the peak: icon above, value below.
     private function drawData(dc as Dc, p as Array) as Void {
-        var cxA = 82;
-        var cxB = 175;
+        var cxA = 87;
+        var cxB = 180;
         var iconA = 222;
         var valA = 252;
         var iconB = 300;
