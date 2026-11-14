@@ -30,7 +30,6 @@ class TrailheadView extends WatchUi.WatchFace {
 
     private var _far as Array = [];
     private var _mid as Array = [];
-    private var _mid2 as Array = [];
     private var _near as Array = [];
     private var _trees as Array = [];
 
@@ -63,7 +62,6 @@ class TrailheadView extends WatchUi.WatchFace {
 
         _far = ridge(1.2, 300.0, 70.0);
         _mid = ridge(3.7, 322.0, 46.0);
-        _mid2 = ridge(2.4, 298.0, 12.0);
         _near = ridge(5.1, 352.0, 8.0);
 
         // Larch silhouettes along the near ridge.
@@ -131,13 +129,13 @@ class TrailheadView extends WatchUi.WatchFace {
         return out;
     }
 
-    // Peak transform: scale 0.72 anchored at the right edge, base raised to y = 296.
+    // Peak coordinates are used as authored (no scaling).
     private function mx(x as Numeric) as Float {
-        return 454.0 - (454.0 - x) * 0.72;
+        return x.toFloat();
     }
 
     private function my(y as Numeric) as Float {
-        return 296.0 - (348.0 - y) * 0.72;
+        return y.toFloat();
     }
 
     private function peak(flat as Array) as Array {
@@ -197,7 +195,7 @@ class TrailheadView extends WatchUi.WatchFace {
         dc.setColor(p[3], Graphics.COLOR_TRANSPARENT);
         dc.fillPolygon(_mid);
 
-        // Main peak, raised and scaled so the trail sign panel sits below it.
+        // Main peak.
         dc.setColor(p[4], Graphics.COLOR_TRANSPARENT);
         dc.fillPolygon(peak([228, 348, 300, 262, 322, 246, 345, 214, 338, 300, 338, 420, 228, 420]));
         dc.setColor(p[5], Graphics.COLOR_TRANSPARENT);
@@ -215,10 +213,6 @@ class TrailheadView extends WatchUi.WatchFace {
         dc.setPenWidth(1);
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.fillPolygon(peak([337, 248, 337, 234, 347, 239, 337, 244]));
-
-        // Low ridge hides the foot of the peak.
-        dc.setColor(p[3], Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(_mid2);
 
         // Foreground ridge and larches.
         dc.setColor(p[6], Graphics.COLOR_TRANSPARENT);
@@ -285,68 +279,71 @@ class TrailheadView extends WatchUi.WatchFace {
 
     // ---------------------------------------------------------------- data
 
-    // Trail sign: a panel under the peak with the four readouts in a 2 x 2 grid.
+    // Trail sign: a tall panel to the left of the peak, one readout per row.
     private function drawData(dc as Dc, p as Array) as Void {
         var J = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
-        var x0 = 99;
-        var y0 = 302;
-        var pw = 256;
-        var ph = 100;
-        var c1 = x0 + 16;
-        var c2 = x0 + pw / 2 + 16;
-        var r1 = y0 + 31;
-        var r2 = y0 + 81;
+        var x0 = 70;
+        var y0 = 206;
+        var pw = 150;
+        var ph = 144;
+        var ix = x0 + 14;
+        var tx = ix + 38;
+        var r0 = y0 + 24;
+        var r1 = r0 + 32;
+        var r2 = r1 + 32;
+        var r3 = r2 + 32;
 
         // Panel, outline and dividers (accent blended into the panel color, no alpha on the watch).
         dc.setColor(p[6], Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(22));
+        dc.fillRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(20));
         dc.setColor(lerpColor(p[6], p[9], 0.4), Graphics.COLOR_TRANSPARENT);
-        dc.drawRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(22));
+        dc.drawRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(20));
         dc.setColor(lerpColor(p[6], p[9], 0.25), Graphics.COLOR_TRANSPARENT);
-        dc.drawLine(px(x0 + pw / 2), px(y0 + 14), px(x0 + pw / 2), px(y0 + ph - 14));
-        dc.drawLine(px(x0 + 14), px(y0 + ph / 2), px(x0 + pw - 14), px(y0 + ph / 2));
+        for (var d = 0; d < 3; d++) {
+            var dy = r0 + 16 + d * 32;
+            dc.drawLine(px(x0 + 14), px(dy), px(x0 + pw - 14), px(dy));
+        }
 
         // Battery
         var bat = System.getSystemStats().battery.toNumber();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(c1), px(r1 - 8), px(26), px(15), px(3));
-        dc.drawLine(px(c1 + 29), px(r1 - 3), px(c1 + 29), px(r1 + 2));
+        dc.drawRoundedRectangle(px(ix), px(r0 - 8), px(26), px(15), px(3));
+        dc.drawLine(px(ix + 29), px(r0 - 3), px(ix + 29), px(r0 + 2));
         dc.setPenWidth(1);
-        dc.fillRectangle(px(c1 + 3.5), px(r1 - 4.5), px(14.0 * bat / 100.0) + 1, px(8));
-        valueWithUnit(dc, px(c1 + 38), px(r1), bat.format("%d"), "%", p, J);
+        dc.fillRectangle(px(ix + 3.5), px(r0 - 4.5), px(14.0 * bat / 100.0) + 1, px(8));
+        valueWithUnit(dc, px(tx), px(r0), bat.format("%d"), "%", p, J);
 
         // Steps
         var steps = ActivityMonitor.getInfo().steps;
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
-        dc.fillEllipse(px(c2 + 5.4), px(r1 - 12 + 12.6), px(3.6), px(5.4));
-        dc.fillEllipse(px(c2 + 5.4), px(r1 - 12 + 3.2), px(2.5), px(2.7));
-        dc.fillEllipse(px(c2 + 16.2), px(r1 - 12 + 9.5), px(3.6), px(5.4));
-        dc.fillEllipse(px(c2 + 16.2), px(r1 - 12 + 0.4), px(2.5), px(2.7));
-        valueWithUnit(dc, px(c2 + 34), px(r1), steps == null ? "--" : withCommas(steps), "", p, J);
+        dc.fillEllipse(px(ix + 5.4), px(r1 - 12 + 12.6), px(3.6), px(5.4));
+        dc.fillEllipse(px(ix + 5.4), px(r1 - 12 + 3.2), px(2.5), px(2.7));
+        dc.fillEllipse(px(ix + 16.2), px(r1 - 12 + 9.5), px(3.6), px(5.4));
+        dc.fillEllipse(px(ix + 16.2), px(r1 - 12 + 0.4), px(2.5), px(2.7));
+        valueWithUnit(dc, px(tx), px(r1), steps == null ? "--" : withCommas(steps), "", p, J);
 
         // Elevation (feet)
         var alt = elevationFeet();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        var ex = c1;
         var ey = r2 - 9;
-        dc.drawLine(px(ex), px(ey + 15.3), px(ex + 9), px(ey + 1.8));
-        dc.drawLine(px(ex + 9), px(ey + 1.8), px(ex + 13.5), px(ey + 8.1));
-        dc.drawLine(px(ex + 13.5), px(ey + 8.1), px(ex + 18), px(ey + 2.7));
-        dc.drawLine(px(ex + 18), px(ey + 2.7), px(ex + 27.9), px(ey + 15.3));
-        dc.drawLine(px(ex), px(ey + 15.3), px(ex + 27.9), px(ey + 15.3));
+        dc.drawLine(px(ix), px(ey + 15.3), px(ix + 9), px(ey + 1.8));
+        dc.drawLine(px(ix + 9), px(ey + 1.8), px(ix + 13.5), px(ey + 8.1));
+        dc.drawLine(px(ix + 13.5), px(ey + 8.1), px(ix + 18), px(ey + 2.7));
+        dc.drawLine(px(ix + 18), px(ey + 2.7), px(ix + 27.9), px(ey + 15.3));
+        dc.drawLine(px(ix), px(ey + 15.3), px(ix + 27.9), px(ey + 15.3));
         dc.setPenWidth(1);
-        valueWithUnit(dc, px(c1 + 38), px(r2), alt == null ? "--" : withCommas(alt), " ft", p, J);
+        valueWithUnit(dc, px(tx), px(r2), alt == null ? "--" : withCommas(alt), " ft", p, J);
 
         // Temperature (Fahrenheit)
         var temp = temperatureF();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(c2 + 11.4), px(r2 - 10), px(5.4), px(11), px(2.7));
+        dc.drawRoundedRectangle(px(ix + 11.4), px(r3 - 10), px(5.4), px(11), px(2.7));
         dc.setPenWidth(1);
-        dc.fillCircle(px(c2 + 14.1), px(r2 + 0.5), px(4.9));
-        valueWithUnit(dc, px(c2 + 34), px(r2), temp == null ? "--" : temp.format("%d"), "°F", p, J);
+        dc.fillCircle(px(ix + 14.1), px(r3 + 0.5), px(4.9));
+        valueWithUnit(dc, px(tx), px(r3), temp == null ? "--" : temp.format("%d"), "°F", p, J);
     }
 
     private function valueWithUnit(dc as Dc, x as Number, y as Number, value as String, unit as String, p as Array, just as Number) as Void {
