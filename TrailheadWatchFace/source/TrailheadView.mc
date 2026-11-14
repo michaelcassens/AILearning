@@ -1,10 +1,8 @@
-import Toybox.Activity;
 import Toybox.ActivityMonitor;
 import Toybox.Application;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
-import Toybox.SensorHistory;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
@@ -266,6 +264,7 @@ class TrailheadView extends WatchUi.WatchFace {
     private function drawData(dc as Dc, p as Array) as Void {
         var cxA = 87;
         var cxB = 180;
+        var cxT = (cxA + cxB) / 2;
         var iconA = 222;
         var valA = 252;
         var iconB = 300;
@@ -290,28 +289,14 @@ class TrailheadView extends WatchUi.WatchFace {
         dc.fillEllipse(px(cxB + 6), px(iconA - 9.6), px(2.8), px(3));
         valueCentered(dc, px(cxB), px(valA), steps == null ? "--" : withCommas(steps), "", p);
 
-        // Elevation (feet)
-        var alt = elevationFeet();
-        dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(2);
-        var ex = cxA - 15;
-        var ey = iconB + 8;
-        dc.drawLine(px(ex), px(ey), px(ex + 10), px(ey - 15));
-        dc.drawLine(px(ex + 10), px(ey - 15), px(ex + 15), px(ey - 8));
-        dc.drawLine(px(ex + 15), px(ey - 8), px(ex + 20), px(ey - 14));
-        dc.drawLine(px(ex + 20), px(ey - 14), px(ex + 31), px(ey));
-        dc.drawLine(px(ex), px(ey), px(ex + 31), px(ey));
-        dc.setPenWidth(1);
-        valueCentered(dc, px(cxA), px(valB), alt == null ? "--" : withCommas(alt), " ft", p);
-
         // Temperature (Fahrenheit)
         var temp = temperatureF();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(cxB - 3), px(iconB - 12), px(6), px(17), px(3));
+        dc.drawRoundedRectangle(px(cxT - 3), px(iconB - 12), px(6), px(17), px(3));
         dc.setPenWidth(1);
-        dc.fillCircle(px(cxB), px(iconB + 6), px(5.4));
-        valueCentered(dc, px(cxB), px(valB), temp == null ? "--" : temp.format("%d"), "°F", p);
+        dc.fillCircle(px(cxT), px(iconB + 6), px(5.4));
+        valueCentered(dc, px(cxT), px(valB), temp == null ? "--" : temp.format("%d"), "°F", p);
     }
 
     // Value with a smaller unit, the pair centered on x.
@@ -336,24 +321,6 @@ class TrailheadView extends WatchUi.WatchFace {
             if (cnt % 3 == 0 && i > 0) { out = "," + out; }
         }
         return n < 0 ? "-" + out : out;
-    }
-
-    private function elevationFeet() as Number or Null {
-        var meters = null;
-        var ai = Activity.getActivityInfo();
-        if (ai != null && ai.altitude != null) {
-            meters = ai.altitude;
-        } else if ((Toybox has :SensorHistory) && (SensorHistory has :getElevationHistory)) {
-            var it = SensorHistory.getElevationHistory({:period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST});
-            if (it != null) {
-                var sample = it.next();
-                if (sample != null && sample.data != null) {
-                    meters = sample.data;
-                }
-            }
-        }
-        if (meters == null) { return null; }
-        return Math.round(meters * 3.28084).toNumber();
     }
 
     private function temperatureF() as Number or Null {
