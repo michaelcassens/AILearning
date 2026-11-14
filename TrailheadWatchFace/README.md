@@ -7,6 +7,7 @@ a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and te
 Pick one in the Connect IQ app or Garmin Connect (device > watch face > Settings > Color palette):
 - **Stone and Larch** (beige, warm gray, off-white on light black)
 - **Maroon and Silver** (maroon shadows, silver highlights)
+- **Maroon and Black** (black ridges with a maroon peak and accents)
 
 To add a palette, append a 12-color row to `PALETTES` in `source/TrailheadView.mc`
 (order is documented above it) and a `listEntry` in `resources/settings/settings.xml`.
