@@ -48,8 +48,8 @@ class TrailheadView extends WatchUi.WatchFace {
 
         if (Graphics has :getVectorFont) {
             var face = ["RobotoCondensedBold", "RobotoCondensedRegular", "RobotoRegular"];
-            var fTime = Graphics.getVectorFont({:face => face, :size => px(82)});
-            var fAmpm = Graphics.getVectorFont({:face => face, :size => px(24)});
+            var fTime = Graphics.getVectorFont({:face => face, :size => px(108)});
+            var fAmpm = Graphics.getVectorFont({:face => face, :size => px(28)});
             var fData = Graphics.getVectorFont({:face => face, :size => px(30)});
             var fUnit = Graphics.getVectorFont({:face => face, :size => px(18)});
             var fDate = Graphics.getVectorFont({:face => face, :size => px(19)});
@@ -273,8 +273,10 @@ class TrailheadView extends WatchUi.WatchFace {
         var a = deg * Math.PI / 180.0;
         var sa = Math.sin(a);
         var ca = Math.cos(a);
+        // Flat-sided baton with a rounded end (no pointed tip).
+        var r = w * 0.9;
         var local = [
-            [-w, tail], [-w * 0.7, -len + 10], [0, -len], [w * 0.7, -len + 10], [w, tail]
+            [-w, tail], [-w * 0.9, -len + r], [w * 0.9, -len + r], [w, tail]
         ];
         var pts = [];
         for (var i = 0; i < local.size(); i++) {
@@ -284,6 +286,7 @@ class TrailheadView extends WatchUi.WatchFace {
         }
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         dc.fillPolygon(pts);
+        dc.fillCircle(px(227 + (len - r) * sa), px(227 - (len - r) * ca), px(r));
     }
 
     private function drawCap(dc as Dc, p as Array) as Void {
@@ -305,15 +308,15 @@ class TrailheadView extends WatchUi.WatchFace {
         // Date: SAT  14 NOV
         var info = Gregorian.info(Time.now(), Time.FORMAT_MEDIUM);
         var dateStr = Lang.format("$1$  $2$ $3$", [info.day_of_week, info.day.format("%d"), info.month]).toUpper();
-        drawOutlined(dc, cx, px(106), dateStr, _fDate, p[8], p[0], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        drawOutlined(dc, cx, px(80), dateStr, _fDate, p[8], p[0], Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         // Time with leading zero, AM/PM to the right.
         var wT = dc.getTextWidthInPixels(timeStr, _fTime);
         var wA = dc.getTextWidthInPixels(ampm, _fAmpm);
         var gap = px(6);
         var x0 = cx - (wT + gap + wA) / 2;
-        drawOutlined(dc, x0, px(146), timeStr, _fTime, p[7], p[0], J);
-        drawOutlined(dc, x0 + wT + gap, px(160), ampm, _fAmpm, p[9], p[0], J);
+        drawOutlined(dc, x0, px(150), timeStr, _fTime, p[7], p[0], J);
+        drawOutlined(dc, x0 + wT + gap, px(172), ampm, _fAmpm, p[9], p[0], J);
     }
 
     // ---------------------------------------------------------------- data
@@ -424,7 +427,7 @@ class TrailheadView extends WatchUi.WatchFace {
         dc.clear();
         drawHands(dc, p, clock, Graphics.COLOR_BLACK, p[8]);
         dc.setColor(p[8], Graphics.COLOR_TRANSPARENT);
-        dc.drawText(px(227), px(146), _fTime, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(px(227), px(150), _fTime, timeStr, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.fillCircle(px(227), px(227), px(5));
     }
 }
