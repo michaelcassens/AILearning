@@ -1,7 +1,7 @@
 # Trailhead (Garmin Fenix 8 Pro watch face)
 
 Mountain biking watch face: large 12-hour digital time with a leading zero (08:42 AM),
-a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and temperature (°F) stacked on the left.
+a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and temperature (°F) on a trail sign panel under the peak.
 
 ## Palettes
 Pick one in the Connect IQ app or Garmin Connect (device > watch face > Settings > Color palette):
@@ -20,6 +20,5 @@ To add a palette, append a 12-color row to `PALETTES` in `source/TrailheadView.m
 ## Notes
 - Written without access to the SDK, so it has not been compiled yet. If the build reports an error,
   send it over and I'll fix it. Check that the product IDs in `manifest.xml` match the names the SDK Manager lists.
-- Temperature comes from Garmin Weather (needs a recent phone sync). Elevation uses the activity altitude,
-  falling back to the last barometric elevation sample. Missing data shows `--`.
+- Temperature comes from Garmin Weather (needs a recent phone sync). Elevation uses the activity altitude, falling back to the last barometric elevation sample. Missing data shows `--`.
 - Low-power (AMOLED sleep) mode draws only a dim time.
