@@ -50,8 +50,8 @@ class TrailheadView extends WatchUi.WatchFace {
             var face = ["RobotoCondensedBold", "RobotoCondensedRegular", "RobotoRegular"];
             var fTime = Graphics.getVectorFont({:face => face, :size => px(140)});
             var fAmpm = Graphics.getVectorFont({:face => face, :size => px(34)});
-            var fData = Graphics.getVectorFont({:face => face, :size => px(38)});
-            var fUnit = Graphics.getVectorFont({:face => face, :size => px(23)});
+            var fData = Graphics.getVectorFont({:face => face, :size => px(34)});
+            var fUnit = Graphics.getVectorFont({:face => face, :size => px(20)});
             var fDate = Graphics.getVectorFont({:face => face, :size => px(21)});
             if (fTime != null) { _fTime = fTime; }
             if (fAmpm != null) { _fAmpm = fAmpm; }
@@ -262,63 +262,67 @@ class TrailheadView extends WatchUi.WatchFace {
 
     // ---------------------------------------------------------------- data
 
-    // Four readouts stacked in a column to the left of the peak.
+    // Four readouts in a 2 x 2 grid to the left of the peak: icon above, value below.
     private function drawData(dc as Dc, p as Array) as Void {
-        var J = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
-        var tx = px(110);
-        var r0 = 238;
-        var r1 = 282;
-        var r2 = 326;
-        var r3 = 370;
+        var cxA = 82;
+        var cxB = 175;
+        var iconA = 222;
+        var valA = 252;
+        var iconB = 300;
+        var valB = 330;
 
         // Battery
         var bat = System.getSystemStats().battery.toNumber();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(64), px(r0 - 8), px(28), px(16), px(3));
-        dc.drawLine(px(94), px(r0 - 3), px(94), px(r0 + 3));
+        dc.drawRoundedRectangle(px(cxA - 16), px(iconA - 8), px(28), px(16), px(3));
+        dc.drawLine(px(cxA + 14), px(iconA - 3), px(cxA + 14), px(iconA + 3));
         dc.setPenWidth(1);
-        dc.fillRectangle(px(67), px(r0 - 5), px(22.0 * bat / 100.0) + 1, px(10));
-        valueWithUnit(dc, tx, px(r0), bat.format("%d"), "%", p, J);
+        dc.fillRectangle(px(cxA - 13), px(iconA - 5), px(22.0 * bat / 100.0) + 1, px(10));
+        valueCentered(dc, px(cxA), px(valA), bat.format("%d"), "%", p);
 
         // Steps
         var steps = ActivityMonitor.getInfo().steps;
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
-        dc.fillEllipse(px(72), px(r1 + 4), px(4), px(6));
-        dc.fillEllipse(px(72), px(r1 - 6.4), px(2.8), px(3));
-        dc.fillEllipse(px(84), px(r1 + 0.5), px(4), px(6));
-        dc.fillEllipse(px(84), px(r1 - 9.6), px(2.8), px(3));
-        valueWithUnit(dc, tx, px(r1), steps == null ? "--" : withCommas(steps), "", p, J);
+        dc.fillEllipse(px(cxB - 6), px(iconA + 4), px(4), px(6));
+        dc.fillEllipse(px(cxB - 6), px(iconA - 6.4), px(2.8), px(3));
+        dc.fillEllipse(px(cxB + 6), px(iconA + 0.5), px(4), px(6));
+        dc.fillEllipse(px(cxB + 6), px(iconA - 9.6), px(2.8), px(3));
+        valueCentered(dc, px(cxB), px(valA), steps == null ? "--" : withCommas(steps), "", p);
 
         // Elevation (feet)
         var alt = elevationFeet();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        var ex = 62;
-        var ey = r2 + 8;
+        var ex = cxA - 15;
+        var ey = iconB + 8;
         dc.drawLine(px(ex), px(ey), px(ex + 10), px(ey - 15));
         dc.drawLine(px(ex + 10), px(ey - 15), px(ex + 15), px(ey - 8));
         dc.drawLine(px(ex + 15), px(ey - 8), px(ex + 20), px(ey - 14));
         dc.drawLine(px(ex + 20), px(ey - 14), px(ex + 31), px(ey));
         dc.drawLine(px(ex), px(ey), px(ex + 31), px(ey));
         dc.setPenWidth(1);
-        valueWithUnit(dc, tx, px(r2), alt == null ? "--" : withCommas(alt), " ft", p, J);
+        valueCentered(dc, px(cxA), px(valB), alt == null ? "--" : withCommas(alt), " ft", p);
 
         // Temperature (Fahrenheit)
         var temp = temperatureF();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(75), px(r3 - 12), px(6), px(17), px(3));
+        dc.drawRoundedRectangle(px(cxB - 3), px(iconB - 12), px(6), px(17), px(3));
         dc.setPenWidth(1);
-        dc.fillCircle(px(78), px(r3 + 6), px(5.4));
-        valueWithUnit(dc, tx, px(r3), temp == null ? "--" : temp.format("%d"), "°F", p, J);
+        dc.fillCircle(px(cxB), px(iconB + 6), px(5.4));
+        valueCentered(dc, px(cxB), px(valB), temp == null ? "--" : temp.format("%d"), "°F", p);
     }
 
-    private function valueWithUnit(dc as Dc, x as Number, y as Number, value as String, unit as String, p as Array, just as Number) as Void {
-        drawOutlined(dc, x, y, value, _fData, p[7], p[0], just);
+    // Value with a smaller unit, the pair centered on x.
+    private function valueCentered(dc as Dc, x as Number, y as Number, value as String, unit as String, p as Array) as Void {
+        var J = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
+        var wV = dc.getTextWidthInPixels(value, _fData);
+        var wU = unit.length() > 0 ? dc.getTextWidthInPixels(unit, _fUnit) + px(2) : 0;
+        var x0 = x - (wV + wU) / 2;
+        drawOutlined(dc, x0, y, value, _fData, p[7], p[0], J);
         if (unit.length() > 0) {
-            var w = dc.getTextWidthInPixels(value, _fData);
-            drawOutlined(dc, x + w + px(3), y + px(3), unit, _fUnit, p[8], p[0], just);
+            drawOutlined(dc, x0 + wV + px(2), y + px(3), unit, _fUnit, p[8], p[0], J);
         }
     }
 
