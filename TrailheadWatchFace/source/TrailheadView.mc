@@ -1,8 +1,10 @@
+import Toybox.Activity;
 import Toybox.ActivityMonitor;
 import Toybox.Application;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
+import Toybox.SensorHistory;
 import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
@@ -28,6 +30,7 @@ class TrailheadView extends WatchUi.WatchFace {
 
     private var _far as Array = [];
     private var _mid as Array = [];
+    private var _mid2 as Array = [];
     private var _near as Array = [];
     private var _trees as Array = [];
 
@@ -48,8 +51,8 @@ class TrailheadView extends WatchUi.WatchFace {
             var face = ["RobotoCondensedBold", "RobotoCondensedRegular", "RobotoRegular"];
             var fTime = Graphics.getVectorFont({:face => face, :size => px(140)});
             var fAmpm = Graphics.getVectorFont({:face => face, :size => px(34)});
-            var fData = Graphics.getVectorFont({:face => face, :size => px(34)});
-            var fUnit = Graphics.getVectorFont({:face => face, :size => px(20)});
+            var fData = Graphics.getVectorFont({:face => face, :size => px(30)});
+            var fUnit = Graphics.getVectorFont({:face => face, :size => px(18)});
             var fDate = Graphics.getVectorFont({:face => face, :size => px(21)});
             if (fTime != null) { _fTime = fTime; }
             if (fAmpm != null) { _fAmpm = fAmpm; }
@@ -60,11 +63,12 @@ class TrailheadView extends WatchUi.WatchFace {
 
         _far = ridge(1.2, 300.0, 70.0);
         _mid = ridge(3.7, 322.0, 46.0);
+        _mid2 = ridge(2.4, 298.0, 12.0);
         _near = ridge(5.1, 352.0, 8.0);
 
         // Larch silhouettes along the near ridge.
         _trees = [];
-        var xs = [360, 380, 398, 418];
+        var xs = [34, 52, 70, 88, 104, 122, 140, 158, 176, 194, 210, 360, 380, 398, 418];
         for (var i = 0; i < xs.size(); i++) {
             var h = 24.0 + 16.0 * Math.sin(i * 2.1 + 0.6).abs();
             var w = h * 0.16;
@@ -127,6 +131,23 @@ class TrailheadView extends WatchUi.WatchFace {
         return out;
     }
 
+    // Peak transform: scale 0.72 anchored at the right edge, base raised to y = 296.
+    private function mx(x as Numeric) as Float {
+        return 454.0 - (454.0 - x) * 0.72;
+    }
+
+    private function my(y as Numeric) as Float {
+        return 296.0 - (348.0 - y) * 0.72;
+    }
+
+    private function peak(flat as Array) as Array {
+        var out = [];
+        for (var i = 0; i < flat.size(); i += 2) {
+            out.add(pt(mx(flat[i]), my(flat[i + 1])));
+        }
+        return out;
+    }
+
     private function ridge(seed as Float, base as Float, amp as Float) as Array {
         var pts = [];
         for (var x = 0; x <= 456; x += 6) {
@@ -176,24 +197,28 @@ class TrailheadView extends WatchUi.WatchFace {
         dc.setColor(p[3], Graphics.COLOR_TRANSPARENT);
         dc.fillPolygon(_mid);
 
-        // Main peak: lit face (left) and shade face (right).
+        // Main peak, raised and scaled so the trail sign panel sits below it.
         dc.setColor(p[4], Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(poly([228, 348, 300, 262, 322, 246, 345, 214, 338, 300, 338, 348]));
+        dc.fillPolygon(peak([228, 348, 300, 262, 322, 246, 345, 214, 338, 300, 338, 420, 228, 420]));
         dc.setColor(p[5], Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(poly([345, 214, 372, 252, 395, 266, 430, 310, 454, 330, 454, 348, 338, 348, 338, 300]));
+        dc.fillPolygon(peak([345, 214, 372, 252, 395, 266, 430, 310, 454, 330, 454, 420, 338, 420, 338, 300]));
         dc.setColor(p[11], Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(poly([345, 214, 333, 234, 341, 230, 346, 240, 353, 229, 360, 236]));
+        dc.fillPolygon(peak([345, 214, 333, 234, 341, 230, 346, 240, 353, 229, 360, 236]));
 
         // Switchback trail (dashed) with a summit flag.
         var trail = [270, 336, 326, 320, 292, 306, 328, 292, 304, 278, 330, 264, 337, 248];
         dc.setColor(p[10], Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(px(2) < 2 ? 2 : px(2));
+        dc.setPenWidth(2);
         for (var i = 0; i + 3 < trail.size(); i += 2) {
-            dashedLine(dc, trail[i], trail[i + 1], trail[i + 2], trail[i + 3]);
+            dashedLine(dc, mx(trail[i]), my(trail[i + 1]), mx(trail[i + 2]), my(trail[i + 3]));
         }
         dc.setPenWidth(1);
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
-        dc.fillPolygon(poly([337, 248, 337, 234, 347, 239, 337, 244]));
+        dc.fillPolygon(peak([337, 248, 337, 234, 347, 239, 337, 244]));
+
+        // Low ridge hides the foot of the peak.
+        dc.setColor(p[3], Graphics.COLOR_TRANSPARENT);
+        dc.fillPolygon(_mid2);
 
         // Foreground ridge and larches.
         dc.setColor(p[6], Graphics.COLOR_TRANSPARENT);
@@ -260,54 +285,75 @@ class TrailheadView extends WatchUi.WatchFace {
 
     // ---------------------------------------------------------------- data
 
-    // Four readouts in a 2 x 2 grid to the left of the peak: icon above, value below.
+    // Trail sign: a panel under the peak with the four readouts in a 2 x 2 grid.
     private function drawData(dc as Dc, p as Array) as Void {
-        var cxA = 87;
-        var cxB = 180;
-        var cxT = (cxA + cxB) / 2;
-        var iconA = 222;
-        var valA = 252;
-        var iconB = 300;
-        var valB = 330;
+        var J = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
+        var x0 = 99;
+        var y0 = 302;
+        var pw = 256;
+        var ph = 100;
+        var c1 = x0 + 16;
+        var c2 = x0 + pw / 2 + 16;
+        var r1 = y0 + 31;
+        var r2 = y0 + 81;
+
+        // Panel, outline and dividers (accent blended into the panel color, no alpha on the watch).
+        dc.setColor(p[6], Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(22));
+        dc.setColor(lerpColor(p[6], p[9], 0.4), Graphics.COLOR_TRANSPARENT);
+        dc.drawRoundedRectangle(px(x0), px(y0), px(pw), px(ph), px(22));
+        dc.setColor(lerpColor(p[6], p[9], 0.25), Graphics.COLOR_TRANSPARENT);
+        dc.drawLine(px(x0 + pw / 2), px(y0 + 14), px(x0 + pw / 2), px(y0 + ph - 14));
+        dc.drawLine(px(x0 + 14), px(y0 + ph / 2), px(x0 + pw - 14), px(y0 + ph / 2));
 
         // Battery
         var bat = System.getSystemStats().battery.toNumber();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(cxA - 16), px(iconA - 8), px(28), px(16), px(3));
-        dc.drawLine(px(cxA + 14), px(iconA - 3), px(cxA + 14), px(iconA + 3));
+        dc.drawRoundedRectangle(px(c1), px(r1 - 8), px(26), px(15), px(3));
+        dc.drawLine(px(c1 + 29), px(r1 - 3), px(c1 + 29), px(r1 + 2));
         dc.setPenWidth(1);
-        dc.fillRectangle(px(cxA - 13), px(iconA - 5), px(22.0 * bat / 100.0) + 1, px(10));
-        valueCentered(dc, px(cxA), px(valA), bat.format("%d"), "%", p);
+        dc.fillRectangle(px(c1 + 3.5), px(r1 - 4.5), px(14.0 * bat / 100.0) + 1, px(8));
+        valueWithUnit(dc, px(c1 + 38), px(r1), bat.format("%d"), "%", p, J);
 
         // Steps
         var steps = ActivityMonitor.getInfo().steps;
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
-        dc.fillEllipse(px(cxB - 6), px(iconA + 4), px(4), px(6));
-        dc.fillEllipse(px(cxB - 6), px(iconA - 6.4), px(2.8), px(3));
-        dc.fillEllipse(px(cxB + 6), px(iconA + 0.5), px(4), px(6));
-        dc.fillEllipse(px(cxB + 6), px(iconA - 9.6), px(2.8), px(3));
-        valueCentered(dc, px(cxB), px(valA), steps == null ? "--" : withCommas(steps), "", p);
+        dc.fillEllipse(px(c2 + 5.4), px(r1 - 12 + 12.6), px(3.6), px(5.4));
+        dc.fillEllipse(px(c2 + 5.4), px(r1 - 12 + 3.2), px(2.5), px(2.7));
+        dc.fillEllipse(px(c2 + 16.2), px(r1 - 12 + 9.5), px(3.6), px(5.4));
+        dc.fillEllipse(px(c2 + 16.2), px(r1 - 12 + 0.4), px(2.5), px(2.7));
+        valueWithUnit(dc, px(c2 + 34), px(r1), steps == null ? "--" : withCommas(steps), "", p, J);
+
+        // Elevation (feet)
+        var alt = elevationFeet();
+        dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(2);
+        var ex = c1;
+        var ey = r2 - 9;
+        dc.drawLine(px(ex), px(ey + 15.3), px(ex + 9), px(ey + 1.8));
+        dc.drawLine(px(ex + 9), px(ey + 1.8), px(ex + 13.5), px(ey + 8.1));
+        dc.drawLine(px(ex + 13.5), px(ey + 8.1), px(ex + 18), px(ey + 2.7));
+        dc.drawLine(px(ex + 18), px(ey + 2.7), px(ex + 27.9), px(ey + 15.3));
+        dc.drawLine(px(ex), px(ey + 15.3), px(ex + 27.9), px(ey + 15.3));
+        dc.setPenWidth(1);
+        valueWithUnit(dc, px(c1 + 38), px(r2), alt == null ? "--" : withCommas(alt), " ft", p, J);
 
         // Temperature (Fahrenheit)
         var temp = temperatureF();
         dc.setColor(p[9], Graphics.COLOR_TRANSPARENT);
         dc.setPenWidth(2);
-        dc.drawRoundedRectangle(px(cxT - 3), px(iconB - 12), px(6), px(17), px(3));
+        dc.drawRoundedRectangle(px(c2 + 11.4), px(r2 - 10), px(5.4), px(11), px(2.7));
         dc.setPenWidth(1);
-        dc.fillCircle(px(cxT), px(iconB + 6), px(5.4));
-        valueCentered(dc, px(cxT), px(valB), temp == null ? "--" : temp.format("%d"), "°F", p);
+        dc.fillCircle(px(c2 + 14.1), px(r2 + 0.5), px(4.9));
+        valueWithUnit(dc, px(c2 + 34), px(r2), temp == null ? "--" : temp.format("%d"), "°F", p, J);
     }
 
-    // Value with a smaller unit, the pair centered on x.
-    private function valueCentered(dc as Dc, x as Number, y as Number, value as String, unit as String, p as Array) as Void {
-        var J = Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER;
-        var wV = dc.getTextWidthInPixels(value, _fData);
-        var wU = unit.length() > 0 ? dc.getTextWidthInPixels(unit, _fUnit) + px(2) : 0;
-        var x0 = x - (wV + wU) / 2;
-        drawOutlined(dc, x0, y, value, _fData, p[7], p[0], J);
+    private function valueWithUnit(dc as Dc, x as Number, y as Number, value as String, unit as String, p as Array, just as Number) as Void {
+        drawOutlined(dc, x, y, value, _fData, p[7], p[6], just);
         if (unit.length() > 0) {
-            drawOutlined(dc, x0 + wV + px(2), y + px(3), unit, _fUnit, p[8], p[0], J);
+            var w = dc.getTextWidthInPixels(value, _fData);
+            drawOutlined(dc, x + w + px(2), y + px(3), unit, _fUnit, p[8], p[6], just);
         }
     }
 
@@ -321,6 +367,24 @@ class TrailheadView extends WatchUi.WatchFace {
             if (cnt % 3 == 0 && i > 0) { out = "," + out; }
         }
         return n < 0 ? "-" + out : out;
+    }
+
+    private function elevationFeet() as Number or Null {
+        var meters = null;
+        var ai = Activity.getActivityInfo();
+        if (ai != null && ai.altitude != null) {
+            meters = ai.altitude;
+        } else if ((Toybox has :SensorHistory) && (SensorHistory has :getElevationHistory)) {
+            var it = SensorHistory.getElevationHistory({:period => 1, :order => SensorHistory.ORDER_NEWEST_FIRST});
+            if (it != null) {
+                var sample = it.next();
+                if (sample != null && sample.data != null) {
+                    meters = sample.data;
+                }
+            }
+        }
+        if (meters == null) { return null; }
+        return Math.round(meters * 3.28084).toNumber();
     }
 
     private function temperatureF() as Number or Null {
