@@ -1,7 +1,7 @@
 # Trailhead (Garmin Fenix 8 Pro watch face)
 
 Mountain biking watch face: large 12-hour digital time with a leading zero (08:42 AM),
-a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and temperature (°F) on a trail sign panel under the peak.
+a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and temperature (°F) on a trail sign panel to the left of the peak.
 
 ## Palettes
 Pick one in the Connect IQ app or Garmin Connect (device > watch face > Settings > Color palette):
