@@ -4,7 +4,7 @@ Mountain biking watch face: large 12-hour digital time with a leading zero (08:4
 a ridgeline with a switchback trail, and battery %, steps, elevation (ft) and temperature (°F) on a trail sign panel to the left of the peak.
 
 ## Palettes
-Pick one in the Connect IQ app or Garmin Connect (device > watch face > Settings > Color palette):
+Tap the watch face to cycle palettes on the watch. If the app was installed from the Connect IQ store you can also pick one in the phone app (Settings > Color palette). Sideloaded copies usually don't show settings in the phone app, so use the tap:
 - **Stone and Larch** (beige, warm gray, off-white on light black)
 - **Maroon and Silver** (maroon shadows, silver highlights)
 - **Maroon and Black** (black mountain and ridges, with maroon glow, summit, trail and accents)

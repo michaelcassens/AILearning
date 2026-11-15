@@ -9,7 +9,7 @@ class TrailheadApp extends Application.AppBase {
     }
 
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [new TrailheadView()];
+        return [new TrailheadView(), new TrailheadDelegate()];
     }
 
     // Called when the palette is changed in Garmin Connect / Connect IQ settings.
