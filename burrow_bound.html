@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Burrow Bound</title>
+<meta name="description" content="A digging adventure inspired by the arcade classic Dig Dug: tunnel through Montana dirt, pump up critters, drop boulders and hunt for buried relics. Keyboard, gamepad or touch.">
+<meta name="theme-color" content="#140d24">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Layout: HUD on top, the pixel canvas in the middle, touch controls below
+   (portrait) or on either side (landscape phones). Desktop hides the pad. */
+:root{
+  --bg:#140d24;
+  --panel:#221638;
+  --panel-2:#2e1f4a;
+  --ink:#f6efe0;
+  --muted:#c9bfd8;
+  --accent:#ffcf3f;
+  --accent-2:#4fd1c5;
+  --danger:#ff6b6b;
+  --pixel:"Press Start 2P", ui-monospace, "Courier New", monospace;
+  --body:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--body);overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+#app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;grid-template-columns:1fr;
+  grid-template-areas:"hud" "stage" "pad";
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+
+/* HUD */
+#hud{grid-area:hud;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 16px;
+  padding:8px 10px 6px;font-family:var(--pixel);font-size:clamp(8px,2.3vw,12px);background:linear-gradient(#1d1333,#140d24)}
+.stat{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:3.5em}
+.lbl{color:var(--muted);font-size:.75em;letter-spacing:.05em}
+#hScore{color:var(--accent)}
+#hLives,#hRelics{letter-spacing:2px}
+#hRelics{color:#7fb2ff}
+.meter{display:block;width:4.5em;height:.9em;border:2px solid var(--muted);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;width:100%;background:var(--accent-2);transition:background .2s}
+.meter i.cooling{background:#6c5f86}
+.hudBtns{display:flex;gap:6px}
+.hudBtns button{font-family:var(--pixel);font-size:12px;width:40px;height:36px;border-radius:8px;border:2px solid #4a3a6a;
+  background:var(--panel);color:var(--ink);cursor:pointer}
+.hudBtns button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:440px){
+  #hud{gap:4px 7px;font-size:8px;padding:6px 6px 4px}
+  .stat{min-width:0}
+  .meter{width:3.2em}
+  .hudBtns button{width:32px;height:30px;font-size:10px}
+}
+
+/* Stage */
+#stage{grid-area:stage;position:relative;display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;padding:4px}
+#game{display:block;border-radius:6px;box-shadow:0 0 0 3px #2e1f4a,0 10px 30px rgba(0,0,0,.6);background:#000;touch-action:none}
+#toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:min(92%,420px);padding:10px 14px;border-radius:10px;
+  background:rgba(20,13,36,.92);border:2px solid #7fb2ff;font-size:14px;line-height:1.35;text-align:center;pointer-events:none;
+  opacity:0;transition:opacity .25s}
+#toast.show{opacity:1}
+#toast b{display:block;font-family:var(--pixel);font-size:10px;color:#7fb2ff;margin-bottom:6px}
+
+/* Touch pad */
+#pad{grid-area:pad;display:none;justify-content:space-between;align-items:center;padding:6px 22px 16px}
+body.touch #pad{display:flex}
+#dpadWrap,#btnWrap{display:flex;align-items:center;justify-content:center}
+#dpad{position:relative;width:156px;height:156px;border-radius:50%;background:radial-gradient(circle,#2a1d44 0,#1b1230 70%);
+  border:2px solid #3a2a5a;touch-action:none}
+#dpad .arm{position:absolute;background:#3d2c61;border:2px solid #5a4688;border-radius:10px;transition:background .06s}
+#dpad .arm.on{background:var(--accent);border-color:#fff3b0}
+#dpad .up{left:52px;top:8px;width:52px;height:52px}
+#dpad .down{left:52px;bottom:8px;width:52px;height:52px}
+#dpad .left{top:52px;left:8px;width:52px;height:52px}
+#dpad .right{top:52px;right:8px;width:52px;height:52px}
+#dpad .hub{position:absolute;left:58px;top:58px;width:40px;height:40px;border-radius:50%;background:#2a1d44}
+#dpad .arm::after{content:"";position:absolute;left:50%;top:50%;border:7px solid transparent;transform:translate(-50%,-50%)}
+#dpad .up::after{border-bottom:10px solid #c9bfd8;border-top-width:0}
+#dpad .down::after{border-top:10px solid #c9bfd8;border-bottom-width:0}
+#dpad .left::after{border-right:10px solid #c9bfd8;border-left-width:0}
+#dpad .right::after{border-left:10px solid #c9bfd8;border-right-width:0}
+#btnWrap{gap:14px;align-items:flex-end}
+.act{font-family:var(--pixel);color:#1a1030;border-radius:50%;border:3px solid rgba(255,255,255,.55);touch-action:none;cursor:pointer;
+  box-shadow:0 5px 0 rgba(0,0,0,.45)}
+.act.on{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.pumpBtn{width:92px;height:92px;font-size:12px;background:radial-gradient(circle at 35% 30%,#ffe27a,#f2a81d);margin-bottom:26px}
+.scanBtn{width:66px;height:66px;font-size:9px;background:radial-gradient(circle at 35% 30%,#a6f3ea,#2fb3a6)}
+.scanBtn.cooling{filter:grayscale(.8) brightness(.7)}
+
+@media (orientation:landscape) and (max-height:560px){
+  body.touch #app{grid-template-columns:minmax(170px,1fr) 3fr minmax(170px,1fr);grid-template-rows:auto 1fr;
+    grid-template-areas:"hud hud hud" "left stage right"}
+  body.touch #pad{display:contents}
+  body.touch #dpadWrap{grid-area:left}
+  body.touch #btnWrap{grid-area:right}
+  #hud{padding:4px 8px}
+}
+
+/* Overlays */
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,6,20,.72);z-index:10;padding:16px}
+#overlay[hidden]{display:none}
+#ovBox{width:min(560px,100%);max-height:100%;overflow:auto;background:var(--panel);border:3px solid #4a3a6a;border-radius:14px;
+  padding:22px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6);-webkit-user-select:text;user-select:text}
+#ovBox h1,#ovBox h2{font-family:var(--pixel);font-weight:400;margin:0 0 14px;line-height:1.35}
+#ovBox h1{font-size:clamp(18px,5vw,28px);color:var(--accent);text-align:center;text-shadow:3px 3px 0 #7a3a1c}
+#ovBox h2{font-size:clamp(12px,3.4vw,16px);color:var(--accent)}
+#ovBox h3{font-family:var(--pixel);font-weight:400;font-size:11px;color:var(--accent-2);margin:18px 0 8px}
+#ovBox p,#ovBox li{font-size:15px;line-height:1.5;color:var(--ink)}
+#ovBox .sub{text-align:center;color:var(--muted)}
+#ovBox ul{padding-left:20px;margin:6px 0}
+#ovBox kbd{font-family:var(--pixel);font-size:9px;background:#140d24;border:1px solid #5a4688;border-radius:4px;padding:3px 5px;color:var(--accent)}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:18px}
+.btnrow button{font-family:var(--pixel);font-size:11px;padding:13px 16px;border-radius:10px;border:2px solid #5a4688;background:var(--panel-2);
+  color:var(--ink);cursor:pointer;min-height:44px}
+.btnrow button.primary{background:var(--accent);color:#1a1030;border-color:#fff3b0}
+.btnrow button:focus-visible{outline:3px solid var(--accent-2);outline-offset:3px}
+.btnrow button:hover{filter:brightness(1.12)}
+.statrow{display:grid;grid-template-columns:1fr auto;gap:6px 14px;font-size:15px;margin:10px 0}
+.statrow span:nth-child(even){font-family:var(--pixel);font-size:11px;color:var(--accent);text-align:right;align-self:center}
+.journal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px}
+.relic{background:#1a1130;border:2px solid #3a2a5a;border-radius:10px;padding:10px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.relic.found{border-color:#7fb2ff}
+.relic canvas{width:48px;height:48px;image-rendering:pixelated}
+.relic .nm{font-family:var(--pixel);font-size:8px;line-height:1.4;margin:6px 0 4px;color:var(--accent)}
+.relic .ct{font-size:12px;color:var(--muted)}
+.relic .bl{font-size:12px;line-height:1.4;margin-top:6px;color:var(--ink)}
+.found-list{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.found-list span{font-size:13px;background:#1a1130;border:1px solid #7fb2ff;border-radius:6px;padding:4px 8px}
+@media (prefers-reduced-motion:reduce){ #toast{transition:none} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hud" aria-label="Game status">
+    <div class="stat"><span class="lbl">SCORE</span><span id="hScore">0</span></div>
+    <div class="stat"><span class="lbl">HI</span><span id="hHi">0</span></div>
+    <div class="stat"><span class="lbl">LVL</span><span id="hLvl">1</span></div>
+    <div class="stat"><span class="lbl">LIVES</span><span id="hLives"></span></div>
+    <div class="stat"><span class="lbl">RELICS</span><span id="hRelics"></span></div>
+    <div class="stat"><span class="lbl">SCAN</span><span class="meter"><i id="hScan"></i></span></div>
+    <div class="hudBtns">
+      <button id="bMute" type="button" aria-label="Toggle sound">&#9834;</button>
+      <button id="bPause" type="button" aria-label="Pause">II</button>
+    </div>
+  </header>
+  <main id="stage">
+    <canvas id="game" width="224" height="288" aria-label="Burrow Bound play field"></canvas>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </main>
+  <div id="pad">
+    <div id="dpadWrap">
+      <div id="dpad" role="group" aria-label="Direction pad">
+        <span class="arm up"></span><span class="arm down"></span><span class="arm left"></span><span class="arm right"></span><span class="hub"></span>
+      </div>
+    </div>
+    <div id="btnWrap">
+      <button id="bScan" type="button" class="act scanBtn" aria-label="Scan for relics">SCAN</button>
+      <button id="bPump" type="button" class="act pumpBtn" aria-label="Pump">PUMP</button>
+    </div>
+  </div>
+</div>
+<div id="overlay" hidden><div id="ovBox" role="dialog" aria-modal="true" aria-labelledby="ovTitle"></div></div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- Constants ----------
+const T = 16, COLS = 14, ROWS = 18, W = COLS * T, H = ROWS * T;
+const BS = 4, BW = W / BS, BH = H / BS;       // dirt is tracked in 4px "bits" so tunnels look carved
+const DIRT_TOP = 2 * T;                        // rows 0-1 are sky / surface
+const START_C = 6, START_R = 9;
+const PSPEED = 46;
+const SCAN_CD = 6;
+const TUNNEL = '#0d0a14';
+const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const DLIST = ['up', 'down', 'left', 'right'];
+const OPP = { up: 'down', down: 'up', left: 'right', right: 'left' };
+const isH = d => d === 'left' || d === 'right';
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const rand = (a, b) => a + Math.random() * (b - a);
+const irand = (a, b) => Math.floor(rand(a, b + 1));
+const idx = (c, r) => r * COLS + c;
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Four strata per palette, each [base, dark speckle, light speckle]
+const PALETTES = [
+  [['#e8b04a', '#cf9636', '#f6cc72'], ['#d9782a', '#bd631c', '#eb9447'], ['#b04a22', '#93391a', '#c9643a'], ['#7a2c1c', '#5f2114', '#93412c']],
+  [['#c9b38a', '#ad976f', '#ddc9a2'], ['#9c8a6e', '#836f55', '#b3a185'], ['#6f6a7a', '#5a5565', '#888395'], ['#43405a', '#33304a', '#58557a']],
+  [['#d6a35e', '#bb8a48', '#e8bd7d'], ['#b9734a', '#9c5c36', '#cf8d63'], ['#8e4f4f', '#753d3d', '#a86565'], ['#5a3050', '#45233e', '#714163']]
+];
+
+const RELICS = [
+  { id: 'quartz', name: 'Quartz Crystal', pts: 300, color: '#e8f4ff', shape: 'crystal', blurb: 'Six-sided crystals that grow slowly in cracks deep in the rock.' },
+  { id: 'copper', name: 'Copper Ore', pts: 350, color: '#3fb39b', shape: 'nugget', blurb: 'Butte was once called "the Richest Hill on Earth" for its copper.' },
+  { id: 'agate', name: 'Montana Agate', pts: 400, color: '#e2885a', shape: 'agate', blurb: 'Banded, see-through stones tumbled along the Yellowstone River.' },
+  { id: 'wood', name: 'Petrified Wood', pts: 400, color: '#9a7a5a', shape: 'log', blurb: 'Ancient trees turned to stone that still show their growth rings.' },
+  { id: 'garnet', name: 'Garnet', pts: 450, color: '#c0143e', shape: 'gem', blurb: 'Early miners mistook these red stones for rubies, so they named Ruby Valley after them.' },
+  { id: 'ammonite', name: 'Ammonite', pts: 500, color: '#d8c3a0', shape: 'spiral', blurb: 'Coiled shells from when an inland sea covered the Montana plains.' },
+  { id: 'gold', name: 'Gold Nugget', pts: 600, color: '#ffd23f', shape: 'nugget', blurb: 'Montana is the Treasure State. Gold strikes built Virginia City and Helena.' },
+  { id: 'trilobite', name: 'Trilobite', pts: 700, color: '#8d8478', shape: 'trilobite', blurb: 'Three-lobed sea creatures that first appeared over 500 million years ago.' },
+  { id: 'sapphire', name: 'Yogo Sapphire', pts: 800, color: '#3f7bff', shape: 'gem', blurb: 'Cornflower-blue sapphires found only in Yogo Gulch, Montana.' },
+  { id: 'mammoth', name: 'Mammoth Tusk', pts: 850, color: '#efe3c4', shape: 'tusk', blurb: 'Ice Age mammoths once roamed Montana’s river valleys.' },
+  { id: 'trex', name: 'T. rex Tooth', pts: 900, color: '#f3ead2', shape: 'tooth', blurb: 'The first T. rex skeleton was found in 1902 near Jordan, Montana.' },
+  { id: 'egg', name: 'Dinosaur Egg', pts: 1000, color: '#cfc6b0', shape: 'egg', blurb: 'Maiasaura nests were discovered at Egg Mountain near Choteau.' }
+];
+const CRUSH_PTS = [0, 1000, 2500, 4000, 6000, 8000, 10000, 12000, 15000];
+const TUNE = [523, 587, 659, 784, 659, 587, 523, 440, 523, 587, 659, 784, 880, 784, 659, 523];
+
+// ---------- Save data ----------
+const SAVE_KEY = 'burrowBound.v1';
+let save = { hi: 0, journal: {}, muted: false, touch: null };
+try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s) save = Object.assign(save, s); } catch (e) {}
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+// ---------- DOM ----------
+const $ = id => document.getElementById(id);
+const cv = $('game'), ctx = cv.getContext('2d');
+const stage = $('stage'), ov = $('overlay'), ovBox = $('ovBox'), toastEl = $('toast');
+const dirtCv = document.createElement('canvas'); dirtCv.width = W; dirtCv.height = H;
+const dctx = dirtCv.getContext('2d');
+let K = 1;
+
+// ---------- World ----------
+const dirt = new Uint8Array(BW * BH);   // 1 = solid dirt bit
+const dug = new Uint8Array(COLS * ROWS); // tile has been tunneled
+const eH = new Uint8Array(COLS * ROWS);  // passage open between (c,r) and (c+1,r)
+const eV = new Uint8Array(COLS * ROWS);  // passage open between (c,r) and (c,r+1)
+const distMap = new Int16Array(COLS * ROWS);
+
+let mode = 'title', pausedFrom = 'play';
+let level = 1, score = 0, lives = 3, readyT = 0, levelT = 0, clearT = 0, shake = 0;
+let P, enemies = [], rocks = [], relics = [], popups = [], particles = [];
+let bonus = null, bonusSpawned = false, rocksDropped = 0, relicsFoundLevel = 0, runRelics = [];
+let scanFx = null, scanHint = null;
+let palette = PALETTES[0];
+
+function paintDirt() {
+  dctx.clearRect(0, 0, W, H);
+  for (let L = 0; L < 4; L++) {
+    const y0 = DIRT_TOP + L * 4 * T, p = palette[L];
+    dctx.fillStyle = p[0]; dctx.fillRect(0, y0, W, 4 * T);
+    for (let i = 0; i < 260; i++) {
+      dctx.fillStyle = Math.random() < 0.55 ? p[1] : p[2];
+      dctx.fillRect(Math.floor(Math.random() * W / 2) * 2, y0 + Math.floor(Math.random() * 2 * T) * 2, 2, Math.random() < 0.3 ? 1 : 2);
+    }
+    if (L > 0) { // ragged strata boundary
+      dctx.fillStyle = p[1];
+      for (let x = 0; x < W; x += 2) dctx.fillRect(x, y0 + Math.round(Math.sin(x * 0.21 + L) * 1.5), 2, 2);
+    }
+  }
+  // grass lip on top of the dirt
+  dctx.fillStyle = '#3f9b47'; dctx.fillRect(0, DIRT_TOP, W, 3);
+  dctx.fillStyle = '#62c46a';
+  for (let x = 0; x < W; x += 3) dctx.fillRect(x, DIRT_TOP - (x % 6 === 0 ? 2 : 1), 1, 2);
+}
+
+function clearBox(x, y, w, h) {
+  let n = 0;
+  const bx0 = Math.max(0, Math.floor(x / BS)), by0 = Math.max(0, Math.floor(y / BS));
+  const bx1 = Math.min(BW - 1, Math.ceil((x + w) / BS) - 1), by1 = Math.min(BH - 1, Math.ceil((y + h) / BS) - 1);
+  dctx.fillStyle = TUNNEL;
+  for (let by = by0; by <= by1; by++) for (let bx = bx0; bx <= bx1; bx++) {
+    const i = by * BW + bx;
+    if (dirt[i]) { dirt[i] = 0; n++; dctx.fillRect(bx * BS, by * BS, BS, BS); }
+  }
+  return n;
+}
+function isDirt(x, y) {
+  const bx = Math.floor(x / BS), by = Math.floor(y / BS);
+  if (bx < 0 || by < 0 || bx >= BW || by >= BH) return false;
+  return dirt[by * BW + bx] === 1;
+}
+function stripClear(x0, y0, x1, y1) {
+  for (let by = Math.floor(y0 / BS); by < Math.ceil(y1 / BS); by++)
+    for (let bx = Math.floor(x0 / BS); bx < Math.ceil(x1 / BS); bx++)
+      if (by >= 0 && by < BH && bx >= 0 && bx < BW && dirt[by * BW + bx]) return false;
+  return true;
+}
+function digTile(c, r) { clearBox(c * T, r * T, T, T); dug[idx(c, r)] = 1; }
+function openEdge(c1, r1, c2, r2) {
+  if (r1 === r2) eH[idx(Math.min(c1, c2), r1)] = 1; else eV[idx(c1, Math.min(r1, r2))] = 1;
+}
+function rockAt(c, r) { return rocks.some(k => k.c === c && k.r === r && (k.state === 'idle' || k.state === 'wobble')); }
+// Enemy passability (they never walk on the surface row)
+function canPass(c, r, d) {
+  const nc = c + DIRS[d][0], nr = r + DIRS[d][1];
+  if (nc < 0 || nc >= COLS || nr < 2 || nr >= ROWS) return false;
+  const open = d === 'right' ? eH[idx(c, r)] : d === 'left' ? eH[idx(nc, nr)] : d === 'down' ? eV[idx(c, r)] : eV[idx(nc, nr)];
+  return !!open && !rockAt(nc, nr);
+}
+// When the player stands on a tile center, join neighbouring tunnels that now visibly touch
+function linkNeighbours(c, r) {
+  for (const d of DLIST) {
+    const nc = c + DIRS[d][0], nr = r + DIRS[d][1];
+    if (nc < 0 || nc >= COLS || nr < 1 || nr >= ROWS || !dug[idx(nc, nr)]) continue;
+    const x0 = Math.min(c, nc) * T, y0 = Math.min(r, nr) * T;
+    const ok = isH(d) ? stripClear(x0 + 8, y0, x0 + 24, y0 + T) : stripClear(x0, y0 + 8, x0 + T, y0 + 24);
+    if (ok) openEdge(c, r, nc, nr);
+  }
+}
+
+function buildLevel() {
+  palette = PALETTES[Math.floor((level - 1) / 2) % PALETTES.length];
+  dirt.fill(0); dug.fill(0); eH.fill(0); eV.fill(0);
+  for (let by = DIRT_TOP / BS; by < BH; by++) for (let bx = 0; bx < BW; bx++) dirt[by * BW + bx] = 1;
+  paintDirt();
+  for (let c = 0; c < COLS; c++) { dug[idx(c, 1)] = 1; if (c < COLS - 1) eH[idx(c, 1)] = 1; }
+  digTile(START_C, 2); openEdge(START_C, 1, START_C, 2);
+  for (let r = 3; r <= START_R; r++) { digTile(START_C, r); openEdge(START_C, r - 1, START_C, r); }
+
+  const res = new Uint8Array(COLS * ROWS);
+  const reserve = (c, r, pad) => {
+    for (let y = r - pad; y <= r + pad; y++) for (let x = c - pad; x <= c + pad; x++)
+      if (x >= 0 && x < COLS && y >= 0 && y < ROWS) res[idx(x, y)] = 1;
+  };
+  for (let r = 2; r <= START_R + 1; r++) reserve(START_C, r, 1);
+
+  // Enemy dens: short pre-dug tunnels
+  const nE = Math.min(3 + Math.floor((level - 1) / 2), 8);
+  enemies = [];
+  let tries = 0;
+  while (enemies.length < nE && tries++ < 800) {
+    const horiz = Math.random() < 0.6, len = irand(3, 4);
+    const c0 = irand(0, horiz ? COLS - len : COLS - 1), r0 = irand(3, horiz ? ROWS - 1 : ROWS - len);
+    const cells = [];
+    for (let i = 0; i < len; i++) cells.push(horiz ? [c0 + i, r0] : [c0, r0 + i]);
+    if (cells.some(([c, r]) => res[idx(c, r)])) continue;
+    cells.forEach(([c, r], i) => { digTile(c, r); if (i) openEdge(cells[i - 1][0], cells[i - 1][1], c, r); });
+    cells.forEach(([c, r]) => reserve(c, r, 1));
+    const [sc, sr] = cells[irand(0, len - 1)];
+    const newt = enemies.length % 3 === 2 || (level > 2 && Math.random() < 0.25);
+    enemies.push(makeEnemy(newt ? 'newt' : 'beetle', sc, sr));
+  }
+
+  // Boulders
+  rocks = [];
+  const nR = Math.min(3 + Math.floor(level / 3), 6);
+  tries = 0;
+  while (rocks.length < nR && tries++ < 800) {
+    const c = irand(0, COLS - 1), r = irand(3, ROWS - 4);
+    if (dug[idx(c, r)] || dug[idx(c, r + 1)] || c === START_C) continue;
+    if (rocks.some(k => Math.abs(k.c - c) < 3 && Math.abs(k.r - r) < 3)) continue;
+    rocks.push({ c, r, x: c * T, y: r * T, state: 'idle', t: 0, kills: [] });
+    res[idx(c, r)] = 1;
+  }
+
+  // Buried relics: one shallow, one middle, one deep. Never next to an open tunnel.
+  relics = [];
+  const defs = shuffle(RELICS.slice()).slice(0, 3).sort((a, b) => a.pts - b.pts);
+  const bands = [[4, 8], [9, 13], [13, 17]];
+  for (let i = 0; i < 3; i++) {
+    tries = 0;
+    while (tries++ < 800) {
+      const c = irand(0, COLS - 1), r = irand(bands[i][0], bands[i][1]);
+      if (res[idx(c, r)] || dug[idx(c, r)]) continue;
+      let nearOpen = false;
+      for (const d of DLIST) { const nc = c + DIRS[d][0], nr = r + DIRS[d][1]; if (nc >= 0 && nc < COLS && nr < ROWS && dug[idx(nc, nr)]) nearOpen = true; }
+      if (nearOpen) continue;
+      if (relics.some(o => Math.abs(o.c - c) + Math.abs(o.r - r) < 4)) continue;
+      relics.push({ c, r, def: defs[i], found: false, glint: 0 });
+      break;
+    }
+  }
+}
+
+// ---------- Entities ----------
+function makePlayer() {
+  return { x: START_C * T, y: START_R * T, face: 'right', tc: START_C, tr: START_R, moving: false, anim: 0,
+    hose: null, autoPump: 0, scanCD: 0, dying: 0, deathType: null, digging: false, musicT: 0, note: 0 };
+}
+function ghostDelay() { return Math.max(3.5, rand(7, 13) - level * 0.5); }
+function makeEnemy(type, c, r) {
+  return { type, c, r, sc: c, sr: r, x: c * T, y: r * T, tc: c, tr: r, dir: null, face: Math.random() < 0.5 ? 'left' : 'right',
+    state: 'walk', inflate: 0, deflT: 0, t: 0, ghostClock: 0, ghostAt: ghostDelay(), fireCD: rand(2, 4),
+    anim: Math.random() * 10, fdir: 'right', flameLen: 0, flee: false };
+}
+function enemySpeed(e) {
+  let s = 24 + Math.min(level, 12) * 1.6;
+  if (e.flee) s += 10;
+  if (e.state === 'ghost') s *= 0.75;
+  return s;
+}
+function layerOf(y) { return clamp(Math.floor((Math.floor((y + 8) / T) - 2) / 4), 0, 3); }
+
+// ---------- Game flow ----------
+function newGame() {
+  level = 1; score = 0; lives = 3; runRelics = [];
+  startLevel();
+}
+function startLevel() {
+  buildLevel();
+  P = makePlayer();
+  rocksDropped = 0; bonus = null; bonusSpawned = false; relicsFoundLevel = 0; levelT = 0;
+  scanFx = null; scanHint = null; popups = []; particles = [];
+  mode = 'ready'; readyT = 2;
+  hideOverlay(); clearInputs();
+}
+function resetPositions() {
+  for (const k of rocks) if (k.state === 'fall') { k.y = k.r * T; land(k); }
+  P = makePlayer();
+  for (const e of enemies) {
+    if (e.state === 'dead' || e.state === 'escaped') continue;
+    Object.assign(e, { x: e.sc * T, y: e.sr * T, c: e.sc, r: e.sr, tc: e.sc, tr: e.sr, dir: null,
+      state: 'walk', inflate: 0, flameLen: 0, flee: false, ghostClock: 0, ghostAt: ghostDelay() });
+  }
+  scanFx = null; scanHint = null;
+}
+function killPlayer(type) {
+  if (mode !== 'play') return;
+  mode = 'dying'; P.dying = 1.8; P.deathType = type; P.hose = null; P.moving = false;
+  sfx('die');
+}
+function addScore(n) {
+  const before = score;
+  score += n;
+  // extra life every 20,000
+  if (Math.floor(score / 20000) > Math.floor(before / 20000) && lives < 5) { lives++; sfx('life'); popup(P.x + 8, P.y - 4, '1UP!', '#7CFC9A'); }
+}
+function popup(x, y, text, color) { popups.push({ x, y, text, color: color || '#fff', t: 1.3 }); }
+let toastTimer = 0;
+function toast(title, body) {
+  toastEl.innerHTML = '';
+  const b = document.createElement('b'); b.textContent = title; toastEl.appendChild(b);
+  toastEl.appendChild(document.createTextNode(body));
+  toastEl.classList.add('show'); toastTimer = 4.2;
+}
+
+// ---------- Player ----------
+function aligned(v) { return Math.abs(v - Math.round(v / T) * T) < 0.001; }
+function overlapTile(ax, ay, bx, by) { return Math.abs(ax - bx) < T - 0.01 && Math.abs(ay - by) < T - 0.01; }
+
+function moveStep(d, dist) {
+  let nx = clamp(P.x + DIRS[d][0] * dist, 0, (COLS - 1) * T);
+  let ny = clamp(P.y + DIRS[d][1] * dist, T, (ROWS - 1) * T);
+  for (const k of rocks) {
+    if ((k.state === 'idle' || k.state === 'wobble') && overlapTile(nx, ny, k.x, k.y)) {
+      if (d === 'right') nx = k.x - T; else if (d === 'left') nx = k.x + T;
+      else if (d === 'down') ny = k.y - T; else ny = k.y + T;
+    }
+  }
+  if (Math.abs(nx - P.x) < 1e-6 && Math.abs(ny - P.y) < 1e-6) return false;
+  P.x = nx; P.y = ny;
+  if (P.y + T > DIRT_TOP && clearBox(P.x, P.y, T, T) > 0) P.digging = true;
+  trackTile();
+  return true;
+}
+
+function movePlayer(d, dt) {
+  let rem = PSPEED * dt * (P.digging ? 0.78 : 1);
+  P.digging = false;
+  let moved = false;
+  const horiz = isH(d);
+  const perp = horiz ? P.y : P.x;
+  if (!aligned(perp)) {
+    // finish lining up with the grid before turning (forgiving: go to the nearest line)
+    const target = Math.round(perp / T) * T;
+    const ad = horiz ? (target > P.y ? 'down' : 'up') : (target > P.x ? 'right' : 'left');
+    const step = Math.min(rem, Math.abs(target - perp));
+    moved = moveStep(ad, step) || moved;
+    rem -= step;
+    if (horiz) { if (Math.abs(P.y - target) < 0.01) P.y = target; } else if (Math.abs(P.x - target) < 0.01) P.x = target;
+    if (!aligned(horiz ? P.y : P.x)) { P.face = ad; finishMove(moved, dt); return; }
+  }
+  if (rem > 0) moved = moveStep(d, rem) || moved;
+  P.face = d;
+  finishMove(moved, dt);
+}
+function finishMove(moved, dt) {
+  P.moving = moved;
+  if (!moved) return;
+  P.anim += dt;
+  P.musicT -= dt;
+  if (P.musicT <= 0) { P.musicT = 0.13; tone(TUNE[P.note++ % TUNE.length], 0.09, 'square', 0.035); }
+  if (aligned(P.x) && aligned(P.y)) linkNeighbours(Math.round(P.x / T), Math.round(P.y / T));
+}
+
+function trackTile() {
+  const cx = Math.floor((P.x + 8) / T), cy = Math.floor((P.y + 8) / T);
+  if (cx === P.tc && cy === P.tr) return;
+  if (!dug[idx(cx, cy)]) { dug[idx(cx, cy)] = 1; if (cy >= 2) addScore(10); }
+  openEdge(P.tc, P.tr, cx, cy);
+  P.tc = cx; P.tr = cy;
+  const rl = relics.find(r => !r.found && r.c === cx && r.r === cy);
+  if (rl) {
+    rl.found = true; relicsFoundLevel++;
+    runRelics.push(rl.def.name);
+    addScore(rl.def.pts);
+    popup(P.x + 8, P.y - 2, rl.def.name.toUpperCase(), '#9cc4ff');
+    popup(P.x + 8, P.y + 8, '+' + rl.def.pts, '#ffcf3f');
+    save.journal[rl.def.id] = (save.journal[rl.def.id] || 0) + 1; persist();
+    for (let i = 0; i < 14; i++) particles.push({ x: rl.c * T + 8, y: rl.r * T + 8, vx: rand(-40, 40), vy: rand(-60, 10), t: 0.8, c: rl.def.color });
+    toast('FOUND: ' + rl.def.name.toUpperCase(), rl.def.blurb);
+    sfx('relic');
+  }
+}
+
+// ---------- Pump hose ----------
+function startHose() {
+  if (P.hose) return;
+  P.hose = { state: 'extend', len: 0, d: P.face, target: null };
+  sfx('hose');
+}
+function pumpEnemy(e) {
+  e.inflate++; e.deflT = 0.7; P.autoPump = 0.28;
+  sfx('pump', e.inflate);
+  if (e.inflate >= 4) {
+    e.state = 'pop'; e.t = 0.35; P.hose = null;
+    let pts = [200, 300, 400, 500][layerOf(e.y)];
+    if (e.type === 'newt' && isH(P.face)) pts *= 2; // risky side-on attack pays double
+    addScore(pts); popup(e.x + 8, e.y, String(pts), '#fff');
+    sfx('pop');
+  }
+}
+function updateHose(dt) {
+  const h = P.hose; if (!h) return;
+  const [dx, dy] = DIRS[h.d], cx = P.x + 8, cy = P.y + 8;
+  if (h.state === 'extend') {
+    h.len += 230 * dt;
+    const tx = cx + dx * (6 + h.len), ty = cy + dy * (6 + h.len);
+    if (tx < 0 || tx >= W || ty < T || ty >= H || isDirt(tx, ty) || rocks.some(k => k.state !== 'gone' && tx > k.x && tx < k.x + T && ty > k.y && ty < k.y + T)) {
+      P.hose = null; return;
+    }
+    for (const e of enemies) {
+      if (['walk', 'charge', 'fire', 'flee', 'pumped'].includes(e.state) && tx > e.x && tx < e.x + T && ty > e.y && ty < e.y + T) {
+        if (e.state === 'flee' && isDirt(e.x + 8, e.y + 8)) continue;
+        if (e.state !== 'pumped') { e.state = 'pumped'; e.inflate = 0; }
+        h.state = 'attached'; h.target = e;
+        pumpEnemy(e);
+        return;
+      }
+    }
+    if (h.len >= 3 * T) P.hose = null;
+  } else {
+    const e = h.target;
+    if (!e || e.state !== 'pumped') { P.hose = null; return; }
+    h.len = Math.max(2, isH(h.d) ? Math.abs(e.x + 8 - cx) - 6 : Math.abs(e.y + 8 - cy) - 6);
+  }
+}
+
+// ---------- Scan ----------
+function doScan() {
+  if (P.scanCD > 0) return;
+  P.scanCD = SCAN_CD; scanFx = { t: 0 };
+  sfx('scan');
+  enemies.forEach(e => { e.ghostClock += 1.5; }); // the ping is loud: critters get restless
+  const left = relics.filter(r => !r.found);
+  if (!left.length) { scanHint = { text: 'ALL RELICS FOUND', color: '#7CFC9A', t: 2.2, ang: null }; return; }
+  let near = null, nd = 1e9;
+  for (const r of left) {
+    const d = Math.hypot(r.c - P.tc, r.r - P.tr);
+    if (d <= 3.2) r.glint = 3.2;
+    if (d < nd) { nd = d; near = r; }
+  }
+  const ang = Math.atan2(near.r - P.tr, near.c - P.tc);
+  if (nd <= 3.2) scanHint = { text: 'SOMETHING GLINTS!', color: '#ffffff', t: 2.6, ang };
+  else if (nd <= 5.5) scanHint = { text: 'HOT', color: '#ff7a3a', t: 2.4, ang };
+  else if (nd <= 8.5) scanHint = { text: 'WARM', color: '#ffcf3f', t: 2.4, ang };
+  else scanHint = { text: 'COLD', color: '#7fb2ff', t: 2.4, ang };
+}
+
+// ---------- Enemies ----------
+function computeDist() {
+  distMap.fill(-1);
+  const q = [idx(P.tc, P.tr)];
+  distMap[q[0]] = 0;
+  for (let h = 0; h < q.length; h++) {
+    const i = q[h], c = i % COLS, r = (i / COLS) | 0;
+    for (const d of DLIST) {
+      if (!canPass(c, r, d) && !(r === 1 && d === 'down' && eV[idx(c, 1)])) continue;
+      const ni = idx(c + DIRS[d][0], r + DIRS[d][1]);
+      if (distMap[ni] < 0) { distMap[ni] = distMap[i] + 1; q.push(ni); }
+    }
+  }
+}
+function chooseDir(e) {
+  const all = DLIST.filter(d => canPass(e.c, e.r, d));
+  if (!all.length) { e.dir = null; return false; }
+  let pick = null;
+  if (Math.random() < Math.min(0.85, 0.45 + level * 0.05)) {
+    let best = 1e9;
+    for (const d of all) { const v = distMap[idx(e.c + DIRS[d][0], e.r + DIRS[d][1])]; if (v >= 0 && v < best) { best = v; pick = d; } }
+  }
+  if (!pick) {
+    const opts = all.length > 1 && e.dir ? all.filter(d => d !== OPP[e.dir]) : all;
+    pick = opts[Math.floor(Math.random() * opts.length)];
+  }
+  e.dir = pick; if (isH(pick)) e.face = pick;
+  e.tc = e.c + DIRS[pick][0]; e.tr = e.r + DIRS[pick][1];
+  return true;
+}
+function maybeFire(e) {
+  const inLine = Math.abs(P.y - e.y) < 6 && Math.abs(P.x - e.x) < 5 * T;
+  if (Math.random() < (inLine ? 0.6 : 0.06)) {
+    e.state = 'charge'; e.t = 0.65;
+    e.fdir = inLine ? (P.x < e.x ? 'left' : 'right') : e.face;
+    e.face = e.fdir; e.fireCD = rand(2.5, 4.5);
+    return true;
+  }
+  e.fireCD = 0.5;
+  return false;
+}
+function walk(e, dt) {
+  e.ghostClock += dt; e.fireCD -= dt;
+  let rem = enemySpeed(e) * dt, guard = 0;
+  while (rem > 0 && guard++ < 4) {
+    const tx = e.tc * T, ty = e.tr * T, dx = tx - e.x, dy = ty - e.y, d = Math.abs(dx) + Math.abs(dy);
+    if (d < 0.001) {
+      e.x = tx; e.y = ty; e.c = e.tc; e.r = e.tr;
+      if (e.ghostClock > e.ghostAt) { e.state = 'ghost'; e.t = 0; return; }
+      if (e.type === 'newt' && e.fireCD <= 0 && maybeFire(e)) return;
+      if (!chooseDir(e)) { e.ghostClock += dt * 2; return; }
+      continue;
+    }
+    const step = Math.min(rem, d);
+    e.x += Math.sign(dx) * Math.min(step, Math.abs(dx));
+    e.y += Math.sign(dy) * Math.min(step, Math.abs(dy));
+    rem -= step;
+  }
+}
+function ghost(e, dt) {
+  e.t += dt;
+  const tx = P.x, ty = Math.max(P.y, 2 * T), dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy) || 1;
+  const sp = Math.min(enemySpeed(e) * dt, d);
+  e.x += dx / d * sp; e.y += dy / d * sp;
+  if (Math.abs(dx) > 1) e.face = dx < 0 ? 'left' : 'right';
+  if (e.t > 1.5) {
+    const c = Math.round(e.x / T), r = Math.round(e.y / T);
+    if (r >= 2 && r < ROWS && c >= 0 && c < COLS && dug[idx(c, r)] && !rockAt(c, r) && Math.hypot(e.x - c * T, e.y - r * T) < 2.5) {
+      e.x = c * T; e.y = r * T; e.c = e.tc = c; e.r = e.tr = r;
+      e.state = 'walk'; e.ghostClock = 0; e.ghostAt = ghostDelay(); e.dir = null;
+    }
+  }
+}
+function flee(e, dt) {
+  const sp = enemySpeed(e) * dt;
+  if (e.y > T + 0.01) {
+    e.y = Math.max(T, e.y - sp);
+    e.x += clamp(Math.round(e.x / T) * T - e.x, -sp, sp);
+  } else {
+    e.y = T; e.x -= sp; e.face = 'left';
+    if (e.x < -T) { e.state = 'escaped'; popup(12, T, 'ESCAPED', '#ff9a9a'); }
+  }
+}
+function updateEnemy(e, dt) {
+  e.anim += dt;
+  switch (e.state) {
+    case 'walk': walk(e, dt); break;
+    case 'ghost': ghost(e, dt); break;
+    case 'flee': flee(e, dt); break;
+    case 'charge': e.t -= dt; if (e.t <= 0) { e.state = 'fire'; e.t = 0.8; e.flameLen = 0; sfx('fire'); } break;
+    case 'fire': e.t -= dt; e.flameLen = Math.min(3 * T, e.flameLen + 200 * dt); if (e.t <= 0) { e.state = 'walk'; e.flameLen = 0; } break;
+    case 'pumped':
+      e.deflT -= dt;
+      if (e.deflT <= 0) {
+        e.inflate--; e.deflT = 0.45;
+        if (e.inflate <= 0) {
+          e.inflate = 0; e.state = e.flee ? 'flee' : 'walk';
+          if (P.hose && P.hose.target === e) P.hose = null;
+        }
+      }
+      break;
+    case 'pop': e.t -= dt; if (e.t <= 0) e.state = 'dead'; break;
+  }
+}
+
+// ---------- Rocks ----------
+function land(k) {
+  k.state = 'crumble'; k.t = 0.6;
+  if (!reduceMotion) shake = 3;
+  sfx('thud');
+  rocksDropped++;
+  if (k.kills.length) {
+    for (const e of k.kills) e.state = 'dead';
+    const pts = CRUSH_PTS[Math.min(k.kills.length, CRUSH_PTS.length - 1)];
+    addScore(pts); popup(k.x + 8, k.y, String(pts), '#ffcf3f');
+  }
+  if (rocksDropped >= 2 && !bonusSpawned) {
+    bonusSpawned = true;
+    bonus = { x: START_C * T, y: START_R * T, t: 10 };
+    sfx('bonus');
+  }
+}
+function updateRocks(dt) {
+  for (const k of rocks) {
+    if (k.state === 'idle') {
+      const below = k.r + 1 < ROWS && dug[idx(k.c, k.r + 1)];
+      const playerUnder = Math.abs(P.x - k.x) < T - 1 && P.y > k.y && P.y < k.y + 2 * T;
+      if (below && !playerUnder) { k.state = 'wobble'; k.t = 0.7; }
+    } else if (k.state === 'wobble') {
+      k.t -= dt;
+      if (k.t <= 0) { k.state = 'fall'; digTile(k.c, k.r); openEdge(k.c, k.r, k.c, k.r + 1); sfx('fall'); }
+    } else if (k.state === 'fall') {
+      k.y += 120 * dt;
+      while (k.state === 'fall' && k.y >= (k.r + 1) * T) {
+        k.r++;
+        if (!(k.r + 1 < ROWS && dug[idx(k.c, k.r + 1)])) { k.y = k.r * T; land(k); }
+        else openEdge(k.c, k.r, k.c, k.r + 1);
+      }
+      for (const e of enemies) {
+        if (['walk', 'charge', 'fire', 'pumped', 'flee'].includes(e.state) && Math.abs(e.x - k.x) < 12 && e.y >= k.y - 2 && e.y < k.y + T) {
+          e.state = 'crushed'; k.kills.push(e);
+          if (P.hose && P.hose.target === e) P.hose = null;
+        }
+      }
+      for (const e of k.kills) { e.x = k.x; e.y = k.y + 8; }
+      if (mode === 'play' && Math.abs(P.x - k.x) < 12 && P.y > k.y && P.y < k.y + T - 2) killPlayer('crush');
+    } else if (k.state === 'crumble') {
+      k.t -= dt; if (k.t <= 0) k.state = 'gone';
+    }
+  }
+  rocks = rocks.filter(k => k.state !== 'gone');
+}
+
+// ---------- Main update ----------
+function update(dt) {
+  pollGamepad();
+  if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.classList.remove('show'); }
+
+  if (mode === 'ready') {
+    readyT -= dt; if (readyT <= 0) mode = 'play';
+  } else if (mode === 'play') {
+    levelT += dt;
+    computeDist();
+    P.scanCD = Math.max(0, P.scanCD - dt);
+    if (scanEdge) doScan();
+
+    const held = pumpHeld();
+    P.autoPump -= dt;
+    if (pumpEdge || (held && P.autoPump <= 0)) {
+      if (P.hose && P.hose.state === 'attached') pumpEnemy(P.hose.target);
+      else if (!P.hose) { startHose(); P.autoPump = 0.35; }
+    }
+    const d = desiredDir();
+    if (d && !held) { if (P.hose) P.hose = null; movePlayer(d, dt); }
+    else P.moving = false;
+    updateHose(dt);
+
+    for (const e of enemies) updateEnemy(e, dt);
+    updateRocks(dt);
+
+    // Contact with critters and fire
+    for (const e of enemies) {
+      if (['walk', 'ghost', 'charge', 'fire', 'flee'].includes(e.state) && Math.abs(e.x - P.x) < 11 && Math.abs(e.y - P.y) < 11) killPlayer('enemy');
+      if (e.state === 'fire') {
+        const fx = e.fdir === 'right' ? e.x + T : e.x - e.flameLen;
+        if (P.x + 3 < fx + e.flameLen && P.x + 13 > fx && P.y + 3 < e.y + 11 && P.y + 13 > e.y + 5) killPlayer('fire');
+      }
+    }
+    if (bonus) {
+      bonus.t -= dt;
+      if (Math.abs(P.x - bonus.x) < 10 && Math.abs(P.y - bonus.y) < 10) {
+        const pts = 400 + level * 100;
+        addScore(pts); popup(bonus.x + 8, bonus.y, 'HUCKLEBERRIES ' + pts, '#d58cff'); sfx('relic'); bonus = null;
+      } else if (bonus.t <= 0) bonus = null;
+    }
+    // The last critter makes a run for the surface
+    const alive = enemies.filter(e => !['dead', 'escaped', 'pop'].includes(e.state));
+    if (alive.length === 1 && enemies.length > 1 && !alive[0].flee && levelT > 3 && alive[0].state === 'walk') {
+      alive[0].flee = true; alive[0].state = 'flee';
+      popup(alive[0].x + 8, alive[0].y - 4, 'RUNNING!', '#ff9a9a');
+    }
+    if (enemies.every(e => e.state === 'dead' || e.state === 'escaped')) {
+      mode = 'clearing'; clearT = 1.4; P.hose = null; sfx('clear');
+    }
+  } else if (mode === 'dying') {
+    P.dying -= dt;
+    updateRocks(dt);
+    if (P.dying <= 0) {
+      lives--;
+      if (lives <= 0) gameOver();
+      else { resetPositions(); mode = 'ready'; readyT = 1.6; }
+    }
+  } else if (mode === 'clearing') {
+    clearT -= dt;
+    updateRocks(dt);
+    if (clearT <= 0) showLevelClear();
+  }
+
+  if (scanFx) { scanFx.t += dt; if (scanFx.t > 0.9) scanFx = null; }
+  if (scanHint) { scanHint.t -= dt; if (scanHint.t <= 0) scanHint = null; }
+  for (const r of relics) if (r.glint > 0) r.glint -= dt;
+  for (const p of popups) { p.t -= dt; p.y -= 12 * dt; }
+  popups = popups.filter(p => p.t > 0);
+  for (const p of particles) { p.t -= dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 140 * dt; }
+  particles = particles.filter(p => p.t > 0);
+  if (shake > 0) shake = Math.max(0, shake - dt * 12);
+
+  pumpEdge = false; scanEdge = false;
+  updateHUD();
+}
+
+// ---------- Rendering ----------
+const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+function ellipse(x, y, rx, ry, c) { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); }
+function poly(pts, c, stroke) {
+  ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  ctx.closePath(); ctx.fillStyle = c; ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 0.8; ctx.stroke(); }
+}
+function text(s, x, y, color, size, align) {
+  ctx.font = (size || 8) + 'px "Press Start 2P", monospace';
+  ctx.textAlign = align || 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(0,0,0,.85)';
+  ctx.fillText(s, x + 1, y + 1); ctx.fillText(s, x - 1, y + 1); ctx.fillText(s, x + 1, y - 1); ctx.fillText(s, x - 1, y - 1);
+  ctx.fillStyle = color; ctx.fillText(s, x, y);
+}
+
+const MOUNTAINS = [[0, 32], [0, 20], [18, 12], [30, 18], [46, 6], [62, 16], [78, 10], [96, 20], [112, 8], [128, 4], [146, 14], [160, 9], [178, 18], [196, 7], [212, 15], [224, 11], [224, 32]];
+let cloudX = 30;
+function drawSky() {
+  const g = ctx.createLinearGradient(0, 0, 0, DIRT_TOP);
+  g.addColorStop(0, '#5fa8e0'); g.addColorStop(1, '#bfe6f7');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, DIRT_TOP);
+  ellipse(196, 9, 5, 5, '#fff3b0');
+  cloudX = (cloudX + 0.05) % (W + 40);
+  ellipse(cloudX - 20, 8, 9, 3, 'rgba(255,255,255,.85)'); ellipse(cloudX - 14, 6, 6, 3, 'rgba(255,255,255,.85)');
+  poly(MOUNTAINS, '#7d8fb8');
+  poly([[40, 9], [46, 6], [52, 9], [48, 10]], '#eef4ff');
+  poly([[122, 7], [128, 4], [134, 7], [129, 8]], '#eef4ff');
+  poly([[190, 10], [196, 7], [202, 10], [197, 11]], '#eef4ff');
+  poly([[0, 32], [0, 26], [40, 22], [90, 27], [140, 21], [190, 26], [224, 23], [224, 32]], '#5f8f5a');
+}
+
+function drawPlayer() {
+  ctx.save();
+  ctx.translate(P.x + 8, P.y + 8);
+  if (mode === 'dying') {
+    const k = 1 - P.dying / 1.8;
+    if (P.deathType === 'crush') ctx.scale(1.3, 0.35);
+    else if (P.deathType === 'fire') { ctx.globalAlpha = 1 - k * 0.6; }
+    else { ctx.rotate(k * 12); ctx.scale(1 - k * 0.7, 1 - k * 0.7); }
+  }
+  const f = P.face;
+  if (f === 'left') ctx.scale(-1, 1); else if (f === 'up') ctx.rotate(-Math.PI / 2); else if (f === 'down') ctx.rotate(Math.PI / 2);
+  ctx.translate(-8, -8);
+  const burnt = mode === 'dying' && P.deathType === 'fire';
+  const fr = P.moving && Math.floor(P.anim * 9) % 2 ? 1 : 0;
+  R('#5a3a22', fr ? 3 : 4, 14, 3, 2); R('#5a3a22', fr ? 10 : 9, 14, 3, 2);
+  R(burnt ? '#333' : '#2f5fd0', 4, 11, 8, 3);
+  R(burnt ? '#222' : '#d6383a', 3, 8, 9, 3);
+  R('#ffd23f', 5, 11, 1, 1); R('#ffd23f', 10, 11, 1, 1);
+  R(burnt ? '#555' : '#f2c08a', 5, 4, 7, 4);
+  R('#2b1b10', 10, 5, 1, 1);
+  R('#8a5a3a', 5, 7, 3, 1);
+  R(burnt ? '#444' : '#ffd23f', 3, 1, 9, 3); R('#e0a800', 3, 4, 10, 1);
+  R('#fff6a0', 12, 1, 2, 2);
+  R('#9aa3ad', 11, 9, 4, 2); R('#5c636b', 14, 9, 1, 2);
+  ctx.restore();
+}
+
+function drawEyes(e) {
+  const flick = Math.floor(e.anim * 10) % 2;
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = e.type === 'newt' ? '#7CFC9A' : '#ff8aa6'; ctx.lineWidth = 1;
+  ctx.setLineDash([2, 2]); ctx.beginPath(); ctx.ellipse(0, 0, 7, 6, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+  const lx = (P.x - e.x) > 0 ? 1 : -1, ly = (P.y - e.y) > 0 ? 1 : -1;
+  ellipse(-3, -1, 2.4, 2.8 - flick * 0.4, '#fff'); ellipse(3, -1, 2.4, 2.8 - flick * 0.4, '#fff');
+  R('#111', -3 + lx - 0.5, -1 + ly - 0.5, 1.5, 1.5); R('#111', 3 + lx - 0.5, -1 + ly - 0.5, 1.5, 1.5);
+}
+function drawBeetle(e) {
+  const pumped = e.state === 'pumped' || e.state === 'crushed';
+  const step = Math.floor(e.anim * 8) % 2;
+  if (!pumped) { R('#2a0f1c', -5, 3 + step, 2, 3); R('#2a0f1c', -1, 3 + (1 - step), 2, 3); R('#2a0f1c', 3, 3 + step, 2, 3); }
+  ellipse(0, 0, 7, 6, pumped ? '#ff6f8a' : '#c2304a');
+  ellipse(-2, -3, 3, 1.4, 'rgba(255,255,255,.3)');
+  R(pumped ? '#c2304a' : '#8a1f34', -6, 0, 6, 1);
+  ctx.strokeStyle = '#2a0f1c'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(1, -5); ctx.lineTo(-1, -8); ctx.moveTo(4, -5); ctx.lineTo(6, -8); ctx.stroke();
+  ellipse(1.5, -1.5, 2.2, 2.4, '#fff'); ellipse(5, -1.5, 2.2, 2.4, '#fff');
+  if (e.inflate >= 3) { R('#111', 1, -2, 1, 1); R('#111', 4.5, -2, 1, 1); }
+  else { R('#111', 2.2, -2, 1.5, 1.8); R('#111', 5.6, -2, 1.5, 1.8); }
+}
+function drawNewt(e) {
+  const pumped = e.state === 'pumped' || e.state === 'crushed';
+  const charging = e.state === 'charge' && Math.floor(e.anim * 14) % 2;
+  const step = Math.floor(e.anim * 8) % 2;
+  const body = charging ? '#ff7a3a' : pumped ? '#7fe08a' : '#3fae4a';
+  poly([[-8, 1], [-3, -1], [-3, 3]], '#2f8f3a');
+  if (!pumped) { R('#25702e', -4, 4 + step, 2, 2); R('#25702e', 2, 4 + (1 - step), 2, 2); }
+  ellipse(-1, 1, 6, 4, body);
+  R('#ffb347', -5, 3, 9, 1.5);
+  poly([[-5, -2], [-4, -5], [-3, -2]], '#25702e'); poly([[-2, -3], [-1, -6], [0, -3]], '#25702e'); poly([[1, -3], [2, -5], [3, -3]], '#25702e');
+  ellipse(5, -1, 4, 3.4, body);
+  ellipse(6, -2.5, 1.7, 1.7, '#fff');
+  R('#111', 6.3, -3, 1.2, 1.2);
+  if (e.state === 'fire' || e.state === 'charge') R('#b3122a', 7, 0, 2, 1.5);
+}
+function drawEnemy(e) {
+  if (e.state === 'dead' || e.state === 'escaped') return;
+  ctx.save(); ctx.translate(e.x + 8, e.y + 8);
+  if (e.state === 'ghost' || (e.state === 'flee' && isDirt(e.x + 8, e.y + 8))) { drawEyes(e); ctx.restore(); return; }
+  if (e.state === 'pop') {
+    const k = 1 - e.t / 0.35;
+    ctx.strokeStyle = e.type === 'newt' ? '#7CFC9A' : '#ff8aa6'; ctx.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4, r0 = 4 + k * 6, r1 = 8 + k * 8;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1); ctx.stroke();
+    }
+    ctx.restore(); return;
+  }
+  if (e.state === 'crushed') ctx.scale(1.3, 0.4);
+  if (e.face === 'left') ctx.scale(-1, 1);
+  if (e.state === 'pumped') { const s = 1 + e.inflate * 0.2; ctx.scale(s, s); }
+  if (e.type === 'beetle') drawBeetle(e); else drawNewt(e);
+  ctx.restore();
+  if (e.state === 'fire') {
+    const fx = e.fdir === 'right' ? e.x + T : e.x - e.flameLen, len = e.flameLen;
+    const fl = Math.floor(e.anim * 20) % 2;
+    R('#ff5a1f', fx, e.y + 4, len, 8);
+    R(fl ? '#ffd23f' : '#ffb347', fx + (e.fdir === 'right' ? 0 : 2), e.y + 6, Math.max(0, len - 2), 4);
+    for (let x = 0; x < len; x += 6) R('#fff3b0', fx + x + (fl ? 2 : 0), e.y + 7, 2, 2);
+  }
+}
+
+function drawRock(k) {
+  const ox = k.state === 'wobble' ? Math.sin(performance.now() / 25) * 1.2 : 0;
+  ctx.save(); ctx.translate(k.x + 8 + ox, k.y + 8);
+  if (k.state === 'crumble') {
+    const f = 1 - k.t / 0.6;
+    ctx.globalAlpha = 1 - f;
+    const bits = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
+    for (const [sx, sy] of bits) poly([[sx * f * 6 - 3, sy * f * 4 - 3], [sx * f * 6 + 3, sy * f * 4 - 2], [sx * f * 6 + 2, sy * f * 4 + 3], [sx * f * 6 - 3, sy * f * 4 + 2]], '#8b8f99');
+  } else {
+    poly([[-7, 2], [-6, -4], [-2, -7], [4, -7], [7, -3], [7, 4], [3, 7], [-4, 7]], '#8b8f99', '#3e4149');
+    poly([[-4, -3], [-1, -6], [3, -6], [1, -3]], '#c3c7d0');
+    ctx.strokeStyle = '#5d616b'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(-3, 2); ctx.lineTo(0, 4); ctx.lineTo(3, 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawRelicIcon(g, def, cx, cy, s, silhouette) {
+  g.save(); g.translate(cx, cy); g.scale(s, s);
+  const c = silhouette ? '#3a2a5a' : def.color, dark = 'rgba(0,0,0,.45)', hi = silhouette ? '#3a2a5a' : 'rgba(255,255,255,.7)';
+  const P2 = (pts, col) => { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (const p of pts.slice(1)) g.lineTo(p[0], p[1]); g.closePath(); g.fillStyle = col; g.fill(); };
+  const E = (x, y, rx, ry, col) => { g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fillStyle = col; g.fill(); };
+  g.lineWidth = 0.8;
+  switch (def.shape) {
+    case 'gem': P2([[0, -5], [4.5, -1], [0, 5], [-4.5, -1]], c); P2([[0, -5], [-4.5, -1], [-1, -1]], hi); break;
+    case 'nugget': E(-1, 1, 4.5, 3.4, c); E(2, -1.5, 2.8, 2.4, c); E(-2, -0.5, 1.2, 0.9, hi); break;
+    case 'spiral': E(0, 0, 5, 5, c); g.strokeStyle = dark; g.beginPath(); g.arc(0.5, 0.5, 3.2, 0, Math.PI * 1.6); g.stroke(); g.beginPath(); g.arc(1, 0.8, 1.5, 0, Math.PI * 1.7); g.stroke(); break;
+    case 'tooth': P2([[-3, -5], [3, -5], [1.5, 2], [0, 6], [-1.5, 2]], c); P2([[-3, -5], [3, -5], [2.6, -3], [-2.6, -3]], silhouette ? c : '#a89070'); break;
+    case 'egg': E(0, 0.5, 4, 5.5, c); if (!silhouette) { E(-1.5, -1, 0.7, 0.7, '#9a8f78'); E(1.5, 2, 0.8, 0.8, '#9a8f78'); E(1, -2.5, 0.6, 0.6, '#9a8f78'); } break;
+    case 'crystal': P2([[-2, -6], [2, -6], [3.5, 3], [0, 6], [-3.5, 3]], c); P2([[-2, -6], [0, -6], [-1, 4], [-3.5, 3]], hi); break;
+    case 'log': g.fillStyle = c; g.fillRect(-5, -3, 9, 6); E(4, 0, 2, 3, silhouette ? c : '#c9a77f'); if (!silhouette) { g.strokeStyle = dark; g.beginPath(); g.ellipse(4, 0, 1, 1.6, 0, 0, Math.PI * 2); g.stroke(); } break;
+    case 'trilobite': E(0, 0, 4, 5.5, c); if (!silhouette) { g.fillStyle = dark; for (let y = -3; y <= 4; y += 1.6) g.fillRect(-3.5, y, 7, 0.5); g.fillRect(-0.5, -5, 1, 10); } break;
+    case 'tusk': g.strokeStyle = c; g.lineWidth = 2.6; g.lineCap = 'round'; g.beginPath(); g.arc(1, -2, 5, Math.PI * 0.55, Math.PI * 1.45); g.stroke(); break;
+    case 'agate': E(0, 0, 5, 4.5, c); if (!silhouette) { g.strokeStyle = '#fbe0c6'; g.beginPath(); g.ellipse(0, 0, 3.2, 2.8, 0, 0, Math.PI * 2); g.stroke(); g.strokeStyle = '#a24a26'; g.beginPath(); g.ellipse(0, 0, 1.6, 1.3, 0, 0, Math.PI * 2); g.stroke(); } break;
+  }
+  g.restore();
+}
+function sparkle(x, y, s, a) {
+  ctx.globalAlpha = a;
+  R('#fff', x - s, y - 0.5, s * 2, 1); R('#fff', x - 0.5, y - s, 1, s * 2);
+  ctx.globalAlpha = 1;
+}
+
+function render() {
+  ctx.setTransform(K, 0, 0, K, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  if (shake > 0) ctx.translate(rand(-shake, shake), rand(-shake, shake));
+  drawSky();
+  ctx.drawImage(dirtCv, 0, 0, W, H);
+  const now = performance.now() / 1000;
+
+  for (const r of relics) {
+    if (r.found || r.glint <= 0) continue;
+    const a = Math.min(1, r.glint) * (0.55 + Math.sin(now * 8) * 0.25);
+    ctx.globalAlpha = a; drawRelicIcon(ctx, r.def, r.c * T + 8, r.r * T + 8, 1, false); ctx.globalAlpha = 1;
+    sparkle(r.c * T + 12 + Math.sin(now * 3) * 2, r.r * T + 4, 3, a);
+  }
+  if (bonus) {
+    const blink = bonus.t < 3 && Math.floor(now * 6) % 2;
+    if (!blink) {
+      ctx.save(); ctx.translate(bonus.x + 8, bonus.y + 9);
+      ellipse(-3, 1, 3, 3, '#5b2a86'); ellipse(3, 1, 3, 3, '#6b33a0'); ellipse(0, -3, 3, 3, '#7a3fb5');
+      R('rgba(255,255,255,.6)', -1, -4, 1, 1);
+      poly([[0, -6], [5, -9], [3, -5]], '#3f9b47');
+      ctx.restore();
+    }
+  }
+  for (const k of rocks) drawRock(k);
+  for (const e of enemies) drawEnemy(e);
+
+  if (P && P.hose) {
+    const h = P.hose, [dx, dy] = DIRS[h.d], cx = P.x + 8 + dx * 6, cy = P.y + 9 + dy * 6;
+    ctx.strokeStyle = '#e8eef5'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + dx * h.len, cy + dy * h.len); ctx.stroke();
+    R('#ffd23f', cx + dx * h.len - 1.5, cy + dy * h.len - 1.5, 3, 3);
+  }
+  if (P && mode !== 'title') drawPlayer();
+
+  if (scanFx) {
+    const rr = scanFx.t * 140;
+    ctx.strokeStyle = `rgba(79,209,197,${1 - scanFx.t / 0.9})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(P.x + 8, P.y + 8, rr, 0, Math.PI * 2); ctx.stroke();
+  }
+  if (scanHint && P) {
+    if (scanHint.ang !== null) {
+      const ax = P.x + 8 + Math.cos(scanHint.ang) * 15, ay = P.y + 8 + Math.sin(scanHint.ang) * 15;
+      ctx.save(); ctx.translate(ax, ay); ctx.rotate(scanHint.ang);
+      poly([[5, 0], [-3, -4], [-1, 0], [-3, 4]], scanHint.color, 'rgba(0,0,0,.7)');
+      ctx.restore();
+    }
+    text('SCAN: ' + scanHint.text, W / 2, 26, scanHint.color, 7);
+  }
+  for (const p of particles) { ctx.globalAlpha = Math.min(1, p.t * 2); R(p.c, p.x - 1, p.y - 1, 2, 2); }
+  ctx.globalAlpha = 1;
+  for (const p of popups) { ctx.globalAlpha = Math.min(1, p.t * 2); text(p.text, clamp(p.x, 30, W - 30), p.y, p.color, 6); }
+  ctx.globalAlpha = 1;
+
+  if (mode === 'ready') { text('LEVEL ' + level, W / 2, H / 2 - 12, '#ffcf3f', 10); text('READY!', W / 2, H / 2 + 6, '#fff', 10); }
+  if (mode === 'clearing') text('LEVEL CLEAR!', W / 2, H / 2, '#7CFC9A', 10);
+  if (mode === 'paused') text('PAUSED', W / 2, H / 2, '#fff', 10);
+}
+
+// ---------- HUD ----------
+const hudCache = {};
+function setHud(id, val, prop) {
+  if (hudCache[id] === val) return;
+  hudCache[id] = val;
+  const el = $(id);
+  if (prop === 'width') el.style.width = val; else el.textContent = val;
+}
+function updateHUD() {
+  setHud('hScore', String(score));
+  setHud('hHi', String(Math.max(save.hi, score)));
+  setHud('hLvl', String(level));
+  setHud('hLives', '⛏'.repeat(Math.max(0, lives)) || '-');
+  setHud('hRelics', '◆'.repeat(relicsFoundLevel) + '◇'.repeat(Math.max(0, 3 - relicsFoundLevel)));
+  const cd = P ? P.scanCD : 0;
+  setHud('hScan', Math.round((1 - cd / SCAN_CD) * 100) + '%', 'width');
+  const cooling = cd > 0;
+  if (hudCache.cool !== cooling) {
+    hudCache.cool = cooling;
+    $('hScan').classList.toggle('cooling', cooling);
+    $('bScan').classList.toggle('cooling', cooling);
+  }
+}
+
+// ---------- Overlays ----------
+function showOverlay(html, buttons) {
+  ovBox.innerHTML = html;
+  const row = document.createElement('div'); row.className = 'btnrow';
+  buttons.forEach(([label, fn, cls]) => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls;
+    b.addEventListener('click', () => { initAudio(); sfx('ui'); fn(); });
+    row.appendChild(b);
+  });
+  ovBox.appendChild(row);
+  ov.hidden = false;
+  clearInputs();
+  setTimeout(() => { const f = row.querySelector('button'); if (f) f.focus(); }, 30);
+}
+function hideOverlay() { ov.hidden = true; }
+function overlayOpen() { return !ov.hidden; }
+
+function showTitle() {
+  mode = 'title';
+  level = 1; buildLevel(); P = makePlayer();
+  showOverlay(`
+    <h1 id="ovTitle">BURROW BOUND</h1>
+    <p class="sub">Tunnel through Montana dirt, pump up the critters, drop boulders on their heads, and track down buried relics with your scanner.</p>
+    <p class="sub" style="font-size:13px">High score: <b style="color:var(--accent)">${save.hi}</b> &middot; Relics catalogued: <b style="color:#9cc4ff">${Object.keys(save.journal).length}/${RELICS.length}</b></p>`,
+    [['PLAY', newGame, 'primary'], ['HOW TO PLAY', showHelp], ['RELIC JOURNAL', () => showJournal(showTitle)], ['SETTINGS', () => showSettings(showTitle)]]);
+}
+function showHelp() {
+  showOverlay(`
+    <h2 id="ovTitle">HOW TO PLAY</h2>
+    <p><b>Goal:</b> clear every critter from the level. Dig wherever you like. Every tunnel you dig is also a road the critters can use.</p>
+    <h3>ATTACK</h3>
+    <ul>
+      <li><b>Pump:</b> shoot your hose (3 tiles, it can't go through dirt), then keep pumping until the critter pops. Stop pumping and it deflates.</li>
+      <li><b>Boulders:</b> dig out the dirt under a boulder and it wobbles, then falls. Squash several critters at once for big points.</li>
+      <li>Deeper layers are worth more. Pumping a fire newt from the side pays double.</li>
+    </ul>
+    <h3>FIND RELICS</h3>
+    <ul>
+      <li>Each level hides 3 relics in solid dirt: one shallow, one middle, one deep.</li>
+      <li><b>Scan</b> sends out a ping. Relics within 3 tiles glint. Otherwise an arrow points to the nearest one and tells you <span style="color:#7fb2ff">COLD</span>, <span style="color:#ffcf3f">WARM</span> or <span style="color:#ff7a3a">HOT</span>.</li>
+      <li>The ping is loud, so critters turn into ghosts and drift through the dirt sooner.</li>
+      <li>Find all 3 in one level for a bonus and an extra life.</li>
+    </ul>
+    <h3>CONTROLS</h3>
+    <ul>
+      <li><b>Keyboard:</b> <kbd>&larr;&uarr;&darr;&rarr;</kbd> or <kbd>WASD</kbd> move &middot; <kbd>SPACE</kbd>/<kbd>J</kbd> pump &middot; <kbd>E</kbd>/<kbd>K</kbd>/<kbd>SHIFT</kbd> scan &middot; <kbd>P</kbd>/<kbd>ESC</kbd> pause &middot; <kbd>M</kbd> sound</li>
+      <li><b>Touch:</b> slide your thumb on the D-pad. Hold <b>PUMP</b> to fire and keep pumping. Tap <b>SCAN</b>.</li>
+      <li><b>Gamepad:</b> D-pad or left stick &middot; <b>A</b> pump &middot; <b>X</b>/<b>B</b> scan &middot; <b>Start</b> pause</li>
+    </ul>
+    <p style="color:var(--muted);font-size:13px">Tip: you stand still while pumping. Let go of PUMP to move again.</p>`,
+    [['BACK', showTitle, 'primary']]);
+}
+function showJournal(back) {
+  const cards = RELICS.map(r => {
+    const n = save.journal[r.id] || 0;
+    return `<div class="relic ${n ? 'found' : ''}"><canvas data-id="${r.id}" width="48" height="48" aria-hidden="true"></canvas>
+      <div class="nm">${n ? r.name : '???'}</div><div class="ct">${n ? 'Found ×' + n : 'Not found yet'}</div>
+      ${n ? `<div class="bl">${r.blurb}</div>` : ''}</div>`;
+  }).join('');
+  showOverlay(`<h2 id="ovTitle">RELIC JOURNAL</h2><p style="color:var(--muted);font-size:13px;margin-top:0">${Object.keys(save.journal).length} of ${RELICS.length} kinds catalogued. Rarer relics hide deeper.</p><div class="journal">${cards}</div>`,
+    [['BACK', back, 'primary']]);
+  ovBox.querySelectorAll('canvas').forEach(c => {
+    const def = RELICS.find(r => r.id === c.dataset.id), g = c.getContext('2d');
+    drawRelicIcon(g, def, 24, 24, 3.4, !save.journal[def.id]);
+  });
+}
+function touchLabel() { return save.touch === null ? 'AUTO' : save.touch ? 'ON' : 'OFF'; }
+function showSettings(back) {
+  showOverlay(`<h2 id="ovTitle">SETTINGS</h2>
+    <div class="statrow"><span>Sound</span><span>${save.muted ? 'OFF' : 'ON'}</span><span>On-screen controls</span><span>${touchLabel()}</span></div>`,
+    [['TOGGLE SOUND', () => { toggleMute(); showSettings(back); }],
+     ['TOUCH CONTROLS: ' + touchLabel(), () => { save.touch = save.touch === null ? true : save.touch ? false : null; persist(); applyTouch(); showSettings(back); }],
+     ['BACK', back, 'primary']]);
+}
+function showPause() {
+  showOverlay(`<h2 id="ovTitle">PAUSED</h2><p>Level ${level} &middot; Score ${score}</p>`,
+    [['RESUME', resume, 'primary'], ['RELIC JOURNAL', () => showJournal(showPause)], ['SETTINGS', () => showSettings(showPause)], ['QUIT', showTitle]]);
+}
+function togglePause() {
+  if (mode === 'play' || mode === 'ready') { pausedFrom = mode; mode = 'paused'; showPause(); }
+  else if (mode === 'paused') resume();
+}
+function resume() { mode = pausedFrom; hideOverlay(); clearInputs(); }
+
+function showLevelClear() {
+  mode = 'cleared';
+  const missed = relics.filter(r => !r.found).length;
+  let bonusPts = relicsFoundLevel * 250 * level, extra = '';
+  if (relicsFoundLevel === 3) {
+    bonusPts += 2000;
+    if (lives < 5) { lives++; extra = '<p style="color:#7CFC9A;text-align:center;font-family:var(--pixel);font-size:10px">FULL SURVEY! +1 LIFE</p>'; }
+  }
+  addScore(bonusPts);
+  const found = relics.filter(r => r.found).map(r => `<span>${r.def.name}</span>`).join('');
+  showOverlay(`<h2 id="ovTitle">LEVEL ${level} CLEAR</h2>
+    <div class="statrow"><span>Relics found</span><span>${relicsFoundLevel} / 3</span>
+      <span>Relic bonus</span><span>+${bonusPts}</span><span>Score</span><span>${score}</span></div>
+    ${found ? `<div class="found-list">${found}</div>` : ''}
+    ${missed ? `<p style="color:var(--muted);font-size:13px;text-align:center">${missed} relic${missed > 1 ? 's' : ''} stayed buried. Try scanning more next time.</p>` : ''}${extra}`,
+    [['NEXT LEVEL', () => { level++; startLevel(); }, 'primary']]);
+}
+function gameOver() {
+  mode = 'over';
+  const best = score > save.hi;
+  if (best) { save.hi = score; persist(); }
+  showOverlay(`<h2 id="ovTitle">GAME OVER</h2>
+    ${best ? '<p style="color:var(--accent);text-align:center;font-family:var(--pixel);font-size:10px">NEW HIGH SCORE!</p>' : ''}
+    <div class="statrow"><span>Score</span><span>${score}</span><span>Reached level</span><span>${level}</span><span>Relics this run</span><span>${runRelics.length}</span></div>
+    ${runRelics.length ? `<div class="found-list">${runRelics.map(n => `<span>${n}</span>`).join('')}</div>` : ''}`,
+    [['PLAY AGAIN', newGame, 'primary'], ['RELIC JOURNAL', () => showJournal(gameOverBack)], ['TITLE', showTitle]]);
+}
+function gameOverBack() { mode = 'over'; showOverlay('<h2 id="ovTitle">GAME OVER</h2><p>Score ' + score + '</p>', [['PLAY AGAIN', newGame, 'primary'], ['TITLE', showTitle]]); }
+
+// ---------- Audio ----------
+let AC = null, master = null;
+function initAudio() {
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = save.muted ? 0 : 0.6; master.connect(AC.destination);
+    } catch (e) { AC = null; }
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+}
+function tone(freq, dur, type, vol, slideTo, delay) {
+  if (!AC || save.muted) return;
+  const t = AC.currentTime + (delay || 0), o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  g.gain.setValueAtTime(vol || 0.1, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + 0.02);
+}
+function noise(dur, vol) {
+  if (!AC || save.muted) return;
+  const buf = AC.createBuffer(1, Math.floor(AC.sampleRate * dur), AC.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const s = AC.createBufferSource(), g = AC.createGain(); g.gain.value = vol;
+  s.buffer = buf; s.connect(g); g.connect(master); s.start();
+}
+function sfx(name, arg) {
+  switch (name) {
+    case 'hose': tone(900, 0.08, 'square', 0.05, 1500); break;
+    case 'pump': tone(220 + arg * 90, 0.1, 'square', 0.08, 300 + arg * 120); break;
+    case 'pop': noise(0.18, 0.25); tone(600, 0.12, 'triangle', 0.12, 120); break;
+    case 'fire': noise(0.5, 0.08); tone(160, 0.5, 'sawtooth', 0.04, 90); break;
+    case 'fall': tone(900, 0.5, 'triangle', 0.06, 200); break;
+    case 'thud': noise(0.25, 0.3); tone(90, 0.2, 'sine', 0.2, 50); break;
+    case 'die': [523, 494, 440, 392, 349, 330, 294, 262].forEach((f, i) => tone(f, 0.16, 'square', 0.07, null, i * 0.14)); break;
+    case 'relic': [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, 'triangle', 0.09, null, i * 0.07)); break;
+    case 'scan': tone(1400, 0.35, 'sine', 0.08, 500); tone(1400, 0.2, 'sine', 0.03, 700, 0.3); break;
+    case 'clear': [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.15, 'square', 0.07, null, i * 0.12)); break;
+    case 'bonus': tone(1047, 0.1, 'square', 0.06); tone(1319, 0.15, 'square', 0.06, null, 0.1); break;
+    case 'life': [659, 784, 1319].forEach((f, i) => tone(f, 0.12, 'square', 0.07, null, i * 0.09)); break;
+    case 'ui': tone(660, 0.05, 'square', 0.04); break;
+  }
+}
+function toggleMute() {
+  save.muted = !save.muted; persist();
+  if (master) master.gain.value = save.muted ? 0 : 0.6;
+  $('bMute').style.opacity = save.muted ? 0.45 : 1;
+  $('bMute').setAttribute('aria-pressed', String(save.muted));
+}
+
+// ---------- Input ----------
+const KEYMAP = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+const PUMP_KEYS = ['Space', 'KeyJ', 'KeyZ'], SCAN_KEYS = ['KeyE', 'KeyK', 'KeyX', 'ShiftLeft', 'ShiftRight'];
+let keyDirs = [], touchDir = null, padDir = null;
+let pumpKey = false, pumpTouch = false, pumpPad = false, pumpEdge = false, scanEdge = false;
+const desiredDir = () => touchDir || padDir || keyDirs[keyDirs.length - 1] || null;
+const pumpHeld = () => pumpKey || pumpTouch || pumpPad;
+function clearInputs() { keyDirs = []; touchDir = null; pumpKey = pumpTouch = false; pumpEdge = scanEdge = false; setDpadVisual(null); }
+
+window.addEventListener('keydown', e => {
+  initAudio();
+  if (e.code === 'KeyP' || e.code === 'Escape') { if (mode === 'play' || mode === 'ready' || mode === 'paused') { togglePause(); e.preventDefault(); } return; }
+  if (e.code === 'KeyM') { toggleMute(); return; }
+  if (overlayOpen()) return;
+  const d = KEYMAP[e.code];
+  if (d) { if (!keyDirs.includes(d)) keyDirs.push(d); e.preventDefault(); return; }
+  if (PUMP_KEYS.includes(e.code)) { if (!e.repeat) pumpEdge = true; pumpKey = true; e.preventDefault(); return; }
+  if (SCAN_KEYS.includes(e.code)) { if (!e.repeat) scanEdge = true; e.preventDefault(); }
+});
+window.addEventListener('keyup', e => {
+  const d = KEYMAP[e.code];
+  if (d) keyDirs = keyDirs.filter(k => k !== d);
+  if (PUMP_KEYS.includes(e.code)) pumpKey = false;
+});
+window.addEventListener('blur', clearInputs);
+document.addEventListener('visibilitychange', () => { if (document.hidden && (mode === 'play' || mode === 'ready')) togglePause(); });
+
+// Touch D-pad: one pointer, slide between directions without lifting
+const dpad = $('dpad');
+let dpadPointer = null;
+function setDpadVisual(d) { dpad.querySelectorAll('.arm').forEach(a => a.classList.toggle('on', !!d && a.classList.contains(d))); }
+function dpadFrom(e) {
+  const r = dpad.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  let d = null;
+  if (Math.hypot(dx, dy) > r.width * 0.1) d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  if (d !== touchDir && d && navigator.vibrate) { try { navigator.vibrate(6); } catch (err) {} }
+  touchDir = d; setDpadVisual(d);
+}
+dpad.addEventListener('pointerdown', e => { initAudio(); dpadPointer = e.pointerId; try { dpad.setPointerCapture(e.pointerId); } catch (err) {} dpadFrom(e); e.preventDefault(); });
+dpad.addEventListener('pointermove', e => { if (e.pointerId === dpadPointer) dpadFrom(e); });
+const dpadEnd = e => { if (e.pointerId === dpadPointer) { dpadPointer = null; touchDir = null; setDpadVisual(null); } };
+dpad.addEventListener('pointerup', dpadEnd); dpad.addEventListener('pointercancel', dpadEnd);
+
+function holdButton(el, down, up) {
+  el.addEventListener('pointerdown', e => { initAudio(); try { el.setPointerCapture(e.pointerId); } catch (err) {} el.classList.add('on'); down(); e.preventDefault(); });
+  const end = () => { el.classList.remove('on'); if (up) up(); };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+holdButton($('bPump'), () => { pumpTouch = true; pumpEdge = true; }, () => { pumpTouch = false; });
+holdButton($('bScan'), () => { scanEdge = true; });
+$('bPause').addEventListener('click', () => { initAudio(); if (mode === 'paused') resume(); else togglePause(); });
+$('bMute').addEventListener('click', () => { initAudio(); toggleMute(); });
+document.addEventListener('touchmove', e => { if (e.target.closest && e.target.closest('#pad,#game')) e.preventDefault(); }, { passive: false });
+
+// Gamepad (Standard mapping)
+let padPrev = { a: false, s: false, st: false, d: null };
+function pollGamepad() {
+  const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null;
+  for (const p of pads) if (p && p.connected) { gp = p; break; }
+  if (!gp) { padDir = null; pumpPad = false; return; }
+  const b = i => !!(gp.buttons[i] && gp.buttons[i].pressed);
+  const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+  let d = null;
+  if (b(12)) d = 'up'; else if (b(13)) d = 'down'; else if (b(14)) d = 'left'; else if (b(15)) d = 'right';
+  else if (Math.hypot(ax, ay) > 0.5) d = Math.abs(ax) > Math.abs(ay) ? (ax > 0 ? 'right' : 'left') : (ay > 0 ? 'down' : 'up');
+  const a = b(0), s = b(1) || b(2) || b(3), st = b(9);
+  if (overlayOpen()) {
+    // simple menu navigation: D-pad moves focus, A presses
+    const btns = [...ovBox.querySelectorAll('.btnrow button')];
+    if (d && d !== padPrev.d && btns.length) {
+      const i = btns.indexOf(document.activeElement), step = (d === 'right' || d === 'down') ? 1 : -1;
+      btns[(Math.max(0, i) + step + btns.length) % btns.length].focus();
+    }
+    if (a && !padPrev.a) { initAudio(); (btns.includes(document.activeElement) ? document.activeElement : btns[0]).click(); }
+    if (st && !padPrev.st && mode === 'paused') resume();
+    padDir = null; pumpPad = false;
+  } else {
+    padDir = d;
+    if (a && !padPrev.a) pumpEdge = true;
+    pumpPad = a;
+    if (s && !padPrev.s) scanEdge = true;
+    if (st && !padPrev.st) togglePause();
+  }
+  padPrev = { a, s, st, d };
+}
+
+// ---------- Layout ----------
+function applyTouch() {
+  const auto = (window.matchMedia && matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0;
+  document.body.classList.toggle('touch', save.touch === null ? auto : save.touch);
+  requestAnimationFrame(fit);
+}
+function fit() {
+  const r = stage.getBoundingClientRect();
+  const s = Math.max(0.5, Math.min((r.width - 12) / W, (r.height - 12) / H));
+  cv.style.width = Math.floor(W * s) + 'px';
+  cv.style.height = Math.floor(H * s) + 'px';
+  K = clamp(Math.round(s * (window.devicePixelRatio || 1)), 1, 8);
+  if (cv.width !== W * K) { cv.width = W * K; cv.height = H * K; }
+}
+window.addEventListener('resize', fit);
+window.addEventListener('orientationchange', () => setTimeout(fit, 200));
+
+// ---------- Boot ----------
+applyTouch();
+if (save.muted) { $('bMute').style.opacity = 0.45; $('bMute').setAttribute('aria-pressed', 'true'); }
+showTitle();
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  update(dt); render();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { for (const k in hudCache) delete hudCache[k]; });
+})();
+</script>
+</body>
+</html>

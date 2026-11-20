@@ -1,0 +1,7 @@
+<resources>
+    <string id="AppName">Trailhead</string>
+    <string id="PaletteTitle">Color palette</string>
+    <string id="PaletteStone">Stone and Larch</string>
+    <string id="PaletteMaroon">Maroon and Silver</string>
+    <string id="PaletteMaroonBlack">Maroon and Black</string>
+</resources>

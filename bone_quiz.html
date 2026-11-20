@@ -150,6 +150,18 @@
   .feedback.ok { color: var(--ok-text); }
   .feedback.bad { color: var(--wrong); }
   .feedback.info { color: var(--muted); }
+  .answer-card { border-radius: 12px; padding: 12px 14px; margin-top: 4px; border: 2px solid; }
+  .answer-card.ok { border-color: var(--ok-text); background: #eef7ee; }
+  .answer-card.missed { border-color: var(--wrong); background: #fdeeee; }
+  .answer-title { margin: 0; font-size: 1.35rem; font-weight: 800; }
+  .answer-card.ok .answer-title { color: var(--ok-text); }
+  .answer-card.missed .answer-title { color: var(--wrong); }
+  .answer-sub { margin: 4px 0 0; font-weight: 600; }
+  .answer-card .def { margin-top: 6px; }
+  .btn.next { width: 100%; margin: 10px 0 4px; font-size: 1.1rem; min-height: 52px; }
+  .q-enter { animation: qIn .35s ease-out; }
+  @keyframes qIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .q-enter { animation: none; } }
   .key { display: flex; flex-wrap: wrap; gap: 4px 14px; list-style: none; margin: 8px 0 0; padding: 0; font-size: .85rem; color: var(--muted); }
   .key li { display: inline-flex; align-items: center; gap: 6px; }
   .key .sw-found { background: linear-gradient(90deg, var(--g-arm) 0 33%, var(--g-leg) 33% 66%, var(--g-skull) 66%); }
@@ -945,7 +957,7 @@
 
   function renderQuestion() {
     const b = BY_ID[S.current];
-    const remaining = S.queue.length;
+    const qNum = Object.keys(S.results).length + 1;
     let html = '';
     const actions = `<div class="actions">
         <button type="button" class="btn grow" id="skipBtn">Skip &#8631;</button>
@@ -957,8 +969,8 @@
         ${S.mode === 'name' ? '<li><span class="swatch sw-target"></span>Yellow glow = bone to name</li>' : ''}
       </ul>`;
     if (S.mode === 'find') {
-      html += `<p class="prompt-label">Find this bone &middot; ${remaining} left</p>`;
-      html += `<h2 class="prompt-name">${esc(b.name)}</h2>`;
+      html += `<div class="q-enter"><p class="prompt-label">Question ${qNum} of ${S.ids.length} &middot; Find this bone</p>`;
+      html += `<h2 class="prompt-name">${esc(b.name)}</h2></div>`;
       if (S.showDef) html += `<p class="aka">${esc(b.aka)}</p>`;
       html += feedbackHTML() + actions;
       if (S.showDef) html += `<p class="def">${esc(b.def)}</p>`;
@@ -966,28 +978,18 @@
       // hide the answer word (and its plural/other endings) inside the clue
       const stem = b.name.split(' ')[0].replace(/s$/, '');
       const clue = b.def.replace(new RegExp(`\\b${stem}\\w*`, 'gi'), '____');
-      html += `<p class="prompt-label">Name the glowing bone &middot; ${remaining} left</p>`;
+      html += `<p class="prompt-label q-enter">Question ${qNum} of ${S.ids.length} &middot; Name the glowing bone</p>`;
       html += `<div class="choices" role="group" aria-label="Answer choices">${S.choices.map(id =>
         `<button type="button" class="choice" data-choice="${id}" ${S.wrongChoices.includes(id) ? 'aria-disabled="true"' : ''}>${esc(BY_ID[id].name)}</button>`
       ).join('')}</div>`;
       html += feedbackHTML() + actions;
       if (S.showDef) html += `<p class="def"><strong>Clue:</strong> ${esc(clue)}</p>`;
     }
-    html += lastAnswerHTML();
     panelBody.innerHTML = html;
+    $('panel').scrollTop = 0;
     $('skipBtn').onclick = skip;
     $('revealBtn').onclick = () => reveal(false);
     panelBody.querySelectorAll('[data-choice]').forEach(btn => btn.onclick = () => onChoice(btn.dataset.choice, btn));
-  }
-
-  // After each answer, keep the definition of the bone you just learned visible.
-  function lastAnswerHTML() {
-    if (!S.lastLearned) return '';
-    const b = BY_ID[S.lastLearned];
-    return `<details class="glossary" ${S.showDef ? '' : 'open'} style="margin-top:12px">
-      <summary>About the last bone: <strong>${esc(b.name)}</strong></summary>
-      ${boneInfoHTML(b, { heading: 'h3' })}
-    </details>`;
   }
 
   function setFeedback(kind, html) {
@@ -1056,10 +1058,8 @@
     g.classList.add('found', 'pop');
     setTimeout(() => g.classList.remove('pop'), 600);
     S.queue.shift();
-    S.lastLearned = id;
-    S.lastFeedback = { kind: 'ok', html: `&#10003; Correct — ${esc(b.name)}!${S.attempts ? '' : ' First try.'}` };
     updateStats();
-    nextQuestion();
+    showAnswer(id, 'correct');
   }
 
   function reveal(auto) {
@@ -1070,10 +1070,40 @@
     boneEls[id].classList.remove('target');
     boneEls[id].classList.add('revealed');
     S.queue.shift();
-    S.lastLearned = id;
-    S.lastFeedback = { kind: 'bad', html: `${auto ? 'Out of tries. ' : ''}The <strong>red-striped</strong> bone is the <strong>${esc(b.name)}</strong> — marked as missed and added to your review list.` };
     updateStats();
-    nextQuestion();
+    showAnswer(id, auto ? 'out' : 'shown');
+  }
+
+  // After an answer: say whether it was right, explain the bone, and wait
+  // for "Next question" so it's obvious when a new question starts.
+  // "Thigh bone" -> "thigh bone", but leave "T1–T12" and "C1–C7 (neck)" alone
+  const akaInline = aka => /^[A-Z][a-z]/.test(aka) ? aka[0].toLowerCase() + aka.slice(1) : aka;
+
+  function showAnswer(id, outcome) {
+    const b = BY_ID[id];
+    const ok = outcome === 'correct';
+    S.current = null;
+    S.lastFeedback = null;
+    if (S.running) { S.elapsed = Date.now() - S.start; S.running = false; } // pause the clock while reading
+    const title = ok ? '&#10003; That’s correct!' : outcome === 'out' ? '&#10007; Not quite' : 'Here’s the answer';
+    const sub = ok
+      ? `${S.attempts ? 'You found' : 'First try! You found'} the <strong>${esc(b.name)}</strong> — ${esc(akaInline(b.aka))}.`
+      : `This is the <strong>${esc(b.name)}</strong> — ${esc(akaInline(b.aka))}. It’s shown in red stripes and added to your review list.`;
+    const last = S.queue.length === 0;
+    panelBody.innerHTML = `
+      <div class="answer-card ${ok ? 'ok' : 'missed'} q-enter" role="status" aria-live="polite">
+        <p class="answer-title">${title}</p>
+        <p class="answer-sub">${sub}</p>
+        <button type="button" class="btn primary next" id="nextBtn">${last ? 'See my results' : 'Next question'} &rarr;</button>
+        <p class="def">${esc(b.def)}</p>
+        ${b.tip ? `<p class="tip"><strong>Memory tip:</strong> ${esc(b.tip)}</p>` : ''}
+      </div>`;
+    $('panel').scrollTop = 0;
+    $('nextBtn').onclick = () => {
+      S.running = true; S.start = Date.now() - S.elapsed;
+      nextQuestion();
+    };
+    $('nextBtn').focus({ preventScroll: true });
   }
 
   function skip() {

@@ -1,0 +1,50 @@
+name: Build Keep Onslaught iOS app
+
+on:
+  push:
+    paths:
+      - keep_onslaught.html
+      - keep_onslaught_icon.png
+      - keep_onslaught.webmanifest
+      - 'keep-onslaught-app/**'
+      - .github/workflows/keep-onslaught-ios.yml
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: keep-onslaught-app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Capacitor
+        run: npm ci
+
+      - name: Copy the game into the iOS project
+        run: npm run sync:ios
+
+      # Built without code signing: a sideloading tool (Sideloadly, AltStore) signs it with your Apple ID
+      # when it installs it on your iPhone.
+      - name: Build the app
+        working-directory: keep-onslaught-app/ios/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+
+      - name: Package the IPA
+        run: |
+          mkdir -p Payload
+          cp -R ios/App/build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qr keep-onslaught.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keep-onslaught-ipa
+          path: keep-onslaught-app/keep-onslaught.ipa
