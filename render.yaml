@@ -1,0 +1,22 @@
+# Render Blueprint for the Holiday Helpers gift drive.
+# Render dashboard -> your project -> New -> Blueprint -> pick this repo/branch.
+services:
+  - type: web
+    name: holiday-helpers
+    runtime: node
+    rootDir: holiday-helpers
+    buildCommand: echo "no build step"
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    plan: starter            # persistent disks are not available on the free plan
+    envVars:
+      - key: DATA_DIR
+        value: /data
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_PIN       # you'll be asked for this when creating the Blueprint
+        sync: false
+    disk:
+      name: claims
+      mountPath: /data
+      sizeGB: 1
