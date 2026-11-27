@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Holiday Helpers Gift Drive</title>
+  <meta name="description" content="Pick a gift from a wish list. Everyone sees what's been taken, live.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎁%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to wish list</a>
+  <header class="hero">
+    <div class="wrap">
+      <h1><span class="h1-top">Holiday Helpers</span> <span class="h1-tag">Gift Drive</span></h1>
+      <p class="lede">Pick something from a list, tap <strong>I’ll get this</strong>, and everyone sees it’s covered — so no gift gets bought twice. No account needed, and your name is optional.</p>
+      <p class="live" id="live" role="status"><span class="dot" aria-hidden="true"></span><span id="live-text">Connecting…</span></p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <aside class="dropoff" id="dropoff" aria-label="Drop-off information"></aside>
+    <nav class="tabs" id="tabs" aria-label="Wish lists"></nav>
+  </div>
+
+  <main id="main" class="wrap" tabindex="-1">
+    <noscript>This page needs JavaScript to show the live lists.</noscript>
+    <section id="panel" aria-live="off"></section>
+
+    <section class="activity" aria-labelledby="act-h">
+      <h2 id="act-h">Latest gifts claimed</h2>
+      <ul id="activity" class="feed"></ul>
+    </section>
+  </main>
+
+  <footer class="wrap foot">
+    <p>Claims are saved permanently. Made a mistake? Use <em>Undo</em> on this device. Organizer? <button type="button" class="linkish" id="admin-btn">Organizer sign-in</button></p>
+  </footer>
+
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>

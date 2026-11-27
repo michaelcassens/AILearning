@@ -1,0 +1,112 @@
+{
+  "title": "Holiday Helpers Gift Drive",
+  "dropoff": {
+    "text": "VolunteerUM holiday party and gift drop-off: Tuesday, December 8, 3–5 p.m., DHC Lounge.",
+    "contact": "bonnie.moore@mso.umt.edu"
+  },
+  "lists": [
+    {
+      "id": "ywca",
+      "tab": "YWCA Wishlist",
+      "title": "YWCA Wishlist",
+      "intro": "The YWCA is the leading organization in Missoula for moving women and families out of crisis and empowering them to achieve lasting independence. Donate new, unwrapped gifts for Holiday Baskets.",
+      "notes": ["Many people can bring the same item — tap “I’ll bring one” each time you pick something up."],
+      "multi": true,
+      "groups": [
+        {
+          "title": "Holiday basket gifts",
+          "items": [
+            { "id": "ywca-mugs", "label": "Coffee mugs" },
+            { "id": "ywca-coffee", "label": "Coffee", "detail": "gift basket size" },
+            { "id": "ywca-lotion", "label": "Body lotion", "detail": "full size" },
+            { "id": "ywca-bubble", "label": "Bubble bath", "detail": "full size, adult & children" },
+            { "id": "ywca-bodywash", "label": "Body wash", "detail": "full size" },
+            { "id": "ywca-journals", "label": "Journals & planners" },
+            { "id": "ywca-beanies", "label": "Winter beanies & hats" },
+            { "id": "ywca-gloves", "label": "Winter gloves", "detail": "adult & children" },
+            { "id": "ywca-shampoo", "label": "Shampoo and conditioner", "detail": "full size" },
+            { "id": "ywca-blankets", "label": "Large warm throw blankets", "detail": "any color/design" }
+          ]
+        },
+        {
+          "title": "Also collecting for families in both shelters",
+          "items": [
+            { "id": "ywca-diapers", "label": "Diapers", "detail": "sizes 4 & 5" },
+            { "id": "ywca-wipes", "label": "Baby wipes" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s2603",
+      "tab": "Student 2603",
+      "title": "Student 2603’s Wish List",
+      "intro": "Coordinated by Missoula County Public Schools and Experiential Learning and Career Success. Female, age 15.",
+      "notes": [
+        "Sizes: pants 16 · shirt/sweatshirt Large · shoes 8.5",
+        "Favorite hobby: LEGOs"
+      ],
+      "multi": false,
+      "groups": [
+        {
+          "title": "The two gifts they’d be most excited to receive",
+          "items": [
+            { "id": "s2603-giftcard", "label": "Gift card", "detail": "Starbucks or Victoria’s Secret" },
+            { "id": "s2603-lego", "label": "Flowers LEGO set" }
+          ]
+        },
+        {
+          "title": "Additional gifts they’d love",
+          "items": [
+            { "id": "s2603-candles", "label": "Candles" },
+            { "id": "s2603-jeans", "label": "Jeans", "detail": "baggy style, size 16" },
+            { "id": "s2603-perfume", "label": "Good smelling perfume" }
+          ]
+        },
+        {
+          "title": "Favorite snacks & treats",
+          "items": [
+            { "id": "s2603-chips", "label": "Spicy Dinomita chips" },
+            { "id": "s2603-donuts", "label": "Donuts" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "v2606",
+      "tab": "Veteran 2606",
+      "title": "Veteran 2606’s Wish List",
+      "intro": "Coordinated by the Poverello Center and Experiential Learning and Career Success. Male, age 37.",
+      "notes": [
+        "Would prefer one larger gift over several smaller gifts.",
+        "Sizes: shoes 9.5 wide with ankle support · shirts 2XL",
+        "Favorite hobbies: video games, music, and movies"
+      ],
+      "multi": false,
+      "groups": [
+        {
+          "title": "The two gifts they’d be most excited to receive",
+          "items": [
+            { "id": "v2606-headphones", "label": "Headphones", "detail": "preferably earbuds" },
+            { "id": "v2606-switch", "label": "A Nintendo Switch" }
+          ]
+        },
+        {
+          "title": "Additional gifts they’d love",
+          "items": [
+            { "id": "v2606-spices", "label": "Herbs and spice kit" },
+            { "id": "v2606-hoodies", "label": "Hoodies", "detail": "2XL" },
+            { "id": "v2606-straighttalk", "label": "Straight Talk wireless prepaid phone card" }
+          ]
+        },
+        {
+          "title": "Favorites",
+          "items": [
+            { "id": "v2606-gamestop", "label": "GameStop gift card" },
+            { "id": "v2606-mint", "label": "Mint chocolate anything" }
+          ]
+        }
+      ]
+    }
+  ]
+}
