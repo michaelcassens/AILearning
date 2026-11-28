@@ -1,0 +1,8 @@
+pikepdf>=9
+pdfminer.six>=20240706
+pypdfium2>=4
+numpy
+pillow
+flask>=3
+# optional: pip install ocrmypdf (needs tesseract-ocr + ghostscript) for scanned PDFs
+# optional: pip install anthropic for --ai-alt
