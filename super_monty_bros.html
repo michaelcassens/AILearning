@@ -25,22 +25,22 @@
     padding:8px calc(16px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     background:linear-gradient(#15060b,#0b0b10)}
   body.touch #pad{display:flex}
-  #dpad{position:relative;width:min(52vw,230px);height:min(24vh,104px);border-radius:60px;border:3px solid var(--silver-d);
+  #dpad{position:relative;width:min(38vw,230px);height:min(24vh,104px);border-radius:60px;border:3px solid var(--silver-d);
     background:rgba(110,18,48,.55);display:flex;touch-action:none}
   #dpad span{flex:1;display:flex;align-items:center;justify-content:center;font-size:34px;color:#fff;border-radius:60px;transition:background .05s}
   #dpad.l span:first-child,#dpad.r span:last-child{background:rgba(255,255,255,.35)}
-  #btns{display:flex;gap:16px;align-items:center}
-  .pbtn{width:min(22vw,92px);height:min(22vw,92px);border-radius:50%;border:3px solid var(--silver);background:rgba(110,18,48,.7);
+  #btns{display:flex;gap:10px;align-items:center}
+  .pbtn{width:min(19vw,92px);height:min(19vw,92px);border-radius:50%;border:3px solid var(--silver);background:rgba(110,18,48,.7);
     color:#fff;font-weight:800;font-size:26px;touch-action:none;padding:0;cursor:pointer}
   .pbtn small{display:block;font-size:10px;font-weight:600;opacity:.85;letter-spacing:.5px}
   .pbtn.on{background:rgba(255,255,255,.4)}
-  #btns .pbtn:first-child{margin-top:34px}
+  #btns .pbtn{margin-top:0} #btns #bB{margin-top:34px}
   @media (orientation:landscape){
     body.touch #pad{position:absolute;left:0;right:0;bottom:0;height:auto;background:none;pointer-events:none;padding-bottom:calc(14px + env(safe-area-inset-bottom))}
     body.touch #pad>*{pointer-events:auto}
-    body.touch #dpad{width:min(30vw,220px);height:88px;opacity:.8}
-    body.touch .pbtn{width:78px;height:78px;opacity:.8}
-    body.touch #btns .pbtn:first-child{margin-top:30px}
+    body.touch #dpad{width:min(26vw,220px);height:88px;opacity:.8}
+    body.touch .pbtn{width:70px;height:70px;opacity:.8}
+    body.touch #btns #bB{margin-top:30px}
   }
   .sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 </style>
@@ -58,6 +58,7 @@
   <div id="pad" aria-label="Touch controls">
     <div id="dpad" role="group" aria-label="Move left or right"><span aria-hidden="true">&#9664;</span><span aria-hidden="true">&#9654;</span></div>
     <div id="btns">
+      <button class="pbtn" id="bD" aria-label="Down: crouch">&#9660;<small>DUCK</small></button>
       <button class="pbtn" id="bB" aria-label="B button: hold to run, tap to throw fire">B<small>RUN/FIRE</small></button>
       <button class="pbtn" id="bA" aria-label="A button: jump or flap wings">A<small>JUMP</small></button>
     </div>
@@ -79,13 +80,13 @@ cv.width = W; cv.height = H;
 const $ = id => document.getElementById(id);
 
 /* ---------------- Input ---------------- */
-const inp = {left:false,right:false,a:false,b:false,aP:false,bP:false,startP:false,pauseP:false};
+const inp = {left:false,right:false,down:false,a:false,b:false,aP:false,bP:false,startP:false,pauseP:false};
 function setKey(k,v){
   if(k==='a' && v && !inp.a) inp.aP = true;
   if(k==='b' && v && !inp.b) inp.bP = true;
   inp[k] = v;
 }
-const KEYMAP = {ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',
+const KEYMAP = {ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',ArrowDown:'down',KeyS:'down',
   Space:'a',KeyZ:'a',ArrowUp:'a',KeyW:'a',KeyK:'a',
   KeyX:'b',ShiftLeft:'b',ShiftRight:'b',KeyJ:'b',ControlLeft:'b'};
 addEventListener('keydown',e=>{
@@ -98,7 +99,7 @@ addEventListener('keydown',e=>{
   if(k){ if(!e.repeat) setKey(k,true); e.preventDefault(); }
 });
 addEventListener('keyup',e=>{ const k=KEYMAP[e.code]; if(k){ setKey(k,false); e.preventDefault(); } });
-addEventListener('blur',()=>{ for(const k of ['left','right','a','b']) inp[k]=false; if(S==='play') togglePause(); });
+addEventListener('blur',()=>{ for(const k of ['left','right','down','a','b']) inp[k]=false; if(S==='play') togglePause(); });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden && S==='play') togglePause(); });
 addEventListener('contextmenu',e=>e.preventDefault());
 
@@ -119,7 +120,7 @@ function holdBtn(id,key){
   el.addEventListener('pointerdown',e=>{ el.setPointerCapture(e.pointerId); setKey(key,true); el.classList.add('on'); audioInit(); e.preventDefault(); });
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>{ setKey(key,false); el.classList.remove('on'); }));
 }
-holdBtn('bA','a'); holdBtn('bB','b');
+holdBtn('bA','a'); holdBtn('bB','b'); holdBtn('bD','down');
 cv.addEventListener('pointerdown',e=>{ audioInit(); inp.startP = true; cv.focus({preventScroll:true}); });
 $('bPause').addEventListener('click',()=>{ togglePause(); cv.focus(); });
 $('bMute').addEventListener('click',()=>{ toggleMute(); cv.focus(); });
@@ -250,7 +251,7 @@ function lvl1(){
   en(L,'bobcat',142);en(L,'lumber',146);
   stairs(L,150,6,1);
   L.flagX=162;L.castleX=166;
-  L.tip='MOVE   JUMP   RUN';
+  L.tip='MOVE   JUMP   RUN   DOWN=DUCK';
   return L;
 }
 function lvl2(){
@@ -314,10 +315,15 @@ try{ game.best=+localStorage.getItem('smb_griz_best')||0; }catch(e){}
 function saveBest(){ if(game.score>game.best){ game.best=game.score; try{localStorage.setItem('smb_griz_best',String(game.best));}catch(e){} } }
 const announce=s=>{ $('live').textContent=s; };
 
+function fitSize(p){
+  const bottom=p.y+p.h;
+  p.h=p.big?(p.crouch?16:28):(p.crouch?11:14);
+  p.y=bottom-p.h;
+}
 function newPlayer(){
   const big=game.big;
   return {x:2*TS,y:12*TS-(big?28:14),w:12,h:big?28:14,vx:0,vy:0,dir:1,onGround:false,big,power:game.power,
-    inv:0,star:0,coyote:0,buf:0,flaps:0,flapT:0,anim:0,t:0,hitX:false,hitHead:false,combo:0,hide:false};
+    crouch:false,inv:0,star:0,coyote:0,buf:0,flaps:0,flapT:0,anim:0,t:0,hitX:false,hitHead:false,combo:0,hide:false};
 }
 function loadLevel(i){
   game.level=i; L=LEVELS[i](); buildTiles(L.theme);
@@ -408,7 +414,7 @@ function hurtPlayer(){
   const p=P;
   if(p.inv>0||p.star>0||S!=='play') return;
   if(p.power!=='none'){ p.power='none'; game.power='none'; p.inv=110; SFX.hurt(); }
-  else if(p.big){ p.big=false; game.big=false; p.y+=14; p.h=14; p.inv=110; SFX.hurt(); }
+  else if(p.big){ p.big=false; game.big=false; fitSize(p); p.inv=110; SFX.hurt(); }
   else killPlayer(false);
 }
 function killPlayer(){
@@ -419,13 +425,13 @@ function killPlayer(){
 function collectItem(it){
   const p=P;
   if(it.kind==='berry'){
-    if(!p.big){ p.big=true; game.big=true; p.y-=14; p.h=28; }
+    if(!p.big){ p.big=true; game.big=true; fitSize(p); }
     addScore(1000,p.x,p.y-8); SFX.power();
   } else if(it.kind==='flower'){
-    if(!p.big){ p.big=true; game.big=true; p.y-=14; p.h=28; }
+    if(!p.big){ p.big=true; game.big=true; fitSize(p); }
     p.power='fire'; game.power='fire'; addScore(1000,p.x,p.y-8); SFX.power(); announce('Fire power!');
   } else if(it.kind==='feather'){
-    if(!p.big){ p.big=true; game.big=true; p.y-=14; p.h=28; }
+    if(!p.big){ p.big=true; game.big=true; fitSize(p); }
     p.power='wing'; game.power='wing'; p.flaps=0; addScore(1000,p.x,p.y-8); SFX.power(); announce('Wing power! Tap jump in the air to fly.');
   } else if(it.kind==='star'){
     p.star=600; addScore(1000,p.x,p.y-8); SFX.power(); announce('Invincible!');
@@ -435,7 +441,15 @@ function collectItem(it){
 /* ---------------- Update ---------------- */
 function updPlayer(){
   const p=P;
-  const dirIn=(inp.right?1:0)-(inp.left?1:0);
+  // crouch / stand (stay ducked if something is overhead)
+  if(inp.down&&!p.crouch){ p.crouch=true; fitSize(p); }
+  else if(!inp.down&&p.crouch){
+    const nh=p.big?28:14, ny=p.y+p.h-nh, l=Math.floor(p.x/TS), r=Math.floor((p.x+p.w-0.01)/TS), t=Math.floor(ny/TS);
+    let free=true; for(let tx=l;tx<=r;tx++) if(solidAt(tx,t)) free=false;
+    if(free){ p.crouch=false; fitSize(p); }
+  }
+  const ducking=p.crouch&&p.onGround;
+  const dirIn=ducking?0:(inp.right?1:0)-(inp.left?1:0);
   const maxS=inp.b?2.3:1.4;
   if(dirIn){
     p.dir=dirIn; const a=p.onGround?0.12:0.09;
@@ -443,7 +457,7 @@ function updPlayer(){
     else if(Math.abs(p.vx)<maxS) p.vx=Math.max(-maxS,Math.min(maxS,p.vx+dirIn*a));
     else p.vx-=Math.sign(p.vx)*0.04;
   } else {
-    const f=p.onGround?0.12:0.015; p.vx=Math.abs(p.vx)<=f?0:p.vx-Math.sign(p.vx)*f;
+    const f=ducking?0.07:(p.onGround?0.12:0.015); p.vx=Math.abs(p.vx)<=f?0:p.vx-Math.sign(p.vx)*f;
   }
   if(p.onGround){ p.coyote=6; p.flaps=0; } else if(p.coyote>0) p.coyote--;
   if(inp.aP) p.buf=6; else if(p.buf>0) p.buf--;
@@ -453,7 +467,7 @@ function updPlayer(){
   p.vy=Math.min(p.vy+g,7);
   if(p.power==='wing'&&inp.a&&!p.onGround&&p.vy>0.9) p.vy=0.9;
   if(inp.bP&&p.power==='fire'&&fireballs.length<2){
-    fireballs.push({x:p.x+(p.dir>0?p.w:-5),y:p.y+9,w:5,h:5,vx:p.dir*3.4,vy:0.5,t:0,vyb:0}); SFX.fire();
+    fireballs.push({x:p.x+(p.dir>0?p.w:-5),y:p.y+Math.min(9,p.h-6),w:5,h:5,vx:p.dir*3.4,vy:0.5,t:0,vyb:0}); SFX.fire();
   }
   moveX(p); moveY(p);
   if(p.hitHead) bumpTile(p.headTx,p.headTy);
@@ -684,13 +698,13 @@ function togglePause(){
 }
 
 /* ---------------- Sprite drawing ---------------- */
-function drawMonty(x,y,big,dir,anim,power,air,flapT,starT){
+function drawMonty(x,y,big,dir,anim,power,air,flapT,starT,crouch){
   const w=12; ctx.save();
   ctx.translate(Math.round(x)+(dir<0?w:0),Math.round(y)); ctx.scale(dir<0?-1:1,1);
   const brown='#7b4a24',dark='#3a2210',tan='#dba56b';
   let shirt=power==='fire'?'#f4f4f4':'#8a1230', trim=power==='fire'?'#c0392b':'#d5d9e0';
   if(starT>0){ shirt=['#ffd23a','#ffffff','#8a1230','#d5d9e0'][(starT>>2)&3]; }
-  const th=big?12:2, lh=big?7:3;
+  const th=crouch?(big?4:1):(big?12:2), lh=crouch?(big?3:1):(big?7:3);
   if(power==='wing'){
     const f=flapT>0?(flapT>7?-3:3):(air?0:1), wy=big?10:8;
     R('#f4f6fa',-6,wy+f-1,7,2,1); R('#d5d9e0',-8,wy+f+1,9,2); R('#f4f6fa',-7,wy+f+3,8,2); R('#aab2bd',-5,wy+f+5,5,2);
@@ -701,9 +715,9 @@ function drawMonty(x,y,big,dir,anim,power,air,flapT,starT){
   R(tan,6,5,5,4); R('#111',9,5,2,2);
   R('#fff',5,3,3,3); R('#111',7,4,1,2);
   // torso
-  R(shirt,1,9,10,th); R(brown,0,9+(big?1:0),2,big?6:2); R(brown,10,9+(big?1:0),2,big?6:2);
+  R(shirt,1,9,10,th); const al=crouch?Math.min(th,2):(big?6:2); R(brown,0,9+(big&&!crouch?1:0),2,al); R(brown,10,9+(big&&!crouch?1:0),2,al);
   R(trim,1,9,10,1);
-  if(big){
+  if(big&&!crouch){
     R(trim,1,9+th-2,10,1);
     const M=['10001','11011','10101','10001','10001'];
     M.forEach((rw,yy)=>{for(let xx=0;xx<5;xx++) if(rw[xx]==='1') R(power==='fire'?'#8a1230':'#d5d9e0',4+xx,12+yy,1,1);});
@@ -883,7 +897,7 @@ function drawMonty_(){
   if(p.inv>0&&((p.inv>>2)&1)) return;
   const air=!p.onGround&&S!=='flag';
   let dir=p.dir;
-  drawMonty(p.x-1+0,p.y,p.big,dir,Math.abs(p.vx)>0.1?p.anim:0,p.power,air,p.flapT,p.star);
+  drawMonty(p.x-1+0,p.y,p.big,dir,(Math.abs(p.vx)>0.1&&!p.crouch)?p.anim:0,p.power,air&&!p.crouch,p.flapT,p.star,p.crouch);
 }
 
 /* ---------------- Render ---------------- */
